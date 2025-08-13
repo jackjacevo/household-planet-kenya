@@ -1,0 +1,678 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  phone             String?
+  name              String
+  firstName         String?
+  lastName          String?
+  role              String   @default("CUSTOMER")
+  password          String
+  emailVerified     Boolean  @default(false)
+  phoneVerified     Boolean  @default(false)
+  emailVerifyToken  String?
+  phoneVerifyToken  String?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+  refreshToken      String?
+  lastLoginAt       DateTime?
+  isActive          Boolean  @default(true)
+  avatar            String?
+  dateOfBirth       DateTime?
+  gender            String?
+  socialProviders   String?  // Store social login data as JSON string
+  twoFactorEnabled  Boolean  @default(false)
+  twoFactorSecret   String?
+  loyaltyPoints     Int      @default(0)
+  totalSpent        Float    @default(0)
+  preferredLanguage String   @default("en")
+  marketingEmails   Boolean  @default(true)
+  smsNotifications  Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orders    Order[]
+  addresses Address[]
+  cart      Cart[]
+  wishlist  Wishlist[]
+  reviews   Review[]
+  recentlyViewed RecentlyViewed[]
+  savedForLater SavedForLater[]
+  returnRequests ReturnRequest[]
+  promoCodeUsages PromoCodeUsage[]
+  supportTickets SupportTicket[]
+  loyaltyTransactions LoyaltyTransaction[]
+  wishlistNotifications WishlistNotification[]
+  whatsappMessages WhatsAppMessage[]
+  whatsappContacts WhatsAppContact[]
+  abandonedCarts AbandonedCart[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  image       String?
+  parentId    String?
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id               String  @id @default(cuid())
+  name             String
+  slug             String  @unique
+  description      String?
+  shortDescription String?
+  sku              String  @unique
+  price            Float
+  comparePrice     Float?
+  weight           Float?
+  dimensions       String?
+  images           String?
+  categoryId       String
+  brandId          String?
+  isActive         Boolean @default(true)
+  isFeatured       Boolean @default(false)
+  seoTitle         String?
+  seoDescription   String?
+  tags             String?
+  stock            Int     @default(0)
+  lowStockThreshold Int    @default(10)
+  trackInventory   Boolean @default(true)
+  averageRating    Float?  @default(0)
+  totalReviews     Int     @default(0)
+  viewCount        Int     @default(0)
+  searchKeywords   String?
+  relatedProducts  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+  variants ProductVariant[]
+  orderItems OrderItem[]
+  cart     Cart[]
+  wishlist Wishlist[]
+  reviews  Review[]
+  recentlyViewed RecentlyViewed[]
+  savedForLater SavedForLater[]
+  recommendations ProductRecommendation[] @relation("ProductRecommendations")
+  recommendedBy ProductRecommendation[] @relation("RecommendedProducts")
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id         String @id @default(cuid())
+  productId  String
+  name       String
+  sku        String @unique
+  price      Float
+  stock      Int    @default(0)
+  lowStockThreshold Int @default(5)
+  attributes String?
+  size       String?
+  color      String?
+  material   String?
+  isActive   Boolean @default(true)
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  cart       Cart[]
+  savedForLater SavedForLater[]
+
+  @@map("product_variants")
+}
+
+model Order {
+  id               String   @id @default(cuid())
+  userId           String?
+  orderNumber      String   @unique
+  status           String   @default("PENDING")
+  subtotal         Float
+  shippingCost     Float
+  discount         Float    @default(0)
+  total            Float
+  shippingAddress  String
+  deliveryLocation String
+  deliveryPrice    Float
+  paymentMethod    String
+  paymentStatus    String   @default("PENDING")
+  promoCodeId      String?
+  guestEmail       String?
+  guestName        String?
+  guestPhone       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user       User?       @relation(fields: [userId], references: [id])
+  promoCode  PromoCode?  @relation(fields: [promoCodeId], references: [id])
+  items OrderItem[]
+  statusHistory OrderStatusHistory[]
+  returnRequests ReturnRequest[]
+  payments Payment[]
+  partialPayments PartialPayment[]
+  deliveryTracking DeliveryTracking?
+  deliverySchedule DeliverySchedule?
+  deliveryFeedback DeliveryFeedback?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  quantity  Int
+  price     Float
+  total     Float
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+  returnRequestItems ReturnRequestItem[]
+
+  @@map("order_items")
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   @default("HOME")
+  fullName  String
+  phone     String
+  county    String
+  town      String
+  street    String
+  landmark  String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  variantId String?
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId, variantId])
+  @@map("cart")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  notifyOnStock Boolean @default(true)
+  notifyOnSale  Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  userId     String
+  rating     Int
+  title      String?
+  comment    String?
+  isVerified Boolean  @default(false)
+  isHelpful  Int      @default(0)
+  images     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@map("reviews")
+}
+
+model RecentlyViewed {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("recently_viewed")
+}
+
+model ProductRecommendation {
+  id            String @id @default(cuid())
+  productId     String
+  recommendedId String
+  score         Float  @default(0)
+  type          String // "similar", "frequently_bought", "viewed_together"
+
+  product     Product @relation("ProductRecommendations", fields: [productId], references: [id], onDelete: Cascade)
+  recommended Product @relation("RecommendedProducts", fields: [recommendedId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, recommendedId, type])
+  @@map("product_recommendations")
+}
+
+model InventoryAlert {
+  id        String   @id @default(cuid())
+  productId String?
+  variantId String?
+  type      String   // "low_stock", "out_of_stock"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("inventory_alerts")
+}
+
+model SavedForLater {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  variantId String?
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId, variantId])
+  @@map("saved_for_later")
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  status    String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+model ReturnRequest {
+  id          String   @id @default(cuid())
+  orderId     String
+  userId      String
+  reason      String
+  description String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED
+  images      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order            @relation(fields: [orderId], references: [id])
+  user  User             @relation(fields: [userId], references: [id])
+  items ReturnRequestItem[]
+
+  @@map("return_requests")
+}
+
+model ReturnRequestItem {
+  id              String @id @default(cuid())
+  returnRequestId String
+  orderItemId     String
+  reason          String
+  condition       String?
+
+  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id])
+
+  @@map("return_request_items")
+}
+
+model Payment {
+  id                String    @id @default(cuid())
+  orderId           String
+  checkoutRequestId String    @unique
+  merchantRequestId String?
+  amount            Float
+  phoneNumber       String
+  status            String    @default("PENDING")
+  paymentMethod     String    @default("MPESA")
+  mpesaReceiptNumber String?
+  transactionDate   DateTime?
+  failureReason     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+  refunds Refund[]
+  retries PaymentRetry[]
+
+  @@map("payments")
+}
+
+model Refund {
+  id        String   @id @default(cuid())
+  paymentId String
+  orderId   String
+  amount    Float
+  reason    String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@map("refunds")
+}
+
+model PaymentRetry {
+  id        String   @id @default(cuid())
+  paymentId String
+  attempt   Int
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@map("payment_retries")
+}
+
+model PartialPayment {
+  id                String    @id @default(cuid())
+  orderId           String
+  installmentNumber Int
+  amount            Float
+  dueDate           DateTime
+  status            String    @default("PENDING")
+  paidAt            DateTime?
+  createdAt         DateTime  @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("partial_payments")
+}
+
+model PaymentSession {
+  id            String   @id @default(cuid())
+  sessionId     String   @unique
+  orderId       String
+  paymentMethod String
+  status        String   @default("ACTIVE")
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@map("payment_sessions")
+}
+
+model DeliveryLocation {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  tier        Int
+  price       Float
+  description String?
+  isActive    Boolean @default(true)
+  estimatedDays Int   @default(3)
+  expressAvailable Boolean @default(false)
+  expressPrice Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("delivery_locations")
+}
+
+model DeliveryTracking {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  status    String   @default("PENDING")
+  location  String?
+  notes     String?
+  photoProof String?
+  deliveredAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+  updates DeliveryUpdate[]
+
+  @@map("delivery_tracking")
+}
+
+model DeliveryUpdate {
+  id        String   @id @default(cuid())
+  trackingId String
+  status    String
+  location  String?
+  notes     String?
+  timestamp DateTime @default(now())
+
+  tracking DeliveryTracking @relation(fields: [trackingId], references: [id])
+
+  @@map("delivery_updates")
+}
+
+model DeliverySchedule {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  preferredDate DateTime
+  timeSlot    String
+  instructions String?
+  isRescheduled Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("delivery_schedules")
+}
+
+model DeliveryFeedback {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("delivery_feedback")
+}
+
+model PromoCode {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  discountType    String   // "PERCENTAGE" or "FIXED"
+  discountValue   Float
+  minimumAmount   Float?
+  maxDiscountAmount Float?
+  usageLimit      Int?
+  usedCount       Int      @default(0)
+  allowMultipleUse Boolean @default(false)
+  isActive        Boolean  @default(true)
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orders Order[]
+  usages PromoCodeUsage[]
+
+  @@map("promo_codes")
+}
+
+model PromoCodeUsage {
+  id          String   @id @default(cuid())
+  userId      String
+  promoCodeId String
+  orderId     String?
+  usedAt      DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+
+  @@unique([userId, promoCodeId])
+  @@map("promo_code_usage")
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  message   String
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority  String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  category  String   // ORDER, PRODUCT, PAYMENT, DELIVERY, ACCOUNT, OTHER
+  orderId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  replies SupportTicketReply[]
+
+  @@map("support_tickets")
+}
+
+model SupportTicketReply {
+  id       String   @id @default(cuid())
+  ticketId String
+  message  String
+  isStaff  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id])
+
+  @@map("support_ticket_replies")
+}
+
+model LoyaltyTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int
+  type        String   // EARNED, REDEEMED, EXPIRED, BONUS
+  description String
+  orderId     String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("loyalty_transactions")
+}
+
+model WishlistNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  type      String   // BACK_IN_STOCK, PRICE_DROP, ON_SALE
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("wishlist_notifications")
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  number    String   @unique
+  pdfPath   String?
+  createdAt DateTime @default(now())
+
+  @@map("invoices")
+}
+
+model WhatsAppMessage {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  message     String
+  type        String   // ORDER_CONFIRMATION, DELIVERY_UPDATE, ABANDONED_CART, PROMOTIONAL, SUPPORT
+  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, FAILED
+  orderId     String?
+  userId      String?
+  templateId  String?
+  mediaUrl    String?
+  failureReason String?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("whatsapp_messages")
+}
+
+model WhatsAppTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String   // ORDER_CONFIRMATION, DELIVERY_UPDATE, ABANDONED_CART, etc.
+  template    String   // Message template with placeholders
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("whatsapp_templates")
+}
+
+model WhatsAppContact {
+  id          String   @id @default(cuid())
+  phoneNumber String   @unique
+  name        String?
+  userId      String?
+  isOptedIn   Boolean  @default(true)
+  lastMessageAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("whatsapp_contacts")
+}
+
+model AbandonedCart {
+  id          String   @id @default(cuid())
+  userId      String?
+  sessionId   String?
+  phoneNumber String?
+  cartData    String   // JSON string of cart items
+  remindersSent Int    @default(0)
+  lastReminderAt DateTime?
+  isRecovered Boolean  @default(false)
+  recoveredAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("abandoned_carts")
+}

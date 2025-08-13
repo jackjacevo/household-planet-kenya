@@ -1,0 +1,482 @@
+import { CartService } from './cart.service';
+import { AddToCartDto } from './dto/add-to-cart.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
+import { ApplyPromoDto } from './dto/apply-promo.dto';
+import { SaveForLaterDto } from './dto/save-for-later.dto';
+export declare class CartController {
+    private cartService;
+    constructor(cartService: CartService);
+    addToCart(userId: string, addToCartDto: AddToCartDto): Promise<{
+        product: {
+            name: string;
+            id: string;
+            slug: string;
+            sku: string;
+            description: string | null;
+            shortDescription: string | null;
+            price: number;
+            comparePrice: number | null;
+            weight: number | null;
+            dimensions: string | null;
+            images: string | null;
+            categoryId: string;
+            brandId: string | null;
+            isActive: boolean;
+            isFeatured: boolean;
+            seoTitle: string | null;
+            seoDescription: string | null;
+            tags: string | null;
+            stock: number;
+            lowStockThreshold: number;
+            trackInventory: boolean;
+            averageRating: number | null;
+            totalReviews: number;
+            viewCount: number;
+            searchKeywords: string | null;
+            relatedProducts: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        variant: {
+            name: string;
+            id: string;
+            sku: string;
+            price: number;
+            isActive: boolean;
+            stock: number;
+            lowStockThreshold: number;
+            productId: string;
+            attributes: string | null;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    }>;
+    getCart(userId: string, promoCode?: string): Promise<{
+        items: ({
+            product: {
+                category: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                    description: string | null;
+                    isActive: boolean;
+                    image: string | null;
+                    parentId: string | null;
+                    sortOrder: number;
+                };
+            } & {
+                name: string;
+                id: string;
+                slug: string;
+                sku: string;
+                description: string | null;
+                shortDescription: string | null;
+                price: number;
+                comparePrice: number | null;
+                weight: number | null;
+                dimensions: string | null;
+                images: string | null;
+                categoryId: string;
+                brandId: string | null;
+                isActive: boolean;
+                isFeatured: boolean;
+                seoTitle: string | null;
+                seoDescription: string | null;
+                tags: string | null;
+                stock: number;
+                lowStockThreshold: number;
+                trackInventory: boolean;
+                averageRating: number | null;
+                totalReviews: number;
+                viewCount: number;
+                searchKeywords: string | null;
+                relatedProducts: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+            variant: {
+                name: string;
+                id: string;
+                sku: string;
+                price: number;
+                isActive: boolean;
+                stock: number;
+                lowStockThreshold: number;
+                productId: string;
+                attributes: string | null;
+                size: string | null;
+                color: string | null;
+                material: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            productId: string;
+            userId: string;
+            variantId: string | null;
+            quantity: number;
+        })[];
+        total: number;
+        itemCount: number;
+    } | {
+        promo: {
+            promoCode: string;
+            discountType: string;
+            discountValue: number;
+            discount: number;
+            originalTotal: number;
+            finalTotal: number;
+            savings: number;
+        };
+        finalTotal: number;
+        items: ({
+            product: {
+                category: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                    description: string | null;
+                    isActive: boolean;
+                    image: string | null;
+                    parentId: string | null;
+                    sortOrder: number;
+                };
+            } & {
+                name: string;
+                id: string;
+                slug: string;
+                sku: string;
+                description: string | null;
+                shortDescription: string | null;
+                price: number;
+                comparePrice: number | null;
+                weight: number | null;
+                dimensions: string | null;
+                images: string | null;
+                categoryId: string;
+                brandId: string | null;
+                isActive: boolean;
+                isFeatured: boolean;
+                seoTitle: string | null;
+                seoDescription: string | null;
+                tags: string | null;
+                stock: number;
+                lowStockThreshold: number;
+                trackInventory: boolean;
+                averageRating: number | null;
+                totalReviews: number;
+                viewCount: number;
+                searchKeywords: string | null;
+                relatedProducts: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+            variant: {
+                name: string;
+                id: string;
+                sku: string;
+                price: number;
+                isActive: boolean;
+                stock: number;
+                lowStockThreshold: number;
+                productId: string;
+                attributes: string | null;
+                size: string | null;
+                color: string | null;
+                material: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            productId: string;
+            userId: string;
+            variantId: string | null;
+            quantity: number;
+        })[];
+        total: number;
+        itemCount: number;
+    } | {
+        promoError: any;
+        items: ({
+            product: {
+                category: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                    description: string | null;
+                    isActive: boolean;
+                    image: string | null;
+                    parentId: string | null;
+                    sortOrder: number;
+                };
+            } & {
+                name: string;
+                id: string;
+                slug: string;
+                sku: string;
+                description: string | null;
+                shortDescription: string | null;
+                price: number;
+                comparePrice: number | null;
+                weight: number | null;
+                dimensions: string | null;
+                images: string | null;
+                categoryId: string;
+                brandId: string | null;
+                isActive: boolean;
+                isFeatured: boolean;
+                seoTitle: string | null;
+                seoDescription: string | null;
+                tags: string | null;
+                stock: number;
+                lowStockThreshold: number;
+                trackInventory: boolean;
+                averageRating: number | null;
+                totalReviews: number;
+                viewCount: number;
+                searchKeywords: string | null;
+                relatedProducts: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+            variant: {
+                name: string;
+                id: string;
+                sku: string;
+                price: number;
+                isActive: boolean;
+                stock: number;
+                lowStockThreshold: number;
+                productId: string;
+                attributes: string | null;
+                size: string | null;
+                color: string | null;
+                material: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            productId: string;
+            userId: string;
+            variantId: string | null;
+            quantity: number;
+        })[];
+        total: number;
+        itemCount: number;
+    }>;
+    updateCartItem(userId: string, itemId: string, updateCartDto: UpdateCartDto): Promise<{
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    }>;
+    removeFromCart(userId: string, itemId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    }>;
+    clearCart(userId: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
+    moveToWishlist(userId: string, itemId: string): Promise<{
+        message: string;
+    }>;
+    saveForLater(userId: string, saveForLaterDto: SaveForLaterDto): Promise<{
+        product: {
+            name: string;
+            id: string;
+            slug: string;
+            sku: string;
+            description: string | null;
+            shortDescription: string | null;
+            price: number;
+            comparePrice: number | null;
+            weight: number | null;
+            dimensions: string | null;
+            images: string | null;
+            categoryId: string;
+            brandId: string | null;
+            isActive: boolean;
+            isFeatured: boolean;
+            seoTitle: string | null;
+            seoDescription: string | null;
+            tags: string | null;
+            stock: number;
+            lowStockThreshold: number;
+            trackInventory: boolean;
+            averageRating: number | null;
+            totalReviews: number;
+            viewCount: number;
+            searchKeywords: string | null;
+            relatedProducts: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        variant: {
+            name: string;
+            id: string;
+            sku: string;
+            price: number;
+            isActive: boolean;
+            stock: number;
+            lowStockThreshold: number;
+            productId: string;
+            attributes: string | null;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    }>;
+    getSavedForLater(userId: string): Promise<({
+        product: {
+            category: {
+                name: string;
+                id: string;
+                slug: string;
+                description: string | null;
+                isActive: boolean;
+                image: string | null;
+                parentId: string | null;
+                sortOrder: number;
+            };
+        } & {
+            name: string;
+            id: string;
+            slug: string;
+            sku: string;
+            description: string | null;
+            shortDescription: string | null;
+            price: number;
+            comparePrice: number | null;
+            weight: number | null;
+            dimensions: string | null;
+            images: string | null;
+            categoryId: string;
+            brandId: string | null;
+            isActive: boolean;
+            isFeatured: boolean;
+            seoTitle: string | null;
+            seoDescription: string | null;
+            tags: string | null;
+            stock: number;
+            lowStockThreshold: number;
+            trackInventory: boolean;
+            averageRating: number | null;
+            totalReviews: number;
+            viewCount: number;
+            searchKeywords: string | null;
+            relatedProducts: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        variant: {
+            name: string;
+            id: string;
+            sku: string;
+            price: number;
+            isActive: boolean;
+            stock: number;
+            lowStockThreshold: number;
+            productId: string;
+            attributes: string | null;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    })[]>;
+    moveBackToCart(userId: string, savedItemId: string): Promise<{
+        product: {
+            name: string;
+            id: string;
+            slug: string;
+            sku: string;
+            description: string | null;
+            shortDescription: string | null;
+            price: number;
+            comparePrice: number | null;
+            weight: number | null;
+            dimensions: string | null;
+            images: string | null;
+            categoryId: string;
+            brandId: string | null;
+            isActive: boolean;
+            isFeatured: boolean;
+            seoTitle: string | null;
+            seoDescription: string | null;
+            tags: string | null;
+            stock: number;
+            lowStockThreshold: number;
+            trackInventory: boolean;
+            averageRating: number | null;
+            totalReviews: number;
+            viewCount: number;
+            searchKeywords: string | null;
+            relatedProducts: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        variant: {
+            name: string;
+            id: string;
+            sku: string;
+            price: number;
+            isActive: boolean;
+            stock: number;
+            lowStockThreshold: number;
+            productId: string;
+            attributes: string | null;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    }>;
+    removeSavedItem(userId: string, savedItemId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        productId: string;
+        userId: string;
+        variantId: string | null;
+        quantity: number;
+    }>;
+    applyPromoCode(userId: string, applyPromoDto: ApplyPromoDto): Promise<{
+        promoCode: string;
+        discountType: string;
+        discountValue: number;
+        discount: number;
+        originalTotal: number;
+        finalTotal: number;
+        savings: number;
+    }>;
+}
