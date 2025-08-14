@@ -19,6 +19,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -55,7 +56,9 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -64,6 +67,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -77,6 +87,7 @@ export declare class ProductsService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -111,6 +122,8 @@ export declare class ProductsService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -119,6 +132,13 @@ export declare class ProductsService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -136,6 +156,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -189,7 +210,9 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -198,6 +221,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }) | {
@@ -214,6 +244,7 @@ export declare class ProductsService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -248,6 +279,8 @@ export declare class ProductsService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -256,6 +289,13 @@ export declare class ProductsService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -268,6 +308,7 @@ export declare class ProductsService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -302,6 +343,8 @@ export declare class ProductsService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -310,6 +353,13 @@ export declare class ProductsService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -335,6 +385,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -369,6 +420,8 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -376,6 +429,13 @@ export declare class ProductsService {
         totalReviews: number;
         viewCount: number;
         searchKeywords: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -386,6 +446,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -422,7 +483,9 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -431,6 +494,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -452,7 +522,9 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -461,6 +533,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -523,6 +602,7 @@ export declare class ProductsService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -574,6 +654,8 @@ export declare class ProductsService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -581,6 +663,13 @@ export declare class ProductsService {
             totalReviews: number;
             viewCount: number;
             searchKeywords: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -611,6 +700,7 @@ export declare class ProductsService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -662,6 +752,8 @@ export declare class ProductsService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -669,6 +761,13 @@ export declare class ProductsService {
             totalReviews: number;
             viewCount: number;
             searchKeywords: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -692,7 +791,7 @@ export declare class ProductsService {
         name: string;
         slug: string;
     }[]>;
-    createReview(productId: string, userId: string, createReviewDto: CreateReviewDto): Promise<{
+    createReview(productId: string, userId: string | number, createReviewDto: CreateReviewDto): Promise<{
         images: any;
         user: {
             name: string;
@@ -708,7 +807,7 @@ export declare class ProductsService {
         isVerified: boolean;
         isHelpful: number;
     }>;
-    getRecentlyViewed(userId: string): Promise<{
+    getRecentlyViewed(userId: string | number): Promise<{
         images: any;
         tags: any;
         viewedAt: Date;
@@ -718,6 +817,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -752,6 +852,8 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -760,6 +862,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -781,7 +890,9 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -790,6 +901,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     } | {
@@ -815,6 +933,7 @@ export declare class ProductsService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -835,7 +954,9 @@ export declare class ProductsService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
             tags: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -844,6 +965,13 @@ export declare class ProductsService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -856,6 +984,7 @@ export declare class ProductsService {
                     slug: string;
                     description: string | null;
                     isActive: boolean;
+                    metaDescription: string | null;
                     image: string | null;
                     parentId: string | null;
                     sortOrder: number;
@@ -876,7 +1005,9 @@ export declare class ProductsService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -885,6 +1016,13 @@ export declare class ProductsService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -936,6 +1074,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -970,6 +1109,8 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -978,6 +1119,13 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -989,6 +1137,7 @@ export declare class ProductsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -1009,7 +1158,9 @@ export declare class ProductsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -1018,13 +1169,20 @@ export declare class ProductsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    trackView(productId: string, userId: string): Promise<{
+    trackView(productId: string, userId: string | number): Promise<{
         success: boolean;
     }>;
-    removeFromRecentlyViewed(userId: string, productId: string): Promise<{
+    removeFromRecentlyViewed(userId: string | number, productId: string): Promise<{
         success: boolean;
     }>;
     private updateProductRating;

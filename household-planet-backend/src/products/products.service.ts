@@ -189,12 +189,13 @@ export class ProductsService {
     return this.searchService.getSearchSuggestions(query);
   }
 
-  async createReview(productId: string, userId: string, createReviewDto: CreateReviewDto) {
+  async createReview(productId: string, userId: string | number, createReviewDto: CreateReviewDto) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const review = await this.prisma.review.create({
       data: {
         ...createReviewDto,
         productId,
-        userId,
+        userId: userIdStr,
         images: createReviewDto.images ? JSON.stringify(createReviewDto.images) : null
       },
       include: { user: { select: { name: true } } }
@@ -209,8 +210,9 @@ export class ProductsService {
     };
   }
 
-  async getRecentlyViewed(userId: string) {
-    return this.recommendationsService.getRecentlyViewed(userId);
+  async getRecentlyViewed(userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
+    return this.recommendationsService.getRecentlyViewed(userIdStr);
   }
 
   async updateStock(productId: string, variantId: string | null, quantity: number, operation: 'add' | 'subtract') {
@@ -283,7 +285,9 @@ export class ProductsService {
     }));
   }
 
-  async trackView(productId: string, userId: string) {
+  async trackView(productId: string, userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
+    
     // Update product view count
     await this.prisma.product.update({
       where: { id: productId },
@@ -294,7 +298,7 @@ export class ProductsService {
     await this.prisma.recentlyViewed.upsert({
       where: {
         userId_productId: {
-          userId,
+          userId: userIdStr,
           productId
         }
       },
@@ -302,7 +306,7 @@ export class ProductsService {
         viewedAt: new Date()
       },
       create: {
-        userId,
+        userId: userIdStr,
         productId,
         viewedAt: new Date()
       }
@@ -311,11 +315,13 @@ export class ProductsService {
     return { success: true };
   }
 
-  async removeFromRecentlyViewed(userId: string, productId: string) {
+  async removeFromRecentlyViewed(userId: string | number, productId: string) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
+    
     await this.prisma.recentlyViewed.delete({
       where: {
         userId_productId: {
-          userId,
+          userId: userIdStr,
           productId
         }
       }

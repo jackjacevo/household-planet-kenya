@@ -17,6 +17,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -53,7 +54,9 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -62,6 +65,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -75,6 +85,7 @@ export declare class ProductsController {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -109,6 +120,8 @@ export declare class ProductsController {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -117,6 +130,13 @@ export declare class ProductsController {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -138,6 +158,7 @@ export declare class ProductsController {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -189,6 +210,8 @@ export declare class ProductsController {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -196,6 +219,13 @@ export declare class ProductsController {
             totalReviews: number;
             viewCount: number;
             searchKeywords: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -244,6 +274,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -278,6 +309,8 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -286,6 +319,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -296,6 +336,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -349,7 +390,9 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -358,6 +401,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }) | {
@@ -374,6 +424,7 @@ export declare class ProductsController {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -408,6 +459,8 @@ export declare class ProductsController {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -416,6 +469,13 @@ export declare class ProductsController {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -428,6 +488,7 @@ export declare class ProductsController {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -462,6 +523,8 @@ export declare class ProductsController {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -470,6 +533,13 @@ export declare class ProductsController {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -495,6 +565,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -529,6 +600,8 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -536,6 +609,13 @@ export declare class ProductsController {
         totalReviews: number;
         viewCount: number;
         searchKeywords: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -547,6 +627,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -567,7 +648,9 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -576,6 +659,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -611,6 +701,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -645,6 +736,8 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -653,6 +746,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -663,6 +763,7 @@ export declare class ProductsController {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -699,7 +800,9 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -708,6 +811,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -729,7 +839,9 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -738,6 +850,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -823,7 +942,9 @@ export declare class ProductsController {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
         tags: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -832,6 +953,13 @@ export declare class ProductsController {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     } | {
@@ -857,6 +985,7 @@ export declare class ProductsController {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -877,7 +1006,9 @@ export declare class ProductsController {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
             tags: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -886,6 +1017,13 @@ export declare class ProductsController {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -898,6 +1036,7 @@ export declare class ProductsController {
                     slug: string;
                     description: string | null;
                     isActive: boolean;
+                    metaDescription: string | null;
                     image: string | null;
                     parentId: string | null;
                     sortOrder: number;
@@ -918,7 +1057,9 @@ export declare class ProductsController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -927,6 +1068,13 @@ export declare class ProductsController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };

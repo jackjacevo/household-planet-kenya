@@ -59,6 +59,7 @@ let WhatsAppService = WhatsAppService_1 = class WhatsAppService {
         return this.isReady;
     }
     async sendMessage(phoneNumber, message, type, orderId, userId, mediaUrl) {
+        const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
         try {
             if (!this.isReady) {
                 throw new Error('WhatsApp client is not ready');
@@ -72,13 +73,13 @@ let WhatsAppService = WhatsAppService_1 = class WhatsAppService {
             else {
                 sentMessage = await this.client.sendMessage(formattedNumber, message);
             }
-            await this.logMessage(phoneNumber, message, type, 'SENT', orderId, userId, mediaUrl);
+            await this.logMessage(phoneNumber, message, type, 'SENT', orderId, userIdStr, mediaUrl);
             this.logger.log(`Message sent to ${phoneNumber}: ${message.substring(0, 50)}...`);
             return true;
         }
         catch (error) {
             this.logger.error(`Failed to send message to ${phoneNumber}:`, error);
-            await this.logMessage(phoneNumber, message, type, 'FAILED', orderId, userId, mediaUrl, error.message);
+            await this.logMessage(phoneNumber, message, type, 'FAILED', orderId, userIdStr, mediaUrl, error.message);
             return false;
         }
     }
@@ -144,10 +145,11 @@ let WhatsAppService = WhatsAppService_1 = class WhatsAppService {
         }
     }
     async getMessageHistory(phoneNumber, userId, limit = 50) {
+        const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
         return this.prisma.whatsAppMessage.findMany({
             where: {
                 ...(phoneNumber && { phoneNumber }),
-                ...(userId && { userId }),
+                ...(userIdStr && { userId: userIdStr }),
             },
             orderBy: { createdAt: 'desc' },
             take: limit,

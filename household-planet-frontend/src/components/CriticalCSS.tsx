@@ -11,6 +11,13 @@ export default function CriticalCSS() {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(12px);
         border-bottom: 1px solid #e5e7eb;
+        contain: layout style;
+      }
+      
+      /* Font optimization */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-display: swap;
       }
       
       .critical-hero {
@@ -19,6 +26,7 @@ export default function CriticalCSS() {
         display: flex;
         align-items: center;
         justify-content: center;
+        contain: layout style paint;
       }
       
       .critical-grid {
@@ -34,6 +42,14 @@ export default function CriticalCSS() {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         transition: transform 0.2s ease;
+        content-visibility: auto;
+        contain-intrinsic-size: 280px 200px;
+      }
+      
+      /* Image optimization */
+      img {
+        content-visibility: auto;
+        contain-intrinsic-size: 300px 200px;
       }
       
       .critical-button {
@@ -61,6 +77,20 @@ export default function CriticalCSS() {
         
         .critical-hero {
           min-height: 50vh;
+        }
+        
+        body {
+          font-size: 14px;
+        }
+      }
+      
+      /* Reduce motion for accessibility */
+      @media (prefers-reduced-motion: reduce) {
+        .critical-card {
+          transition: none;
+        }
+        .critical-button {
+          transition: none;
         }
       }
     `}</style>

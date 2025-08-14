@@ -8,7 +8,7 @@ export declare class CartService {
     private prisma;
     private abandonedCartService;
     constructor(prisma: PrismaService, abandonedCartService: AbandonedCartService);
-    addToCart(userId: string, addToCartDto: AddToCartDto): Promise<{
+    addToCart(userId: string | number, addToCartDto: AddToCartDto): Promise<{
         product: {
             name: string;
             id: string;
@@ -27,7 +27,9 @@ export declare class CartService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
             tags: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -36,6 +38,13 @@ export declare class CartService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -61,7 +70,7 @@ export declare class CartService {
         variantId: string | null;
         quantity: number;
     }>;
-    getCart(userId: string): Promise<{
+    getCart(userId: string | number): Promise<{
         items: ({
             product: {
                 category: {
@@ -70,6 +79,7 @@ export declare class CartService {
                     slug: string;
                     description: string | null;
                     isActive: boolean;
+                    metaDescription: string | null;
                     image: string | null;
                     parentId: string | null;
                     sortOrder: number;
@@ -92,7 +102,9 @@ export declare class CartService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -101,6 +113,13 @@ export declare class CartService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -129,7 +148,7 @@ export declare class CartService {
         total: number;
         itemCount: number;
     }>;
-    updateCartItem(userId: string, itemId: string, updateCartDto: UpdateCartDto): Promise<{
+    updateCartItem(userId: string | number, itemId: string, updateCartDto: UpdateCartDto): Promise<{
         id: string;
         createdAt: Date;
         productId: string;
@@ -137,7 +156,7 @@ export declare class CartService {
         variantId: string | null;
         quantity: number;
     }>;
-    removeFromCart(userId: string, itemId: string): Promise<{
+    removeFromCart(userId: string | number, itemId: string): Promise<{
         id: string;
         createdAt: Date;
         productId: string;
@@ -145,8 +164,8 @@ export declare class CartService {
         variantId: string | null;
         quantity: number;
     }>;
-    clearCart(userId: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
-    moveToWishlist(userId: string, itemId: string): Promise<{
+    clearCart(userId: string | number): Promise<import(".prisma/client").Prisma.BatchPayload>;
+    moveToWishlist(userId: string | number, itemId: string): Promise<{
         message: string;
     }>;
     saveForLater(userId: string, saveForLaterDto: SaveForLaterDto): Promise<{
@@ -168,7 +187,9 @@ export declare class CartService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
             tags: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -177,6 +198,13 @@ export declare class CartService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -210,6 +238,7 @@ export declare class CartService {
                 slug: string;
                 description: string | null;
                 isActive: boolean;
+                metaDescription: string | null;
                 image: string | null;
                 parentId: string | null;
                 sortOrder: number;
@@ -232,7 +261,9 @@ export declare class CartService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
             tags: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -241,6 +272,13 @@ export declare class CartService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -285,7 +323,9 @@ export declare class CartService {
             isFeatured: boolean;
             seoTitle: string | null;
             seoDescription: string | null;
+            metaDescription: string | null;
             tags: string | null;
+            keywords: string | null;
             stock: number;
             lowStockThreshold: number;
             trackInventory: boolean;
@@ -294,6 +334,13 @@ export declare class CartService {
             viewCount: number;
             searchKeywords: string | null;
             relatedProducts: string | null;
+            ageRestricted: boolean;
+            minimumAge: number | null;
+            warrantyPeriod: string | null;
+            warrantyType: string | null;
+            warrantyTerms: string | null;
+            geographicRestrictions: string | null;
+            restrictedRegions: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -337,6 +384,7 @@ export declare class CartService {
                     slug: string;
                     description: string | null;
                     isActive: boolean;
+                    metaDescription: string | null;
                     image: string | null;
                     parentId: string | null;
                     sortOrder: number;
@@ -359,7 +407,9 @@ export declare class CartService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -368,6 +418,13 @@ export declare class CartService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -414,6 +471,7 @@ export declare class CartService {
                     slug: string;
                     description: string | null;
                     isActive: boolean;
+                    metaDescription: string | null;
                     image: string | null;
                     parentId: string | null;
                     sortOrder: number;
@@ -436,7 +494,9 @@ export declare class CartService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -445,6 +505,13 @@ export declare class CartService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -482,6 +549,7 @@ export declare class CartService {
                     slug: string;
                     description: string | null;
                     isActive: boolean;
+                    metaDescription: string | null;
                     image: string | null;
                     parentId: string | null;
                     sortOrder: number;
@@ -504,7 +572,9 @@ export declare class CartService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -513,6 +583,13 @@ export declare class CartService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };

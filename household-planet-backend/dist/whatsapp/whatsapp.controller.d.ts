@@ -35,8 +35,8 @@ export declare class WhatsAppController {
         createdAt: Date;
         updatedAt: Date;
         userId: string | null;
-        message: string;
         phoneNumber: string;
+        message: string;
         type: string;
         status: string;
         orderId: string | null;

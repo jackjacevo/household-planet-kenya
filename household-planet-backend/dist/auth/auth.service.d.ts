@@ -7,11 +7,19 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { SendPhoneVerificationDto, VerifyPhoneDto } from './dto/verify-phone.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { GuestCartService } from '../cart/guest-cart.service';
+import { AuthResponse } from '../types/user.interface';
+import { InputSanitizerService } from '../security/input-sanitizer.service';
+import { SecureLoggerService } from '../security/secure-logger.service';
 export declare class AuthService {
     private prisma;
     private jwtService;
     private guestCartService;
-    constructor(prisma: PrismaService, jwtService: JwtService, guestCartService: GuestCartService);
+    private sanitizer;
+    private secureLogger;
+    private readonly loginAttempts;
+    private readonly maxLoginAttempts;
+    private readonly lockoutDuration;
+    constructor(prisma: PrismaService, jwtService: JwtService, guestCartService: GuestCartService, sanitizer: InputSanitizerService, secureLogger: SecureLoggerService);
     register(registerDto: RegisterDto): Promise<{
         user: {
             name: string;
@@ -25,17 +33,7 @@ export declare class AuthService {
         };
         message: string;
     }>;
-    login(loginDto: LoginDto, guestCartItems?: any[]): Promise<{
-        accessToken: string;
-        refreshToken: string;
-        user: {
-            id: string;
-            email: string;
-            name: string;
-            role: string;
-            emailVerified: boolean;
-        };
-    }>;
+    login(loginDto: LoginDto, guestCartItems?: any[]): Promise<AuthResponse>;
     verifyEmail(token: string): Promise<{
         message: string;
     }>;
@@ -48,10 +46,10 @@ export declare class AuthService {
     refreshToken(refreshToken: string): Promise<{
         accessToken: string;
     }>;
-    logout(userId: string): Promise<{
+    logout(userId: string | number): Promise<{
         message: string;
     }>;
-    changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<{
+    changePassword(userId: string | number, changePasswordDto: ChangePasswordDto): Promise<{
         message: string;
     }>;
     sendPhoneVerification(sendPhoneVerificationDto: SendPhoneVerificationDto): Promise<{
@@ -76,4 +74,7 @@ export declare class AuthService {
     }>;
     private generateToken;
     private generatePhoneCode;
+    private isAccountLocked;
+    private recordFailedLogin;
+    private clearFailedLogins;
 }

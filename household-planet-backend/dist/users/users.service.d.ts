@@ -3,7 +3,7 @@ import { UpdateProfileDto, AddAddressDto } from './dto/update-profile.dto';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<{
+    updateProfile(userId: string | number, updateProfileDto: UpdateProfileDto): Promise<{
         user: {
             name: string;
             email: string;
@@ -17,7 +17,7 @@ export declare class UsersService {
             phoneVerified: boolean;
         };
     }>;
-    getProfile(userId: string): Promise<{
+    getProfile(userId: string | number): Promise<{
         user: {
             name: string;
             email: string;
@@ -43,7 +43,7 @@ export declare class UsersService {
             }[];
         };
     }>;
-    addAddress(userId: string, addAddressDto: AddAddressDto): Promise<{
+    addAddress(userId: string | number, addAddressDto: AddAddressDto): Promise<{
         address: {
             phone: string;
             id: string;
@@ -59,7 +59,7 @@ export declare class UsersService {
             isDefault: boolean;
         };
     }>;
-    getAddresses(userId: string): Promise<{
+    getAddresses(userId: string | number): Promise<{
         addresses: {
             phone: string;
             id: string;
@@ -75,7 +75,7 @@ export declare class UsersService {
             isDefault: boolean;
         }[];
     }>;
-    updateAddress(userId: string, addressId: string, updateAddressDto: AddAddressDto): Promise<{
+    updateAddress(userId: string | number, addressId: string, updateAddressDto: AddAddressDto): Promise<{
         address: {
             phone: string;
             id: string;
@@ -91,16 +91,16 @@ export declare class UsersService {
             isDefault: boolean;
         };
     }>;
-    deleteAddress(userId: string, addressId: string): Promise<{
+    deleteAddress(userId: string | number, addressId: string): Promise<{
         message: string;
     }>;
-    verifyPhone(userId: string, token: string): Promise<{
+    verifyPhone(userId: string | number, token: string): Promise<{
         message: string;
     }>;
-    sendPhoneVerification(userId: string): Promise<{
+    sendPhoneVerification(userId: string | number): Promise<{
         message: string;
     }>;
-    getDashboardStats(userId: string): Promise<{
+    getDashboardStats(userId: string | number): Promise<{
         loyaltyPoints: number;
         totalSpent: number;
         totalOrders: number;
@@ -114,7 +114,7 @@ export declare class UsersService {
         }[];
         memberSince: Date;
     }>;
-    updateSettings(userId: string, settings: {
+    updateSettings(userId: string | number, settings: {
         marketingEmails?: boolean;
         smsNotifications?: boolean;
         preferredLanguage?: string;
@@ -123,7 +123,7 @@ export declare class UsersService {
         marketingEmails: boolean;
         smsNotifications: boolean;
     }>;
-    getWishlist(userId: string): Promise<({
+    getWishlist(userId: string | number): Promise<({
         product: {
             name: string;
             id: string;
@@ -141,7 +141,7 @@ export declare class UsersService {
         notifyOnStock: boolean;
         notifyOnSale: boolean;
     })[]>;
-    addToWishlist(userId: string, productId: string): Promise<{
+    addToWishlist(userId: string | number, productId: string): Promise<{
         product: {
             name: string;
             id: string;
@@ -157,7 +157,7 @@ export declare class UsersService {
         notifyOnStock: boolean;
         notifyOnSale: boolean;
     }>;
-    removeFromWishlist(userId: string, productId: string): Promise<{
+    removeFromWishlist(userId: string | number, productId: string): Promise<{
         id: string;
         createdAt: Date;
         productId: string;

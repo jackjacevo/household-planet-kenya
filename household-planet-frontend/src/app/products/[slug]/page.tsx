@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { generateProductSchema } from '@/lib/seo';
+import SchemaMarkup from '@/components/SEO/SchemaMarkup';
+import Breadcrumbs from '@/components/SEO/Breadcrumbs';
 import ProductImageGallery from '@/components/products/ProductImageGallery';
 import ProductInfo from '@/components/products/ProductInfo';
 import ProductTabs from '@/components/products/ProductTabs';
@@ -127,16 +130,23 @@ export default function ProductDetailPage() {
     );
   }
 
+  const breadcrumbs = [
+    { name: 'Products', url: '/products' },
+    ...(product?.category ? [{ name: product.category.name, url: `/products?category=${product.category.name.toLowerCase()}` }] : []),
+    { name: product.name, url: `/products/${params.slug}` },
+  ];
+
+  const productSchema = generateProductSchema({
+    ...product,
+    stockQuantity: product.stock,
+    reviewCount: product.totalReviews,
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <SchemaMarkup schema={productSchema} />
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <a href="/" className="hover:text-blue-600">Home</a>
-          <span>/</span>
-          <a href="/products" className="hover:text-blue-600">Products</a>
-          <span>/</span>
-          <span className="text-gray-900">{product.name}</span>
-        </nav>
+        <Breadcrumbs items={breadcrumbs.slice(0, -1)} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <ProductImageGallery images={product.images} productName={product.name} />

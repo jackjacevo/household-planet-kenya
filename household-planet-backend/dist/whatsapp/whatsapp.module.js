@@ -10,8 +10,10 @@ exports.WhatsAppModule = void 0;
 const common_1 = require("@nestjs/common");
 const whatsapp_service_1 = require("./whatsapp.service");
 const whatsapp_controller_1 = require("./whatsapp.controller");
+const business_controller_1 = require("./business.controller");
 const abandoned_cart_service_1 = require("./abandoned-cart.service");
 const template_service_1 = require("./template.service");
+const business_service_1 = require("./business.service");
 const prisma_module_1 = require("../prisma/prisma.module");
 let WhatsAppModule = class WhatsAppModule {
 };
@@ -19,14 +21,19 @@ exports.WhatsAppModule = WhatsAppModule;
 exports.WhatsAppModule = WhatsAppModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
-        controllers: [whatsapp_controller_1.WhatsAppController],
+        controllers: [
+            whatsapp_controller_1.WhatsAppController,
+            business_controller_1.WhatsAppBusinessController,
+        ],
         providers: [
             whatsapp_service_1.WhatsAppService,
+            business_service_1.WhatsAppBusinessService,
             abandoned_cart_service_1.AbandonedCartService,
             template_service_1.WhatsAppTemplateService,
         ],
         exports: [
             whatsapp_service_1.WhatsAppService,
+            business_service_1.WhatsAppBusinessService,
             abandoned_cart_service_1.AbandonedCartService,
             template_service_1.WhatsAppTemplateService,
         ],

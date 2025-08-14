@@ -16,9 +16,19 @@ export default function PWAInstallPrompt() {
 
   useEffect(() => {
     // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone === true) {
       setIsInstalled(true);
       return;
+    }
+
+    // Check if user has dismissed recently
+    const lastDismissed = localStorage.getItem('pwa-install-dismissed');
+    if (lastDismissed) {
+      const daysSinceDismissed = (Date.now() - parseInt(lastDismissed)) / (1000 * 60 * 60 * 24);
+      if (daysSinceDismissed < 7) {
+        return; // Don't show for 7 days after dismissal
+      }
     }
 
     // Listen for install prompt
@@ -26,15 +36,34 @@ export default function PWAInstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       
-      // Show prompt after 30 seconds or on second visit
+      // Smart timing for showing prompt
+      const visitCount = parseInt(localStorage.getItem('pwa-visit-count') || '0') + 1;
+      localStorage.setItem('pwa-visit-count', visitCount.toString());
+      
       const installPromptShown = localStorage.getItem('pwa-install-prompt-shown');
+      
       if (!installPromptShown) {
-        setTimeout(() => setShowPrompt(true), 30000);
-      } else {
+        // First time: show after user engagement (scroll or 30 seconds)
+        const showAfterEngagement = () => {
+          setTimeout(() => setShowPrompt(true), 30000);
+        };
+        
+        const showOnScroll = () => {
+          if (window.scrollY > 500) {
+            setShowPrompt(true);
+            window.removeEventListener('scroll', showOnScroll);
+          }
+        };
+        
+        window.addEventListener('scroll', showOnScroll);
+        showAfterEngagement();
+        
+      } else if (visitCount >= 3) {
+        // Show on 3rd+ visit if not shown recently
         const lastShown = parseInt(installPromptShown);
         const daysSinceLastShown = (Date.now() - lastShown) / (1000 * 60 * 60 * 24);
-        if (daysSinceLastShown > 7) {
-          setTimeout(() => setShowPrompt(true), 5000);
+        if (daysSinceLastShown > 14) {
+          setTimeout(() => setShowPrompt(true), 10000);
         }
       }
     };
@@ -44,6 +73,8 @@ export default function PWAInstallPrompt() {
       setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
+      localStorage.removeItem('pwa-install-prompt-shown');
+      localStorage.removeItem('pwa-install-dismissed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -76,6 +107,7 @@ export default function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
+    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
     localStorage.setItem('pwa-install-prompt-shown', Date.now().toString());
   };
 
@@ -103,7 +135,7 @@ export default function PWAInstallPrompt() {
                   🏠 Install Household Planet
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">
-                  ✨ Shop offline • 🔔 Get notifications • ⚡ Faster loading
+                  ✨ Shop offline • 🔔 Get notifications • ⚡ Faster loading • 📱 App-like experience
                 </p>
               </div>
               
@@ -142,7 +174,7 @@ export default function PWAInstallPrompt() {
                   Install Household Planet
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Faster access and offline browsing
+                  Faster access, offline browsing, and push notifications
                 </p>
               </div>
               

@@ -10,15 +10,17 @@ import { EmailVerifiedGuard } from './guards/email-verified.guard';
 import { ActiveUserGuard } from './guards/active-user.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CartModule } from '../cart/cart.module';
+import { SecurityModule } from '../security/security.module';
 
 @Module({
   imports: [
     PrismaModule,
+    SecurityModule,
     forwardRef(() => CartModule),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '15m' },
     }),
   ],
   controllers: [AuthController],

@@ -1,16 +1,17 @@
 {
-  "name": "Household Planet Kenya",
+  "name": "Household Planet Kenya - Premium Home Essentials",
   "short_name": "HP Kenya",
-  "description": "Shop premium household essentials across Kenya with fast delivery",
-  "start_url": "/",
-  "display": "fullscreen",
-  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "description": "Shop premium household essentials across Kenya with fast delivery, offline browsing, and instant notifications",
+  "start_url": "/?utm_source=pwa",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en-KE",
-  "categories": ["shopping", "lifestyle"],
+  "dir": "ltr",
+  "categories": ["shopping", "lifestyle", "business", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -55,6 +56,12 @@
       "purpose": "maskable any"
     },
     {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
@@ -66,11 +73,12 @@
       "name": "Browse Products",
       "short_name": "Products",
       "description": "Browse our product catalog",
-      "url": "/products",
+      "url": "/products?utm_source=pwa_shortcut",
       "icons": [
         {
-          "src": "/icons/shortcut-products.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     },
@@ -78,50 +86,102 @@
       "name": "Shopping Cart",
       "short_name": "Cart",
       "description": "View your shopping cart",
-      "url": "/cart",
+      "url": "/cart?utm_source=pwa_shortcut",
       "icons": [
         {
-          "src": "/icons/shortcut-cart.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     },
     {
       "name": "My Account",
       "short_name": "Account",
-      "description": "Manage your account",
-      "url": "/dashboard",
+      "description": "Manage your account and orders",
+      "url": "/dashboard?utm_source=pwa_shortcut",
       "icons": [
         {
-          "src": "/icons/shortcut-account.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Quick Order",
+      "short_name": "Order",
+      "description": "Quick checkout for repeat orders",
+      "url": "/checkout?utm_source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     }
   ],
   "screenshots": [
     {
-      "src": "/screenshots/mobile-home.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "390x844",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Home screen with featured products"
     },
     {
-      "src": "/screenshots/mobile-products.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "390x844",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Product catalog with filters"
     },
     {
-      "src": "/screenshots/desktop-home.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Desktop shopping experience"
     }
   ],
   "prefer_related_applications": false,
   "related_applications": [],
   "edge_side_panel": {
     "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "web+householdplanet",
+      "url": "/?handler=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/csv": [".csv"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*"]
+        }
+      ]
+    }
   }
 }

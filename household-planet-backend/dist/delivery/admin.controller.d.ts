@@ -53,6 +53,9 @@ export declare class AdminDeliveryController {
                 preferredLanguage: string;
                 marketingEmails: boolean;
                 smsNotifications: boolean;
+                optedOutAt: Date | null;
+                phoneNumber: string | null;
+                privacySettings: string | null;
             };
         } & {
             deliveryLocation: string;
@@ -74,6 +77,7 @@ export declare class AdminDeliveryController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         updates: {
             id: string;

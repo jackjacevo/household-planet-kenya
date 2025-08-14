@@ -3,12 +3,6 @@ export declare class CustomerManagementController {
     private customerManagementService;
     constructor(customerManagementService: CustomerManagementService);
     getCustomers(filters: any): Promise<({
-        orders: {
-            id: string;
-            createdAt: Date;
-            status: string;
-            total: number;
-        }[];
         addresses: {
             phone: string;
             id: string;
@@ -23,13 +17,19 @@ export declare class CustomerManagementController {
             landmark: string | null;
             isDefault: boolean;
         }[];
-        supportTickets: {
-            id: string;
-            status: string;
-        }[];
         loyaltyTransactions: {
             type: string;
             points: number;
+        }[];
+        orders: {
+            id: string;
+            createdAt: Date;
+            status: string;
+            total: number;
+        }[];
+        supportTickets: {
+            id: string;
+            status: string;
         }[];
     } & {
         name: string;
@@ -62,6 +62,9 @@ export declare class CustomerManagementController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     })[]>;
     getCustomerStats(): Promise<{
         total: number;
@@ -111,6 +114,9 @@ export declare class CustomerManagementController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     })[]>;
     getCustomer(id: string): Promise<{
         reviews: ({
@@ -132,7 +138,9 @@ export declare class CustomerManagementController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -141,6 +149,13 @@ export declare class CustomerManagementController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -157,6 +172,29 @@ export declare class CustomerManagementController {
             isVerified: boolean;
             isHelpful: number;
         })[];
+        addresses: {
+            phone: string;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            type: string;
+            fullName: string;
+            county: string;
+            town: string;
+            street: string;
+            landmark: string | null;
+            isDefault: boolean;
+        }[];
+        loyaltyTransactions: {
+            id: string;
+            description: string;
+            createdAt: Date;
+            userId: string;
+            type: string;
+            orderId: string | null;
+            points: number;
+        }[];
         orders: ({
             items: ({
                 product: {
@@ -177,7 +215,9 @@ export declare class CustomerManagementController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -186,6 +226,13 @@ export declare class CustomerManagementController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -233,21 +280,8 @@ export declare class CustomerManagementController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         })[];
-        addresses: {
-            phone: string;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            type: string;
-            fullName: string;
-            county: string;
-            town: string;
-            street: string;
-            landmark: string | null;
-            isDefault: boolean;
-        }[];
         supportTickets: ({
             replies: {
                 id: string;
@@ -268,15 +302,6 @@ export declare class CustomerManagementController {
             subject: string;
             priority: string;
         })[];
-        loyaltyTransactions: {
-            id: string;
-            description: string;
-            createdAt: Date;
-            userId: string;
-            type: string;
-            orderId: string | null;
-            points: number;
-        }[];
     } & {
         name: string;
         email: string;
@@ -308,6 +333,9 @@ export declare class CustomerManagementController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     getCustomerInsights(id: string): Promise<{
         totalOrders: number;
@@ -377,6 +405,9 @@ export declare class CustomerManagementController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     addCustomerTag(id: string, data: {
         tag: string;
@@ -431,6 +462,9 @@ export declare class CustomerManagementController {
             preferredLanguage: string;
             marketingEmails: boolean;
             smsNotifications: boolean;
+            optedOutAt: Date | null;
+            phoneNumber: string | null;
+            privacySettings: string | null;
         };
     }>;
     createSupportTicket(id: string, data: any): Promise<{

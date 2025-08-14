@@ -21,17 +21,7 @@ export declare class AuthController {
         };
         message: string;
     }>;
-    login(loginDto: LoginDto): Promise<{
-        accessToken: string;
-        refreshToken: string;
-        user: {
-            id: string;
-            email: string;
-            name: string;
-            role: string;
-            emailVerified: boolean;
-        };
-    }>;
+    login(loginDto: LoginDto): Promise<import("../types").AuthResponse>;
     verifyEmail(token: string): Promise<{
         message: string;
     }>;

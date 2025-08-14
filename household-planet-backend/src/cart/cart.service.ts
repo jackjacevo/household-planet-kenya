@@ -5,6 +5,7 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 import { ApplyPromoDto } from './dto/apply-promo.dto';
 import { SaveForLaterDto } from './dto/save-for-later.dto';
 import { AbandonedCartService } from '../whatsapp/abandoned-cart.service';
+import { ensureStringUserId } from '../common/utils/type-conversion.util';
 
 @Injectable()
 export class CartService {
@@ -13,7 +14,8 @@ export class CartService {
     private abandonedCartService: AbandonedCartService
   ) {}
 
-  async addToCart(userId: string, addToCartDto: AddToCartDto) {
+  async addToCart(userId: string | number, addToCartDto: AddToCartDto) {
+    const userIdStr = ensureStringUserId(userId);
     const { productId, variantId, quantity } = addToCartDto;
 
     // Verify product exists
@@ -44,7 +46,7 @@ export class CartService {
     const existingItem = await this.prisma.cart.findUnique({
       where: {
         userId_productId_variantId: {
-          userId,
+          userId: userIdStr,
           productId,
           variantId: variantId || null
         }
@@ -67,14 +69,14 @@ export class CartService {
       });
 
       // Track for abandoned cart
-      await this.trackAbandonedCart(userId);
+      await this.trackAbandonedCart(userIdStr);
 
       return updatedItem;
     }
 
     const cartItem = await this.prisma.cart.create({
       data: {
-        userId,
+        userId: userIdStr,
         productId,
         variantId,
         quantity
@@ -86,14 +88,15 @@ export class CartService {
     });
 
     // Track for abandoned cart
-    await this.trackAbandonedCart(userId);
+    await this.trackAbandonedCart(userIdStr);
 
     return cartItem;
   }
 
-  async getCart(userId: string) {
+  async getCart(userId: string | number) {
+    const userIdStr = ensureStringUserId(userId);
     const cartItems = await this.prisma.cart.findMany({
-      where: { userId },
+      where: { userId: userIdStr },
       include: {
         product: {
           include: {
@@ -117,11 +120,12 @@ export class CartService {
     };
   }
 
-  async updateCartItem(userId: string, itemId: string, updateCartDto: UpdateCartDto) {
+  async updateCartItem(userId: string | number, itemId: string, updateCartDto: UpdateCartDto) {
+    const userIdStr = ensureStringUserId(userId);
     const { quantity } = updateCartDto;
 
     const cartItem = await this.prisma.cart.findFirst({
-      where: { id: itemId, userId },
+      where: { id: itemId, userId: userIdStr },
       include: {
         product: { include: { variants: true } },
         variant: true
@@ -156,14 +160,15 @@ export class CartService {
     });
 
     // Track for abandoned cart
-    await this.trackAbandonedCart(userId);
+    await this.trackAbandonedCart(userIdStr);
 
     return updatedItem;
   }
 
-  async removeFromCart(userId: string, itemId: string) {
+  async removeFromCart(userId: string | number, itemId: string) {
+    const userIdStr = ensureStringUserId(userId);
     const cartItem = await this.prisma.cart.findFirst({
-      where: { id: itemId, userId }
+      where: { id: itemId, userId: userIdStr }
     });
 
     if (!cartItem) {
@@ -173,15 +178,17 @@ export class CartService {
     return this.prisma.cart.delete({ where: { id: itemId } });
   }
 
-  async clearCart(userId: string) {
+  async clearCart(userId: string | number) {
+    const userIdStr = ensureStringUserId(userId);
     return this.prisma.cart.deleteMany({
-      where: { userId }
+      where: { userId: userIdStr }
     });
   }
 
-  async moveToWishlist(userId: string, itemId: string) {
+  async moveToWishlist(userId: string | number, itemId: string) {
+    const userIdStr = ensureStringUserId(userId);
     const cartItem = await this.prisma.cart.findFirst({
-      where: { id: itemId, userId }
+      where: { id: itemId, userId: userIdStr }
     });
 
     if (!cartItem) {
@@ -192,12 +199,12 @@ export class CartService {
     await this.prisma.wishlist.upsert({
       where: {
         userId_productId: {
-          userId,
+          userId: userIdStr,
           productId: cartItem.productId
         }
       },
       create: {
-        userId,
+        userId: userIdStr,
         productId: cartItem.productId
       },
       update: {}

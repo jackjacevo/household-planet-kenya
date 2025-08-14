@@ -72,8 +72,9 @@ let RecommendationsService = class RecommendationsService {
         }));
     }
     async getRecentlyViewed(userId, limit = 10) {
+        const userIdStr = typeof userId === 'string' ? userId : String(userId);
         const recentlyViewed = await this.prisma.recentlyViewed.findMany({
-            where: { userId },
+            where: { userId: userIdStr },
             include: {
                 product: {
                     include: {
@@ -98,12 +99,13 @@ let RecommendationsService = class RecommendationsService {
             data: { viewCount: { increment: 1 } }
         });
         if (userId) {
+            const userIdStr = typeof userId === 'string' ? userId : String(userId);
             await this.prisma.recentlyViewed.upsert({
                 where: {
-                    userId_productId: { userId, productId }
+                    userId_productId: { userId: userIdStr, productId }
                 },
                 update: { viewedAt: new Date() },
-                create: { userId, productId }
+                create: { userId: userIdStr, productId }
             });
         }
     }

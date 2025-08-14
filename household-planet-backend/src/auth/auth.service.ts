@@ -10,13 +10,28 @@ import { SendPhoneVerificationDto, VerifyPhoneDto } from './dto/verify-phone.dto
 import { SocialLoginDto, SocialUserDto } from './dto/social-login.dto';
 import { UserRole } from '../common/enums';
 import { GuestCartService } from '../cart/guest-cart.service';
+import { ensureStringUserId } from '../common/utils/type-conversion.util';
+import { AuthResponse, JwtUser } from '../types/user.interface';
+import { InputSanitizerService } from '../security/input-sanitizer.service';
+import { SecureLoggerService } from '../security/secure-logger.service';
+
+interface LoginAttempt {
+  count: number;
+  lastAttempt: Date;
+}
 
 @Injectable()
 export class AuthService {
+  private readonly loginAttempts = new Map<string, LoginAttempt>();
+  private readonly maxLoginAttempts = 5;
+  private readonly lockoutDuration = 15 * 60 * 1000; // 15 minutes
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private guestCartService: GuestCartService,
+    private sanitizer: InputSanitizerService,
+    private secureLogger: SecureLoggerService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -71,18 +86,25 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto, guestCartItems?: any[]) {
+  async login(loginDto: LoginDto, guestCartItems?: any[]): Promise<AuthResponse> {
+    if (this.isAccountLocked(loginDto.email)) {
+      throw new UnauthorizedException('Account temporarily locked due to too many failed attempts');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
     });
 
     if (!user || !await bcrypt.compare(loginDto.password, user.password)) {
+      this.recordFailedLogin(loginDto.email);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (!user.isActive) {
       throw new UnauthorizedException('Account is deactivated');
     }
+
+    this.clearFailedLogins(loginDto.email);
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -112,6 +134,8 @@ export class AuthService {
         name: user.name,
         role: user.role,
         emailVerified: user.emailVerified,
+        isActive: user.isActive,
+        phoneVerified: user.phoneVerified,
       },
     };
   }
@@ -208,18 +232,20 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string) {
+  async logout(userId: string | number) {
+    const userIdStr = ensureStringUserId(userId);
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: userIdStr },
       data: { refreshToken: null },
     });
 
     return { message: 'Logged out successfully' };
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+  async changePassword(userId: string | number, changePasswordDto: ChangePasswordDto) {
+    const userIdStr = ensureStringUserId(userId);
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userIdStr },
     });
 
     if (!user) {
@@ -238,7 +264,7 @@ export class AuthService {
     const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 12);
 
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: userIdStr },
       data: { password: hashedNewPassword },
     });
 
@@ -388,5 +414,29 @@ export class AuthService {
 
   private generatePhoneCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private isAccountLocked(email: string): boolean {
+    const attempts = this.loginAttempts.get(email);
+    if (!attempts) return false;
+    
+    const timeSinceLastAttempt = Date.now() - attempts.lastAttempt.getTime();
+    if (timeSinceLastAttempt > this.lockoutDuration) {
+      this.loginAttempts.delete(email);
+      return false;
+    }
+    
+    return attempts.count >= this.maxLoginAttempts;
+  }
+
+  private recordFailedLogin(email: string): void {
+    const attempts = this.loginAttempts.get(email) || { count: 0, lastAttempt: new Date() };
+    attempts.count++;
+    attempts.lastAttempt = new Date();
+    this.loginAttempts.set(email, attempts);
+  }
+
+  private clearFailedLogins(email: string): void {
+    this.loginAttempts.delete(email);
   }
 }

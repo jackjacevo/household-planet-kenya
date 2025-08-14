@@ -26,7 +26,17 @@ const delivery_module_1 = require("./delivery/delivery.module");
 const support_module_1 = require("./support/support.module");
 const admin_module_1 = require("./admin/admin.module");
 const whatsapp_module_1 = require("./whatsapp/whatsapp.module");
+const chat_module_1 = require("./chat/chat.module");
+const email_module_1 = require("./email/email.module");
+const sms_module_1 = require("./sms/sms.module");
+const content_module_1 = require("./content/content.module");
+const ab_testing_module_1 = require("./ab-testing/ab-testing.module");
+const security_module_1 = require("./security/security.module");
+const file_upload_module_1 = require("./file-upload/file-upload.module");
+const api_security_module_1 = require("./api-security/api-security.module");
 const jwt_auth_guard_1 = require("./auth/guards/jwt-auth.guard");
+const security_guard_1 = require("./security/guards/security.guard");
+const csrf_guard_1 = require("./security/guards/csrf.guard");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -38,6 +48,9 @@ exports.AppModule = AppModule = __decorate([
                 serveRoot: '/uploads',
             }),
             schedule_1.ScheduleModule.forRoot(),
+            security_module_1.SecurityModule,
+            file_upload_module_1.FileUploadModule,
+            api_security_module_1.ApiSecurityModule,
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
@@ -49,14 +62,27 @@ exports.AppModule = AppModule = __decorate([
             delivery_module_1.DeliveryModule,
             support_module_1.SupportModule,
             admin_module_1.AdminModule,
-            whatsapp_module_1.WhatsAppModule
+            whatsapp_module_1.WhatsAppModule,
+            chat_module_1.ChatModule,
+            email_module_1.EmailModule,
+            sms_module_1.SmsModule,
+            content_module_1.ContentModule,
+            ab_testing_module_1.AbTestingModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [
             app_service_1.AppService,
             {
                 provide: core_1.APP_GUARD,
+                useClass: security_guard_1.SecurityGuard,
+            },
+            {
+                provide: core_1.APP_GUARD,
                 useClass: jwt_auth_guard_1.JwtAuthGuard,
+            },
+            {
+                provide: core_1.APP_GUARD,
+                useClass: csrf_guard_1.CsrfGuard,
             },
         ],
     })

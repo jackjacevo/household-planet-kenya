@@ -42,6 +42,9 @@ export declare class StaffManagementService {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     updateStaffRole(userId: string, role: string): Promise<{
         name: string;
@@ -74,6 +77,9 @@ export declare class StaffManagementService {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     deactivateStaff(userId: string): Promise<{
         name: string;
@@ -106,9 +112,30 @@ export declare class StaffManagementService {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     getStaffPermissions(role: string): Promise<any>;
-    logActivity(userId: string, action: string, details: any): Promise<number>;
-    getActivityLog(filters?: any): Promise<unknown>;
+    logActivity(userId: string, action: string, details: any): Promise<{
+        id: string;
+        userId: string | null;
+        status: string | null;
+        score: number | null;
+        timestamp: Date;
+        action: string;
+        details: string | null;
+        ipAddress: string | null;
+    }>;
+    getActivityLog(filters?: any): Promise<{
+        id: string;
+        userId: string | null;
+        status: string | null;
+        score: number | null;
+        timestamp: Date;
+        action: string;
+        details: string | null;
+        ipAddress: string | null;
+    }[]>;
     private generateId;
 }

@@ -7,13 +7,14 @@ import { AddressType } from '../common/enums';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+  async updateProfile(userId: string | number, updateProfileDto: UpdateProfileDto) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     // Check if phone is being updated and already exists
     if (updateProfileDto.phone) {
       const existingPhone = await this.prisma.user.findFirst({
         where: { 
           phone: updateProfileDto.phone,
-          NOT: { id: userId }
+          NOT: { id: userIdStr }
         },
       });
       if (existingPhone) {
@@ -27,7 +28,7 @@ export class UsersService {
     };
 
     const user = await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: userIdStr },
       data: updateData,
       select: {
         id: true,
@@ -46,9 +47,10 @@ export class UsersService {
     return { user };
   }
 
-  async getProfile(userId: string) {
+  async getProfile(userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userIdStr },
       select: {
         id: true,
         email: true,
@@ -69,10 +71,11 @@ export class UsersService {
     return { user };
   }
 
-  async addAddress(userId: string, addAddressDto: AddAddressDto) {
+  async addAddress(userId: string | number, addAddressDto: AddAddressDto) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     if (addAddressDto.isDefault) {
       await this.prisma.address.updateMany({
-        where: { userId },
+        where: { userId: userIdStr },
         data: { isDefault: false },
       });
     }
@@ -80,25 +83,27 @@ export class UsersService {
     const address = await this.prisma.address.create({
       data: {
         ...addAddressDto,
-        userId,
+        userId: userIdStr,
       },
     });
 
     return { address };
   }
 
-  async getAddresses(userId: string) {
+  async getAddresses(userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const addresses = await this.prisma.address.findMany({
-      where: { userId },
+      where: { userId: userIdStr },
       orderBy: { isDefault: 'desc' },
     });
 
     return { addresses };
   }
 
-  async updateAddress(userId: string, addressId: string, updateAddressDto: AddAddressDto) {
+  async updateAddress(userId: string | number, addressId: string, updateAddressDto: AddAddressDto) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const existingAddress = await this.prisma.address.findFirst({
-      where: { id: addressId, userId },
+      where: { id: addressId, userId: userIdStr },
     });
 
     if (!existingAddress) {
@@ -107,7 +112,7 @@ export class UsersService {
 
     if (updateAddressDto.isDefault) {
       await this.prisma.address.updateMany({
-        where: { userId },
+        where: { userId: userIdStr },
         data: { isDefault: false },
       });
     }
@@ -120,9 +125,10 @@ export class UsersService {
     return { address };
   }
 
-  async deleteAddress(userId: string, addressId: string) {
+  async deleteAddress(userId: string | number, addressId: string) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const address = await this.prisma.address.findFirst({
-      where: { id: addressId, userId },
+      where: { id: addressId, userId: userIdStr },
     });
 
     if (!address) {
@@ -136,9 +142,10 @@ export class UsersService {
     return { message: 'Address deleted successfully' };
   }
 
-  async verifyPhone(userId: string, token: string) {
+  async verifyPhone(userId: string | number, token: string) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const user = await this.prisma.user.findFirst({
-      where: { id: userId, phoneVerifyToken: token },
+      where: { id: userIdStr, phoneVerifyToken: token },
     });
 
     if (!user) {
@@ -146,7 +153,7 @@ export class UsersService {
     }
 
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: userIdStr },
       data: {
         phoneVerified: true,
         phoneVerifyToken: null,
@@ -156,9 +163,10 @@ export class UsersService {
     return { message: 'Phone verified successfully' };
   }
 
-  async sendPhoneVerification(userId: string) {
+  async sendPhoneVerification(userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userIdStr },
     });
 
     if (!user || !user.phone) {
@@ -168,7 +176,7 @@ export class UsersService {
     const phoneVerifyToken = Math.floor(100000 + Math.random() * 900000).toString();
 
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: userIdStr },
       data: { phoneVerifyToken },
     });
 
@@ -178,10 +186,11 @@ export class UsersService {
     return { message: 'Verification code sent to your phone' };
   }
 
-  async getDashboardStats(userId: string) {
+  async getDashboardStats(userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const [user, orderStats, wishlistCount, recentOrders] = await Promise.all([
       this.prisma.user.findUnique({
-        where: { id: userId },
+        where: { id: userIdStr },
         select: {
           loyaltyPoints: true,
           totalSpent: true,
@@ -189,13 +198,13 @@ export class UsersService {
         }
       }),
       this.prisma.order.aggregate({
-        where: { userId },
+        where: { userId: userIdStr },
         _count: { id: true },
         _sum: { total: true }
       }),
-      this.prisma.wishlist.count({ where: { userId } }),
+      this.prisma.wishlist.count({ where: { userId: userIdStr } }),
       this.prisma.order.findMany({
-        where: { userId },
+        where: { userId: userIdStr },
         take: 5,
         orderBy: { createdAt: 'desc' },
         select: {
@@ -218,13 +227,14 @@ export class UsersService {
     };
   }
 
-  async updateSettings(userId: string, settings: {
+  async updateSettings(userId: string | number, settings: {
     marketingEmails?: boolean;
     smsNotifications?: boolean;
     preferredLanguage?: string;
   }) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     return this.prisma.user.update({
-      where: { id: userId },
+      where: { id: userIdStr },
       data: settings,
       select: {
         marketingEmails: true,
@@ -234,9 +244,10 @@ export class UsersService {
     });
   }
 
-  async getWishlist(userId: string) {
+  async getWishlist(userId: string | number) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     return this.prisma.wishlist.findMany({
-      where: { userId },
+      where: { userId: userIdStr },
       include: {
         product: {
           select: {
@@ -254,12 +265,13 @@ export class UsersService {
     });
   }
 
-  async addToWishlist(userId: string, productId: string) {
+  async addToWishlist(userId: string | number, productId: string) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     return this.prisma.wishlist.upsert({
       where: {
-        userId_productId: { userId, productId }
+        userId_productId: { userId: userIdStr, productId }
       },
-      create: { userId, productId },
+      create: { userId: userIdStr, productId },
       update: {},
       include: {
         product: {
@@ -275,10 +287,11 @@ export class UsersService {
     });
   }
 
-  async removeFromWishlist(userId: string, productId: string) {
+  async removeFromWishlist(userId: string | number, productId: string) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     return this.prisma.wishlist.delete({
       where: {
-        userId_productId: { userId, productId }
+        userId_productId: { userId: userIdStr, productId }
       }
     });
   }

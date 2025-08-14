@@ -5,8 +5,8 @@ export declare class AbandonedCartService {
     private whatsappService;
     private readonly logger;
     constructor(prisma: PrismaService, whatsappService: WhatsAppService);
-    trackAbandonedCart(userId?: string, sessionId?: string, phoneNumber?: string, cartItems?: any[]): Promise<void>;
-    markCartAsRecovered(userId?: string, sessionId?: string, phoneNumber?: string): Promise<void>;
+    trackAbandonedCart(userId?: string | number, sessionId?: string, phoneNumber?: string, cartItems?: any[]): Promise<void>;
+    markCartAsRecovered(userId?: string | number, sessionId?: string, phoneNumber?: string): Promise<void>;
     sendAbandonedCartReminders(): Promise<void>;
     getAbandonedCartStats(): Promise<{
         total: number;

@@ -27,7 +27,9 @@ export declare class OrdersController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -36,6 +38,13 @@ export declare class OrdersController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -89,6 +98,7 @@ export declare class OrdersController {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     }>;
     createOrderWithPayment(userId: string, createOrderDto: CreateOrderWithPaymentDto): Promise<{
         order: {
@@ -111,7 +121,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -120,6 +132,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -173,6 +192,7 @@ export declare class OrdersController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         payment: {
             checkoutRequestId: any;
@@ -200,7 +220,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -209,6 +231,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -262,6 +291,7 @@ export declare class OrdersController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         payment?: undefined;
     }>;
@@ -285,7 +315,9 @@ export declare class OrdersController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -294,6 +326,13 @@ export declare class OrdersController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -347,6 +386,7 @@ export declare class OrdersController {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     }>;
     getOrders(userId: string, page?: string, limit?: string): Promise<{
         orders: ({
@@ -369,7 +409,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -378,6 +420,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -431,6 +480,7 @@ export declare class OrdersController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         })[];
         pagination: {
             page: number;
@@ -478,7 +528,9 @@ export declare class OrdersController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -487,6 +539,13 @@ export declare class OrdersController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -540,6 +599,7 @@ export declare class OrdersController {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     }>;
     getOrderTracking(userId: string, orderId: string): Promise<{
         orderNumber: string;
@@ -572,7 +632,9 @@ export declare class OrdersController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -581,6 +643,13 @@ export declare class OrdersController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -627,6 +696,7 @@ export declare class OrdersController {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     }>;
     createReturnRequest(userId: string, orderId: string, returnRequestDto: ReturnRequestDto): Promise<{
         items: ({
@@ -649,7 +719,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -658,6 +730,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -723,6 +802,7 @@ export declare class OrdersController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         items: ({
             orderItem: {
@@ -744,7 +824,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -753,6 +835,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -821,7 +910,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -830,6 +921,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -895,7 +993,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -904,6 +1004,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -957,6 +1064,7 @@ export declare class OrdersController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         payment: {
             checkoutRequestId: any;
@@ -984,7 +1092,9 @@ export declare class OrdersController {
                     isFeatured: boolean;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    metaDescription: string | null;
                     tags: string | null;
+                    keywords: string | null;
                     stock: number;
                     lowStockThreshold: number;
                     trackInventory: boolean;
@@ -993,6 +1103,13 @@ export declare class OrdersController {
                     viewCount: number;
                     searchKeywords: string | null;
                     relatedProducts: string | null;
+                    ageRestricted: boolean;
+                    minimumAge: number | null;
+                    warrantyPeriod: string | null;
+                    warrantyType: string | null;
+                    warrantyTerms: string | null;
+                    geographicRestrictions: string | null;
+                    restrictedRegions: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -1046,6 +1163,7 @@ export declare class OrdersController {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         payment?: undefined;
     }>;
@@ -1069,7 +1187,9 @@ export declare class OrdersController {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -1078,6 +1198,13 @@ export declare class OrdersController {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -1131,5 +1258,6 @@ export declare class OrdersController {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     }>;
 }

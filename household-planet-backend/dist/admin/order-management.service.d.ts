@@ -38,7 +38,9 @@ export declare class OrderManagementService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -47,6 +49,13 @@ export declare class OrderManagementService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -115,6 +124,7 @@ export declare class OrderManagementService {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     })[]>;
     getOrderById(id: string): Promise<{
         user: {
@@ -148,6 +158,9 @@ export declare class OrderManagementService {
             preferredLanguage: string;
             marketingEmails: boolean;
             smsNotifications: boolean;
+            optedOutAt: Date | null;
+            phoneNumber: string | null;
+            privacySettings: string | null;
         };
         deliveryTracking: {
             updates: {
@@ -207,7 +220,9 @@ export declare class OrderManagementService {
                 isFeatured: boolean;
                 seoTitle: string | null;
                 seoDescription: string | null;
+                metaDescription: string | null;
                 tags: string | null;
+                keywords: string | null;
                 stock: number;
                 lowStockThreshold: number;
                 trackInventory: boolean;
@@ -216,6 +231,13 @@ export declare class OrderManagementService {
                 viewCount: number;
                 searchKeywords: string | null;
                 relatedProducts: string | null;
+                ageRestricted: boolean;
+                minimumAge: number | null;
+                warrantyPeriod: string | null;
+                warrantyType: string | null;
+                warrantyTerms: string | null;
+                geographicRestrictions: string | null;
+                restrictedRegions: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -284,6 +306,7 @@ export declare class OrderManagementService {
         guestEmail: string | null;
         guestName: string | null;
         guestPhone: string | null;
+        estimatedDeliveryDate: Date | null;
     }>;
     updateOrderStatus(id: string, status: string, notes?: string): Promise<{
         order: {
@@ -306,6 +329,7 @@ export declare class OrderManagementService {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         statusHistory: {
             id: string;
@@ -386,6 +410,7 @@ export declare class OrderManagementService {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
         items: ({
             orderItem: {

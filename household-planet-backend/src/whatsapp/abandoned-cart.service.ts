@@ -12,14 +12,15 @@ export class AbandonedCartService {
     private whatsappService: WhatsAppService,
   ) {}
 
-  async trackAbandonedCart(userId?: string, sessionId?: string, phoneNumber?: string, cartItems?: any[]) {
+  async trackAbandonedCart(userId?: string | number, sessionId?: string, phoneNumber?: string, cartItems?: any[]) {
     try {
+      const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
       const cartData = JSON.stringify(cartItems || []);
       
       const existingCart = await this.prisma.abandonedCart.findFirst({
         where: {
           OR: [
-            { userId: userId || undefined },
+            { userId: userIdStr || undefined },
             { sessionId: sessionId || undefined },
             { phoneNumber: phoneNumber || undefined },
           ],
@@ -38,7 +39,7 @@ export class AbandonedCartService {
       } else {
         await this.prisma.abandonedCart.create({
           data: {
-            userId,
+            userId: userIdStr,
             sessionId,
             phoneNumber,
             cartData,
@@ -46,18 +47,19 @@ export class AbandonedCartService {
         });
       }
 
-      this.logger.log(`Tracked abandoned cart for ${userId || sessionId || phoneNumber}`);
+      this.logger.log(`Tracked abandoned cart for ${userIdStr || sessionId || phoneNumber}`);
     } catch (error) {
       this.logger.error('Failed to track abandoned cart:', error);
     }
   }
 
-  async markCartAsRecovered(userId?: string, sessionId?: string, phoneNumber?: string) {
+  async markCartAsRecovered(userId?: string | number, sessionId?: string, phoneNumber?: string) {
     try {
+      const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
       await this.prisma.abandonedCart.updateMany({
         where: {
           OR: [
-            { userId: userId || undefined },
+            { userId: userIdStr || undefined },
             { sessionId: sessionId || undefined },
             { phoneNumber: phoneNumber || undefined },
           ],
@@ -69,7 +71,7 @@ export class AbandonedCartService {
         },
       });
 
-      this.logger.log(`Marked cart as recovered for ${userId || sessionId || phoneNumber}`);
+      this.logger.log(`Marked cart as recovered for ${userIdStr || sessionId || phoneNumber}`);
     } catch (error) {
       this.logger.error('Failed to mark cart as recovered:', error);
     }

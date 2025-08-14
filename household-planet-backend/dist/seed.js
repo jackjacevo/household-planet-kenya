@@ -27,6 +27,21 @@ async function main() {
         });
     }
     console.log('Categories seeded successfully!');
+    console.log('Seeding WhatsApp business settings...');
+    await prisma.whatsAppBusinessSettings.upsert({
+        where: { id: 'default' },
+        update: {},
+        create: {
+            id: 'default',
+            businessName: 'Household Planet Kenya',
+            businessPhone: '+254790227760',
+            businessEmail: 'info@householdplanet.co.ke',
+            welcomeMessage: 'Welcome to Household Planet Kenya! How can we help you today?',
+            awayMessage: 'Thank you for contacting us. We will get back to you soon.',
+            businessHours: 'Monday - Friday: 8AM - 6PM, Saturday: 9AM - 5PM'
+        }
+    });
+    console.log('WhatsApp business settings seeded successfully!');
 }
 main()
     .catch((e) => {

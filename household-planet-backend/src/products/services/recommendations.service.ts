@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class RecommendationsService {
   constructor(private prisma: PrismaService) {}
 
-  async getRecommendations(productId: string, userId?: string, limit = 6) {
+  async getRecommendations(productId: string, userId?: string | number, limit = 6) {
     const recommendations = await this.prisma.productRecommendation.findMany({
       where: { productId },
       include: {
@@ -65,9 +65,10 @@ export class RecommendationsService {
     }));
   }
 
-  async getRecentlyViewed(userId: string, limit = 10) {
+  async getRecentlyViewed(userId: string | number, limit = 10) {
+    const userIdStr = typeof userId === 'string' ? userId : String(userId);
     const recentlyViewed = await this.prisma.recentlyViewed.findMany({
-      where: { userId },
+      where: { userId: userIdStr },
       include: {
         product: {
           include: {
@@ -88,7 +89,7 @@ export class RecommendationsService {
     }));
   }
 
-  async trackProductView(productId: string, userId?: string) {
+  async trackProductView(productId: string, userId?: string | number) {
     // Update product view count
     await this.prisma.product.update({
       where: { id: productId },
@@ -97,12 +98,13 @@ export class RecommendationsService {
 
     // Track user view if logged in
     if (userId) {
+      const userIdStr = typeof userId === 'string' ? userId : String(userId);
       await this.prisma.recentlyViewed.upsert({
         where: {
-          userId_productId: { userId, productId }
+          userId_productId: { userId: userIdStr, productId }
         },
         update: { viewedAt: new Date() },
-        create: { userId, productId }
+        create: { userId: userIdStr, productId }
       });
     }
   }

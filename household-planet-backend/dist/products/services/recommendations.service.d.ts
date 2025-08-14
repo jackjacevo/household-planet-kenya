@@ -2,7 +2,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export declare class RecommendationsService {
     private prisma;
     constructor(prisma: PrismaService);
-    getRecommendations(productId: string, userId?: string, limit?: number): Promise<{
+    getRecommendations(productId: string, userId?: string | number, limit?: number): Promise<{
         images: any;
         tags: any;
         recommendationType: string;
@@ -13,6 +13,7 @@ export declare class RecommendationsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -47,6 +48,8 @@ export declare class RecommendationsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -55,6 +58,13 @@ export declare class RecommendationsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -67,6 +77,7 @@ export declare class RecommendationsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -101,6 +112,8 @@ export declare class RecommendationsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -109,10 +122,17 @@ export declare class RecommendationsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    getRecentlyViewed(userId: string, limit?: number): Promise<{
+    getRecentlyViewed(userId: string | number, limit?: number): Promise<{
         images: any;
         tags: any;
         viewedAt: Date;
@@ -122,6 +142,7 @@ export declare class RecommendationsService {
             slug: string;
             description: string | null;
             isActive: boolean;
+            metaDescription: string | null;
             image: string | null;
             parentId: string | null;
             sortOrder: number;
@@ -156,6 +177,8 @@ export declare class RecommendationsService {
         isFeatured: boolean;
         seoTitle: string | null;
         seoDescription: string | null;
+        metaDescription: string | null;
+        keywords: string | null;
         stock: number;
         lowStockThreshold: number;
         trackInventory: boolean;
@@ -164,9 +187,16 @@ export declare class RecommendationsService {
         viewCount: number;
         searchKeywords: string | null;
         relatedProducts: string | null;
+        ageRestricted: boolean;
+        minimumAge: number | null;
+        warrantyPeriod: string | null;
+        warrantyType: string | null;
+        warrantyTerms: string | null;
+        geographicRestrictions: string | null;
+        restrictedRegions: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    trackProductView(productId: string, userId?: string): Promise<void>;
+    trackProductView(productId: string, userId?: string | number): Promise<void>;
     generateRecommendations(): Promise<void>;
 }

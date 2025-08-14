@@ -59,7 +59,8 @@ export class WhatsAppService implements OnModuleInit {
     return this.isReady;
   }
 
-  async sendMessage(phoneNumber: string, message: string, type: string, orderId?: string, userId?: string, mediaUrl?: string): Promise<boolean> {
+  async sendMessage(phoneNumber: string, message: string, type: string, orderId?: string, userId?: string | number, mediaUrl?: string): Promise<boolean> {
+    const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
     try {
       if (!this.isReady) {
         throw new Error('WhatsApp client is not ready');
@@ -75,23 +76,23 @@ export class WhatsAppService implements OnModuleInit {
         sentMessage = await this.client.sendMessage(formattedNumber, message);
       }
 
-      await this.logMessage(phoneNumber, message, type, 'SENT', orderId, userId, mediaUrl);
+      await this.logMessage(phoneNumber, message, type, 'SENT', orderId, userIdStr, mediaUrl);
       this.logger.log(`Message sent to ${phoneNumber}: ${message.substring(0, 50)}...`);
       return true;
     } catch (error) {
       this.logger.error(`Failed to send message to ${phoneNumber}:`, error);
-      await this.logMessage(phoneNumber, message, type, 'FAILED', orderId, userId, mediaUrl, error.message);
+      await this.logMessage(phoneNumber, message, type, 'FAILED', orderId, userIdStr, mediaUrl, error.message);
       return false;
     }
   }
 
-  async sendOrderConfirmation(phoneNumber: string, orderNumber: string, total: number, orderId: string, userId?: string): Promise<boolean> {
+  async sendOrderConfirmation(phoneNumber: string, orderNumber: string, total: number, orderId: string, userId?: string | number): Promise<boolean> {
     const message = `🎉 Order Confirmed!\n\nOrder #${orderNumber}\nTotal: KSh ${total.toLocaleString()}\n\nThank you for shopping with Household Planet Kenya! We'll keep you updated on your delivery.\n\nTrack your order: https://householdplanet.co.ke/orders/${orderNumber}`;
     
     return this.sendMessage(phoneNumber, message, 'ORDER_CONFIRMATION', orderId, userId);
   }
 
-  async sendDeliveryUpdate(phoneNumber: string, orderNumber: string, status: string, location?: string, orderId?: string, userId?: string): Promise<boolean> {
+  async sendDeliveryUpdate(phoneNumber: string, orderNumber: string, status: string, location?: string, orderId?: string, userId?: string | number): Promise<boolean> {
     let message = `📦 Delivery Update\n\nOrder #${orderNumber}\nStatus: ${status}`;
     
     if (location) {
@@ -103,7 +104,7 @@ export class WhatsAppService implements OnModuleInit {
     return this.sendMessage(phoneNumber, message, 'DELIVERY_UPDATE', orderId, userId);
   }
 
-  async sendAbandonedCartReminder(phoneNumber: string, cartItems: any[], userId?: string): Promise<boolean> {
+  async sendAbandonedCartReminder(phoneNumber: string, cartItems: any[], userId?: string | number): Promise<boolean> {
     const itemCount = cartItems.length;
     const totalValue = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
@@ -112,7 +113,7 @@ export class WhatsAppService implements OnModuleInit {
     return this.sendMessage(phoneNumber, message, 'ABANDONED_CART', null, userId);
   }
 
-  async sendPromotionalMessage(phoneNumber: string, title: string, description: string, link?: string, userId?: string): Promise<boolean> {
+  async sendPromotionalMessage(phoneNumber: string, title: string, description: string, link?: string, userId?: string | number): Promise<boolean> {
     let message = `🎁 ${title}\n\n${description}`;
     
     if (link) {
@@ -122,7 +123,7 @@ export class WhatsAppService implements OnModuleInit {
     return this.sendMessage(phoneNumber, message, 'PROMOTIONAL', null, userId);
   }
 
-  async sendSupportMessage(phoneNumber: string, ticketId: string, response: string, userId?: string): Promise<boolean> {
+  async sendSupportMessage(phoneNumber: string, ticketId: string, response: string, userId?: string | number): Promise<boolean> {
     const message = `💬 Support Response\n\nTicket #${ticketId}\n\n${response}\n\nNeed more help? Reply to this message or visit: https://householdplanet.co.ke/support`;
     
     return this.sendMessage(phoneNumber, message, 'SUPPORT', null, userId);
@@ -173,11 +174,12 @@ export class WhatsAppService implements OnModuleInit {
     }
   }
 
-  async getMessageHistory(phoneNumber?: string, userId?: string, limit = 50) {
+  async getMessageHistory(phoneNumber?: string, userId?: string | number, limit = 50) {
+    const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
     return this.prisma.whatsAppMessage.findMany({
       where: {
         ...(phoneNumber && { phoneNumber }),
-        ...(userId && { userId }),
+        ...(userIdStr && { userId: userIdStr }),
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

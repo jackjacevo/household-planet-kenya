@@ -17,186 +17,259 @@ let ContentManagementService = class ContentManagementService {
         this.prisma = prisma;
     }
     async getHomepageContent() {
-        return this.prisma.$queryRaw `
-      SELECT * FROM content WHERE type = 'homepage' ORDER BY sort_order ASC
-    `;
+        return this.prisma.page.findMany({
+            where: { slug: { startsWith: 'homepage' } },
+            orderBy: { createdAt: 'asc' }
+        });
     }
     async updateHomepageContent(data) {
-        const { banners, sections } = data;
-        for (const banner of banners || []) {
-            await this.upsertContent('homepage_banner', banner.id, {
-                title: banner.title,
-                subtitle: banner.subtitle,
-                image: banner.image,
-                link: banner.link,
-                isActive: banner.isActive,
-                sortOrder: banner.sortOrder
-            });
-        }
-        for (const section of sections || []) {
-            await this.upsertContent('homepage_section', section.id, {
-                title: section.title,
-                content: section.content,
-                type: section.type,
-                isActive: section.isActive,
-                sortOrder: section.sortOrder
-            });
-        }
-        return { success: true };
+        const { title, content, seoTitle, seoDescription } = data;
+        return this.prisma.page.upsert({
+            where: { slug: 'homepage' },
+            update: {
+                title: title || 'Homepage',
+                content: content || '',
+                seoTitle,
+                seoDescription,
+                updatedAt: new Date()
+            },
+            create: {
+                title: title || 'Homepage',
+                slug: 'homepage',
+                content: content || '',
+                seoTitle,
+                seoDescription,
+                isActive: true
+            }
+        });
     }
     async getPromotions() {
-        return this.prisma.$queryRaw `
-      SELECT * FROM content WHERE type = 'promotion' ORDER BY created_at DESC
-    `;
+        return this.prisma.blogPost.findMany({
+            where: { tags: { contains: 'promotion' } },
+            orderBy: { createdAt: 'desc' }
+        });
     }
     async createPromotion(data) {
-        return this.upsertContent('promotion', null, {
-            title: data.title,
-            content: data.content,
-            image: data.image,
-            startDate: data.startDate,
-            endDate: data.endDate,
-            isActive: data.isActive,
-            targetAudience: data.targetAudience
+        const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        return this.prisma.blogPost.create({
+            data: {
+                title: data.title,
+                slug: `promo-${slug}-${Date.now()}`,
+                content: data.content,
+                featuredImage: data.image,
+                tags: 'promotion',
+                status: data.isActive ? 'PUBLISHED' : 'DRAFT',
+                publishedAt: data.isActive ? new Date() : null
+            }
         });
     }
     async updatePromotion(id, data) {
-        return this.upsertContent('promotion', id, data);
+        return this.prisma.blogPost.update({
+            where: { id },
+            data: {
+                title: data.title,
+                content: data.content,
+                featuredImage: data.image,
+                status: data.isActive ? 'PUBLISHED' : 'DRAFT',
+                publishedAt: data.isActive && !data.publishedAt ? new Date() : data.publishedAt
+            }
+        });
     }
     async getEmailTemplates() {
-        return this.prisma.$queryRaw `
-      SELECT * FROM content WHERE type = 'email_template' ORDER BY name ASC
-    `;
+        return this.prisma.page.findMany({
+            where: { slug: { startsWith: 'email-template' } },
+            orderBy: { title: 'asc' }
+        });
     }
     async createEmailTemplate(data) {
-        return this.upsertContent('email_template', null, {
-            name: data.name,
-            subject: data.subject,
-            content: data.content,
-            variables: JSON.stringify(data.variables || []),
-            isActive: data.isActive
+        const slug = `email-template-${data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+        return this.prisma.page.create({
+            data: {
+                title: data.name,
+                slug,
+                content: data.content,
+                seoTitle: data.subject,
+                seoDescription: `Email template: ${data.name}`,
+                isActive: data.isActive
+            }
         });
     }
     async updateEmailTemplate(id, data) {
-        return this.upsertContent('email_template', id, {
-            ...data,
-            variables: JSON.stringify(data.variables || [])
+        return this.prisma.page.update({
+            where: { id },
+            data: {
+                title: data.name,
+                content: data.content,
+                seoTitle: data.subject,
+                isActive: data.isActive
+            }
         });
     }
     async getStaticPages() {
-        return this.prisma.$queryRaw `
-      SELECT * FROM content WHERE type = 'static_page' ORDER BY name ASC
-    `;
+        return this.prisma.page.findMany({
+            where: {
+                slug: {
+                    notIn: ['homepage', 'email-template']
+                }
+            },
+            orderBy: { title: 'asc' }
+        });
     }
     async createStaticPage(data) {
-        return this.upsertContent('static_page', null, {
-            name: data.name,
-            slug: data.slug,
-            title: data.title,
-            content: data.content,
-            metaTitle: data.metaTitle,
-            metaDescription: data.metaDescription,
-            isActive: data.isActive
+        return this.prisma.page.create({
+            data: {
+                title: data.title,
+                slug: data.slug,
+                content: data.content,
+                seoTitle: data.metaTitle,
+                seoDescription: data.metaDescription,
+                isActive: data.isActive
+            }
         });
     }
     async updateStaticPage(id, data) {
-        return this.upsertContent('static_page', id, data);
+        return this.prisma.page.update({
+            where: { id },
+            data: {
+                title: data.title,
+                content: data.content,
+                seoTitle: data.metaTitle,
+                seoDescription: data.metaDescription,
+                isActive: data.isActive
+            }
+        });
     }
     async getFAQs() {
-        return this.prisma.$queryRaw `
-      SELECT * FROM content WHERE type = 'faq' ORDER BY sort_order ASC, created_at DESC
-    `;
+        return this.prisma.fAQ.findMany({
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }]
+        });
     }
     async createFAQ(data) {
-        return this.upsertContent('faq', null, {
-            question: data.question,
-            answer: data.answer,
-            category: data.category,
-            sortOrder: data.sortOrder || 0,
-            isActive: data.isActive
+        return this.prisma.fAQ.create({
+            data: {
+                question: data.question,
+                answer: data.answer,
+                category: data.category,
+                sortOrder: data.sortOrder || 0,
+                isActive: data.isActive
+            }
         });
     }
     async updateFAQ(id, data) {
-        return this.upsertContent('faq', id, data);
+        return this.prisma.fAQ.update({
+            where: { id },
+            data: {
+                question: data.question,
+                answer: data.answer,
+                category: data.category,
+                sortOrder: data.sortOrder,
+                isActive: data.isActive
+            }
+        });
     }
     async deleteFAQ(id) {
-        return this.prisma.$executeRaw `DELETE FROM content WHERE id = ${id} AND type = 'faq'`;
+        return this.prisma.fAQ.delete({ where: { id } });
     }
     async getBlogPosts() {
-        return this.prisma.$queryRaw `
-      SELECT * FROM content WHERE type = 'blog_post' ORDER BY created_at DESC
-    `;
+        return this.prisma.blogPost.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
     }
     async createBlogPost(data) {
-        return this.upsertContent('blog_post', null, {
-            title: data.title,
-            slug: data.slug,
-            excerpt: data.excerpt,
-            content: data.content,
-            image: data.image,
-            author: data.author,
-            tags: JSON.stringify(data.tags || []),
-            metaTitle: data.metaTitle,
-            metaDescription: data.metaDescription,
-            publishedAt: data.publishedAt,
-            isActive: data.isActive
+        return this.prisma.blogPost.create({
+            data: {
+                title: data.title,
+                slug: data.slug,
+                excerpt: data.excerpt,
+                content: data.content,
+                featuredImage: data.image,
+                authorId: data.author,
+                tags: Array.isArray(data.tags) ? data.tags.join(',') : data.tags,
+                seoTitle: data.metaTitle,
+                seoDescription: data.metaDescription,
+                publishedAt: data.publishedAt,
+                status: data.isActive ? 'PUBLISHED' : 'DRAFT'
+            }
         });
     }
     async updateBlogPost(id, data) {
-        return this.upsertContent('blog_post', id, {
-            ...data,
-            tags: JSON.stringify(data.tags || [])
+        return this.prisma.blogPost.update({
+            where: { id },
+            data: {
+                title: data.title,
+                excerpt: data.excerpt,
+                content: data.content,
+                featuredImage: data.image,
+                tags: Array.isArray(data.tags) ? data.tags.join(',') : data.tags,
+                seoTitle: data.metaTitle,
+                seoDescription: data.metaDescription,
+                status: data.isActive ? 'PUBLISHED' : 'DRAFT'
+            }
         });
     }
     async deleteBlogPost(id) {
-        return this.prisma.$executeRaw `DELETE FROM content WHERE id = ${id} AND type = 'blog_post'`;
-    }
-    async upsertContent(type, id, data) {
-        const contentData = {
-            type,
-            data: JSON.stringify(data),
-            updatedAt: new Date()
-        };
-        if (id) {
-            return this.prisma.$executeRaw `
-        UPDATE content SET 
-          data = ${contentData.data},
-          updated_at = ${contentData.updatedAt}
-        WHERE id = ${id} AND type = ${type}
-      `;
-        }
-        else {
-            const newId = this.generateId();
-            return this.prisma.$executeRaw `
-        INSERT INTO content (id, type, data, created_at, updated_at)
-        VALUES (${newId}, ${type}, ${contentData.data}, ${new Date()}, ${contentData.updatedAt})
-      `;
-        }
+        return this.prisma.blogPost.delete({ where: { id } });
     }
     async searchContent(query, type) {
-        let sql = `SELECT * FROM content WHERE data LIKE '%${query}%'`;
-        if (type) {
-            sql += ` AND type = '${type}'`;
+        const results = [];
+        if (!type || type === 'page') {
+            const pages = await this.prisma.page.findMany({
+                where: {
+                    OR: [
+                        { title: { contains: query } },
+                        { content: { contains: query } }
+                    ]
+                }
+            });
+            results.push(...pages.map(p => ({ ...p, type: 'page' })));
         }
-        sql += ` ORDER BY updated_at DESC`;
-        return this.prisma.$queryRawUnsafe(sql);
+        if (!type || type === 'blog') {
+            const posts = await this.prisma.blogPost.findMany({
+                where: {
+                    OR: [
+                        { title: { contains: query } },
+                        { content: { contains: query } }
+                    ]
+                }
+            });
+            results.push(...posts.map(p => ({ ...p, type: 'blog' })));
+        }
+        if (!type || type === 'faq') {
+            const faqs = await this.prisma.fAQ.findMany({
+                where: {
+                    OR: [
+                        { question: { contains: query } },
+                        { answer: { contains: query } }
+                    ]
+                }
+            });
+            results.push(...faqs.map(f => ({ ...f, type: 'faq' })));
+        }
+        return results;
     }
     async backupContent() {
-        return this.prisma.$queryRaw `SELECT * FROM content ORDER BY type, created_at`;
+        const [pages, posts, faqs] = await Promise.all([
+            this.prisma.page.findMany({ orderBy: { createdAt: 'asc' } }),
+            this.prisma.blogPost.findMany({ orderBy: { createdAt: 'asc' } }),
+            this.prisma.fAQ.findMany({ orderBy: { createdAt: 'asc' } })
+        ]);
+        return {
+            pages,
+            posts,
+            faqs
+        };
     }
     async getContentStats() {
-        const stats = await this.prisma.$queryRaw `
-      SELECT 
-        type,
-        COUNT(*) as count,
-        MAX(updated_at) as last_updated
-      FROM content 
-      GROUP BY type
-    `;
-        return stats;
-    }
-    generateId() {
-        return 'cnt_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
+        const [pageCount, postCount, faqCount] = await Promise.all([
+            this.prisma.page.count(),
+            this.prisma.blogPost.count(),
+            this.prisma.fAQ.count()
+        ]);
+        return {
+            pages: { count: pageCount, type: 'page' },
+            posts: { count: postCount, type: 'blog' },
+            faqs: { count: faqCount, type: 'faq' }
+        };
     }
 };
 exports.ContentManagementService = ContentManagementService;

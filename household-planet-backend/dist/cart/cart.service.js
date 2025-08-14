@@ -13,12 +13,14 @@ exports.CartService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const abandoned_cart_service_1 = require("../whatsapp/abandoned-cart.service");
+const type_conversion_util_1 = require("../common/utils/type-conversion.util");
 let CartService = class CartService {
     constructor(prisma, abandonedCartService) {
         this.prisma = prisma;
         this.abandonedCartService = abandonedCartService;
     }
     async addToCart(userId, addToCartDto) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const { productId, variantId, quantity } = addToCartDto;
         const product = await this.prisma.product.findUnique({
             where: { id: productId },
@@ -41,7 +43,7 @@ let CartService = class CartService {
         const existingItem = await this.prisma.cart.findUnique({
             where: {
                 userId_productId_variantId: {
-                    userId,
+                    userId: userIdStr,
                     productId,
                     variantId: variantId || null
                 }
@@ -60,12 +62,12 @@ let CartService = class CartService {
                     variant: true
                 }
             });
-            await this.trackAbandonedCart(userId);
+            await this.trackAbandonedCart(userIdStr);
             return updatedItem;
         }
         const cartItem = await this.prisma.cart.create({
             data: {
-                userId,
+                userId: userIdStr,
                 productId,
                 variantId,
                 quantity
@@ -75,12 +77,13 @@ let CartService = class CartService {
                 variant: true
             }
         });
-        await this.trackAbandonedCart(userId);
+        await this.trackAbandonedCart(userIdStr);
         return cartItem;
     }
     async getCart(userId) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const cartItems = await this.prisma.cart.findMany({
-            where: { userId },
+            where: { userId: userIdStr },
             include: {
                 product: {
                     include: {
@@ -102,9 +105,10 @@ let CartService = class CartService {
         };
     }
     async updateCartItem(userId, itemId, updateCartDto) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const { quantity } = updateCartDto;
         const cartItem = await this.prisma.cart.findFirst({
-            where: { id: itemId, userId },
+            where: { id: itemId, userId: userIdStr },
             include: {
                 product: { include: { variants: true } },
                 variant: true
@@ -131,12 +135,13 @@ let CartService = class CartService {
                 variant: true
             }
         });
-        await this.trackAbandonedCart(userId);
+        await this.trackAbandonedCart(userIdStr);
         return updatedItem;
     }
     async removeFromCart(userId, itemId) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const cartItem = await this.prisma.cart.findFirst({
-            where: { id: itemId, userId }
+            where: { id: itemId, userId: userIdStr }
         });
         if (!cartItem) {
             throw new common_1.NotFoundException('Cart item not found');
@@ -144,13 +149,15 @@ let CartService = class CartService {
         return this.prisma.cart.delete({ where: { id: itemId } });
     }
     async clearCart(userId) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         return this.prisma.cart.deleteMany({
-            where: { userId }
+            where: { userId: userIdStr }
         });
     }
     async moveToWishlist(userId, itemId) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const cartItem = await this.prisma.cart.findFirst({
-            where: { id: itemId, userId }
+            where: { id: itemId, userId: userIdStr }
         });
         if (!cartItem) {
             throw new common_1.NotFoundException('Cart item not found');
@@ -158,12 +165,12 @@ let CartService = class CartService {
         await this.prisma.wishlist.upsert({
             where: {
                 userId_productId: {
-                    userId,
+                    userId: userIdStr,
                     productId: cartItem.productId
                 }
             },
             create: {
-                userId,
+                userId: userIdStr,
                 productId: cartItem.productId
             },
             update: {}

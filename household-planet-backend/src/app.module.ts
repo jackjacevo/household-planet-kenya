@@ -17,7 +17,17 @@ import { DeliveryModule } from './delivery/delivery.module';
 import { SupportModule } from './support/support.module';
 import { AdminModule } from './admin/admin.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
+import { ChatModule } from './chat/chat.module';
+import { EmailModule } from './email/email.module';
+import { SmsModule } from './sms/sms.module';
+import { ContentModule } from './content/content.module';
+import { AbTestingModule } from './ab-testing/ab-testing.module';
+import { SecurityModule } from './security/security.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { ApiSecurityModule } from './api-security/api-security.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { SecurityGuard } from './security/guards/security.guard';
+import { CsrfGuard } from './security/guards/csrf.guard';
 
 @Module({
   imports: [
@@ -26,6 +36,9 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
       serveRoot: '/uploads',
     }),
     ScheduleModule.forRoot(),
+    SecurityModule,
+    FileUploadModule,
+    ApiSecurityModule,
     PrismaModule, 
     AuthModule, 
     UsersModule, 
@@ -37,14 +50,27 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     DeliveryModule,
     SupportModule,
     AdminModule,
-    WhatsAppModule
+    WhatsAppModule,
+    ChatModule,
+    EmailModule,
+    SmsModule,
+    ContentModule,
+    AbTestingModule
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
+      useClass: SecurityGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
     },
   ],
 })

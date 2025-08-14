@@ -57,28 +57,32 @@ export class StaffManagementService {
   }
 
   async logActivity(userId: string, action: string, details: any) {
-    return this.prisma.$executeRaw`
-      INSERT INTO admin_activity_log (id, user_id, action, details, created_at)
-      VALUES (${this.generateId()}, ${userId}, ${action}, ${JSON.stringify(details)}, ${new Date()})
-    `;
+    return this.prisma.auditLog.create({
+      data: {
+        action,
+        details: JSON.stringify(details),
+        userId,
+        timestamp: new Date()
+      }
+    });
   }
 
   async getActivityLog(filters: any = {}) {
-    let sql = `
-      SELECT al.*, u.name as user_name, u.email as user_email
-      FROM admin_activity_log al
-      JOIN users u ON al.user_id = u.id
-      WHERE 1=1
-    `;
+    const where: any = {};
     
-    if (filters.userId) sql += ` AND al.user_id = '${filters.userId}'`;
-    if (filters.action) sql += ` AND al.action LIKE '%${filters.action}%'`;
-    if (filters.dateFrom) sql += ` AND al.created_at >= '${filters.dateFrom}'`;
-    if (filters.dateTo) sql += ` AND al.created_at <= '${filters.dateTo}'`;
+    if (filters.userId) where.userId = filters.userId;
+    if (filters.action) where.action = { contains: filters.action };
+    if (filters.dateFrom || filters.dateTo) {
+      where.timestamp = {};
+      if (filters.dateFrom) where.timestamp.gte = new Date(filters.dateFrom);
+      if (filters.dateTo) where.timestamp.lte = new Date(filters.dateTo);
+    }
     
-    sql += ` ORDER BY al.created_at DESC LIMIT ${filters.limit || 100}`;
-    
-    return this.prisma.$queryRawUnsafe(sql);
+    return this.prisma.auditLog.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: filters.limit || 100
+    });
   }
 
   private generateId(): string {

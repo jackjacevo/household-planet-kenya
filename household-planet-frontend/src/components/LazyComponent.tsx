@@ -16,6 +16,7 @@ export default function LazyComponent({
   threshold = 0.1
 }: LazyComponentProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,6 +24,8 @@ export default function LazyComponent({
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
+          // Delay loading to improve performance
+          setTimeout(() => setIsLoaded(true), 50);
           observer.disconnect();
         }
       },
@@ -37,8 +40,8 @@ export default function LazyComponent({
   }, [rootMargin, threshold]);
 
   return (
-    <div ref={ref}>
-      {isVisible ? children : fallback}
+    <div ref={ref} style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}>
+      {isVisible && isLoaded ? children : fallback}
     </div>
   );
 }

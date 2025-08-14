@@ -19,6 +19,7 @@ const email_verified_guard_1 = require("./guards/email-verified.guard");
 const active_user_guard_1 = require("./guards/active-user.guard");
 const prisma_module_1 = require("../prisma/prisma.module");
 const cart_module_1 = require("../cart/cart.module");
+const security_module_1 = require("../security/security.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -26,11 +27,12 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
+            security_module_1.SecurityModule,
             (0, common_1.forwardRef)(() => cart_module_1.CartModule),
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'your-secret-key',
-                signOptions: { expiresIn: '1h' },
+                signOptions: { expiresIn: '15m' },
             }),
         ],
         controllers: [auth_controller_1.AuthController],

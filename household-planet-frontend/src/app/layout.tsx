@@ -6,12 +6,23 @@ import MobileNavigation from '@/components/MobileNavigation'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 import PWAUpdateNotification from '@/components/PWAUpdateNotification'
 import OfflineIndicator from '@/components/OfflineIndicator'
+import PWAStatus from '@/components/PWAStatus'
+import PWALoadingScreen from '@/components/PWALoadingScreen'
+import PWAPerformanceMonitor from '@/components/PWAPerformanceMonitor'
+import PerformanceOptimizer from '@/components/PerformanceOptimizer'
 import ResourcePreloader from '@/components/ResourcePreloader'
 import CriticalCSS from '@/components/CriticalCSS'
 import WhatsAppFloating from '@/components/WhatsAppFloating'
 import AbandonedCartTracker from '@/components/AbandonedCartTracker'
+import LiveChat from '@/components/LiveChat'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Metadata, Viewport } from 'next'
+import GoogleAnalytics from '@/components/Analytics/GoogleAnalytics'
+import GoogleTagManager from '@/components/Analytics/GoogleTagManager'
+import FacebookPixel from '@/components/Analytics/FacebookPixel'
+import HotjarScript from '@/components/Analytics/HotjarScript'
+import { generateOrganizationSchema } from '@/lib/seo'
+import SchemaMarkup from '@/components/SEO/SchemaMarkup'
 
 export const metadata: Metadata = {
   title: {
@@ -93,6 +104,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const organizationSchema = generateOrganizationSchema();
+
   return (
     <html lang="en" className="scroll-smooth">
       <head>
@@ -102,8 +115,9 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#3b82f6" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Household Planet" />
+        <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
@@ -118,6 +132,13 @@ export default function RootLayout({
         </a>
         <CriticalCSS />
         <ResourcePreloader />
+        <SchemaMarkup schema={organizationSchema} />
+        <GoogleAnalytics />
+        <GoogleTagManager />
+        <FacebookPixel />
+        <HotjarScript />
+        <PWAPerformanceMonitor />
+        <PerformanceOptimizer />
         <ErrorBoundary>
           <AuthProvider>
             <CartProvider>
@@ -130,8 +151,10 @@ export default function RootLayout({
                 </div>
                 <MobileNavigation />
                 <PWAInstallPrompt />
+                <PWAStatus />
                 <WhatsAppFloating />
                 <AbandonedCartTracker />
+                <LiveChat />
               </div>
             </CartProvider>
           </AuthProvider>

@@ -17,6 +17,7 @@ const delivery_service_1 = require("../delivery/delivery.service");
 const tracking_service_1 = require("../delivery/tracking.service");
 const whatsapp_service_1 = require("../whatsapp/whatsapp.service");
 const abandoned_cart_service_1 = require("../whatsapp/abandoned-cart.service");
+const type_conversion_util_1 = require("../common/utils/type-conversion.util");
 let OrdersService = class OrdersService {
     constructor(prisma, mpesaService, deliveryService, trackingService, whatsappService, abandonedCartService) {
         this.prisma = prisma;
@@ -27,6 +28,7 @@ let OrdersService = class OrdersService {
         this.abandonedCartService = abandonedCartService;
     }
     async createOrder(userId, createOrderDto) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const { items, shippingAddress, deliveryLocation, paymentMethod } = createOrderDto;
         const deliveryPrice = await this.deliveryService.calculateDeliveryPrice(deliveryLocation);
         let subtotal = 0;
@@ -66,7 +68,7 @@ let OrdersService = class OrdersService {
         const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
         const order = await this.prisma.order.create({
             data: {
-                userId,
+                userId: userIdStr,
                 orderNumber,
                 subtotal,
                 shippingCost: deliveryPrice,
@@ -112,18 +114,18 @@ let OrdersService = class OrdersService {
         for (const item of items) {
             await this.prisma.cart.deleteMany({
                 where: {
-                    userId,
+                    userId: userIdStr,
                     productId: item.productId,
                     variantId: item.variantId || null
                 }
             });
         }
         await this.trackingService.createTracking(order.id);
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const user = await this.prisma.user.findUnique({ where: { id: userIdStr } });
         if (user?.phone) {
-            await this.whatsappService.sendOrderConfirmation(user.phone, order.orderNumber, order.total, order.id, userId);
+            await this.whatsappService.sendOrderConfirmation(user.phone, order.orderNumber, order.total, order.id, userIdStr);
         }
-        await this.abandonedCartService.markCartAsRecovered(userId);
+        await this.abandonedCartService.markCartAsRecovered(userIdStr);
         return order;
     }
     async createOrderWithMpesaPayment(userId, createOrderDto) {

@@ -8,186 +8,199 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  phone             String?
-  name              String
-  firstName         String?
-  lastName          String?
-  role              String   @default("CUSTOMER")
-  password          String
-  emailVerified     Boolean  @default(false)
-  phoneVerified     Boolean  @default(false)
-  emailVerifyToken  String?
-  phoneVerifyToken  String?
-  resetPasswordToken String?
-  resetPasswordExpires DateTime?
-  refreshToken      String?
-  lastLoginAt       DateTime?
-  isActive          Boolean  @default(true)
-  avatar            String?
-  dateOfBirth       DateTime?
-  gender            String?
-  socialProviders   String?  // Store social login data as JSON string
-  twoFactorEnabled  Boolean  @default(false)
-  twoFactorSecret   String?
-  loyaltyPoints     Int      @default(0)
-  totalSpent        Float    @default(0)
-  preferredLanguage String   @default("en")
-  marketingEmails   Boolean  @default(true)
-  smsNotifications  Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  orders    Order[]
-  addresses Address[]
-  cart      Cart[]
-  wishlist  Wishlist[]
-  reviews   Review[]
-  recentlyViewed RecentlyViewed[]
-  savedForLater SavedForLater[]
-  returnRequests ReturnRequest[]
-  promoCodeUsages PromoCodeUsage[]
-  supportTickets SupportTicket[]
-  loyaltyTransactions LoyaltyTransaction[]
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  phone                 String?
+  name                  String
+  firstName             String?
+  lastName              String?
+  role                  String                 @default("CUSTOMER")
+  password              String
+  emailVerified         Boolean                @default(false)
+  phoneVerified         Boolean                @default(false)
+  emailVerifyToken      String?
+  phoneVerifyToken      String?
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  refreshToken          String?
+  lastLoginAt           DateTime?
+  isActive              Boolean                @default(true)
+  avatar                String?
+  dateOfBirth           DateTime?
+  gender                String?
+  socialProviders       String?
+  twoFactorEnabled      Boolean                @default(false)
+  twoFactorSecret       String?
+  loyaltyPoints         Int                    @default(0)
+  totalSpent            Float                  @default(0)
+  preferredLanguage     String                 @default("en")
+  marketingEmails       Boolean                @default(true)
+  smsNotifications      Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  optedOutAt            DateTime?
+  phoneNumber           String?
+  privacySettings       String?
+  abandonedCarts        AbandonedCart[]
+  addresses             Address[]
+  apiRequestLogs        ApiRequestLog[]
+  cart                  Cart[]
+  fileAccessLogs        FileAccessLog[]
+  loyaltyTransactions   LoyaltyTransaction[]
+  orders                Order[]
+  promoCodeUsages       PromoCodeUsage[]
+  recentlyViewed        RecentlyViewed[]
+  returnRequests        ReturnRequest[]
+  reviews               Review[]
+  savedForLater         SavedForLater[]
+  securityEvents        SecurityEvent[]
+  supportTickets        SupportTicket[]
+  uploadedFiles         UploadedFile[]
+  whatsappContacts      WhatsAppContact[]
+  whatsappMessages      WhatsAppMessage[]
+  wishlist              Wishlist[]
   wishlistNotifications WishlistNotification[]
-  whatsappMessages WhatsAppMessage[]
-  whatsappContacts WhatsAppContact[]
-  abandonedCarts AbandonedCart[]
+  chatMessages          ChatMessage[]
 
   @@map("users")
 }
 
 model Category {
-  id          String  @id @default(cuid())
-  name        String
-  slug        String  @unique
-  description String?
-  image       String?
-  parentId    String?
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
-
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-  products Product[]
+  id              String     @id @default(cuid())
+  name            String
+  slug            String     @unique
+  description     String?
+  image           String?
+  parentId        String?
+  isActive        Boolean    @default(true)
+  sortOrder       Int        @default(0)
+  metaDescription String?
+  parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryHierarchy")
+  products        Product[]
 
   @@map("categories")
 }
 
 model Product {
-  id               String  @id @default(cuid())
-  name             String
-  slug             String  @unique
-  description      String?
-  shortDescription String?
-  sku              String  @unique
-  price            Float
-  comparePrice     Float?
-  weight           Float?
-  dimensions       String?
-  images           String?
-  categoryId       String
-  brandId          String?
-  isActive         Boolean @default(true)
-  isFeatured       Boolean @default(false)
-  seoTitle         String?
-  seoDescription   String?
-  tags             String?
-  stock            Int     @default(0)
-  lowStockThreshold Int    @default(10)
-  trackInventory   Boolean @default(true)
-  averageRating    Float?  @default(0)
-  totalReviews     Int     @default(0)
-  viewCount        Int     @default(0)
-  searchKeywords   String?
-  relatedProducts  String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  category Category @relation(fields: [categoryId], references: [id])
-  variants ProductVariant[]
-  orderItems OrderItem[]
-  cart     Cart[]
-  wishlist Wishlist[]
-  reviews  Review[]
-  recentlyViewed RecentlyViewed[]
-  savedForLater SavedForLater[]
-  recommendations ProductRecommendation[] @relation("ProductRecommendations")
-  recommendedBy ProductRecommendation[] @relation("RecommendedProducts")
+  id                     String                  @id @default(cuid())
+  name                   String
+  slug                   String                  @unique
+  description            String?
+  shortDescription       String?
+  sku                    String                  @unique
+  price                  Float
+  comparePrice           Float?
+  weight                 Float?
+  dimensions             String?
+  images                 String?
+  categoryId             String
+  brandId                String?
+  isActive               Boolean                 @default(true)
+  isFeatured             Boolean                 @default(false)
+  seoTitle               String?
+  seoDescription         String?
+  metaDescription        String?
+  tags                   String?
+  keywords               String?
+  stock                  Int                     @default(0)
+  lowStockThreshold      Int                     @default(10)
+  trackInventory         Boolean                 @default(true)
+  averageRating          Float?                  @default(0)
+  totalReviews           Int                     @default(0)
+  viewCount              Int                     @default(0)
+  searchKeywords         String?
+  relatedProducts        String?
+  ageRestricted          Boolean                 @default(false)
+  minimumAge             Int?
+  warrantyPeriod         String?
+  warrantyType           String?
+  warrantyTerms          String?
+  geographicRestrictions String?
+  restrictedRegions      String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  cart                   Cart[]
+  orderItems             OrderItem[]
+  recommendedBy          ProductRecommendation[] @relation("RecommendedProducts")
+  recommendations        ProductRecommendation[] @relation("ProductRecommendations")
+  variants               ProductVariant[]
+  category               Category                @relation(fields: [categoryId], references: [id])
+  recentlyViewed         RecentlyViewed[]
+  reviews                Review[]
+  savedForLater          SavedForLater[]
+  wishlist               Wishlist[]
 
   @@map("products")
 }
 
 model ProductVariant {
-  id         String @id @default(cuid())
-  productId  String
-  name       String
-  sku        String @unique
-  price      Float
-  stock      Int    @default(0)
-  lowStockThreshold Int @default(5)
-  attributes String?
-  size       String?
-  color      String?
-  material   String?
-  isActive   Boolean @default(true)
-
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
-  cart       Cart[]
-  savedForLater SavedForLater[]
+  id                String          @id @default(cuid())
+  productId         String
+  name              String
+  sku               String          @unique
+  price             Float
+  stock             Int             @default(0)
+  lowStockThreshold Int             @default(5)
+  attributes        String?
+  size              String?
+  color             String?
+  material          String?
+  isActive          Boolean         @default(true)
+  cart              Cart[]
+  orderItems        OrderItem[]
+  product           Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  savedForLater     SavedForLater[]
 
   @@map("product_variants")
 }
 
 model Order {
-  id               String   @id @default(cuid())
-  userId           String?
-  orderNumber      String   @unique
-  status           String   @default("PENDING")
-  subtotal         Float
-  shippingCost     Float
-  discount         Float    @default(0)
-  total            Float
-  shippingAddress  String
-  deliveryLocation String
-  deliveryPrice    Float
-  paymentMethod    String
-  paymentStatus    String   @default("PENDING")
-  promoCodeId      String?
-  guestEmail       String?
-  guestName        String?
-  guestPhone       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  user       User?       @relation(fields: [userId], references: [id])
-  promoCode  PromoCode?  @relation(fields: [promoCodeId], references: [id])
-  items OrderItem[]
-  statusHistory OrderStatusHistory[]
-  returnRequests ReturnRequest[]
-  payments Payment[]
-  partialPayments PartialPayment[]
-  deliveryTracking DeliveryTracking?
-  deliverySchedule DeliverySchedule?
-  deliveryFeedback DeliveryFeedback?
+  id                    String               @id @default(cuid())
+  userId                String?
+  orderNumber           String               @unique
+  status                String               @default("PENDING")
+  subtotal              Float
+  shippingCost          Float
+  discount              Float                @default(0)
+  total                 Float
+  shippingAddress       String
+  deliveryLocation      String
+  deliveryPrice         Float
+  paymentMethod         String
+  paymentStatus         String               @default("PENDING")
+  promoCodeId           String?
+  guestEmail            String?
+  guestName             String?
+  guestPhone            String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  estimatedDeliveryDate DateTime?
+  deliveryFeedback      DeliveryFeedback?
+  deliverySchedule      DeliverySchedule?
+  deliveryTracking      DeliveryTracking?
+  items                 OrderItem[]
+  statusHistory         OrderStatusHistory[]
+  promoCode             PromoCode?           @relation(fields: [promoCodeId], references: [id])
+  user                  User?                @relation(fields: [userId], references: [id])
+  partialPayments       PartialPayment[]
+  payments              Payment[]
+  returnRequests        ReturnRequest[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
-  orderId   String
-  productId String
-  variantId String?
-  quantity  Int
-  price     Float
-  total     Float
-
-  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product         @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
+  id                 String              @id @default(cuid())
+  orderId            String
+  productId          String
+  variantId          String?
+  quantity           Int
+  price              Float
+  total              Float
+  variant            ProductVariant?     @relation(fields: [variantId], references: [id])
+  product            Product             @relation(fields: [productId], references: [id])
+  order              Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
   returnRequestItems ReturnRequestItem[]
 
   @@map("order_items")
@@ -206,38 +219,35 @@ model Address {
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("addresses")
 }
 
 model Cart {
-  id        String   @id @default(cuid())
+  id        String          @id @default(cuid())
   userId    String
   productId String
   variantId String?
   quantity  Int
-  createdAt DateTime @default(now())
-
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId, variantId])
   @@map("cart")
 }
 
 model Wishlist {
-  id        String   @id @default(cuid())
-  userId    String
-  productId String
-  notifyOnStock Boolean @default(true)
-  notifyOnSale  Boolean @default(true)
-  createdAt DateTime @default(now())
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  userId        String
+  productId     String
+  notifyOnStock Boolean  @default(true)
+  notifyOnSale  Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@map("wishlist")
@@ -255,9 +265,8 @@ model Review {
   images     String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, userId])
   @@map("reviews")
@@ -268,23 +277,21 @@ model RecentlyViewed {
   userId    String
   productId String
   viewedAt  DateTime @default(now())
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@map("recently_viewed")
 }
 
 model ProductRecommendation {
-  id            String @id @default(cuid())
+  id            String  @id @default(cuid())
   productId     String
   recommendedId String
-  score         Float  @default(0)
-  type          String // "similar", "frequently_bought", "viewed_together"
-
-  product     Product @relation("ProductRecommendations", fields: [productId], references: [id], onDelete: Cascade)
-  recommended Product @relation("RecommendedProducts", fields: [recommendedId], references: [id], onDelete: Cascade)
+  score         Float   @default(0)
+  type          String
+  recommended   Product @relation("RecommendedProducts", fields: [recommendedId], references: [id], onDelete: Cascade)
+  product       Product @relation("ProductRecommendations", fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, recommendedId, type])
   @@map("product_recommendations")
@@ -294,7 +301,7 @@ model InventoryAlert {
   id        String   @id @default(cuid())
   productId String?
   variantId String?
-  type      String   // "low_stock", "out_of_stock"
+  type      String
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -303,16 +310,15 @@ model InventoryAlert {
 }
 
 model SavedForLater {
-  id        String   @id @default(cuid())
+  id        String          @id @default(cuid())
   userId    String
   productId String
   variantId String?
   quantity  Int
-  createdAt DateTime @default(now())
-
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId, variantId])
   @@map("saved_for_later")
@@ -324,61 +330,57 @@ model OrderStatusHistory {
   status    String
   notes     String?
   createdAt DateTime @default(now())
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("order_status_history")
 }
 
 model ReturnRequest {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   orderId     String
   userId      String
   reason      String
   description String?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED
+  status      String              @default("PENDING")
   images      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  order Order            @relation(fields: [orderId], references: [id])
-  user  User             @relation(fields: [userId], references: [id])
-  items ReturnRequestItem[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  items       ReturnRequestItem[]
+  user        User                @relation(fields: [userId], references: [id])
+  order       Order               @relation(fields: [orderId], references: [id])
 
   @@map("return_requests")
 }
 
 model ReturnRequestItem {
-  id              String @id @default(cuid())
+  id              String        @id @default(cuid())
   returnRequestId String
   orderItemId     String
   reason          String
   condition       String?
-
-  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
-  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id])
+  orderItem       OrderItem     @relation(fields: [orderItemId], references: [id])
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
 
   @@map("return_request_items")
 }
 
 model Payment {
-  id                String    @id @default(cuid())
-  orderId           String
-  checkoutRequestId String    @unique
-  merchantRequestId String?
-  amount            Float
-  phoneNumber       String
-  status            String    @default("PENDING")
-  paymentMethod     String    @default("MPESA")
+  id                 String         @id @default(cuid())
+  orderId            String
+  checkoutRequestId  String         @unique
+  merchantRequestId  String?
+  amount             Float
+  phoneNumber        String
+  status             String         @default("PENDING")
+  paymentMethod      String         @default("MPESA")
   mpesaReceiptNumber String?
-  transactionDate   DateTime?
-  failureReason     String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  order Order @relation(fields: [orderId], references: [id])
-  refunds Refund[]
-  retries PaymentRetry[]
+  transactionDate    DateTime?
+  failureReason      String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  retries            PaymentRetry[]
+  order              Order          @relation(fields: [orderId], references: [id])
+  refunds            Refund[]
 
   @@map("payments")
 }
@@ -392,8 +394,7 @@ model Refund {
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  payment Payment @relation(fields: [paymentId], references: [id])
+  payment   Payment  @relation(fields: [paymentId], references: [id])
 
   @@map("refunds")
 }
@@ -403,8 +404,7 @@ model PaymentRetry {
   paymentId String
   attempt   Int
   createdAt DateTime @default(now())
-
-  payment Payment @relation(fields: [paymentId], references: [id])
+  payment   Payment  @relation(fields: [paymentId], references: [id])
 
   @@map("payment_retries")
 }
@@ -418,8 +418,7 @@ model PartialPayment {
   status            String    @default("PENDING")
   paidAt            DateTime?
   createdAt         DateTime  @default(now())
-
-  order Order @relation(fields: [orderId], references: [id])
+  order             Order     @relation(fields: [orderId], references: [id])
 
   @@map("partial_payments")
 }
@@ -437,61 +436,58 @@ model PaymentSession {
 }
 
 model DeliveryLocation {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  tier        Int
-  price       Float
-  description String?
-  isActive    Boolean @default(true)
-  estimatedDays Int   @default(3)
-  expressAvailable Boolean @default(false)
-  expressPrice Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String   @unique
+  tier             Int
+  price            Float
+  description      String?
+  isActive         Boolean  @default(true)
+  estimatedDays    Int      @default(3)
+  expressAvailable Boolean  @default(false)
+  expressPrice     Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("delivery_locations")
 }
 
 model DeliveryTracking {
-  id        String   @id @default(cuid())
-  orderId   String   @unique
-  status    String   @default("PENDING")
-  location  String?
-  notes     String?
-  photoProof String?
+  id          String           @id @default(cuid())
+  orderId     String           @unique
+  status      String           @default("PENDING")
+  location    String?
+  notes       String?
+  photoProof  String?
   deliveredAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  order Order @relation(fields: [orderId], references: [id])
-  updates DeliveryUpdate[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  order       Order            @relation(fields: [orderId], references: [id])
+  updates     DeliveryUpdate[]
 
   @@map("delivery_tracking")
 }
 
 model DeliveryUpdate {
-  id        String   @id @default(cuid())
+  id         String           @id @default(cuid())
   trackingId String
-  status    String
-  location  String?
-  notes     String?
-  timestamp DateTime @default(now())
-
-  tracking DeliveryTracking @relation(fields: [trackingId], references: [id])
+  status     String
+  location   String?
+  notes      String?
+  timestamp  DateTime         @default(now())
+  tracking   DeliveryTracking @relation(fields: [trackingId], references: [id])
 
   @@map("delivery_updates")
 }
 
 model DeliverySchedule {
-  id          String   @id @default(cuid())
-  orderId     String   @unique
+  id            String   @id @default(cuid())
+  orderId       String   @unique
   preferredDate DateTime
-  timeSlot    String
-  instructions String?
-  isRescheduled Boolean @default(false)
-  createdAt   DateTime @default(now())
-
-  order Order @relation(fields: [orderId], references: [id])
+  timeSlot      String
+  instructions  String?
+  isRescheduled Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id])
 
   @@map("delivery_schedules")
 }
@@ -502,73 +498,68 @@ model DeliveryFeedback {
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
-
-  order Order @relation(fields: [orderId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id])
 
   @@map("delivery_feedback")
 }
 
 model PromoCode {
-  id              String   @id @default(cuid())
-  code            String   @unique
-  discountType    String   // "PERCENTAGE" or "FIXED"
-  discountValue   Float
-  minimumAmount   Float?
+  id                String           @id @default(cuid())
+  code              String           @unique
+  discountType      String
+  discountValue     Float
+  minimumAmount     Float?
   maxDiscountAmount Float?
-  usageLimit      Int?
-  usedCount       Int      @default(0)
-  allowMultipleUse Boolean @default(false)
-  isActive        Boolean  @default(true)
-  expiresAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  orders Order[]
-  usages PromoCodeUsage[]
+  usageLimit        Int?
+  usedCount         Int              @default(0)
+  allowMultipleUse  Boolean          @default(false)
+  isActive          Boolean          @default(true)
+  expiresAt         DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  orders            Order[]
+  usages            PromoCodeUsage[]
 
   @@map("promo_codes")
 }
 
 model PromoCodeUsage {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   promoCodeId String
   orderId     String?
-  usedAt      DateTime @default(now())
-
-  user      User      @relation(fields: [userId], references: [id])
-  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+  usedAt      DateTime  @default(now())
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, promoCodeId])
   @@map("promo_code_usage")
 }
 
 model SupportTicket {
-  id        String   @id @default(cuid())
+  id        String               @id @default(cuid())
   userId    String
   subject   String
   message   String
-  status    String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority  String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  category  String   // ORDER, PRODUCT, PAYMENT, DELIVERY, ACCOUNT, OTHER
+  status    String               @default("OPEN")
+  priority  String               @default("MEDIUM")
+  category  String
   orderId   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
-  replies SupportTicketReply[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  replies   SupportTicketReply[]
+  user      User                 @relation(fields: [userId], references: [id])
 
   @@map("support_tickets")
 }
 
 model SupportTicketReply {
-  id       String   @id @default(cuid())
-  ticketId String
-  message  String
-  isStaff  Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  ticket SupportTicket @relation(fields: [ticketId], references: [id])
+  id        String        @id @default(cuid())
+  ticketId  String
+  message   String
+  isStaff   Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
 
   @@map("support_ticket_replies")
 }
@@ -577,12 +568,11 @@ model LoyaltyTransaction {
   id          String   @id @default(cuid())
   userId      String
   points      Int
-  type        String   // EARNED, REDEEMED, EXPIRED, BONUS
+  type        String
   description String
   orderId     String?
   createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@map("loyalty_transactions")
 }
@@ -591,12 +581,11 @@ model WishlistNotification {
   id        String   @id @default(cuid())
   userId    String
   productId String
-  type      String   // BACK_IN_STOCK, PRICE_DROP, ON_SALE
+  type      String
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("wishlist_notifications")
 }
@@ -612,67 +601,570 @@ model Invoice {
 }
 
 model WhatsAppMessage {
-  id          String   @id @default(cuid())
-  phoneNumber String
-  message     String
-  type        String   // ORDER_CONFIRMATION, DELIVERY_UPDATE, ABANDONED_CART, PROMOTIONAL, SUPPORT
-  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, FAILED
-  orderId     String?
-  userId      String?
-  templateId  String?
-  mediaUrl    String?
+  id            String    @id @default(cuid())
+  phoneNumber   String
+  message       String
+  type          String
+  status        String    @default("PENDING")
+  orderId       String?
+  userId        String?
+  templateId    String?
+  mediaUrl      String?
   failureReason String?
-  sentAt      DateTime?
-  deliveredAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User? @relation(fields: [userId], references: [id])
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User?     @relation(fields: [userId], references: [id])
 
   @@map("whatsapp_messages")
 }
 
 model WhatsAppTemplate {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  type        String   // ORDER_CONFIRMATION, DELIVERY_UPDATE, ABANDONED_CART, etc.
-  template    String   // Message template with placeholders
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  type      String
+  template  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("whatsapp_templates")
 }
 
 model WhatsAppContact {
-  id          String   @id @default(cuid())
-  phoneNumber String   @unique
-  name        String?
-  userId      String?
-  isOptedIn   Boolean  @default(true)
+  id            String    @id @default(cuid())
+  phoneNumber   String    @unique
+  name          String?
+  userId        String?
+  isOptedIn     Boolean   @default(true)
   lastMessageAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User? @relation(fields: [userId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  optedOutAt    DateTime?
+  user          User?     @relation(fields: [userId], references: [id])
 
   @@map("whatsapp_contacts")
 }
 
 model AbandonedCart {
-  id          String   @id @default(cuid())
-  userId      String?
-  sessionId   String?
-  phoneNumber String?
-  cartData    String   // JSON string of cart items
-  remindersSent Int    @default(0)
+  id             String    @id @default(cuid())
+  userId         String?
+  sessionId      String?
+  phoneNumber    String?
+  cartData       String
+  remindersSent  Int       @default(0)
   lastReminderAt DateTime?
-  isRecovered Boolean  @default(false)
-  recoveredAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User? @relation(fields: [userId], references: [id])
+  isRecovered    Boolean   @default(false)
+  recoveredAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User?     @relation(fields: [userId], references: [id])
 
   @@map("abandoned_carts")
+}
+
+model UploadedFile {
+  id            String          @id @default(cuid())
+  originalName  String
+  filename      String
+  path          String
+  url           String
+  mimeType      String
+  size          Int
+  hash          String
+  category      String          @default("general")
+  userId        String
+  uploadedAt    DateTime        @default(now())
+  scannedAt     DateTime?
+  scanResult    String?
+  isQuarantined Boolean         @default(false)
+  metadata      String?
+  accessLogs    FileAccessLog[]
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("uploaded_files")
+}
+
+model FileAccessLog {
+  id         String       @id @default(cuid())
+  fileId     String
+  userId     String?
+  action     String
+  ipAddress  String?
+  userAgent  String?
+  accessedAt DateTime     @default(now())
+  user       User?        @relation(fields: [userId], references: [id])
+  file       UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@map("file_access_logs")
+}
+
+model ApiRequestLog {
+  id           String   @id @default(cuid())
+  method       String
+  url          String
+  statusCode   Int
+  responseTime Int
+  ipAddress    String?
+  userAgent    String?
+  userId       String?
+  requestedAt  DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@map("api_request_logs")
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  event     String
+  severity  String   @default("medium")
+  details   String?
+  ipAddress String?
+  userId    String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("security_events")
+}
+
+model WhatsAppBusinessSettings {
+  id              String   @id @default(cuid())
+  businessName    String   @default("Household Planet Kenya")
+  businessPhone   String   @default("")
+  businessEmail   String?
+  businessAddress String?
+  businessHours   String?
+  welcomeMessage  String?
+  awayMessage     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("whatsapp_business_settings")
+}
+
+model WhatsAppAutoReply {
+  id        String   @id @default(cuid())
+  type      String   @unique
+  message   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("whatsapp_auto_replies")
+}
+
+model WhatsAppCustomerSegment {
+  id          String             @id @default(cuid())
+  name        String
+  description String?
+  criteria    String
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  campaigns   WhatsAppCampaign[]
+
+  @@map("whatsapp_customer_segments")
+}
+
+model WhatsAppCampaign {
+  id              String                   @id @default(cuid())
+  name            String
+  message         String
+  segmentId       String?
+  phoneNumbers    String?
+  mediaUrl        String?
+  status          String                   @default("DRAFT")
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  completedAt     DateTime?
+  totalSent       Int                      @default(0)
+  totalDelivered  Int                      @default(0)
+  totalFailed     Int                      @default(0)
+  totalRecipients Int                      @default(0)
+  successfulSends Int                      @default(0)
+  failedSends     Int                      @default(0)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  segment         WhatsAppCustomerSegment? @relation(fields: [segmentId], references: [id])
+
+  @@map("whatsapp_campaigns")
+}
+
+model SmsLog {
+  id            String    @id @default(cuid())
+  phoneNumber   String
+  message       String
+  type          String    @default("GENERAL")
+  status        String    @default("PENDING")
+  provider      String    @default("AFRICASTALKING")
+  messageId     String?
+  cost          Float?
+  error         String?
+  failureReason String?
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("sms_logs")
+}
+
+model OtpCode {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  code        String
+  isUsed      Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@map("otp_codes")
+}
+
+model PerformanceMetric {
+  id        String   @id @default(cuid())
+  url       String
+  loadTime  Float
+  userId    String?
+  timestamp DateTime @default(now())
+
+  @@map("performance_metrics")
+}
+
+model TaxRecord {
+  id          String   @id @default(cuid())
+  orderId     String
+  baseAmount  Float
+  vatAmount   Float
+  totalAmount Float
+  vatRate     Float
+  isExempt    Boolean  @default(false)
+  recordedAt  DateTime @default(now())
+
+  @@map("tax_records")
+}
+
+model BlogPost {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  content        String
+  excerpt        String?
+  featuredImage  String?
+  status         String    @default("DRAFT")
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  tags           String?
+  authorId       String?
+  viewCount      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("blog_posts")
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faqs")
+}
+
+model Page {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  content        String
+  seoTitle       String?
+  seoDescription String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("pages")
+}
+
+model SearchLog {
+  id        String   @id @default(cuid())
+  query     String
+  results   Int      @default(0)
+  userId    String?
+  ipAddress String?
+  timestamp DateTime @default(now())
+
+  @@map("search_logs")
+}
+
+model PaymentToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String
+  type      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("payment_tokens")
+}
+
+model PaymentAuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  event     String
+  details   String?
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@map("payment_audit_logs")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  userId    String?
+  ipAddress String?
+  score     Int?
+  status    String?
+  timestamp DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model DataBreach {
+  id            String    @id @default(cuid())
+  type          String
+  severity      String
+  description   String
+  affectedUsers Int       @default(0)
+  detectedAt    DateTime  @default(now())
+  reportedAt    DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  @@map("data_breaches")
+}
+
+model SecurityIncident {
+  id          String    @id @default(cuid())
+  type        String
+  severity    String
+  description String
+  status      String    @default("OPEN")
+  createdAt   DateTime  @default(now())
+  reportedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  @@map("security_incidents")
+}
+
+model SecurityTraining {
+  id          String   @id @default(cuid())
+  userId      String
+  moduleId    String
+  completedAt DateTime @default(now())
+  score       Int?
+
+  @@map("security_training")
+}
+
+model SecurityScan {
+  id        String   @id @default(cuid())
+  type      String
+  results   String
+  score     Int?
+  timestamp DateTime @default(now())
+
+  @@map("security_scans")
+}
+
+model ABExperiment {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  type        String    @default("A_B_TEST")
+  status      String    @default("DRAFT")
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("ab_experiments")
+}
+
+model ABAssignment {
+  id           String   @id @default(cuid())
+  experimentId String
+  userId       String?
+  variant      String
+  assignedAt   DateTime @default(now())
+
+  @@map("ab_assignments")
+}
+
+model ABConversion {
+  id           String   @id @default(cuid())
+  experimentId String
+  userId       String?
+  variant      String
+  event        String
+  value        Float?
+  convertedAt  DateTime @default(now())
+
+  @@map("ab_conversions")
+}
+
+model ChatSession {
+  id             String        @id @default(cuid())
+  userId         String?
+  visitorId      String?
+  userAgent      String?
+  status         String        @default("ACTIVE")
+  lastActivityAt DateTime      @default(now())
+  assignedTo     String?
+  closedAt       DateTime?
+  startedAt      DateTime      @default(now())
+  endedAt        DateTime?
+  messages       ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id             String      @id @default(cuid())
+  sessionId      String
+  userId         String?
+  sender         String
+  message        String
+  content        String?
+  isFromCustomer Boolean     @default(false)
+  timestamp      DateTime    @default(now())
+  createdAt      DateTime    @default(now())
+  session        ChatSession @relation(fields: [sessionId], references: [id])
+  user           User?       @relation(fields: [userId], references: [id])
+
+  @@map("chat_messages")
+}
+
+model OfflineMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("offline_messages")
+}
+
+model ChatAutoResponse {
+  id       String  @id @default(cuid())
+  trigger  String
+  response String
+  isActive Boolean @default(true)
+  priority Int     @default(0)
+  keywords String?
+
+  @@map("chat_auto_responses")
+}
+
+model AgeVerification {
+  id         String   @id @default(cuid())
+  userId     String
+  method     String
+  verified   Boolean  @default(false)
+  verifiedAt DateTime @default(now())
+  age        Int
+  createdAt  DateTime @default(now())
+
+  @@map("age_verifications")
+}
+
+model UserConsent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  granted   Boolean
+  grantedAt DateTime @default(now())
+  timestamp DateTime @default(now())
+
+  @@map("user_consents")
+}
+
+model DataDeletionRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  reason      String
+  status      String    @default("PENDING")
+  requestedAt DateTime  @default(now())
+  completedAt DateTime?
+
+  @@map("data_deletion_requests")
+}
+
+model ConsumerComplaint {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  description String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  @@map("consumer_complaints")
+}
+
+model CookieConsent {
+  id          String   @id @default(cuid())
+  sessionId   String
+  necessary   Boolean  @default(true)
+  analytics   Boolean  @default(false)
+  marketing   Boolean  @default(false)
+  preferences Boolean  @default(false)
+  timestamp   DateTime @default(now())
+
+  @@map("cookie_consents")
+}
+
+model DataExportRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  status      String    @default("PENDING")
+  requestedAt DateTime  @default(now())
+  completedAt DateTime?
+  downloadUrl String?
+  fileName    String?
+
+  @@map("data_export_requests")
+}
+
+model Dispute {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               String
+  description        String
+  status             String    @default("OPEN")
+  initiatedAt        DateTime  @default(now())
+  escalatedAt        DateTime?
+  escalationReason   String?
+  assignedDepartment String?
+
+  @@map("disputes")
+}
+
+model GeographicAccessLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  productId  String
+  country    String
+  allowed    Boolean
+  reason     String?
+  accessedAt DateTime @default(now())
+
+  @@map("geographic_access_logs")
 }

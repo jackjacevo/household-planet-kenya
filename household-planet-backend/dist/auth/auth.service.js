@@ -15,11 +15,19 @@ const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcryptjs");
 const prisma_service_1 = require("../prisma/prisma.service");
 const guest_cart_service_1 = require("../cart/guest-cart.service");
+const type_conversion_util_1 = require("../common/utils/type-conversion.util");
+const input_sanitizer_service_1 = require("../security/input-sanitizer.service");
+const secure_logger_service_1 = require("../security/secure-logger.service");
 let AuthService = class AuthService {
-    constructor(prisma, jwtService, guestCartService) {
+    constructor(prisma, jwtService, guestCartService, sanitizer, secureLogger) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.guestCartService = guestCartService;
+        this.sanitizer = sanitizer;
+        this.secureLogger = secureLogger;
+        this.loginAttempts = new Map();
+        this.maxLoginAttempts = 5;
+        this.lockoutDuration = 15 * 60 * 1000;
     }
     async register(registerDto) {
         const existingUser = await this.prisma.user.findUnique({
@@ -64,15 +72,20 @@ let AuthService = class AuthService {
         };
     }
     async login(loginDto, guestCartItems) {
+        if (this.isAccountLocked(loginDto.email)) {
+            throw new common_1.UnauthorizedException('Account temporarily locked due to too many failed attempts');
+        }
         const user = await this.prisma.user.findUnique({
             where: { email: loginDto.email },
         });
         if (!user || !await bcrypt.compare(loginDto.password, user.password)) {
+            this.recordFailedLogin(loginDto.email);
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         if (!user.isActive) {
             throw new common_1.UnauthorizedException('Account is deactivated');
         }
+        this.clearFailedLogins(loginDto.email);
         await this.prisma.user.update({
             where: { id: user.id },
             data: { lastLoginAt: new Date() },
@@ -96,6 +109,8 @@ let AuthService = class AuthService {
                 name: user.name,
                 role: user.role,
                 emailVerified: user.emailVerified,
+                isActive: user.isActive,
+                phoneVerified: user.phoneVerified,
             },
         };
     }
@@ -173,15 +188,17 @@ let AuthService = class AuthService {
         }
     }
     async logout(userId) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         await this.prisma.user.update({
-            where: { id: userId },
+            where: { id: userIdStr },
             data: { refreshToken: null },
         });
         return { message: 'Logged out successfully' };
     }
     async changePassword(userId, changePasswordDto) {
+        const userIdStr = (0, type_conversion_util_1.ensureStringUserId)(userId);
         const user = await this.prisma.user.findUnique({
-            where: { id: userId },
+            where: { id: userIdStr },
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');
@@ -192,7 +209,7 @@ let AuthService = class AuthService {
         }
         const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 12);
         await this.prisma.user.update({
-            where: { id: userId },
+            where: { id: userIdStr },
             data: { password: hashedNewPassword },
         });
         return { message: 'Password changed successfully' };
@@ -309,12 +326,34 @@ let AuthService = class AuthService {
     generatePhoneCode() {
         return Math.floor(100000 + Math.random() * 900000).toString();
     }
+    isAccountLocked(email) {
+        const attempts = this.loginAttempts.get(email);
+        if (!attempts)
+            return false;
+        const timeSinceLastAttempt = Date.now() - attempts.lastAttempt.getTime();
+        if (timeSinceLastAttempt > this.lockoutDuration) {
+            this.loginAttempts.delete(email);
+            return false;
+        }
+        return attempts.count >= this.maxLoginAttempts;
+    }
+    recordFailedLogin(email) {
+        const attempts = this.loginAttempts.get(email) || { count: 0, lastAttempt: new Date() };
+        attempts.count++;
+        attempts.lastAttempt = new Date();
+        this.loginAttempts.set(email, attempts);
+    }
+    clearFailedLogins(email) {
+        this.loginAttempts.delete(email);
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         jwt_1.JwtService,
-        guest_cart_service_1.GuestCartService])
+        guest_cart_service_1.GuestCartService,
+        input_sanitizer_service_1.InputSanitizerService,
+        secure_logger_service_1.SecureLoggerService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

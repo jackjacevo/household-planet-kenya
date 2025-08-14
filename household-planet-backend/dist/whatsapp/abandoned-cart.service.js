@@ -23,11 +23,12 @@ let AbandonedCartService = AbandonedCartService_1 = class AbandonedCartService {
     }
     async trackAbandonedCart(userId, sessionId, phoneNumber, cartItems) {
         try {
+            const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
             const cartData = JSON.stringify(cartItems || []);
             const existingCart = await this.prisma.abandonedCart.findFirst({
                 where: {
                     OR: [
-                        { userId: userId || undefined },
+                        { userId: userIdStr || undefined },
                         { sessionId: sessionId || undefined },
                         { phoneNumber: phoneNumber || undefined },
                     ],
@@ -46,14 +47,14 @@ let AbandonedCartService = AbandonedCartService_1 = class AbandonedCartService {
             else {
                 await this.prisma.abandonedCart.create({
                     data: {
-                        userId,
+                        userId: userIdStr,
                         sessionId,
                         phoneNumber,
                         cartData,
                     },
                 });
             }
-            this.logger.log(`Tracked abandoned cart for ${userId || sessionId || phoneNumber}`);
+            this.logger.log(`Tracked abandoned cart for ${userIdStr || sessionId || phoneNumber}`);
         }
         catch (error) {
             this.logger.error('Failed to track abandoned cart:', error);
@@ -61,10 +62,11 @@ let AbandonedCartService = AbandonedCartService_1 = class AbandonedCartService {
     }
     async markCartAsRecovered(userId, sessionId, phoneNumber) {
         try {
+            const userIdStr = userId ? (typeof userId === 'string' ? userId : String(userId)) : undefined;
             await this.prisma.abandonedCart.updateMany({
                 where: {
                     OR: [
-                        { userId: userId || undefined },
+                        { userId: userIdStr || undefined },
                         { sessionId: sessionId || undefined },
                         { phoneNumber: phoneNumber || undefined },
                     ],
@@ -75,7 +77,7 @@ let AbandonedCartService = AbandonedCartService_1 = class AbandonedCartService {
                     recoveredAt: new Date(),
                 },
             });
-            this.logger.log(`Marked cart as recovered for ${userId || sessionId || phoneNumber}`);
+            this.logger.log(`Marked cart as recovered for ${userIdStr || sessionId || phoneNumber}`);
         }
         catch (error) {
             this.logger.error('Failed to mark cart as recovered:', error);

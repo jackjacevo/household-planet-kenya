@@ -10,6 +10,7 @@ import { DeliveryService } from '../delivery/delivery.service';
 import { TrackingService } from '../delivery/tracking.service';
 import { WhatsAppService } from '../whatsapp/whatsapp.service';
 import { AbandonedCartService } from '../whatsapp/abandoned-cart.service';
+import { ensureStringUserId } from '../common/utils/type-conversion.util';
 
 @Injectable()
 export class OrdersService {
@@ -22,7 +23,8 @@ export class OrdersService {
     private abandonedCartService: AbandonedCartService
   ) {}
 
-  async createOrder(userId: string, createOrderDto: CreateOrderDto) {
+  async createOrder(userId: string | number, createOrderDto: CreateOrderDto) {
+    const userIdStr = ensureStringUserId(userId);
     const { items, shippingAddress, deliveryLocation, paymentMethod } = createOrderDto;
     
     // Calculate delivery price based on location
@@ -76,7 +78,7 @@ export class OrdersService {
     // Create order with items
     const order = await this.prisma.order.create({
       data: {
-        userId,
+        userId: userIdStr,
         orderNumber,
         subtotal,
         shippingCost: deliveryPrice,
@@ -125,7 +127,7 @@ export class OrdersService {
     for (const item of items) {
       await this.prisma.cart.deleteMany({
         where: {
-          userId,
+          userId: userIdStr,
           productId: item.productId,
           variantId: item.variantId || null
         }
@@ -136,19 +138,19 @@ export class OrdersService {
     await this.trackingService.createTracking(order.id);
 
     // Send WhatsApp order confirmation
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userIdStr } });
     if (user?.phone) {
       await this.whatsappService.sendOrderConfirmation(
         user.phone,
         order.orderNumber,
         order.total,
         order.id,
-        userId
+        userIdStr
       );
     }
 
     // Mark abandoned cart as recovered
-    await this.abandonedCartService.markCartAsRecovered(userId);
+    await this.abandonedCartService.markCartAsRecovered(userIdStr);
 
     return order;
   }

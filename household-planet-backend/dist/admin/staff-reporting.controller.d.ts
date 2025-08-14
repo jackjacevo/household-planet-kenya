@@ -44,6 +44,9 @@ export declare class StaffReportingController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     updateStaffRole(id: string, data: {
         role: string;
@@ -78,6 +81,9 @@ export declare class StaffReportingController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     deactivateStaff(id: string, user: any): Promise<{
         name: string;
@@ -110,13 +116,34 @@ export declare class StaffReportingController {
         preferredLanguage: string;
         marketingEmails: boolean;
         smsNotifications: boolean;
+        optedOutAt: Date | null;
+        phoneNumber: string | null;
+        privacySettings: string | null;
     }>;
     getStaffPermissions(role: string): Promise<any>;
-    getActivityLog(filters: any): Promise<unknown>;
+    getActivityLog(filters: any): Promise<{
+        id: string;
+        userId: string | null;
+        status: string | null;
+        score: number | null;
+        timestamp: Date;
+        action: string;
+        details: string | null;
+        ipAddress: string | null;
+    }[]>;
     logActivity(data: {
         action: string;
         details: any;
-    }, user: any): Promise<number>;
+    }, user: any): Promise<{
+        id: string;
+        userId: string | null;
+        status: string | null;
+        score: number | null;
+        timestamp: Date;
+        action: string;
+        details: string | null;
+        ipAddress: string | null;
+    }>;
     getSalesReport(startDate: string, endDate: string): Promise<{
         period: {
             startDate: Date;

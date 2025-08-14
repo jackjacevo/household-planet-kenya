@@ -48,6 +48,9 @@ export declare class TrackingService {
                 preferredLanguage: string;
                 marketingEmails: boolean;
                 smsNotifications: boolean;
+                optedOutAt: Date | null;
+                phoneNumber: string | null;
+                privacySettings: string | null;
             };
         } & {
             deliveryLocation: string;
@@ -69,6 +72,7 @@ export declare class TrackingService {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
     } & {
         id: string;
@@ -114,6 +118,9 @@ export declare class TrackingService {
                 preferredLanguage: string;
                 marketingEmails: boolean;
                 smsNotifications: boolean;
+                optedOutAt: Date | null;
+                phoneNumber: string | null;
+                privacySettings: string | null;
             };
         } & {
             deliveryLocation: string;
@@ -135,6 +142,7 @@ export declare class TrackingService {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
     } & {
         id: string;
@@ -200,6 +208,9 @@ export declare class TrackingService {
                 preferredLanguage: string;
                 marketingEmails: boolean;
                 smsNotifications: boolean;
+                optedOutAt: Date | null;
+                phoneNumber: string | null;
+                privacySettings: string | null;
             };
         } & {
             deliveryLocation: string;
@@ -221,6 +232,7 @@ export declare class TrackingService {
             guestEmail: string | null;
             guestName: string | null;
             guestPhone: string | null;
+            estimatedDeliveryDate: Date | null;
         };
     } & {
         id: string;
