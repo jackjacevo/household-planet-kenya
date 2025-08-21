@@ -1,250 +1,451 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import ProductGrid from '@/components/products/ProductGrid';
-import ProductFilters from '@/components/products/ProductFilters';
-import ProductSort from '@/components/products/ProductSort';
-import PullToRefresh from '@/components/ui/PullToRefresh';
-import { FiGrid, FiList, FiFilter, FiX } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { ProductCard } from '@/components/products/ProductCard';
+import { ProductFilters } from '@/components/products/ProductFilters';
+import { ProductSort } from '@/components/products/ProductSort';
+import { Pagination } from '@/components/ui/Pagination';
+import { InfiniteScroll } from '@/components/products/InfiniteScroll';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
+import { SEOHead } from '@/components/seo/SEOHead';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
+import { Product } from '@/types';
+import { api } from '@/lib/api';
+import { Loader2, Grid3X3, List, Search, Filter, Package, ShoppingBag, X } from 'lucide-react';
 
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  comparePrice?: number;
-  images: string[];
-  averageRating: number;
-  totalReviews: number;
-  category: { name: string };
-  stock: number;
-}
+const fadeInUp = {
+  initial: { opacity: 0, y: 60 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6 }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 export default function ProductsPage() {
-  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [scrollMode, setScrollMode] = useState<'pagination' | 'infinite'>('pagination');
+  const [hasMore, setHasMore] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [filters, setFilters] = useState({
-    category: searchParams.get('category') || '',
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    rating: searchParams.get('rating') || '',
-    availability: searchParams.get('availability') || '',
-    brand: searchParams.get('brand') || ''
+    category: '',
+    minPrice: 0,
+    maxPrice: 100000,
+    rating: 0,
+    sortBy: 'newest',
   });
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
 
   useEffect(() => {
-    fetchProducts();
-  }, [filters, sortBy, currentPage]);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (currentPage === 1) {
+      fetchProducts();
+    } else {
+      fetchProducts(scrollMode === 'infinite');
+    }
+  }, [currentPage, filters, scrollMode]);
+
+  const fetchProducts = async (append = false, refresh = false) => {
     try {
-      const queryParams = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '12',
-        sort: sortBy,
-        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v))
-      });
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/search?${queryParams}`);
-      const data = await response.json();
+      if (refresh) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       
-      setProducts(data.products || []);
-      setTotalPages(Math.ceil((data.total || 0) / 12));
+      const response = await api.getProducts({
+        page: currentPage,
+        limit: 12,
+        ...filters,
+      }) as any;
+      
+      const newProducts = response.data || [];
+      if (append && scrollMode === 'infinite') {
+        setProducts(prev => [...prev, ...newProducts]);
+      } else {
+        setProducts(newProducts);
+      }
+      
+      setTotalPages(response.pagination?.totalPages || 1);
+      setHasMore(currentPage < (response.pagination?.totalPages || 1));
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   const handleRefresh = async () => {
-    await fetchProducts();
+    setCurrentPage(1);
+    await fetchProducts(false, true);
   };
 
-  const handleFilterChange = (newFilters: typeof filters) => {
+  const loadMore = () => {
+    if (hasMore && !loading) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
     setCurrentPage(1);
-    setShowFilters(false);
   };
 
-  const handleSortChange = (newSort: string) => {
-    setSortBy(newSort);
-    setCurrentPage(1);
-  };
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'All Products - Household Planet Kenya',
+    description: 'Browse our complete collection of quality household products, kitchen appliances, and home decor items.',
+    url: `${process.env.NEXT_PUBLIC_SITE_URL}/products`,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: products.length,
+      itemListElement: products.slice(0, 10).map((product, index) => ({
+        '@type': 'Product',
+        position: index + 1,
+        name: product.name,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product.slug}`,
+        image: product.images?.[0]?.url,
+        offers: {
+          '@type': 'Offer',
+          price: product.price,
+          priceCurrency: 'KES'
+        }
+      }))
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PullToRefresh onRefresh={handleRefresh}>
-        <div className="max-w-7xl mx-auto">
-          {/* Mobile Header */}
-          <div className="md:hidden bg-white shadow-sm sticky top-16 z-30">
-            <div className="p-4">
-              <h1 className="text-mobile-h1 text-gray-900 mb-2">Products</h1>
-              <p className="text-gray-600 text-sm">Discover our wide range of household essentials</p>
-            </div>
-            
-            {/* Mobile Controls */}
-            <div className="flex items-center justify-between px-4 pb-4">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowFilters(true)}
-                  className="btn-mobile bg-white border border-gray-300 text-gray-700 flex items-center gap-2"
-                >
-                  <FiFilter size={16} />
-                  Filters
-                </button>
-                
-                <ProductSort sortBy={sortBy} onSortChange={handleSortChange} mobile />
-              </div>
-              
-              <div className="flex border rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`min-h-[44px] min-w-[44px] p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'}`}
-                >
-                  <FiGrid size={18} />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`min-h-[44px] min-w-[44px] p-2 ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'}`}
-                >
-                  <FiList size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Desktop Header */}
-          <div className="hidden md:block px-4 py-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Products</h1>
-              <p className="text-gray-600">Discover our wide range of household essentials</p>
-            </div>
-          </div>
-
-          <div className="flex gap-8 px-4 md:px-4">
-            {/* Desktop Filters */}
-            <div className="hidden md:block w-64 flex-shrink-0">
-              <ProductFilters 
-                filters={filters} 
-                onFiltersChange={handleFilterChange}
-              />
-            </div>
-
-            {/* Products Grid */}
-            <div className="flex-1">
-              {/* Desktop Controls */}
-              <div className="hidden md:flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-600">
-                    {loading ? 'Loading...' : `${products.length} products found`}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <ProductSort sortBy={sortBy} onSortChange={handleSortChange} />
-                  
-                  <div className="flex border rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'}`}
-                    >
-                      <FiGrid size={18} />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'}`}
-                    >
-                      <FiList size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Results Count */}
-              <div className="md:hidden px-4 py-2 text-sm text-gray-600">
-                {loading ? 'Loading...' : `${products.length} products found`}
-              </div>
-
-              <ProductGrid 
-                products={products} 
-                loading={loading} 
-                viewMode={viewMode}
-              />
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-8 px-4">
-                  <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`min-h-[44px] min-w-[44px] px-4 py-2 rounded flex-shrink-0 ${
-                          currentPage === page
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+    <>
+      <SEOHead
+        title="All Products - Quality Household Items & Appliances"
+        description="Browse our complete collection of quality household products, kitchen appliances, home decor, and more. Find everything you need for your home with fast delivery across Kenya."
+        keywords={[
+          'household products Kenya',
+          'kitchen appliances',
+          'home decor Kenya',
+          'quality home products',
+          'online shopping Kenya',
+          'household items Nairobi'
+        ]}
+        url="/products"
+        type="website"
+        structuredData={structuredData}
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+      <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
+        {/* Breadcrumbs */}
+        <div className="px-4 pt-4">
+          <div className="container mx-auto max-w-7xl">
+            <Breadcrumbs
+              items={[
+                { name: 'Products', url: '/products' }
+              ]}
+            />
           </div>
         </div>
-      </PullToRefresh>
-
-      {/* Mobile Filters Modal */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden"
-            onClick={() => setShowFilters(false)}
-          >
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-xl overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+        
+        {/* Hero Section */}
+        <section className="relative overflow-hidden py-8 md:py-16 px-4">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-amber-600/10" />
+          <div className="container mx-auto max-w-7xl relative z-10">
+            <motion.div 
+              className="text-center"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+              <motion.h1 
+                className="text-3xl md:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-4"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                All Products
+              </motion.h1>
+              <motion.p 
+                className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                Discover our complete collection of quality home products
+              </motion.p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Mobile Filters Overlay */}
+        {showFilters && isMobile && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Filters</h2>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="min-h-[44px] min-w-[44px] p-2 text-gray-500 hover:text-gray-700 rounded-lg active:bg-gray-100"
+                  className="text-gray-400 hover:text-gray-600 p-1"
                 >
-                  <FiX size={20} />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-              
-              <div className="p-4">
-                <ProductFilters 
-                  filters={filters} 
-                  onFiltersChange={handleFilterChange}
-                  mobile
-                />
+              <ProductFilters onFilterChange={handleFilterChange} />
+              <div className="mt-6 flex space-x-3">
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="flex-1 bg-orange-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                >
+                  Apply Filters
+                </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
-    </div>
+
+        {/* Main Content */}
+        <section className="px-4 pb-16">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+              {/* Desktop Sidebar Filters */}
+              <motion.aside 
+                className="hidden lg:block lg:w-80"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 sticky top-4">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-2">
+                      <Filter className="h-5 w-5 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+                  </div>
+                  <ProductFilters onFilterChange={handleFilterChange} />
+                </div>
+              </motion.aside>
+
+            {/* Main Products Area */}
+            <main className="flex-1">
+              {/* Controls Bar */}
+              <motion.div 
+                className="bg-white rounded-2xl p-4 mb-8 shadow-lg border border-gray-100"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center space-x-4 flex-shrink-0">
+                    <div className="flex items-center space-x-2 whitespace-nowrap">
+                      <Package className="h-5 w-5 text-gray-600" />
+                      <span className="text-gray-600 font-medium">
+                        {loading ? 'Loading...' : `${products.length} products`}
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="lg:hidden flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+                    >
+                      <Filter className="h-4 w-4" />
+                      <span>Filters</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-4 flex-shrink-0">
+                    <div className="hidden md:flex items-center bg-gray-100 rounded-xl p-1">
+                      <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-lg transition-all duration-300 ${
+                          viewMode === 'grid'
+                            ? 'bg-white shadow-md text-orange-600'
+                            : 'text-gray-600 hover:text-orange-600'
+                        }`}
+                      >
+                        <Grid3X3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-lg transition-all duration-300 ${
+                          viewMode === 'list'
+                            ? 'bg-white shadow-md text-orange-600'
+                            : 'text-gray-600 hover:text-orange-600'
+                        }`}
+                      >
+                        <List className="h-4 w-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4 whitespace-nowrap">
+                      <div className="flex items-center bg-gray-100 rounded-xl p-1">
+                        <button
+                          onClick={() => setScrollMode('pagination')}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                            scrollMode === 'pagination'
+                              ? 'bg-white shadow-md text-orange-600'
+                              : 'text-gray-600 hover:text-orange-600'
+                          }`}
+                        >
+                          Pages
+                        </button>
+                        <button
+                          onClick={() => setScrollMode('infinite')}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                            scrollMode === 'infinite'
+                              ? 'bg-white shadow-md text-orange-600'
+                              : 'text-gray-600 hover:text-orange-600'
+                          }`}
+                        >
+                          Scroll
+                        </button>
+                      </div>
+                      
+                      <ProductSort onSortChange={(sortBy) => handleFilterChange({ ...filters, sortBy })} />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Products Grid/List */}
+              {loading ? (
+                <motion.div 
+                  className="flex flex-col justify-center items-center h-64 bg-white rounded-3xl shadow-lg"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-full p-4 mb-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-white" />
+                  </div>
+                  <p className="text-gray-600 font-medium">Loading amazing products...</p>
+                </motion.div>
+              ) : (
+                <>
+                  {products.length === 0 ? (
+                    <motion.div 
+                      className="text-center py-16 bg-white rounded-3xl shadow-lg"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <div className="bg-gradient-to-r from-gray-400 to-gray-600 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                        <Search className="h-10 w-10 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">No Products Found</h3>
+                      <p className="text-gray-600 mb-6">Try adjusting your filters or search criteria</p>
+                      <button
+                        onClick={() => handleFilterChange({
+                          category: '',
+                          minPrice: 0,
+                          maxPrice: 100000,
+                          rating: 0,
+                          sortBy: 'newest',
+                        })}
+                        className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+                      >
+                        Clear Filters
+                      </button>
+                    </motion.div>
+                  ) : (
+                    scrollMode === 'infinite' ? (
+                      <InfiniteScroll
+                        hasMore={hasMore}
+                        loading={loading}
+                        onLoadMore={loadMore}
+                      >
+                        <motion.div 
+                          className={`grid gap-4 md:gap-6 ${
+                            viewMode === 'grid' || isMobile
+                              ? 'mobile-grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                              : 'grid-cols-1'
+                          }`}
+                          variants={staggerContainer}
+                          initial="initial"
+                          animate="animate"
+                        >
+                          {products.map((product, index) => (
+                            <motion.div
+                              key={`${product.id}-${index}`}
+                              variants={fadeInUp}
+                              custom={index}
+                            >
+                              <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} />
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      </InfiniteScroll>
+                    ) : (
+                      <motion.div 
+                        className={`grid gap-4 md:gap-6 ${
+                          viewMode === 'grid' || isMobile
+                            ? 'mobile-grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                            : 'grid-cols-1'
+                        }`}
+                        variants={staggerContainer}
+                        initial="initial"
+                        animate="animate"
+                      >
+                        {products.map((product, index) => (
+                          <motion.div
+                            key={product.id}
+                            variants={fadeInUp}
+                            custom={index}
+                          >
+                            <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )
+                  )}
+
+                  {/* Pagination */}
+                  {scrollMode === 'pagination' && totalPages > 1 && (
+                    <motion.div 
+                      className="mt-12 flex justify-center"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.4 }}
+                    >
+                      <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPageChange={setCurrentPage}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </>
+              )}
+            </main>
+            </div>
+          </div>
+        </section>
+      </PullToRefresh>
+      </div>
+    </>
   );
 }

@@ -1,0 +1,57 @@
+{
+  "monitors": [
+    {
+      "friendly_name": "Household Planet - Homepage",
+      "url": "https://householdplanet.co.ke",
+      "type": 1,
+      "interval": 300,
+      "timeout": 30,
+      "keyword_type": 2,
+      "keyword_value": "Household Planet Kenya"
+    },
+    {
+      "friendly_name": "Household Planet - API Health",
+      "url": "https://api.householdplanet.co.ke/health",
+      "type": 1,
+      "interval": 300,
+      "timeout": 30,
+      "keyword_type": 2,
+      "keyword_value": "ok"
+    },
+    {
+      "friendly_name": "Household Planet - Products API",
+      "url": "https://api.householdplanet.co.ke/api/products",
+      "type": 1,
+      "interval": 600,
+      "timeout": 30
+    },
+    {
+      "friendly_name": "Household Planet - Auth API",
+      "url": "https://api.householdplanet.co.ke/api/auth/status",
+      "type": 1,
+      "interval": 600,
+      "timeout": 30
+    }
+  ],
+  "alert_contacts": [
+    {
+      "type": 2,
+      "value": "admin@householdplanet.co.ke",
+      "friendly_name": "Admin Email"
+    },
+    {
+      "type": 11,
+      "value": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "friendly_name": "Slack Alerts"
+    }
+  ],
+  "maintenance_windows": [
+    {
+      "friendly_name": "Weekly Maintenance",
+      "type": 2,
+      "start_time": "02:00",
+      "duration": 60,
+      "value": "1"
+    }
+  ]
+}

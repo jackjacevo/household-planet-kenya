@@ -1,0 +1,203 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateProfileDto, ChangePasswordDto, NotificationSettingsDto, PrivacySettingsDto } from './dto/update-profile.dto';
+import * as bcrypt from 'bcryptjs';
+
+@Injectable()
+export class UsersService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(createUserDto: any) {
+    return this.prisma.user.create({
+      data: createUserDto,
+    });
+  }
+
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
+  }
+
+  async findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
+  }
+
+  async findByResetToken(resetToken: string) {
+    return this.prisma.user.findFirst({
+      where: { resetToken },
+    });
+  }
+
+  async findByVerificationToken(verificationToken: string) {
+    return this.prisma.user.findFirst({
+      where: { verificationToken },
+    });
+  }
+
+  async updateResetToken(id: number, resetToken: string, resetTokenExpiry: Date) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { resetToken, resetTokenExpiry },
+    });
+  }
+
+  async resetPassword(id: number, password: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { 
+        password, 
+        resetToken: null, 
+        resetTokenExpiry: null 
+      },
+    });
+  }
+
+  async verifyEmail(id: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { 
+        emailVerified: true, 
+        verificationToken: null 
+      },
+    });
+  }
+
+  async verifyPhone(id: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { phoneVerified: true },
+    });
+  }
+
+  async updateProfile(userId: number, updateProfileDto: UpdateProfileDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: updateProfileDto,
+    });
+  }
+
+  async uploadAvatar(userId: number, file: Express.Multer.File) {
+    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatar: avatarUrl },
+    });
+    return { avatarUrl };
+  }
+
+  async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
+    const user = await this.findById(userId);
+    const isValidPassword = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
+    
+    if (!isValidPassword) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+  }
+
+  async updateNotificationSettings(userId: number, settings: NotificationSettingsDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { notificationSettings: settings as any },
+    });
+  }
+
+  async updatePrivacySettings(userId: number, settings: PrivacySettingsDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { privacySettings: settings as any },
+    });
+  }
+
+  async deleteAccount(userId: number) {
+    return this.prisma.user.delete({
+      where: { id: userId },
+    });
+  }
+
+  async getDashboardStats(userId: number) {
+    const [orders, wishlistCount] = await Promise.all([
+      this.prisma.order.findMany({
+        where: { userId },
+        select: { total: true, status: true }
+      }),
+      this.prisma.wishlist.count({ where: { userId } })
+    ]);
+
+    const totalOrders = orders.length;
+    const totalSpent = orders
+      .filter(order => order.status === 'DELIVERED')
+      .reduce((sum, order) => sum + Number(order.total), 0);
+    
+    const loyaltyPoints = Math.floor(totalSpent / 100);
+
+    return {
+      totalOrders,
+      totalSpent,
+      loyaltyPoints,
+      wishlistItems: wishlistCount
+    };
+  }
+
+  async getAddresses(userId: number) {
+    return this.prisma.address.findMany({
+      where: { userId },
+      orderBy: { isDefault: 'desc' }
+    });
+  }
+
+  async createAddress(userId: number, addressData: any) {
+    if (addressData.isDefault) {
+      await this.prisma.address.updateMany({
+        where: { userId },
+        data: { isDefault: false }
+      });
+    }
+
+    return this.prisma.address.create({
+      data: { userId, ...addressData }
+    });
+  }
+
+  async updateAddress(userId: number, addressId: string, addressData: any) {
+    const id = parseInt(addressId, 10);
+    if (addressData.isDefault) {
+      await this.prisma.address.updateMany({
+        where: { userId, id: { not: id } },
+        data: { isDefault: false }
+      });
+    }
+
+    return this.prisma.address.update({
+      where: { id, userId },
+      data: addressData
+    });
+  }
+
+  async deleteAddress(userId: number, addressId: string) {
+    return this.prisma.address.delete({
+      where: { id: parseInt(addressId, 10), userId }
+    });
+  }
+
+  async setDefaultAddress(userId: number, addressId: string) {
+    await this.prisma.address.updateMany({
+      where: { userId },
+      data: { isDefault: false }
+    });
+
+    return this.prisma.address.update({
+      where: { id: parseInt(addressId, 10), userId },
+      data: { isDefault: true }
+    });
+  }
+}

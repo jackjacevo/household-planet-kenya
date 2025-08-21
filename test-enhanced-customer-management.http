@@ -1,0 +1,241 @@
+### Enhanced Customer Management API Tests
+
+### Variables
+@baseUrl = http://localhost:3001
+@adminToken = YOUR_ADMIN_JWT_TOKEN_HERE
+@customerToken = YOUR_CUSTOMER_JWT_TOKEN_HERE
+
+### Customer Profile Management
+
+### Get customer profile (customer endpoint)
+GET {{baseUrl}}/customers/profile
+Authorization: Bearer {{customerToken}}
+
+### Update customer profile
+PUT {{baseUrl}}/customers/profile
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "preferredCategories": "Kitchen,Cleaning,Electronics",
+  "communicationPreferences": {
+    "email": true,
+    "sms": true,
+    "pushNotifications": false
+  }
+}
+
+### Get customer order history
+GET {{baseUrl}}/customers/orders?page=1&limit=10
+Authorization: Bearer {{customerToken}}
+
+### Get customer loyalty status
+GET {{baseUrl}}/customers/loyalty
+Authorization: Bearer {{customerToken}}
+
+### Redeem loyalty points
+POST {{baseUrl}}/customers/loyalty/redeem/1
+Authorization: Bearer {{customerToken}}
+
+### Get customer communications
+GET {{baseUrl}}/customers/communications?page=1&limit=20
+Authorization: Bearer {{customerToken}}
+
+### Admin Customer Management
+
+### Search customers
+GET {{baseUrl}}/customers/search?q=john&page=1&limit=20
+Authorization: Bearer {{adminToken}}
+
+### Get customers by segment/tags
+GET {{baseUrl}}/customers/segment?tags=VIP,HighValue&page=1&limit=50
+Authorization: Bearer {{adminToken}}
+
+### Get detailed customer information
+GET {{baseUrl}}/customers/123/details
+Authorization: Bearer {{adminToken}}
+
+### Get customer analytics overview
+GET {{baseUrl}}/customers/analytics/overview
+Authorization: Bearer {{adminToken}}
+
+### Get customer lifetime value
+GET {{baseUrl}}/customers/123/lifetime-value
+Authorization: Bearer {{adminToken}}
+
+### Add tag to customer
+POST {{baseUrl}}/customers/456/tags
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "tag": "VIP"
+}
+
+### Remove tag from customer
+DELETE {{baseUrl}}/customers/456/tags/VIP
+Authorization: Bearer {{adminToken}}
+
+### Bulk tag customers
+POST {{baseUrl}}/customers/bulk-tag
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "customerIds": [123, 456, 789],
+  "tag": "HighValue"
+}
+
+### Log customer communication
+POST {{baseUrl}}/customers/456/communications
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "type": "EMAIL",
+  "subject": "Follow-up on recent order",
+  "message": "Thank you for your recent purchase. How was your experience?",
+  "channel": "customer_service",
+  "sentBy": "admin@householdplanet.co.ke",
+  "metadata": {
+    "orderId": "ORD-12345",
+    "campaign": "post_purchase_followup"
+  }
+}
+
+### Loyalty Program Management
+
+### Create loyalty program
+POST {{baseUrl}}/customers/loyalty/programs
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Gold Membership",
+  "description": "Premium loyalty program with exclusive benefits",
+  "isActive": true,
+  "pointsPerKsh": 2,
+  "minimumSpend": 5000,
+  "rules": {
+    "bonusMultiplier": 1.5,
+    "exclusiveDeals": true,
+    "prioritySupport": true
+  }
+}
+
+### Get loyalty programs
+GET {{baseUrl}}/customers/loyalty/programs
+
+### Create loyalty reward
+POST {{baseUrl}}/customers/loyalty/rewards
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "programId": 1,
+  "name": "Free Delivery Voucher",
+  "description": "Free delivery on your next order",
+  "pointsCost": 500,
+  "rewardType": "DISCOUNT",
+  "rewardValue": 200,
+  "isActive": true,
+  "validUntil": "2024-12-31T23:59:59Z"
+}
+
+### Address Verification Management
+
+### Get pending address verifications
+GET {{baseUrl}}/customers/addresses/pending-verification
+Authorization: Bearer {{adminToken}}
+
+### Verify address
+POST {{baseUrl}}/customers/addresses/123/verify
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "VERIFIED",
+  "verifiedBy": "admin@householdplanet.co.ke",
+  "notes": "Address confirmed via phone call with customer",
+  "coordinates": {
+    "latitude": -1.2921,
+    "longitude": 36.8219
+  }
+}
+
+### Get address verification statistics
+GET {{baseUrl}}/customers/addresses/verification-stats
+Authorization: Bearer {{adminToken}}
+
+### Customer Segmentation Examples
+
+### Get VIP customers
+GET {{baseUrl}}/customers/segment?tags=VIP
+Authorization: Bearer {{adminToken}}
+
+### Get high-value customers
+GET {{baseUrl}}/customers/segment?tags=HighValue,Premium
+Authorization: Bearer {{adminToken}}
+
+### Get new customers (last 30 days)
+GET {{baseUrl}}/customers/segment?tags=NewCustomer
+Authorization: Bearer {{adminToken}}
+
+### Get customers needing follow-up
+GET {{baseUrl}}/customers/segment?tags=NeedsFollowup,ChurnRisk
+Authorization: Bearer {{adminToken}}
+
+### Customer Communication Examples
+
+### Send promotional email
+POST {{baseUrl}}/customers/456/communications
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "type": "EMAIL",
+  "subject": "Exclusive Offer Just for You!",
+  "message": "As a valued customer, enjoy 20% off your next purchase with code SAVE20",
+  "channel": "marketing",
+  "sentBy": "marketing@householdplanet.co.ke",
+  "metadata": {
+    "campaign": "exclusive_offer_q1",
+    "discountCode": "SAVE20",
+    "validUntil": "2024-03-31"
+  }
+}
+
+### Log customer service call
+POST {{baseUrl}}/customers/789/communications
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "type": "PHONE_CALL",
+  "subject": "Order inquiry support",
+  "message": "Customer called regarding order ORD-67890. Issue resolved - delivery address updated.",
+  "channel": "customer_service",
+  "sentBy": "support@householdplanet.co.ke",
+  "metadata": {
+    "callDuration": "5 minutes",
+    "orderId": "ORD-67890",
+    "resolution": "address_updated"
+  }
+}
+
+### Send SMS notification
+POST {{baseUrl}}/customers/123/communications
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "type": "SMS",
+  "message": "Your order ORD-12345 has been shipped! Track: TRK123456. Expected delivery: Tomorrow",
+  "channel": "automated",
+  "sentBy": "system",
+  "metadata": {
+    "orderId": "ORD-12345",
+    "trackingNumber": "TRK123456",
+    "smsProvider": "africastalking"
+  }
+}

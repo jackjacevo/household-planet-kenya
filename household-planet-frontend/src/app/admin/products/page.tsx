@@ -1,319 +1,425 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiUpload, FiDownload, FiSearch, FiFilter } from 'react-icons/fi';
-import Link from 'next/link';
+import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import ProductForm from '@/components/admin/ProductForm';
+import BulkActions from '@/components/admin/BulkActions';
+import ProductAnalytics from '@/components/admin/ProductAnalytics';
+import axios from 'axios';
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   price: number;
-  stock: number;
-  category: { name: string };
+  totalStock: number;
   isActive: boolean;
-  viewCount: number;
-  averageRating: number;
+  images: string[];
+  category: { name: string };
+  brand?: { name: string };
+  reviewCount: number;
+  salesCount: number;
+  createdAt: string;
 }
 
-export default function AdminProducts() {
+export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [filters, setFilters] = useState({
+    search: '',
+    categoryId: '',
+    brandId: '',
+    isActive: '',
+    page: 1,
+    limit: 10
+  });
+  const [meta, setMeta] = useState({ total: 0, totalPages: 0 });
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [filters]);
 
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/products', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value.toString());
       });
-      const data = await response.json();
-      setProducts(data);
-      setLoading(false);
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/products?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProducts(response.data.data);
+      setMeta(response.data.meta);
     } catch (error) {
       console.error('Error fetching products:', error);
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (!confirm('Are you sure you want to delete selected products?')) return;
-    
+  const handleCreateProduct = async (productData: any) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:3001/api/admin/products/bulk', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ids: selectedProducts })
-      });
-      
-      setSelectedProducts([]);
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/products`,
+        productData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchProducts();
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating product:', error);
+    }
+  };
+
+  const handleUpdateProduct = async (productData: any) => {
+    if (!editingProduct) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${editingProduct.id}`,
+        productData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchProducts();
+      setEditingProduct(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       fetchProducts();
     } catch (error) {
-      console.error('Error deleting products:', error);
+      console.error('Error deleting product:', error);
     }
   };
 
-  const handleExportCSV = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/admin/products/export/csv', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      
-      const csv = [
-        Object.keys(data[0]).join(','),
-        ...data.map(row => Object.values(row).join(','))
-      ].join('\n');
-      
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'products.csv';
-      a.click();
-    } catch (error) {
-      console.error('Error exporting CSV:', error);
-    }
+  const toggleProductSelection = (productId: number) => {
+    setSelectedProducts(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
-  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const token = localStorage.getItem('token');
-      await fetch('http://localhost:3001/api/admin/products/import/csv', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-      
-      fetchProducts();
-    } catch (error) {
-      console.error('Error importing CSV:', error);
-    }
+  const selectAllProducts = () => {
+    setSelectedProducts(products.map(p => p.id));
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filterCategory === '' || product.category.name === filterCategory)
-  );
+  const clearSelection = () => {
+    setSelectedProducts([]);
+  };
 
-  if (loading) {
+  if (showForm) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <ProductForm
+        product={editingProduct}
+        onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
+        onCancel={() => {
+          setShowForm(false);
+          setEditingProduct(null);
+        }}
+      />
+    );
+  }
+
+  if (showAnalytics) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Product Analytics</h1>
+          <Button onClick={() => setShowAnalytics(false)} variant="outline">
+            Back to Products
+          </Button>
+        </div>
+        <ProductAnalytics />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
-              <p className="text-gray-600">Manage your product catalog</p>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/admin/products/create">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700">
-                  <FiPlus className="h-4 w-4" />
-                  <span>Add Product</span>
-                </button>
-              </Link>
-            </div>
-          </div>
+    <div className="px-4 sm:px-6 lg:px-8">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+          <p className="mt-2 text-sm text-gray-700">
+            Manage your product catalog and inventory.
+          </p>
         </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAnalytics(true)} variant="outline">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
+      </div>
 
-        {/* Actions Bar */}
-        <div className="bg-white rounded-lg shadow mb-6 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-8">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <Package className="h-6 w-6 text-blue-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Total Products</p>
+                <p className="text-2xl font-semibold text-gray-900">{meta.total}</p>
               </div>
-              
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Categories</option>
-                {/* Add category options */}
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleExportCSV}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
-              >
-                <FiDownload className="h-4 w-4" />
-                <span>Export</span>
-              </button>
-              
-              <label className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 cursor-pointer">
-                <FiUpload className="h-4 w-4" />
-                <span>Import</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleImportCSV}
-                  className="hidden"
-                />
-              </label>
-
-              {selectedProducts.length > 0 && (
-                <button
-                  onClick={handleBulkDelete}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-700"
-                >
-                  <FiTrash2 className="h-4 w-4" />
-                  <span>Delete ({selectedProducts.length})</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Products Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <Package className="h-6 w-6 text-green-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Active Products</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {products.filter(p => p.isActive).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <Package className="h-6 w-6 text-yellow-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Low Stock</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {products.filter(p => p.totalStock < 10).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <Package className="h-6 w-6 text-red-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Out of Stock</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {products.filter(p => p.totalStock === 0).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <select
+            value={filters.isActive}
+            onChange={(e) => setFilters(prev => ({ ...prev, isActive: e.target.value, page: 1 }))}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+          <select
+            value={filters.limit}
+            onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+          </select>
+          <Button onClick={() => setFilters({ search: '', categoryId: '', brandId: '', isActive: '', page: 1, limit: 10 })} variant="outline">
+            Clear Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedProducts={selectedProducts}
+        onBulkUpdate={fetchProducts}
+        onClearSelection={clearSelection}
+      />
+
+      {/* Products Table */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-lg font-medium text-gray-900">Products</h2>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedProducts.length === products.length && products.length > 0}
+              onChange={selectedProducts.length === products.length ? clearSelection : selectAllProducts}
+              className="rounded"
+            />
+            <span className="text-sm text-gray-500">Select All</span>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Select
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Performance
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {products.map((product) => (
+                <tr key={product.id} className={selectedProducts.includes(product.id) ? 'bg-blue-50' : ''}>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedProducts(filteredProducts.map(p => p.id));
-                        } else {
-                          setSelectedProducts([]);
-                        }
-                      }}
-                      className="rounded border-gray-300"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={() => toggleProductSelection(product.id)}
+                      className="rounded"
                     />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Views
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rating
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedProducts.includes(product.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedProducts([...selectedProducts, product.id]);
-                          } else {
-                            setSelectedProducts(selectedProducts.filter(id => id !== product.id));
-                          }
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {product.category.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      KSh {product.price.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        product.stock > 10 ? 'bg-green-100 text-green-800' :
-                        product.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {product.stock}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {product.viewCount}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      ⭐ {product.averageRating?.toFixed(1) || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {product.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <Link href={`/admin/products/edit/${product.id}`}>
-                          <button className="text-blue-600 hover:text-blue-900">
-                            <FiEdit className="h-4 w-4" />
-                          </button>
-                        </Link>
-                        <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this product?')) {
-                              // Handle single delete
-                            }
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <FiTrash2 className="h-4 w-4" />
-                        </button>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 flex-shrink-0">
+                        <img
+                          className="h-10 w-10 rounded object-cover"
+                          src={product.images[0] || '/images/products/placeholder.svg'}
+                          alt={product.name}
+                        />
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {product.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {product.brand?.name}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {product.category.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    KSh {product.price.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`text-sm font-medium ${
+                      product.totalStock === 0 ? 'text-red-600' :
+                      product.totalStock < 10 ? 'text-yellow-600' :
+                      'text-green-600'
+                    }`}>
+                      {product.totalStock}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      product.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {product.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="text-xs">
+                      <div>Reviews: {product.reviewCount}</div>
+                      <div>Sales: {product.salesCount}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => {
+                      setEditingProduct(product);
+                      setShowForm(true);
+                    }}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleDeleteProduct(product.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+          <div className="text-sm text-gray-700">
+            Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, meta.total)} of {meta.total} results
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={filters.page === 1}
+              onClick={() => setFilters(prev => ({ ...prev, page: prev.page - 1 }))}
+            >
+              Previous
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={filters.page >= meta.totalPages}
+              onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
+            >
+              Next
+            </Button>
           </div>
         </div>
       </div>

@@ -1,0 +1,89 @@
+### Test Phase 2 APIs - Product Catalog System
+
+### 1. Get all categories
+GET http://localhost:3001/categories
+
+### 2. Get category hierarchy
+GET http://localhost:3001/categories/hierarchy
+
+### 3. Get category by slug
+GET http://localhost:3001/categories/slug/kitchen-dining
+
+### 4. Get all products
+GET http://localhost:3001/products
+
+### 5. Get featured products
+GET http://localhost:3001/products/featured
+
+### 6. Search products
+GET http://localhost:3001/products/search?q=kitchen
+
+### 7. Get products by category
+GET http://localhost:3001/products?category=kitchen-dining
+
+### 8. Get products with pagination
+GET http://localhost:3001/products?page=1&limit=10
+
+### 9. Create a new category (Admin only)
+POST http://localhost:3001/categories
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "name": "Test Category",
+  "slug": "test-category",
+  "description": "A test category",
+  "isActive": true,
+  "sortOrder": 100
+}
+
+### 10. Create a new product (Admin only)
+POST http://localhost:3001/products
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "name": "Test Product",
+  "slug": "test-product",
+  "description": "A test product for Phase 2",
+  "shortDescription": "Test product",
+  "sku": "TEST-001",
+  "price": 1500.00,
+  "comparePrice": 2000.00,
+  "categoryId": 1,
+  "isActive": true,
+  "isFeatured": true,
+  "seoTitle": "Test Product - Household Planet Kenya",
+  "seoDescription": "High quality test product available at Household Planet Kenya",
+  "tags": "test,product,household",
+  "images": "[]"
+}
+
+### 11. Update product (Admin only)
+PATCH http://localhost:3001/products/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "price": 1400.00,
+  "isFeatured": false
+}
+
+### 12. Bulk update products (Admin only)
+PATCH http://localhost:3001/products/bulk
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "productIds": [1, 2, 3],
+  "updates": {
+    "isActive": true,
+    "isFeatured": false
+  }
+}
+
+### 13. Get product by ID
+GET http://localhost:3001/products/1
+
+### 14. Get product by slug
+GET http://localhost:3001/products/slug/test-product

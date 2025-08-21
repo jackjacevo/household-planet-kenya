@@ -1,0 +1,130 @@
+### Customer Management API Testing
+
+### Get customer profile
+GET http://localhost:3001/customers/profile
+Authorization: Bearer {{token}}
+
+### Update customer profile
+PUT http://localhost:3001/customers/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "preferredCategories": "electronics,home-appliances",
+  "communicationPreferences": {
+    "email": true,
+    "sms": false,
+    "pushNotifications": true
+  }
+}
+
+### Get customer order history
+GET http://localhost:3001/customers/orders?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Get loyalty status
+GET http://localhost:3001/customers/loyalty
+Authorization: Bearer {{token}}
+
+### Get loyalty programs
+GET http://localhost:3001/customers/loyalty/programs
+Authorization: Bearer {{token}}
+
+### Redeem loyalty reward
+POST http://localhost:3001/customers/loyalty/redeem/1
+Authorization: Bearer {{token}}
+
+### Get communication history
+GET http://localhost:3001/customers/communications?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Admin: Search customers
+GET http://localhost:3001/customers/search?q=john
+Authorization: Bearer {{admin_token}}
+
+### Admin: Get customers by segment
+GET http://localhost:3001/customers/segment?tags=vip,frequent-buyer
+Authorization: Bearer {{admin_token}}
+
+### Admin: Add customer tag
+POST http://localhost:3001/customers/1/tags
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "tag": "vip-customer"
+}
+
+### Admin: Remove customer tag
+DELETE http://localhost:3001/customers/1/tags/vip-customer
+Authorization: Bearer {{admin_token}}
+
+### Admin: Log customer communication
+POST http://localhost:3001/customers/1/communications
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "type": "EMAIL",
+  "subject": "Welcome to our VIP program",
+  "message": "Thank you for being a valued customer. You've been enrolled in our VIP program.",
+  "channel": "admin-panel",
+  "sentBy": "admin@householdplanet.co.ke"
+}
+
+### Admin: Create loyalty program
+POST http://localhost:3001/customers/loyalty/programs
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Gold Membership",
+  "description": "Premium loyalty program for our best customers",
+  "pointsPerKsh": 2,
+  "minimumSpend": 1000,
+  "rules": {
+    "bonusMultiplier": 1.5,
+    "freeShipping": true
+  }
+}
+
+### Admin: Create loyalty reward
+POST http://localhost:3001/customers/loyalty/rewards
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "programId": 1,
+  "name": "Free Shipping Voucher",
+  "description": "Get free shipping on your next order",
+  "pointsCost": 500,
+  "rewardType": "shipping_discount",
+  "rewardValue": 100
+}
+
+### Admin: Get pending address verifications
+GET http://localhost:3001/customers/addresses/pending-verification
+Authorization: Bearer {{admin_token}}
+
+### Admin: Verify address
+POST http://localhost:3001/customers/addresses/1/verify
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "status": "VERIFIED",
+  "verifiedBy": "admin@householdplanet.co.ke",
+  "notes": "Address verified through Google Maps",
+  "coordinates": {
+    "lat": -1.2921,
+    "lng": 36.8219
+  }
+}
+
+### Admin: Get address verification stats
+GET http://localhost:3001/customers/addresses/verification-stats
+Authorization: Bearer {{admin_token}}
+
+### Variables
+@token = your_customer_jwt_token_here
+@admin_token = your_admin_jwt_token_here

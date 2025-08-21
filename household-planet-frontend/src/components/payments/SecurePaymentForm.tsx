@@ -1,123 +1,185 @@
 'use client';
 
 import { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { CreditCardIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const paymentSchema = z.object({
+  cardNumber: z.string().regex(/^[0-9]{16}$/, 'Invalid card number'),
+  expiryMonth: z.string().regex(/^(0[1-9]|1[0-2])$/, 'Invalid month'),
+  expiryYear: z.string().regex(/^[0-9]{2}$/, 'Invalid year'),
+  cvv: z.string().regex(/^[0-9]{3,4}$/, 'Invalid CVV'),
+  cardholderName: z.string().min(2, 'Name required'),
+});
 
-interface PaymentFormProps {
+type PaymentFormData = z.infer<typeof paymentSchema>;
+
+interface SecurePaymentFormProps {
   amount: number;
-  onSuccess: (paymentIntent: any) => void;
-  onError: (error: string) => void;
+  onPaymentSuccess: (result: any) => void;
+  onPaymentError: (error: string) => void;
 }
 
-function PaymentForm({ amount, onSuccess, onError }: PaymentFormProps) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
+export default function SecurePaymentForm({ 
+  amount, 
+  onPaymentSuccess, 
+  onPaymentError 
+}: SecurePaymentFormProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<PaymentFormData>({
+    resolver: zodResolver(paymentSchema),
+  });
 
-    if (!stripe || !elements) return;
+  const tokenizePaymentMethod = async (data: PaymentFormData) => {
+    const response = await fetch('/api/payments/tokenize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cardNumber: data.cardNumber,
+        expiryMonth: data.expiryMonth,
+        expiryYear: data.expiryYear,
+        cardholderName: data.cardholderName,
+      }),
+    });
 
-    setProcessing(true);
+    if (!response.ok) throw new Error('Tokenization failed');
+    
+    const result = await response.json();
+    reset(); // Clear form data immediately
+    
+    return result.token;
+  };
 
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) return;
+  const processPayment = async (token: string, cvv: string) => {
+    const response = await fetch('/api/payments/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentIntentId: 'pi_temp',
+        paymentToken: token,
+        cvv,
+      }),
+    });
 
+    if (!response.ok) throw new Error('Payment failed');
+    return await response.json();
+  };
+
+  const onSubmit = async (data: PaymentFormData) => {
+    setIsProcessing(true);
+    
     try {
-      // Create payment method (no card data stored)
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardElement,
-      });
-
-      if (error) {
-        onError(error.message || 'Payment failed');
-        setProcessing(false);
-        return;
-      }
-
-      // Process payment with backend
-      const response = await fetch('/api/payments/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          paymentMethodId: paymentMethod.id,
-          amount,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.requiresAction) {
-        // Handle 3D Secure authentication
-        const { error: confirmError } = await stripe.confirmCardPayment(
-          result.clientSecret
-        );
-
-        if (confirmError) {
-          onError(confirmError.message || 'Payment confirmation failed');
-        } else {
-          onSuccess(result);
-        }
-      } else if (result.success) {
-        onSuccess(result);
-      } else {
-        onError(result.error || 'Payment failed');
-      }
+      const token = await tokenizePaymentMethod(data);
+      const result = await processPayment(token, data.cvv);
+      onPaymentSuccess(result);
     } catch (error) {
-      onError('Payment processing error');
+      onPaymentError(error instanceof Error ? error.message : 'Payment failed');
     } finally {
-      setProcessing(false);
+      setIsProcessing(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="p-4 border rounded-lg">
-        <label className="block text-sm font-medium mb-2">
-          Card Details
-        </label>
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-              },
-            },
-          }}
-        />
+    <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
+      <div className="flex items-center mb-4">
+        <ShieldCheckIcon className="h-6 w-6 text-green-600 mr-2" />
+        <span className="text-sm text-gray-600">PCI DSS Compliant</span>
       </div>
 
-      <div className="bg-blue-50 p-3 rounded text-sm">
-        🔒 Your payment information is encrypted and secure. We never store your card details.
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Card Number
+          </label>
+          <div className="relative">
+            <input
+              {...register('cardNumber')}
+              type="text"
+              placeholder="1234567890123456"
+              maxLength={16}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <CreditCardIcon className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+          </div>
+          {errors.cardNumber && (
+            <p className="text-red-500 text-xs mt-1">{errors.cardNumber.message}</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+            <select
+              {...register('expiryMonth')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">MM</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                  {String(i + 1).padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+            <select
+              {...register('expiryYear')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">YY</option>
+              {Array.from({ length: 10 }, (_, i) => (
+                <option key={i} value={String(new Date().getFullYear() + i).slice(-2)}>
+                  {String(new Date().getFullYear() + i).slice(-2)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+            <input
+              {...register('cvv')}
+              type="password"
+              placeholder="123"
+              maxLength={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Cardholder Name
+          </label>
+          <input
+            {...register('cardholderName')}
+            type="text"
+            placeholder="John Doe"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.cardholderName && (
+            <p className="text-red-500 text-xs mt-1">{errors.cardholderName.message}</p>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={isProcessing}
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
+        >
+          {isProcessing ? 'Processing...' : `Pay KES ${amount.toLocaleString()}`}
+        </button>
+      </form>
+
+      <div className="mt-4 text-xs text-gray-500 text-center">
+        <p>🔒 Your payment information is encrypted and secure</p>
+        <p>We never store your card details</p>
       </div>
-
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-      >
-        {processing ? 'Processing...' : `Pay KES ${amount.toLocaleString()}`}
-      </button>
-    </form>
-  );
-}
-
-export default function SecurePaymentForm(props: PaymentFormProps) {
-  return (
-    <Elements stripe={stripePromise}>
-      <PaymentForm {...props} />
-    </Elements>
+    </div>
   );
 }

@@ -1,0 +1,207 @@
+### Content Management API Tests
+
+### Variables
+@baseUrl = http://localhost:3001
+@adminToken = YOUR_ADMIN_JWT_TOKEN_HERE
+
+### Public Endpoints
+
+### Get page by slug
+GET {{baseUrl}}/content/pages/about-us
+
+### Get active banners
+GET {{baseUrl}}/content/banners
+
+### Get hero banners only
+GET {{baseUrl}}/content/banners?position=HERO
+
+### Get FAQs
+GET {{baseUrl}}/content/faqs
+
+### Get FAQs by category
+GET {{baseUrl}}/content/faqs?category=Delivery
+
+### Get FAQ categories
+GET {{baseUrl}}/content/faqs/categories
+
+### Get blog posts
+GET {{baseUrl}}/content/blog
+
+### Get blog posts with pagination
+GET {{baseUrl}}/content/blog?page=1&limit=5
+
+### Get blog post by slug
+GET {{baseUrl}}/content/blog/essential-kitchen-items-every-kenyan-home
+
+### Admin Endpoints (Require Authentication)
+
+### Create content page
+POST {{baseUrl}}/content/pages
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "shipping-policy",
+  "title": "Shipping Policy",
+  "content": "<h2>Shipping Policy</h2><p>We offer fast and reliable shipping across Kenya...</p>",
+  "metaTitle": "Shipping Policy - Household Planet Kenya",
+  "metaDescription": "Learn about our shipping policy and delivery options across Kenya.",
+  "isPublished": true
+}
+
+### Get all pages (admin)
+GET {{baseUrl}}/content/admin/pages
+Authorization: Bearer {{adminToken}}
+
+### Update content page
+PUT {{baseUrl}}/content/pages/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated About Us",
+  "content": "<h2>Updated content...</h2>"
+}
+
+### Create banner
+POST {{baseUrl}}/content/banners
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "New Year Sale",
+  "subtitle": "Up to 50% off on selected items",
+  "image": "/images/banners/new-year-sale.jpg",
+  "link": "/sale",
+  "buttonText": "Shop Sale",
+  "position": "HERO",
+  "isActive": true,
+  "sortOrder": 1,
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-01-31T23:59:59Z"
+}
+
+### Get all banners (admin)
+GET {{baseUrl}}/content/admin/banners
+Authorization: Bearer {{adminToken}}
+
+### Update banner
+PUT {{baseUrl}}/content/banners/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+### Create email template
+POST {{baseUrl}}/content/email-templates
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "password-reset",
+  "subject": "Reset Your Password",
+  "htmlContent": "<h2>Password Reset</h2><p>Click the link below to reset your password:</p><a href=\"{{resetUrl}}\">Reset Password</a>",
+  "textContent": "Reset your password: {{resetUrl}}",
+  "variables": {
+    "resetUrl": "string"
+  },
+  "isActive": true
+}
+
+### Get email templates
+GET {{baseUrl}}/content/email-templates
+Authorization: Bearer {{adminToken}}
+
+### Get specific email template
+GET {{baseUrl}}/content/email-templates/welcome
+Authorization: Bearer {{adminToken}}
+
+### Update email template
+PUT {{baseUrl}}/content/email-templates/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "subject": "Updated Welcome Email",
+  "htmlContent": "<h2>Welcome!</h2><p>Updated welcome message...</p>"
+}
+
+### Create FAQ
+POST {{baseUrl}}/content/faqs
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "question": "Do you deliver on weekends?",
+  "answer": "Yes, we offer weekend delivery for an additional fee in selected areas.",
+  "category": "Delivery",
+  "isPublished": true,
+  "sortOrder": 10
+}
+
+### Get all FAQs (admin)
+GET {{baseUrl}}/content/admin/faqs
+Authorization: Bearer {{adminToken}}
+
+### Update FAQ
+PUT {{baseUrl}}/content/faqs/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "answer": "Updated answer with more details..."
+}
+
+### Create blog post
+POST {{baseUrl}}/content/blog
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "cleaning-tips-kenyan-homes",
+  "title": "Effective Cleaning Tips for Kenyan Homes",
+  "excerpt": "Discover practical cleaning tips that work well in the Kenyan climate and environment.",
+  "content": "<h2>Cleaning Tips</h2><p>Keeping your home clean in Kenya's climate requires specific strategies...</p>",
+  "featuredImage": "/images/blog/cleaning-tips.jpg",
+  "author": "Household Planet Team",
+  "tags": "cleaning, home care, tips",
+  "metaTitle": "Effective Cleaning Tips for Kenyan Homes",
+  "metaDescription": "Practical cleaning tips and strategies for maintaining a clean home in Kenya's climate.",
+  "isPublished": true
+}
+
+### Get all blog posts (admin)
+GET {{baseUrl}}/content/admin/blog
+Authorization: Bearer {{adminToken}}
+
+### Update blog post
+PUT {{baseUrl}}/content/blog/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated Blog Post Title",
+  "isPublished": false
+}
+
+### Delete content page
+DELETE {{baseUrl}}/content/pages/1
+Authorization: Bearer {{adminToken}}
+
+### Delete banner
+DELETE {{baseUrl}}/content/banners/1
+Authorization: Bearer {{adminToken}}
+
+### Delete email template
+DELETE {{baseUrl}}/content/email-templates/1
+Authorization: Bearer {{adminToken}}
+
+### Delete FAQ
+DELETE {{baseUrl}}/content/faqs/1
+Authorization: Bearer {{adminToken}}
+
+### Delete blog post
+DELETE {{baseUrl}}/content/blog/1
+Authorization: Bearer {{adminToken}}

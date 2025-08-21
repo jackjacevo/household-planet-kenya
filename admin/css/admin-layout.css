@@ -1,0 +1,35 @@
+/* Admin Panel Layout Fixes */
+.navbar {
+    z-index: 1030 !important;
+}
+
+.admin-sidebar {
+    position: fixed !important;
+    top: 56px !important; /* Height of navbar */
+    left: 0 !important;
+    height: calc(100vh - 56px) !important;
+    width: 250px !important;
+    z-index: 1020 !important;
+    overflow-y: auto !important;
+}
+
+.admin-main-content {
+    margin-left: 250px !important;
+    padding-top: 20px !important;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 991.98px) {
+    .admin-sidebar {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .admin-sidebar.show {
+        transform: translateX(0) !important;
+    }
+    
+    .admin-main-content {
+        margin-left: 0 !important;
+    }
+}

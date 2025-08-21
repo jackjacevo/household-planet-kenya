@@ -1,43 +1,63 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { SmsService } from './services/sms.service';
+import { SocialAuthService } from './services/social-auth.service';
+import { AuthMiddleware } from './middleware/auth.middleware';
 import { RolesGuard } from './guards/roles.guard';
 import { EmailVerifiedGuard } from './guards/email-verified.guard';
-import { ActiveUserGuard } from './guards/active-user.guard';
+import { PhoneVerifiedGuard } from './guards/phone-verified.guard';
 import { PrismaModule } from '../prisma/prisma.module';
-import { CartModule } from '../cart/cart.module';
-import { SecurityModule } from '../security/security.module';
 
 @Module({
   imports: [
     PrismaModule,
-    SecurityModule,
-    forwardRef(() => CartModule),
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '15m' },
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 10,
+    }]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'fallback-secret-key',
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
+        },
+      }),
+      inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
   providers: [
     AuthService,
+    LocalStrategy,
     JwtStrategy,
-    JwtAuthGuard,
+    SmsService,
+    SocialAuthService,
     RolesGuard,
     EmailVerifiedGuard,
-    ActiveUserGuard,
+    PhoneVerifiedGuard,
   ],
+  controllers: [AuthController],
   exports: [
     AuthService,
-    JwtAuthGuard,
+    SmsService,
+    SocialAuthService,
     RolesGuard,
     EmailVerifiedGuard,
-    ActiveUserGuard,
+    PhoneVerifiedGuard,
   ],
 })
-export class AuthModule {}
+export class AuthModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .forRoutes('*');
+  }
+}

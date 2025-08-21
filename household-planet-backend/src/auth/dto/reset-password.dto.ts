@@ -1,15 +1,10 @@
-import { IsEmail, IsString } from 'class-validator';
-import { IsStrongPassword } from '../../common/validators/password.validator';
-
-export class ForgotPasswordDto {
-  @IsEmail()
-  email: string;
-}
+import { IsString, MinLength } from 'class-validator';
 
 export class ResetPasswordDto {
   @IsString()
   token: string;
 
-  @IsStrongPassword()
+  @IsString()
+  @MinLength(6)
   password: string;
 }

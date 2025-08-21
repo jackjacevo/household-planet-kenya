@@ -1,109 +1,273 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Request, Query, Res, Patch, BadRequestException } from '@nestjs/common';
+import { Response } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { CreateOrderWithPaymentDto } from './dto/create-order-with-payment.dto';
-import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
-import { ReturnRequestDto } from './dto/return-request.dto';
-import { GuestCheckoutDto } from './dto/guest-checkout.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import { UserRole } from '../common/enums';
+import { WhatsAppService } from './whatsapp.service';
+import { ShippingService } from './shipping.service';
+import { CreateOrderDto, UpdateOrderStatusDto, CreateReturnDto, BulkOrderUpdateDto, OrderFilterDto, AddOrderNoteDto, SendCustomerEmailDto, CreateWhatsAppOrderDto, WhatsAppWebhookDto, ProcessReturnDto } from './dto/order.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums';
 
 @Controller('orders')
-@UseGuards(JwtAuthGuard)
 export class OrdersController {
-  constructor(private ordersService: OrdersService) {}
-
-  @Post()
-  createOrder(@CurrentUser('id') userId: string, @Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.createOrder(userId, createOrderDto);
-  }
-
-  @Post('with-payment')
-  createOrderWithPayment(
-    @CurrentUser('id') userId: string,
-    @Body() createOrderDto: CreateOrderWithPaymentDto
-  ) {
-    return this.ordersService.createOrderWithMpesaPayment(userId, createOrderDto);
-  }
-
-  @Post('from-cart')
-  createOrderFromCart(
-    @CurrentUser('id') userId: string,
-    @Body() orderData: Omit<CreateOrderDto, 'items'>
-  ) {
-    return this.ordersService.createOrderFromCart(userId, orderData);
-  }
+  constructor(
+    private ordersService: OrdersService,
+    private whatsAppService: WhatsAppService,
+    private shippingService: ShippingService
+  ) {}
 
   @Get()
-  getOrders(
-    @CurrentUser('id') userId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  findAll(@Query() filters: OrderFilterDto) {
+    return this.ordersService.findAll(filters);
+  }
+
+  @Get('my-orders')
+  @UseGuards(AuthGuard('jwt'))
+  getMyOrders(@Request() req) {
+    if (!req.user || !req.user.id) {
+      throw new BadRequestException('User not authenticated');
+    }
+    return this.ordersService.findByUser(req.user.id);
+  }
+
+  @Get('admin/stats')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getOrderStats() {
+    return this.ordersService.getOrderStats();
+  }
+
+  @Get('admin/inventory-report')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getInventoryReport() {
+    return this.ordersService.getInventoryReport();
+  }
+
+  @Get('admin/sales-report')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getSalesReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
   ) {
-    return this.ordersService.getOrders(
-      userId,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 10
-    );
+    let start: Date | undefined;
+    let end: Date | undefined;
+    
+    if (startDate) {
+      start = new Date(startDate);
+      if (isNaN(start.getTime())) {
+        throw new BadRequestException('Invalid start date');
+      }
+    }
+    
+    if (endDate) {
+      end = new Date(endDate);
+      if (isNaN(end.getTime())) {
+        throw new BadRequestException('Invalid end date');
+      }
+    }
+    
+    return this.ordersService.getSalesReport(start, end);
   }
 
-  @Get(':orderId')
-  getOrderById(@CurrentUser('id') userId: string, @Param('orderId') orderId: string) {
-    return this.ordersService.getOrderById(userId, orderId);
+  @Get('track/:orderNumber')
+  trackOrder(@Param('orderNumber') orderNumber: string) {
+    return this.ordersService.getOrderTracking(orderNumber);
   }
 
-  @Get(':orderId/tracking')
-  getOrderTracking(@CurrentUser('id') userId: string, @Param('orderId') orderId: string) {
-    return this.ordersService.getOrderTracking(userId, orderId);
+  @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
+  findOne(@Param('id') id: string) {
+    const orderId = parseInt(id, 10);
+    if (isNaN(orderId)) {
+      throw new BadRequestException('Invalid order ID');
+    }
+    return this.ordersService.findOne(orderId);
   }
 
-  @Put(':orderId/status')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.STAFF)
-  updateOrderStatus(@Param('orderId') orderId: string, @Body() updateStatusDto: UpdateOrderStatusDto) {
-    return this.ordersService.updateOrderStatus(orderId, updateStatusDto);
+  @Post()
+  @UseGuards(AuthGuard('jwt'))
+  create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
+    return this.ordersService.create(req.user.id, createOrderDto);
   }
 
-  @Post(':orderId/return')
-  createReturnRequest(
-    @CurrentUser('id') userId: string,
-    @Param('orderId') orderId: string,
-    @Body() returnRequestDto: ReturnRequestDto
+  @Put(':id/status')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  updateStatus(@Param('id') id: string, @Body() updateStatusDto: UpdateOrderStatusDto, @Request() req) {
+    return this.ordersService.updateStatus(+id, updateStatusDto, req.user.email);
+  }
+
+  @Post('returns')
+  @UseGuards(AuthGuard('jwt'))
+  createReturn(@Request() req, @Body() createReturnDto: CreateReturnDto) {
+    return this.ordersService.createReturn(req.user.id, createReturnDto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/invoice')
+  async getInvoice(
+    @Request() req,
+    @Param('id') orderId: string,
+    @Query('preview') preview: string,
+    @Res() res: Response
   ) {
-    return this.ordersService.createReturnRequest(userId, orderId, returnRequestDto);
+    try {
+      const invoice = await this.ordersService.generateInvoice(req.user.id, orderId);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      
+      if (preview === 'true') {
+        res.setHeader('Content-Disposition', 'inline');
+      } else {
+        res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoice.orderNumber}.pdf"`);
+      }
+      
+      return res.send(invoice.pdf);
+    } catch (error) {
+      throw new BadRequestException('Unable to generate invoice');
+    }
   }
 
-  @Get('returns/my-requests')
-  getReturnRequests(@CurrentUser('id') userId: string) {
-    return this.ordersService.getReturnRequests(userId);
-  }
-
-  @Put('returns/:returnRequestId/status')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.STAFF)
-  updateReturnRequestStatus(
-    @Param('returnRequestId') returnRequestId: string,
-    @Body() body: { status: string; notes?: string }
+  @UseGuards(AuthGuard('jwt'))
+  @Post('invoices/bulk')
+  async getBulkInvoices(
+    @Request() req,
+    @Body() body: { orderIds: string[] },
+    @Res() res: Response
   ) {
-    return this.ordersService.updateReturnRequestStatus(returnRequestId, body.status, body.notes);
+    const zip = await this.ordersService.generateBulkInvoices(req.user.id, body.orderIds);
+    
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="invoices-${new Date().toISOString().split('T')[0]}.zip"`);
+    
+    return res.send(zip);
   }
 
-  @Post('guest-checkout')
-  @Public()
-  createGuestOrder(@Body() guestCheckoutDto: GuestCheckoutDto) {
-    return this.ordersService.createGuestOrder(guestCheckoutDto);
+  @Put('bulk/status')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  bulkUpdateStatus(@Body() bulkUpdateDto: BulkOrderUpdateDto, @Request() req) {
+    return this.ordersService.bulkUpdateOrders(bulkUpdateDto, req.user.email);
   }
 
-  @Get('guest/:orderNumber')
-  @Public()
-  getGuestOrder(
-    @Param('orderNumber') orderNumber: string,
-    @Query('email') email: string
+  @Post(':id/notes')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  addOrderNote(@Param('id') id: string, @Body() addNoteDto: AddOrderNoteDto, @Request() req) {
+    return this.ordersService.addOrderNote(+id, addNoteDto, req.user.email);
+  }
+
+  @Get(':id/notes')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getOrderNotes(@Param('id') id: string) {
+    return this.ordersService.getOrderNotes(+id);
+  }
+
+  @Post(':id/email')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  sendCustomerEmail(@Param('id') id: string, @Body() emailDto: SendCustomerEmailDto, @Request() req) {
+    return this.ordersService.sendCustomerEmail(+id, emailDto, req.user.email);
+  }
+
+  @Post(':id/shipping-label')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  generateShippingLabel(@Param('id') id: string) {
+    return this.ordersService.generateShippingLabel(+id);
+  }
+
+  @Get('admin/analytics')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getOrderAnalytics(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
   ) {
-    return this.ordersService.getGuestOrderByNumber(orderNumber, email);
+    let start: Date | undefined;
+    let end: Date | undefined;
+    
+    if (startDate) {
+      start = new Date(startDate);
+      if (isNaN(start.getTime())) {
+        throw new BadRequestException('Invalid start date');
+      }
+    }
+    
+    if (endDate) {
+      end = new Date(endDate);
+      if (isNaN(end.getTime())) {
+        throw new BadRequestException('Invalid end date');
+      }
+    }
+    
+    return this.ordersService.getOrderAnalytics(start, end);
+  }
+
+  // WhatsApp Order Endpoints
+  @Post('whatsapp')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  createWhatsAppOrder(@Body() dto: CreateWhatsAppOrderDto) {
+    return this.whatsAppService.createWhatsAppOrder(dto);
+  }
+
+  @Post('webhooks/whatsapp')
+  processWhatsAppWebhook(@Body() dto: WhatsAppWebhookDto) {
+    // TODO: Add webhook signature verification for production
+    // const signature = req.headers['x-whatsapp-signature'];
+    // if (!this.verifyWebhookSignature(signature, dto)) {
+    //   throw new UnauthorizedException('Invalid webhook signature');
+    // }
+    return this.whatsAppService.processWhatsAppWebhook(dto);
+  }
+
+  @Get('whatsapp/pending')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getPendingWhatsAppMessages() {
+    return this.whatsAppService.getPendingWhatsAppMessages();
+  }
+
+  @Patch('whatsapp/:messageId/processed')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  markWhatsAppMessageProcessed(
+    @Param('messageId') messageId: string,
+    @Body() body: { orderId?: number }
+  ) {
+    return this.whatsAppService.markMessageProcessed(messageId, body.orderId);
+  }
+
+  @Get('returns')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getReturnRequests(
+    @Query('status') status?: string,
+    @Query('orderId') orderId?: string
+  ) {
+    const orderIdNum = orderId ? parseInt(orderId, 10) : undefined;
+    if (orderId && isNaN(orderIdNum!)) {
+      throw new BadRequestException('Invalid order ID');
+    }
+    return this.ordersService.getReturnRequests({ status, orderId: orderIdNum });
+  }
+
+  @Put('returns/process')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  processReturn(@Body() dto: ProcessReturnDto, @Request() req) {
+    return this.ordersService.processReturn(dto, req.user.email);
+  }
+
+  @Get('track/:trackingNumber')
+  getTrackingByNumber(@Param('trackingNumber') trackingNumber: string) {
+    return this.shippingService.getTrackingInfo(trackingNumber);
   }
 }

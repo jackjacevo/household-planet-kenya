@@ -1,52 +1,90 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiChevronDown, FiChevronUp, FiX } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Star, Package, ChevronDown, ChevronUp, Filter, X, Check } from 'lucide-react';
+import { api } from '@/lib/api';
 
-interface FilterProps {
-  filters: {
-    category: string;
-    minPrice: string;
-    maxPrice: string;
-    rating: string;
-    availability: string;
-    brand: string;
-  };
-  onFiltersChange: (filters: any) => void;
+interface ProductFiltersProps {
+  onFilterChange: (filters: any) => void;
 }
 
-export default function ProductFilters({ filters, onFiltersChange }: FilterProps) {
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
+export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
+  const [filters, setFilters] = useState({
+    category: '',
+    minPrice: 0,
+    maxPrice: 100000,
+    rating: 0,
+    inStock: false,
+    size: '',
+    color: '',
+    material: '',
+    brand: '',
+    availability: 'all',
+    discount: false,
+    tags: [] as string[],
+  });
+
   const [expandedSections, setExpandedSections] = useState({
     category: true,
     price: true,
     rating: true,
-    availability: true,
-    brand: true
+    attributes: true,
+    availability: false,
+    brand: false,
   });
 
+  const [categories, setCategories] = useState<any[]>([]);
+  const [availableFilters, setAvailableFilters] = useState({
+    sizes: [] as string[],
+    colors: [] as string[],
+    materials: [] as string[],
+    brands: [] as string[],
+    tags: [] as string[]
+  });
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+
   useEffect(() => {
-    fetchFilterData();
+    // Fetch categories and filter options
+    const fetchFilterOptions = async () => {
+      try {
+        const categoriesRes = await api.getCategories();
+        const apiCategories = Array.isArray(categoriesRes) ? categoriesRes : [];
+        setCategories([{ id: '', name: 'All Categories' }, ...apiCategories]);
+        
+        // Mock filter options - in real app, fetch from API
+        setAvailableFilters({
+          sizes: ['Small', 'Medium', 'Large', 'XL'],
+          colors: ['Red', 'Blue', 'Green', 'Black', 'White', 'Brown', 'Silver', 'Gold'],
+          materials: ['Plastic', 'Metal', 'Wood', 'Glass', 'Ceramic', 'Stainless Steel', 'Bamboo'],
+          brands: ['KitchenPro', 'HomeEssentials', 'QualityWare', 'ModernLiving', 'EcoFriendly'],
+          tags: ['Eco-Friendly', 'Dishwasher Safe', 'Non-Stick', 'Heat Resistant', 'Microwave Safe']
+        });
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        // Set fallback categories if API fails
+        setCategories([{ id: '', name: 'All Categories' }]);
+      }
+    };
+
+    fetchFilterOptions();
   }, []);
 
-  const fetchFilterData = async () => {
-    try {
-      const [categoriesRes, brandsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/brands`)
-      ]);
-      
-      const categoriesData = await categoriesRes.json();
-      setCategories(categoriesData);
-      
-      if (brandsRes.ok) {
-        const brandsData = await brandsRes.json();
-        setBrands(brandsData);
-      }
-    } catch (error) {
-      console.error('Error fetching filter data:', error);
-    }
+  const handleFilterChange = (key: string, value: any) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+    updateActiveFiltersCount(newFilters);
+  };
+
+  const handleTagToggle = (tag: string) => {
+    const newTags = filters.tags.includes(tag)
+      ? filters.tags.filter(t => t !== tag)
+      : [...filters.tags, tag];
+    handleFilterChange('tags', newTags);
   };
 
   const toggleSection = (section: string) => {
@@ -56,222 +94,325 @@ export default function ProductFilters({ filters, onFiltersChange }: FilterProps
     }));
   };
 
-  const updateFilter = (key: string, value: string) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value
-    });
+  const updateActiveFiltersCount = (currentFilters: any) => {
+    let count = 0;
+    if (currentFilters.category) count++;
+    if (currentFilters.minPrice > 0 || currentFilters.maxPrice < 100000) count++;
+    if (currentFilters.rating > 0) count++;
+    if (currentFilters.inStock) count++;
+    if (currentFilters.size) count++;
+    if (currentFilters.color) count++;
+    if (currentFilters.material) count++;
+    if (currentFilters.brand) count++;
+    if (currentFilters.discount) count++;
+    if (currentFilters.tags.length > 0) count++;
+    setActiveFiltersCount(count);
   };
 
-  const clearFilters = () => {
-    onFiltersChange({
+  const resetFilters = () => {
+    const defaultFilters = {
       category: '',
-      minPrice: '',
-      maxPrice: '',
-      rating: '',
-      availability: '',
-      brand: ''
-    });
+      minPrice: 0,
+      maxPrice: 100000,
+      rating: 0,
+      inStock: false,
+      size: '',
+      color: '',
+      material: '',
+      brand: '',
+      availability: 'all',
+      discount: false,
+      tags: [] as string[],
+    };
+    setFilters(defaultFilters);
+    onFilterChange(defaultFilters);
+    setPriceRange([0, 100000]);
+    setActiveFiltersCount(0);
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const FilterSection = ({ title, isExpanded, onToggle, children }: any) => (
+    <div className="border-b border-gray-100 last:border-b-0">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-4 text-left hover:bg-gray-50 px-2 rounded-lg transition-colors"
+      >
+        <span className="font-medium text-gray-900">{title}</span>
+        {isExpanded ? (
+          <ChevronUp className="h-4 w-4 text-gray-500" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-gray-500" />
+        )}
+      </button>
+      <motion.div
+        initial={false}
+        animate={{ height: isExpanded ? 'auto' : 0, opacity: isExpanded ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+        <div className="pb-4 px-2">{children}</div>
+      </motion.div>
+    </div>
+  );
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-          >
-            <FiX size={14} />
-            Clear All
-          </button>
-        )}
-      </div>
-
-      {/* Category Filter */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection('category')}
-          className="flex justify-between items-center w-full text-left font-medium text-gray-900 mb-3"
-        >
-          Category
-          {expandedSections.category ? <FiChevronUp /> : <FiChevronDown />}
-        </button>
-        {expandedSections.category && (
-          <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="category"
-                value=""
-                checked={filters.category === ''}
-                onChange={(e) => updateFilter('category', e.target.value)}
-                className="mr-2"
-              />
-              All Categories
-            </label>
-            {categories.map((category: any) => (
-              <label key={category.id} className="flex items-center">
-                <input
-                  type="radio"
-                  name="category"
-                  value={category.id}
-                  checked={filters.category === category.id}
-                  onChange={(e) => updateFilter('category', e.target.value)}
-                  className="mr-2"
-                />
-                {category.name}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Price Filter */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection('price')}
-          className="flex justify-between items-center w-full text-left font-medium text-gray-900 mb-3"
-        >
-          Price Range
-          {expandedSections.price ? <FiChevronUp /> : <FiChevronDown />}
-        </button>
-        {expandedSections.price && (
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.minPrice}
-                onChange={(e) => updateFilter('minPrice', e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.maxPrice}
-                onChange={(e) => updateFilter('maxPrice', e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              />
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-2">
+              <Filter className="h-5 w-5 text-white" />
             </div>
-            <div className="space-y-2">
-              {[
-                { label: 'Under KSh 1,000', min: '', max: '1000' },
-                { label: 'KSh 1,000 - 5,000', min: '1000', max: '5000' },
-                { label: 'KSh 5,000 - 10,000', min: '5000', max: '10000' },
-                { label: 'Over KSh 10,000', min: '10000', max: '' }
-              ].map((range) => (
-                <label key={range.label} className="flex items-center">
-                  <input
-                    type="radio"
-                    name="priceRange"
-                    checked={filters.minPrice === range.min && filters.maxPrice === range.max}
-                    onChange={() => {
-                      updateFilter('minPrice', range.min);
-                      updateFilter('maxPrice', range.max);
-                    }}
-                    className="mr-2"
-                  />
-                  {range.label}
-                </label>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Filters</h3>
+              {activeFiltersCount > 0 && (
+                <p className="text-sm text-orange-600">{activeFiltersCount} active filters</p>
+              )}
+            </div>
+          </div>
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={resetFilters}
+              className="text-sm text-gray-500 hover:text-red-600 flex items-center space-x-1"
+            >
+              <X className="h-4 w-4" />
+              <span>Clear All</span>
+            </button>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-0">
+        <FilterSection
+          title="Category"
+          isExpanded={expandedSections.category}
+          onToggle={() => toggleSection('category')}
+        >
+          <select
+            value={filters.category}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          >
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </FilterSection>
+
+        <FilterSection
+          title="Price Range"
+          isExpanded={expandedSections.price}
+          onToggle={() => toggleSection('price')}
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Min Price</label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={filters.minPrice || ''}
+                  onChange={(e) => handleFilterChange('minPrice', Number(e.target.value))}
+                  className="text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Max Price</label>
+                <Input
+                  type="number"
+                  placeholder="100000"
+                  value={filters.maxPrice === 100000 ? '' : filters.maxPrice}
+                  onChange={(e) => handleFilterChange('maxPrice', Number(e.target.value) || 100000)}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[500, 1000, 2000, 5000, 10000].map((price) => (
+                <button
+                  key={price}
+                  onClick={() => {
+                    handleFilterChange('minPrice', 0);
+                    handleFilterChange('maxPrice', price);
+                  }}
+                  className="px-3 py-1 text-xs bg-gray-100 hover:bg-orange-100 hover:text-orange-700 rounded-full transition-colors"
+                >
+                  Under KSh {price.toLocaleString()}
+                </button>
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </FilterSection>
 
-      {/* Rating Filter */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection('rating')}
-          className="flex justify-between items-center w-full text-left font-medium text-gray-900 mb-3"
+        <FilterSection
+          title="Customer Rating"
+          isExpanded={expandedSections.rating}
+          onToggle={() => toggleSection('rating')}
         >
-          Customer Rating
-          {expandedSections.rating ? <FiChevronUp /> : <FiChevronDown />}
-        </button>
-        {expandedSections.rating && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[4, 3, 2, 1].map((rating) => (
-              <label key={rating} className="flex items-center">
+              <label key={rating} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
                 <input
                   type="radio"
                   name="rating"
-                  value={rating.toString()}
-                  checked={filters.rating === rating.toString()}
-                  onChange={(e) => updateFilter('rating', e.target.value)}
-                  className="mr-2"
+                  value={rating}
+                  checked={filters.rating === rating}
+                  onChange={(e) => handleFilterChange('rating', Number(e.target.value))}
+                  className="mr-3 text-orange-600 focus:ring-orange-500"
                 />
                 <div className="flex items-center">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span
+                  {[...Array(5)].map((_, i) => (
+                    <Star
                       key={i}
-                      className={`text-sm ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                    >
-                      ★
-                    </span>
+                      className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                    />
                   ))}
-                  <span className="ml-1 text-sm text-gray-600">& Up</span>
+                  <span className="ml-2 text-sm text-gray-600">& up</span>
                 </div>
               </label>
             ))}
           </div>
-        )}
-      </div>
+        </FilterSection>
 
-      {/* Availability Filter */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection('availability')}
-          className="flex justify-between items-center w-full text-left font-medium text-gray-900 mb-3"
+        <FilterSection
+          title="Availability"
+          isExpanded={expandedSections.availability}
+          onToggle={() => toggleSection('availability')}
         >
-          Availability
-          {expandedSections.availability ? <FiChevronUp /> : <FiChevronDown />}
-        </button>
-        {expandedSections.availability && (
-          <div className="space-y-2">
-            <label className="flex items-center">
+          <div className="space-y-3">
+            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
               <input
                 type="checkbox"
-                checked={filters.availability === 'in-stock'}
-                onChange={(e) => updateFilter('availability', e.target.checked ? 'in-stock' : '')}
-                className="mr-2"
+                checked={filters.inStock}
+                onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+                className="mr-3 text-green-600 focus:ring-green-500"
               />
-              In Stock Only
+              <Package className="h-4 w-4 mr-2 text-green-600" />
+              <span className="text-sm font-medium">In Stock Only</span>
+            </label>
+            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+              <input
+                type="checkbox"
+                checked={filters.discount}
+                onChange={(e) => handleFilterChange('discount', e.target.checked)}
+                className="mr-3 text-red-600 focus:ring-red-500"
+              />
+              <span className="text-sm font-medium text-red-600">On Sale</span>
             </label>
           </div>
-        )}
-      </div>
+        </FilterSection>
 
-      {/* Brand Filter */}
-      {brands.length > 0 && (
-        <div className="mb-6">
-          <button
-            onClick={() => toggleSection('brand')}
-            className="flex justify-between items-center w-full text-left font-medium text-gray-900 mb-3"
-          >
-            Brand
-            {expandedSections.brand ? <FiChevronUp /> : <FiChevronDown />}
-          </button>
-          {expandedSections.brand && (
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {brands.map((brand: any) => (
-                <label key={brand} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={filters.brand === brand}
-                    onChange={(e) => updateFilter('brand', e.target.checked ? brand : '')}
-                    className="mr-2"
-                  />
-                  {brand}
-                </label>
-              ))}
+        <FilterSection
+          title="Product Attributes"
+          isExpanded={expandedSections.attributes}
+          onToggle={() => toggleSection('attributes')}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">Size</label>
+              <div className="flex flex-wrap gap-2">
+                {availableFilters.sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => handleFilterChange('size', filters.size === size ? '' : size)}
+                    className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                      filters.size === size
+                        ? 'bg-orange-100 border-orange-300 text-orange-700'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">Color</label>
+              <div className="flex flex-wrap gap-2">
+                {availableFilters.colors.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => handleFilterChange('color', filters.color === color ? '' : color)}
+                    className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                      filters.color === color
+                        ? 'bg-orange-100 border-orange-300 text-orange-700'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {color}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">Material</label>
+              <select
+                value={filters.material}
+                onChange={(e) => handleFilterChange('material', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="">Any Material</option>
+                {availableFilters.materials.map((material) => (
+                  <option key={material} value={material}>{material}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </FilterSection>
+
+        <FilterSection
+          title="Brand"
+          isExpanded={expandedSections.brand}
+          onToggle={() => toggleSection('brand')}
+        >
+          <select
+            value={filters.brand}
+            onChange={(e) => handleFilterChange('brand', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          >
+            <option value="">All Brands</option>
+            {availableFilters.brands.map((brand) => (
+              <option key={brand} value={brand}>{brand}</option>
+            ))}
+          </select>
+        </FilterSection>
+
+        {/* Tags/Features */}
+        <div className="border-t border-gray-100 pt-4">
+          <h4 className="font-medium text-gray-900 mb-3">Features</h4>
+          <div className="flex flex-wrap gap-2">
+            {availableFilters.tags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors flex items-center space-x-1 ${
+                  filters.tags.includes(tag)
+                    ? 'bg-green-100 border-green-300 text-green-700'
+                    : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                {filters.tags.includes(tag) && <Check className="h-3 w-3" />}
+                <span>{tag}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+
+        <div className="border-t border-gray-100 pt-6">
+          <Button 
+            onClick={resetFilters} 
+            variant="outline" 
+            className="w-full hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
+          >
+            <X className="h-4 w-4 mr-2" />
+            Reset All Filters
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

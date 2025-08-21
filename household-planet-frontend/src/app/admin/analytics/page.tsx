@@ -1,320 +1,248 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiTrendingUp, FiUsers, FiShoppingBag, FiMapPin } from 'react-icons/fi';
+import { BarChart3, TrendingUp, Calendar, DollarSign } from 'lucide-react';
+import axios from 'axios';
 
 interface SalesData {
-  dailySales: Array<{ date: string; revenue: number; orders: number }>;
-  weeklySales: Array<{ week: string; revenue: number; orders: number }>;
-  monthlySales: Array<{ month: string; revenue: number; orders: number }>;
-  topProducts: Array<{ productId: string; _sum: { quantity: number; total: number } }>;
+  period: string;
+  orders: number;
+  revenue: number;
+  avgOrderValue: number;
 }
 
-interface CustomerData {
-  newCustomers: Array<{ createdAt: string; _count: number }>;
-  retentionRate: number;
-  topCustomers: Array<{ name: string; email: string; totalSpent: number; _count: { orders: number } }>;
-  customersByLocation: Array<{ county: string; _count: { county: number } }>;
-}
-
-interface ProductData {
-  mostViewed: Array<{ name: string; viewCount: number; price: number }>;
-  bestRated: Array<{ name: string; averageRating: number; totalReviews: number }>;
-  inventoryStatus: { total: number; lowStock: number; outOfStock: number; inStock: number };
-}
-
-interface GeographicData {
-  salesByCounty: Array<{ county: string; orderCount: number; totalRevenue: number }>;
-  deliveryPerformance: Array<{ deliveryLocation: string; _count: { deliveryLocation: number } }>;
-}
-
-export default function AdminAnalytics() {
-  const [activeTab, setActiveTab] = useState('sales');
-  const [salesData, setSalesData] = useState<SalesData | null>(null);
-  const [customerData, setCustomerData] = useState<CustomerData | null>(null);
-  const [productData, setProductData] = useState<ProductData | null>(null);
-  const [geographicData, setGeographicData] = useState<GeographicData | null>(null);
+export default function AnalyticsPage() {
+  const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalyticsData();
-  }, [activeTab]);
+    fetchSalesAnalytics();
+  }, [period]);
 
-  const fetchAnalyticsData = async () => {
+  const fetchSalesAnalytics = async () => {
     try {
       const token = localStorage.getItem('token');
-      
-      if (activeTab === 'sales' && !salesData) {
-        const response = await fetch('http://localhost:3001/api/admin/analytics/sales', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setSalesData(data);
-      }
-      
-      if (activeTab === 'customers' && !customerData) {
-        const response = await fetch('http://localhost:3001/api/admin/analytics/customers', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setCustomerData(data);
-      }
-      
-      if (activeTab === 'products' && !productData) {
-        const response = await fetch('http://localhost:3001/api/admin/analytics/products', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setProductData(data);
-      }
-      
-      if (activeTab === 'geographic' && !geographicData) {
-        const response = await fetch('http://localhost:3001/api/admin/analytics/geographic', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setGeographicData(data);
-      }
-      
-      setLoading(false);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/analytics/sales?period=${period}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setSalesData(response.data);
     } catch (error) {
-      console.error('Error fetching analytics data:', error);
+      console.error('Error fetching analytics:', error);
+    } finally {
       setLoading(false);
     }
   };
 
-  const tabs = [
-    { id: 'sales', name: 'Sales Analytics', icon: FiTrendingUp },
-    { id: 'customers', name: 'Customer Analytics', icon: FiUsers },
-    { id: 'products', name: 'Product Analytics', icon: FiShoppingBag },
-    { id: 'geographic', name: 'Geographic Analytics', icon: FiMapPin }
-  ];
+  const totalRevenue = salesData.reduce((sum, item) => sum + Number(item.revenue), 0);
+  const totalOrders = salesData.reduce((sum, item) => sum + Number(item.orders), 0);
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  const maxRevenue = Math.max(...salesData.map(item => Number(item.revenue)));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Comprehensive business insights and performance metrics</p>
+    <div className="px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Sales Analytics</h1>
+        <p className="mt-2 text-sm text-gray-700">
+          Track your sales performance and identify trends over time.
+        </p>
+      </div>
+
+      {/* Period Selector */}
+      <div className="mb-6">
+        <div className="flex space-x-4">
+          {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${
+                period === p
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {p.charAt(0).toUpperCase() + p.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <DollarSign className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Total Revenue
+                  </dt>
+                  <dd className="text-2xl font-semibold text-gray-900">
+                    KSh {totalRevenue.toLocaleString()}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{tab.name}</span>
-                </button>
-              );
-            })}
-          </nav>
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Total Orders
+                  </dt>
+                  <dd className="text-2xl font-semibold text-gray-900">
+                    {totalOrders.toLocaleString()}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Avg Order Value
+                  </dt>
+                  <dd className="text-2xl font-semibold text-gray-900">
+                    KSh {avgOrderValue.toLocaleString()}
+                  </dd>
+                </dl>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div>
-            {/* Sales Analytics */}
-            {activeTab === 'sales' && salesData && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Sales (Last 30 Days)</h3>
-                    <div className="space-y-2">
-                      {salesData.dailySales.slice(-7).map((day, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{day.date}</span>
-                          <div className="text-right">
-                            <span className="font-medium">KSh {day.revenue.toLocaleString()}</span>
-                            <span className="text-xs text-gray-500 ml-2">({day.orders} orders)</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+        </div>
+      </div>
 
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Performance</h3>
-                    <div className="space-y-2">
-                      {salesData.monthlySales.slice(0, 6).map((month, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{month.month}</span>
-                          <div className="text-right">
-                            <span className="font-medium">KSh {month.revenue.toLocaleString()}</span>
-                            <span className="text-xs text-gray-500 ml-2">({month.orders} orders)</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Customer Analytics */}
-            {activeTab === 'customers' && customerData && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Customer Retention</h3>
-                    <p className="text-3xl font-bold text-green-600">{customerData.retentionRate.toFixed(1)}%</p>
-                    <p className="text-sm text-gray-500">Active in last 90 days</p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Top Customers</h3>
-                    <p className="text-3xl font-bold text-blue-600">{customerData.topCustomers.length}</p>
-                    <p className="text-sm text-gray-500">High-value customers</p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Geographic Spread</h3>
-                    <p className="text-3xl font-bold text-purple-600">{customerData.customersByLocation.length}</p>
-                    <p className="text-sm text-gray-500">Counties served</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Customers by Spending</h3>
-                    <div className="space-y-3">
-                      {customerData.topCustomers.slice(0, 5).map((customer, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-gray-900">{customer.name}</p>
-                            <p className="text-sm text-gray-500">{customer._count.orders} orders</p>
-                          </div>
-                          <span className="font-bold text-green-600">
-                            KSh {customer.totalSpent.toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Customers by Location</h3>
-                    <div className="space-y-3">
-                      {customerData.customersByLocation.slice(0, 5).map((location, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <span className="text-gray-900">{location.county}</span>
-                          <span className="font-medium text-blue-600">{location._count.county}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Product Analytics */}
-            {activeTab === 'products' && productData && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Products</h3>
-                    <p className="text-3xl font-bold text-blue-600">{productData.inventoryStatus.total}</p>
-                  </div>
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">In Stock</h3>
-                    <p className="text-3xl font-bold text-green-600">{productData.inventoryStatus.inStock}</p>
-                  </div>
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Low Stock</h3>
-                    <p className="text-3xl font-bold text-yellow-600">{productData.inventoryStatus.lowStock}</p>
-                  </div>
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Out of Stock</h3>
-                    <p className="text-3xl font-bold text-red-600">{productData.inventoryStatus.outOfStock}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Most Viewed Products</h3>
-                    <div className="space-y-3">
-                      {productData.mostViewed.slice(0, 5).map((product, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-gray-900">{product.name}</p>
-                            <p className="text-sm text-gray-500">KSh {product.price.toLocaleString()}</p>
-                          </div>
-                          <span className="font-bold text-blue-600">{product.viewCount} views</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Best Rated Products</h3>
-                    <div className="space-y-3">
-                      {productData.bestRated.slice(0, 5).map((product, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-gray-900">{product.name}</p>
-                            <p className="text-sm text-gray-500">{product.totalReviews} reviews</p>
-                          </div>
-                          <span className="font-bold text-yellow-600">⭐ {product.averageRating?.toFixed(1)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Geographic Analytics */}
-            {activeTab === 'geographic' && geographicData && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Sales by County</h3>
-                    <div className="space-y-3">
-                      {geographicData.salesByCounty.slice(0, 10).map((county, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-gray-900">{county.county}</p>
-                            <p className="text-sm text-gray-500">{county.orderCount} orders</p>
-                          </div>
-                          <span className="font-bold text-green-600">
-                            KSh {county.totalRevenue.toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Delivery Locations</h3>
-                    <div className="space-y-3">
-                      {geographicData.deliveryPerformance.slice(0, 10).map((location, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <span className="text-gray-900">{location.deliveryLocation}</span>
-                          <span className="font-medium text-blue-600">
-                            {location._count.deliveryLocation} deliveries
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Revenue Chart */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Revenue Trend</h2>
           </div>
-        )}
+          <div className="p-6">
+            <div className="space-y-4">
+              {salesData.map((item, index) => (
+                <div key={index} className="flex items-center">
+                  <div className="w-20 text-sm text-gray-600">
+                    {item.period}
+                  </div>
+                  <div className="flex-1 mx-4">
+                    <div className="bg-gray-200 rounded-full h-4">
+                      <div
+                        className="bg-blue-600 h-4 rounded-full"
+                        style={{
+                          width: `${(Number(item.revenue) / maxRevenue) * 100}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-24 text-sm font-medium text-gray-900 text-right">
+                    KSh {Number(item.revenue).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Orders Chart */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Orders Trend</h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {salesData.map((item, index) => {
+                const maxOrders = Math.max(...salesData.map(d => Number(d.orders)));
+                return (
+                  <div key={index} className="flex items-center">
+                    <div className="w-20 text-sm text-gray-600">
+                      {item.period}
+                    </div>
+                    <div className="flex-1 mx-4">
+                      <div className="bg-gray-200 rounded-full h-4">
+                        <div
+                          className="bg-green-600 h-4 rounded-full"
+                          style={{
+                            width: `${(Number(item.orders) / maxOrders) * 100}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="w-16 text-sm font-medium text-gray-900 text-right">
+                      {Number(item.orders)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="mt-8 bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Detailed Analytics</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Period
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Orders
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Revenue
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Avg Order Value
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {salesData.map((item, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {item.period}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {Number(item.orders).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    KSh {Number(item.revenue).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    KSh {Number(item.avgOrderValue).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

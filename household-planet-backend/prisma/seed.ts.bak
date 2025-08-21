@@ -1,0 +1,207 @@
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Create admin user
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@householdplanet.co.ke' },
+    update: {},
+    create: {
+      email: 'admin@householdplanet.co.ke',
+      name: 'Admin User',
+      role: 'ADMIN',
+      password: hashedPassword,
+      emailVerified: true,
+    },
+  });
+
+  // Create brands
+  const brands = await Promise.all([
+    prisma.brand.upsert({
+      where: { slug: 'samsung' },
+      update: {},
+      create: { name: 'Samsung', slug: 'samsung' },
+    }),
+    prisma.brand.upsert({
+      where: { slug: 'lg' },
+      update: {},
+      create: { name: 'LG', slug: 'lg' },
+    }),
+    prisma.brand.upsert({
+      where: { slug: 'philips' },
+      update: {},
+      create: { name: 'Philips', slug: 'philips' },
+    }),
+    prisma.brand.upsert({
+      where: { slug: 'ikea' },
+      update: {},
+      create: { name: 'IKEA', slug: 'ikea' },
+    }),
+    prisma.brand.upsert({
+      where: { slug: 'generic' },
+      update: {},
+      create: { name: 'Generic', slug: 'generic' },
+    }),
+  ]);
+
+  // Create main categories
+  const categories = await Promise.all([
+    prisma.category.upsert({
+      where: { slug: 'kitchen-dining' },
+      update: {},
+      create: {
+        name: 'Kitchen and Dining',
+        slug: 'kitchen-dining',
+        description: 'Cookware, Utensils, Dinnerware, Appliances, Storage',
+        sortOrder: 1,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'bathroom-accessories' },
+      update: {},
+      create: {
+        name: 'Bathroom Accessories',
+        slug: 'bathroom-accessories',
+        description: 'Towels, Mats, Organizers, Fixtures, Decor',
+        sortOrder: 2,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'cleaning-laundry' },
+      update: {},
+      create: {
+        name: 'Cleaning and Laundry',
+        slug: 'cleaning-laundry',
+        description: 'Cleaning Supplies, Tools, Laundry Accessories',
+        sortOrder: 3,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'beddings-bedroom' },
+      update: {},
+      create: {
+        name: 'Beddings and Bedroom Accessories',
+        slug: 'beddings-bedroom',
+        description: 'Sheets, Comforters, Pillows, Mattress Protectors',
+        sortOrder: 4,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'storage-organization' },
+      update: {},
+      create: {
+        name: 'Storage and Organization',
+        slug: 'storage-organization',
+        description: 'Containers, Shelving, Closet Organizers, Baskets',
+        sortOrder: 5,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'home-decor' },
+      update: {},
+      create: {
+        name: 'Home Decor and Accessories',
+        slug: 'home-decor',
+        description: 'Wall Art, Decorative Items, Rugs, Curtains',
+        sortOrder: 6,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'jewelry' },
+      update: {},
+      create: {
+        name: 'Jewelry',
+        slug: 'jewelry',
+        description: 'Fashion Jewelry, Jewelry Boxes, Accessories',
+        sortOrder: 7,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'humidifier-candles' },
+      update: {},
+      create: {
+        name: 'Humidifier, Candles and Aromatherapy',
+        slug: 'humidifier-candles',
+        description: 'Essential Oils, Diffusers, Scented Candles',
+        sortOrder: 8,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'beauty-cosmetics' },
+      update: {},
+      create: {
+        name: 'Beauty and Cosmetics',
+        slug: 'beauty-cosmetics',
+        description: 'Skincare, Makeup, Tools, Mirrors',
+        sortOrder: 9,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'home-appliances' },
+      update: {},
+      create: {
+        name: 'Home Appliances',
+        slug: 'home-appliances',
+        description: 'Small Appliances, Kitchen Gadgets, Electronics',
+        sortOrder: 10,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'furniture' },
+      update: {},
+      create: {
+        name: 'Furniture',
+        slug: 'furniture',
+        description: 'Living Room, Bedroom, Dining, Office Furniture',
+        sortOrder: 11,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'outdoor-garden' },
+      update: {},
+      create: {
+        name: 'Outdoor and Garden',
+        slug: 'outdoor-garden',
+        description: 'Patio Furniture, Garden Tools, Planters',
+        sortOrder: 12,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'lighting-electrical' },
+      update: {},
+      create: {
+        name: 'Lighting and Electrical',
+        slug: 'lighting-electrical',
+        description: 'Lamps, Fixtures, Bulbs, Extension Cords',
+        sortOrder: 13,
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'bags-belts' },
+      update: {},
+      create: {
+        name: 'Bags and Belts',
+        slug: 'bags-belts',
+        description: 'Handbags, Backpacks, Belts, Accessories',
+        sortOrder: 14,
+      },
+    }),
+  ]);
+
+  // Demo products removed - ready for real product creation
+
+  console.log('Seed data created successfully');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

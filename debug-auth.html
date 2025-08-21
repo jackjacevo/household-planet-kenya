@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth Token</title>
+</head>
+<body>
+    <h1>Debug Authentication Token</h1>
+    <div id="token-info"></div>
+    <button onclick="checkToken()">Check Token</button>
+    <button onclick="clearToken()">Clear Token</button>
+    
+    <script>
+        function checkToken() {
+            const token = localStorage.getItem('token');
+            const tokenInfo = document.getElementById('token-info');
+            
+            if (token) {
+                try {
+                    // Decode JWT token (basic decode, not verification)
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    tokenInfo.innerHTML = `
+                        <h3>Token Found:</h3>
+                        <p><strong>Token:</strong> ${token.substring(0, 50)}...</p>
+                        <p><strong>Expires:</strong> ${new Date(payload.exp * 1000).toLocaleString()}</p>
+                        <p><strong>User ID:</strong> ${payload.sub}</p>
+                        <p><strong>Role:</strong> ${payload.role}</p>
+                        <p><strong>Is Expired:</strong> ${Date.now() > payload.exp * 1000 ? 'Yes' : 'No'}</p>
+                    `;
+                } catch (e) {
+                    tokenInfo.innerHTML = `<p>Token found but invalid format: ${token.substring(0, 50)}...</p>`;
+                }
+            } else {
+                tokenInfo.innerHTML = '<p>No token found in localStorage</p>';
+            }
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('token');
+            checkToken();
+        }
+        
+        // Auto-check on load
+        checkToken();
+    </script>
+</body>
+</html>

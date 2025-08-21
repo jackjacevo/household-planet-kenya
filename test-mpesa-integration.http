@@ -1,0 +1,94 @@
+### Test M-Pesa STK Push Integration
+
+# First, login to get JWT token
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@householdplanet.co.ke",
+  "password": "admin123"
+}
+
+### Create a test order first
+POST http://localhost:3001/orders
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "variantId": 1,
+      "quantity": 1,
+      "price": 1500
+    }
+  ],
+  "shippingAddress": {
+    "fullName": "John Doe",
+    "phone": "0740271041",
+    "county": "Nairobi",
+    "town": "Nairobi",
+    "street": "Test Street"
+  },
+  "deliveryLocation": "Nairobi CBD",
+  "deliveryPrice": 200,
+  "paymentMethod": "MPESA"
+}
+
+### Initiate M-Pesa STK Push Payment
+POST http://localhost:3001/payments/initiate
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "orderId": 1,
+  "paymentMethod": "MPESA",
+  "phoneNumber": "0740271041"
+}
+
+### Check Payment Status
+GET http://localhost:3001/payments/status/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Retry Payment (if failed)
+POST http://localhost:3001/payments/retry/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Get Payment History
+GET http://localhost:3001/payments/history
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### M-Pesa Callback (This will be called by Safaricom)
+POST http://localhost:3001/payments/mpesa/callback
+Content-Type: application/json
+
+{
+  "Body": {
+    "stkCallback": {
+      "MerchantRequestID": "29115-34620561-1",
+      "CheckoutRequestID": "ws_CO_191220191020363925",
+      "ResultCode": 0,
+      "ResultDesc": "The service request is processed successfully.",
+      "CallbackMetadata": {
+        "Item": [
+          {
+            "Name": "Amount",
+            "Value": 1700
+          },
+          {
+            "Name": "MpesaReceiptNumber",
+            "Value": "NLJ7RT61SV"
+          },
+          {
+            "Name": "TransactionDate",
+            "Value": 20191219102115
+          },
+          {
+            "Name": "PhoneNumber",
+            "Value": 254740271041
+          }
+        ]
+      }
+    }
+  }
+}

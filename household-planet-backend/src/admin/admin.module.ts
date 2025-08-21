@@ -1,24 +1,22 @@
 import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
-import { AnalyticsService } from './analytics.service';
-import { ProductManagementService } from './product-management.service';
-import { ProductManagementController, CategoryManagementController } from './product-management.controller';
-import { OrderManagementService } from './order-management.service';
-import { OrderManagementController } from './order-management.controller';
-import { CustomerManagementService } from './customer-management.service';
-import { CustomerManagementController } from './customer-management.controller';
-import { ContentManagementService } from './content-management.service';
-import { ContentManagementController } from './content-management.controller';
-import { StaffManagementService } from './staff-management.service';
-import { ReportingService } from './reporting.service';
-import { StaffReportingController } from './staff-reporting.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ProductsModule } from '../products/products.module';
+import { memoryStorage } from 'multer';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [AdminController, ProductManagementController, CategoryManagementController, OrderManagementController, CustomerManagementController, ContentManagementController, StaffReportingController],
-  providers: [AdminService, AnalyticsService, ProductManagementService, OrderManagementService, CustomerManagementService, ContentManagementService, StaffManagementService, ReportingService],
-  exports: [AdminService, AnalyticsService, ProductManagementService, OrderManagementService, CustomerManagementService, ContentManagementService, StaffManagementService, ReportingService]
+  imports: [
+    PrismaModule,
+    ProductsModule,
+    MulterModule.register({
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+    })
+  ],
+  controllers: [AdminController],
+  providers: [AdminService],
+  exports: [AdminService]
 })
 export class AdminModule {}

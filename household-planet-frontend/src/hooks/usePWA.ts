@@ -1,326 +1,218 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
-interface PWAState {
-  isOnline: boolean;
-  isInstalled: boolean;
-  hasUpdate: boolean;
-  canInstall: boolean;
-  isLoading: boolean;
-  pushSupported: boolean;
-  pushSubscribed: boolean;
-}
-
-interface SyncData {
-  type: string;
-  data: any;
-  endpoint: string;
-  method?: string;
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 export function usePWA() {
-  const [state, setState] = useState<PWAState>({
-    isOnline: true,
-    isInstalled: false,
-    hasUpdate: false,
-    canInstall: false,
-    isLoading: true,
-    pushSupported: false,
-    pushSubscribed: false
-  });
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    let registration: ServiceWorkerRegistration | null = null;
+    // Check if app is installed
+    setIsInstalled(window.matchMedia('(display-mode: standalone)').matches);
 
-    // Check if PWA is installed
-    const checkInstalled = () => {
-      const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                         (window.navigator as any).standalone === true ||
-                         document.referrer.includes('android-app://');
-      setState(prev => ({ ...prev, isInstalled }));
-    };
+    // Online/offline status
+    setIsOnline(navigator.onLine);
+    
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
-    // Check online status
-    const updateOnlineStatus = () => {
-      const isOnline = navigator.onLine;
-      setState(prev => ({ ...prev, isOnline }));
-      
-      // Trigger sync when coming back online
-      if (isOnline && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(reg => {
-          if ('sync' in reg) {
-            reg.sync.register('general-sync').catch(console.error);
-          }
-        });
-      }
-    };
-
-    // Check push notification support
-    const checkPushSupport = async () => {
-      const pushSupported = 'PushManager' in window && 'Notification' in window;
-      let pushSubscribed = false;
-      
-      if (pushSupported && 'serviceWorker' in navigator) {
-        try {
-          const reg = await navigator.serviceWorker.ready;
-          const subscription = await reg.pushManager.getSubscription();
-          pushSubscribed = !!subscription;
-        } catch (error) {
-          console.error('Push subscription check failed:', error);
-        }
-      }
-      
-      setState(prev => ({ ...prev, pushSupported, pushSubscribed }));
-    };
-
-    // Register service worker
-    const registerSW = async () => {
-      if ('serviceWorker' in navigator) {
-        try {
-          registration = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/'
-          });
-          
-          console.log('SW registered:', registration);
-          
-          // Check for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration!.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  setState(prev => ({ ...prev, hasUpdate: true }));
-                }
-              });
-            }
-          });
-
-          // Listen for messages from SW
-          navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data.type === 'CACHE_UPDATED') {
-              console.log('Cache updated:', event.data.url);
-            }
-          });
-
-        } catch (error) {
-          console.error('SW registration failed:', error);
-        }
-      }
-      
-      setState(prev => ({ ...prev, isLoading: false }));
-    };
-
-    // Check for install prompt
+    // Install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setState(prev => ({ ...prev, canInstall: true }));
-      (window as any).deferredPrompt = e;
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setIsInstallable(true);
     };
 
-    // Handle app installed
-    const handleAppInstalled = () => {
-      setState(prev => ({ ...prev, isInstalled: true, canInstall: false }));
-      (window as any).deferredPrompt = null;
-    };
-
-    const init = async () => {
-      checkInstalled();
-      updateOnlineStatus();
-      await registerSW();
-      await checkPushSupport();
-    };
-
-    init();
-
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // App installed
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    };
+
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // Service worker registration
+    if ('serviceWorker' in navigator) {
+      registerServiceWorker();
+    }
+
     return () => {
-      window.removeEventListener('online', updateOnlineStatus);
-      window.removeEventListener('offline', updateOnlineStatus);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  const updateApp = useCallback(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then(registration => {
-        if (registration?.waiting) {
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          window.location.reload();
+  const registerServiceWorker = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              setUpdateAvailable(true);
+            }
+          });
         }
       });
-    }
-  }, []);
 
-  const requestNotificationPermission = useCallback(async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      const granted = permission === 'granted';
+      // Check for updates
+      registration.update();
+    } catch (error) {
+      console.error('Service worker registration failed:', error);
+    }
+  };
+
+  const installApp = async () => {
+    if (!deferredPrompt) return false;
+
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
       
-      if (granted) {
-        // Auto-subscribe to push notifications
-        await subscribeToPush();
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setIsInstallable(false);
+        setDeferredPrompt(null);
+        return true;
       }
+      return false;
+    } catch (error) {
+      console.error('Install prompt failed:', error);
+      return false;
+    }
+  };
+
+  const updateApp = () => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+      window.location.reload();
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) return false;
+    
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  };
+
+  const subscribeToNotifications = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+    
+    // Skip push notification setup if VAPID key is not configured
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+      console.log('Push notifications disabled - VAPID key not configured');
+      return null;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      });
       
-      return granted;
+      return subscription;
+    } catch (error) {
+      console.error('Push subscription failed:', error);
+      return null;
     }
-    return false;
-  }, []);
+  };
 
-  const subscribeToPush = useCallback(async () => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Check if already subscribed
-        const existingSubscription = await registration.pushManager.getSubscription();
-        if (existingSubscription) {
-          setState(prev => ({ ...prev, pushSubscribed: true }));
-          return true;
-        }
-        
-        // Get VAPID key from server
-        const vapidResponse = await fetch('/api/push/vapid-key');
-        const { publicKey } = await vapidResponse.json();
-        
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: publicKey
-        });
-        
-        // Send subscription to server
-        const response = await fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(subscription)
-        });
-        
-        if (response.ok) {
-          setState(prev => ({ ...prev, pushSubscribed: true }));
-          return true;
-        }
-        
-        return false;
-      } catch (error) {
-        console.error('Push subscription failed:', error);
-        return false;
-      }
-    }
-    return false;
-  }, []);
-
-  const syncData = useCallback(async (tag: string, data?: any) => {
+  const syncCartUpdate = async (cartData: any) => {
     if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
       try {
         const registration = await navigator.serviceWorker.ready;
         
-        // Store data for sync if provided
-        if (data) {
-          await storeForSync(data);
-        }
+        // Send cart data to service worker for caching
+        registration.active?.postMessage({
+          type: 'CACHE_CART_UPDATE',
+          data: cartData
+        });
         
-        await registration.sync.register(tag);
+        // Register background sync
+        await registration.sync.register('cart-sync');
         return true;
       } catch (error) {
-        console.error('Background sync failed:', error);
+        console.error('Background sync registration failed:', error);
         return false;
       }
     }
     return false;
-  }, []);
-
-  const storeForSync = async (syncData: SyncData) => {
-    try {
-      const db = await openIndexedDB();
-      const tx = db.transaction(['syncQueue'], 'readwrite');
-      const store = tx.objectStore('syncQueue');
-      
-      await store.add({
-        ...syncData,
-        timestamp: Date.now()
-      });
-    } catch (error) {
-      console.error('Failed to store sync data:', error);
-    }
   };
 
-  const openIndexedDB = () => {
-    return new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('household-planet-cache', 2);
-      
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-      
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('syncQueue')) {
-          const store = db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
-          store.createIndex('type', 'type', { unique: false });
-          store.createIndex('timestamp', 'timestamp', { unique: false });
-        }
-      };
-    });
-  };
-
-  const installApp = useCallback(async () => {
-    const deferredPrompt = (window as any).deferredPrompt;
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        if (outcome === 'accepted') {
-          setState(prev => ({ ...prev, isInstalled: true, canInstall: false }));
-        }
-        
-        (window as any).deferredPrompt = null;
-        return outcome === 'accepted';
-      } catch (error) {
-        console.error('Install prompt failed:', error);
-        return false;
-      }
-    }
-    return false;
-  }, []);
-
-  const unsubscribeFromPush = useCallback(async () => {
+  const getCachedProducts = async () => {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
         
-        if (subscription) {
-          await subscription.unsubscribe();
+        return new Promise((resolve) => {
+          const messageChannel = new MessageChannel();
+          messageChannel.port1.onmessage = (event) => {
+            resolve(event.data.products || []);
+          };
           
-          // Notify server
-          await fetch('/api/push/unsubscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint: subscription.endpoint })
-          });
+          registration.active?.postMessage(
+            { type: 'GET_CACHED_PRODUCTS' },
+            [messageChannel.port2]
+          );
           
-          setState(prev => ({ ...prev, pushSubscribed: false }));
-          return true;
-        }
+          // Timeout after 5 seconds
+          setTimeout(() => resolve([]), 5000);
+        });
       } catch (error) {
-        console.error('Push unsubscribe failed:', error);
+        console.error('Failed to get cached products:', error);
+        return [];
       }
     }
-    return false;
-  }, []);
+    return [];
+  };
+
+  const showNotification = async (title: string, options: NotificationOptions) => {
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        return registration.showNotification(title, {
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-72x72.png',
+          vibrate: [200, 100, 200],
+          ...options
+        });
+      }
+    }
+    return null;
+  };
 
   return {
-    ...state,
+    isInstallable,
+    isInstalled,
+    isOnline,
+    updateAvailable,
+    installApp,
     updateApp,
     requestNotificationPermission,
-    subscribeToPush,
-    unsubscribeFromPush,
-    syncData,
-    installApp
+    subscribeToNotifications,
+    syncCartUpdate,
+    getCachedProducts,
+    showNotification
   };
 }

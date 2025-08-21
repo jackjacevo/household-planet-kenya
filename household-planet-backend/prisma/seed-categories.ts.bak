@@ -1,0 +1,203 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const categories = [
+  {
+    name: 'Kitchen and Dining',
+    slug: 'kitchen-dining',
+    description: 'Complete kitchen essentials and dining accessories',
+    children: [
+      { name: 'Cookware', slug: 'cookware', description: 'Pots, pans, and cooking vessels' },
+      { name: 'Utensils', slug: 'utensils', description: 'Kitchen tools and cutlery' },
+      { name: 'Dinnerware', slug: 'dinnerware', description: 'Plates, bowls, and serving dishes' },
+      { name: 'Appliances', slug: 'kitchen-appliances', description: 'Kitchen electrical appliances' },
+      { name: 'Storage', slug: 'kitchen-storage', description: 'Food storage and containers' }
+    ]
+  },
+  {
+    name: 'Bathroom Accessories',
+    slug: 'bathroom-accessories',
+    description: 'Essential bathroom items and decor',
+    children: [
+      { name: 'Towels', slug: 'towels', description: 'Bath towels and washcloths' },
+      { name: 'Mats', slug: 'bathroom-mats', description: 'Bath mats and rugs' },
+      { name: 'Organizers', slug: 'bathroom-organizers', description: 'Storage and organization' },
+      { name: 'Fixtures', slug: 'bathroom-fixtures', description: 'Bathroom hardware and fixtures' },
+      { name: 'Decor', slug: 'bathroom-decor', description: 'Decorative bathroom items' }
+    ]
+  },
+  {
+    name: 'Cleaning and Laundry',
+    slug: 'cleaning-laundry',
+    description: 'Cleaning supplies and laundry essentials',
+    children: [
+      { name: 'Cleaning Supplies', slug: 'cleaning-supplies', description: 'Detergents and cleaning products' },
+      { name: 'Tools', slug: 'cleaning-tools', description: 'Mops, brooms, and cleaning equipment' },
+      { name: 'Laundry Accessories', slug: 'laundry-accessories', description: 'Laundry baskets and accessories' }
+    ]
+  },
+  {
+    name: 'Beddings and Bedroom Accessories',
+    slug: 'beddings-bedroom',
+    description: 'Comfortable bedding and bedroom essentials',
+    children: [
+      { name: 'Sheets', slug: 'bed-sheets', description: 'Bed sheets and pillowcases' },
+      { name: 'Comforters', slug: 'comforters', description: 'Duvets and comforters' },
+      { name: 'Pillows', slug: 'pillows', description: 'Bed pillows and cushions' },
+      { name: 'Mattress Protectors', slug: 'mattress-protectors', description: 'Mattress covers and protectors' }
+    ]
+  },
+  {
+    name: 'Storage and Organization',
+    slug: 'storage-organization',
+    description: 'Home storage and organization solutions',
+    children: [
+      { name: 'Containers', slug: 'storage-containers', description: 'Storage boxes and containers' },
+      { name: 'Shelving', slug: 'shelving', description: 'Shelves and storage units' },
+      { name: 'Closet Organizers', slug: 'closet-organizers', description: 'Wardrobe organization systems' },
+      { name: 'Baskets', slug: 'storage-baskets', description: 'Wicker and fabric baskets' }
+    ]
+  },
+  {
+    name: 'Home Decor and Accessories',
+    slug: 'home-decor',
+    description: 'Decorative items and home accessories',
+    children: [
+      { name: 'Wall Art', slug: 'wall-art', description: 'Paintings, prints, and wall decor' },
+      { name: 'Decorative Items', slug: 'decorative-items', description: 'Vases, figurines, and ornaments' },
+      { name: 'Rugs', slug: 'rugs', description: 'Area rugs and carpets' },
+      { name: 'Curtains', slug: 'curtains', description: 'Window treatments and drapes' }
+    ]
+  },
+  {
+    name: 'Jewelry',
+    slug: 'jewelry',
+    description: 'Fashion jewelry and accessories',
+    children: [
+      { name: 'Fashion Jewelry', slug: 'fashion-jewelry', description: 'Necklaces, earrings, and bracelets' },
+      { name: 'Jewelry Boxes', slug: 'jewelry-boxes', description: 'Storage for jewelry' },
+      { name: 'Accessories', slug: 'jewelry-accessories', description: 'Jewelry care and accessories' }
+    ]
+  },
+  {
+    name: 'Humidifier, Candles and Aromatherapy',
+    slug: 'aromatherapy',
+    description: 'Wellness and aromatherapy products',
+    children: [
+      { name: 'Essential Oils', slug: 'essential-oils', description: 'Pure essential oils' },
+      { name: 'Diffusers', slug: 'diffusers', description: 'Oil diffusers and humidifiers' },
+      { name: 'Scented Candles', slug: 'scented-candles', description: 'Aromatic candles' }
+    ]
+  },
+  {
+    name: 'Beauty and Cosmetics',
+    slug: 'beauty-cosmetics',
+    description: 'Beauty products and cosmetics',
+    children: [
+      { name: 'Skincare', slug: 'skincare', description: 'Face and body care products' },
+      { name: 'Makeup', slug: 'makeup', description: 'Cosmetics and beauty products' },
+      { name: 'Tools', slug: 'beauty-tools', description: 'Beauty tools and brushes' },
+      { name: 'Mirrors', slug: 'beauty-mirrors', description: 'Makeup and vanity mirrors' }
+    ]
+  },
+  {
+    name: 'Home Appliances',
+    slug: 'home-appliances',
+    description: 'Small appliances and electronics',
+    children: [
+      { name: 'Small Appliances', slug: 'small-appliances', description: 'Blenders, toasters, and more' },
+      { name: 'Kitchen Gadgets', slug: 'kitchen-gadgets', description: 'Innovative kitchen tools' },
+      { name: 'Electronics', slug: 'home-electronics', description: 'Home electronic devices' }
+    ]
+  },
+  {
+    name: 'Furniture',
+    slug: 'furniture',
+    description: 'Home and office furniture',
+    children: [
+      { name: 'Living Room', slug: 'living-room-furniture', description: 'Sofas, tables, and living room sets' },
+      { name: 'Bedroom', slug: 'bedroom-furniture', description: 'Beds, dressers, and nightstands' },
+      { name: 'Dining', slug: 'dining-furniture', description: 'Dining tables and chairs' },
+      { name: 'Office Furniture', slug: 'office-furniture', description: 'Desks, chairs, and office storage' }
+    ]
+  },
+  {
+    name: 'Outdoor and Garden',
+    slug: 'outdoor-garden',
+    description: 'Outdoor living and gardening supplies',
+    children: [
+      { name: 'Patio Furniture', slug: 'patio-furniture', description: 'Outdoor seating and tables' },
+      { name: 'Garden Tools', slug: 'garden-tools', description: 'Gardening equipment and tools' },
+      { name: 'Planters', slug: 'planters', description: 'Pots and planters for plants' }
+    ]
+  },
+  {
+    name: 'Lighting and Electrical',
+    slug: 'lighting-electrical',
+    description: 'Lighting solutions and electrical accessories',
+    children: [
+      { name: 'Lamps', slug: 'lamps', description: 'Table and floor lamps' },
+      { name: 'Fixtures', slug: 'light-fixtures', description: 'Ceiling and wall fixtures' },
+      { name: 'Bulbs', slug: 'light-bulbs', description: 'LED and energy-efficient bulbs' },
+      { name: 'Extension Cords', slug: 'extension-cords', description: 'Power strips and extension cords' }
+    ]
+  },
+  {
+    name: 'Bags and Belts',
+    slug: 'bags-belts',
+    description: 'Fashion bags and accessories',
+    children: [
+      { name: 'Handbags', slug: 'handbags', description: 'Purses and handbags' },
+      { name: 'Backpacks', slug: 'backpacks', description: 'Travel and everyday backpacks' },
+      { name: 'Belts', slug: 'belts', description: 'Fashion and leather belts' },
+      { name: 'Travel Bags', slug: 'travel-bags', description: 'Luggage and travel accessories' }
+    ]
+  }
+];
+
+async function seedCategories() {
+  console.log('Seeding categories...');
+  
+  for (const category of categories) {
+    const parent = await prisma.category.create({
+      data: {
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        isActive: true,
+        sortOrder: categories.indexOf(category)
+      }
+    });
+
+    if (category.children) {
+      for (const child of category.children) {
+        await prisma.category.create({
+          data: {
+            name: child.name,
+            slug: child.slug,
+            description: child.description,
+            parentId: parent.id,
+            isActive: true,
+            sortOrder: category.children.indexOf(child)
+          }
+        });
+      }
+    }
+  }
+  
+  console.log('Categories seeded successfully!');
+}
+
+if (require.main === module) {
+  seedCategories()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+export { seedCategories };

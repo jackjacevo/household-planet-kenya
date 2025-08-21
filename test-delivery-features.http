@@ -1,0 +1,59 @@
+### Test Comprehensive Delivery Features
+
+### Calculate shipping cost
+POST http://localhost:3001/delivery/calculate
+Content-Type: application/json
+
+{
+  "location": "Nairobi CBD",
+  "orderValue": 3000,
+  "isExpress": false
+}
+
+### Calculate shipping with bulk discount
+POST http://localhost:3001/delivery/calculate
+Content-Type: application/json
+
+{
+  "location": "Karen",
+  "orderValue": 15000,
+  "isExpress": true
+}
+
+### Get delivery time slots
+GET http://localhost:3001/delivery/time-slots
+
+### Schedule a delivery
+POST http://localhost:3001/delivery/schedule
+Content-Type: application/json
+
+{
+  "orderId": "HP-1234567890",
+  "preferredDate": "2025-01-20",
+  "timeSlot": "MORNING",
+  "specialInstructions": "Please call before delivery"
+}
+
+### Track delivery
+GET http://localhost:3001/delivery/track/DL-1234567890
+
+### Update delivery status
+PUT http://localhost:3001/delivery/track/DL-1234567890/status
+Content-Type: application/json
+
+{
+  "status": "OUT_FOR_DELIVERY",
+  "notes": "Package is out for delivery"
+}
+
+### Submit delivery feedback
+POST http://localhost:3001/delivery/track/DL-1234567890/feedback
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Excellent delivery service!"
+}
+
+### Get delivery analytics
+GET http://localhost:3001/delivery/analytics

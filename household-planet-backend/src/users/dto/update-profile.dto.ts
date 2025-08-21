@@ -1,5 +1,4 @@
-import { IsString, IsOptional, IsPhoneNumber, IsEnum, IsDateString, IsBoolean, IsUrl } from 'class-validator';
-import { AddressType } from '../../common/enums';
+import { IsString, IsEmail, IsOptional, IsUrl, IsEnum } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -7,7 +6,11 @@ export class UpdateProfileDto {
   name?: string;
 
   @IsOptional()
-  @IsPhoneNumber('KE')
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
   phone?: string;
 
   @IsOptional()
@@ -15,38 +18,50 @@ export class UpdateProfileDto {
   avatar?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   dateOfBirth?: string;
 
   @IsOptional()
-  @IsString()
+  @IsEnum(['male', 'female', 'other'])
   gender?: string;
 }
 
-export class AddAddressDto {
-  @IsEnum(AddressType)
-  type: AddressType;
+export class ChangePasswordDto {
+  @IsString()
+  currentPassword: string;
 
   @IsString()
-  fullName: string;
+  newPassword: string;
+}
 
-  @IsPhoneNumber('KE')
-  phone: string;
-
-  @IsString()
-  county: string;
-
-  @IsString()
-  town: string;
-
-  @IsString()
-  street: string;
+export class NotificationSettingsDto {
+  @IsOptional()
+  orderUpdates?: boolean;
 
   @IsOptional()
-  @IsString()
-  landmark?: string;
+  promotions?: boolean;
 
   @IsOptional()
-  @IsBoolean()
-  isDefault?: boolean;
+  newsletter?: boolean;
+
+  @IsOptional()
+  sms?: boolean;
+
+  @IsOptional()
+  push?: boolean;
+}
+
+export class PrivacySettingsDto {
+  @IsOptional()
+  @IsEnum(['public', 'private'])
+  profileVisibility?: string;
+
+  @IsOptional()
+  showPurchaseHistory?: boolean;
+
+  @IsOptional()
+  allowDataCollection?: boolean;
+
+  @IsOptional()
+  allowPersonalization?: boolean;
 }

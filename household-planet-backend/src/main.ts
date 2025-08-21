@@ -1,62 +1,85 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
-import helmet from 'helmet';
 import * as compression from 'compression';
+import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
-import * as hpp from 'hpp';
-import { SecurityHeadersInterceptor } from './security/interceptors/security-headers.interceptor';
-
-import { SecurityGuard } from './security/guards/security.guard';
-
-import { CorsConfigService } from './api-security/cors-config.service';
-import { HttpsRedirectMiddleware } from './security/https-redirect.middleware';
+import * as session from 'express-session';
+import { SecurityExceptionFilter } from './common/filters/security-exception.filter';
+import { SecurityMiddleware } from './common/middleware/security.middleware';
+import { InputSanitizationMiddleware } from './common/middleware/input-sanitization.middleware';
+import { SecurityLoggingInterceptor } from './common/interceptors/security-logging.interceptor';
+import { ApiVersionInterceptor } from './common/interceptors/api-version.interceptor';
+import { DeprecationInterceptor } from './common/interceptors/deprecation.interceptor';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  // Enforce HTTPS in production
-  if (process.env.NODE_ENV === 'production' && !process.env.SSL_KEY_PATH) {
-    throw new Error('SSL certificates required in production. Set SSL_KEY_PATH and SSL_CERT_PATH environment variables.');
-  }
-
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'debug', 'error', 'verbose', 'warn'],
     httpsOptions: process.env.NODE_ENV === 'production' ? {
-      key: require('fs').readFileSync(process.env.SSL_KEY_PATH || '/etc/ssl/private/server.key'),
-      cert: require('fs').readFileSync(process.env.SSL_CERT_PATH || '/etc/ssl/certs/server.crt'),
+      // HTTPS configuration for production
     } : undefined,
   });
-
+  
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+  
   // Security middleware
   app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://js.stripe.com', 'https://checkout.flutterwave.com'],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https://api.stripe.com', 'https://api.flutterwave.com'],
-        frameSrc: ['https://js.stripe.com', 'https://checkout.flutterwave.com'],
-        objectSrc: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"]
-      },
-    },
+    contentSecurityPolicy: false, // We handle CSP in SecurityMiddleware
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
       preload: true
     }
   }));
-
-  app.use(compression());
+  
   app.use(cookieParser());
-  app.use(hpp()); // HTTP Parameter Pollution protection
-
-  // CORS with security
-  const corsConfig = app.get(CorsConfigService);
-  app.enableCors(corsConfig.getCorsOptions());
-
-  // Global validation with security
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'change-this-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'strict'
+    }
+  }));
+  
+  // Custom security middleware
+  const securityMiddleware = new SecurityMiddleware();
+  const inputSanitizationMiddleware = new InputSanitizationMiddleware();
+  
+  app.use((req, res, next) => securityMiddleware.use(req, res, next));
+  app.use((req, res, next) => inputSanitizationMiddleware.use(req, res, next));
+  
+  // Global exception filter
+  app.useGlobalFilters(new SecurityExceptionFilter());
+  
+  // Global security interceptors
+  app.useGlobalInterceptors(
+    new SecurityLoggingInterceptor(),
+    new ApiVersionInterceptor(app.get('Reflector')),
+    new DeprecationInterceptor(app.get('Reflector'))
+  );
+  
+  // Compression middleware
+  app.use(compression({
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+    threshold: 1024, // Only compress responses > 1KB
+    level: 6, // Compression level (1-9)
+  }));
+  
+  // Global validation pipe with performance optimizations
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
@@ -64,49 +87,33 @@ async function bootstrap() {
     disableErrorMessages: process.env.NODE_ENV === 'production',
     validateCustomDecorators: true,
   }));
-
-  // Global security interceptors
-  app.useGlobalInterceptors(
-    new SecurityHeadersInterceptor()
-  );
-
-
-
-  // Trust proxy for rate limiting (if behind reverse proxy)
+  
+  // Enhanced CORS configuration
+  const { corsConfig } = await import('./common/config/cors.config');
+  app.enableCors(corsConfig);
+  
+  // Set global API prefix
+  app.setGlobalPrefix('api');
+  
+  // Serve uploads without API prefix
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+  
+  // Trust proxy for production
   if (process.env.NODE_ENV === 'production') {
     app.getHttpAdapter().getInstance().set('trust proxy', 1);
-    
-    // Enhanced HTTPS redirect middleware
-    const httpsRedirect = new HttpsRedirectMiddleware();
-    app.use(httpsRedirect.use.bind(httpsRedirect));
-    
-    // Additional security headers for production
-    app.use((req: any, res: any, next: any) => {
-      res.setHeader('X-Frame-Options', 'DENY');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-      res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-      next();
-    });
   }
-
+  
   const port = process.env.PORT || 3001;
   await app.listen(port);
   
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  console.log(`Backend running on ${protocol}://localhost:${port}`);
-  console.log('Security features enabled:');
-  console.log('- HTTPS enforcement (production)');
-  console.log('- Enhanced CSRF protection with double-submit cookies');
-  console.log('- Security headers (Helmet + custom)');
-  console.log('- Rate limiting with IP tracking');
-  console.log('- Input validation & sanitization');
-  console.log('- Log injection prevention');
-  console.log('- XSS protection');
-  console.log('- SQL injection protection');
-  console.log('- File upload security');
-  console.log('- API request logging with sanitization');
-  console.log('- API versioning support');
-  console.log('- Origin validation for API requests');
+  const logger = new Logger('Bootstrap');
+  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 }
-bootstrap();
+
+bootstrap().catch(err => {
+  console.error('Failed to start application:', err);
+  process.exit(1);
+});

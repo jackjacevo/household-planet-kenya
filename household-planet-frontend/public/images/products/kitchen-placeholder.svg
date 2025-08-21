@@ -1,0 +1,18 @@
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="#f8fafc"/>
+  <rect x="20" y="20" width="360" height="360" fill="#e2e8f0" rx="20"/>
+  
+  <!-- Kitchen pan -->
+  <circle cx="200" cy="180" r="80" fill="#64748b" stroke="#475569" stroke-width="4"/>
+  <circle cx="200" cy="180" r="70" fill="#94a3b8"/>
+  <rect x="270" y="175" width="40" height="10" rx="5" fill="#475569"/>
+  
+  <!-- Handle detail -->
+  <circle cx="290" cy="180" r="3" fill="#334155"/>
+  
+  <!-- Shine effect -->
+  <ellipse cx="170" cy="150" rx="25" ry="15" fill="rgba(255,255,255,0.3)"/>
+  
+  <text x="200" y="300" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Kitchen Item</text>
+  <text x="200" y="320" text-anchor="middle" fill="#94a3b8" font-family="Arial, sans-serif" font-size="12">400 x 400</text>
+</svg>

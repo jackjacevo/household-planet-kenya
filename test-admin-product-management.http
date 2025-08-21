@@ -1,0 +1,155 @@
+### Admin Product Management API Tests
+
+# First, login as admin
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@householdplanet.co.ke",
+  "password": "admin123"
+}
+
+### Get all products with admin features
+GET http://localhost:3001/admin/products?page=1&limit=10&search=&sortBy=createdAt&sortOrder=desc
+Authorization: Bearer {{token}}
+
+### Create a new product
+POST http://localhost:3001/admin/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Premium Kitchen Set",
+  "slug": "premium-kitchen-set",
+  "description": "Complete kitchen utensil set with modern design",
+  "shortDescription": "Modern kitchen utensil set",
+  "sku": "PKS-001",
+  "price": 5500,
+  "comparePrice": 7000,
+  "weight": 2.5,
+  "dimensions": "30x20x15cm",
+  "categoryId": 1,
+  "brandId": 1,
+  "images": ["/images/kitchen-set-1.jpg", "/images/kitchen-set-2.jpg"],
+  "tags": ["kitchen", "utensils", "premium", "modern"],
+  "isActive": true,
+  "isFeatured": true,
+  "seoTitle": "Premium Kitchen Set - Modern Utensils",
+  "seoDescription": "Get the best premium kitchen set with modern design and durable materials"
+}
+
+### Update a product
+PUT http://localhost:3001/admin/products/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Premium Kitchen Set",
+  "price": 6000,
+  "isFeatured": false
+}
+
+### Bulk update products
+PUT http://localhost:3001/admin/products/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productIds": [1, 2, 3],
+  "categoryId": 2,
+  "isActive": true,
+  "isFeatured": false
+}
+
+### Get product analytics
+GET http://localhost:3001/admin/products/analytics?period=monthly
+Authorization: Bearer {{token}}
+
+### Export products to CSV
+GET http://localhost:3001/admin/products/export/csv
+Authorization: Bearer {{token}}
+
+### Get categories
+GET http://localhost:3001/admin/categories
+Authorization: Bearer {{token}}
+
+### Create a new category
+POST http://localhost:3001/admin/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Smart Home",
+  "slug": "smart-home",
+  "description": "Smart home devices and automation",
+  "parentId": null,
+  "isActive": true,
+  "sortOrder": 10
+}
+
+### Update category
+PUT http://localhost:3001/admin/categories/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Kitchen & Dining",
+  "description": "Updated description for kitchen and dining products"
+}
+
+### Reorder categories
+PUT http://localhost:3001/admin/categories/reorder
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[
+  {"categoryId": 1, "sortOrder": 1},
+  {"categoryId": 2, "sortOrder": 2},
+  {"categoryId": 3, "sortOrder": 3}
+]
+
+### Get brands
+GET http://localhost:3001/admin/brands
+Authorization: Bearer {{token}}
+
+### Create a new brand
+POST http://localhost:3001/admin/brands
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "EcoHome",
+  "slug": "ecohome",
+  "logo": "/images/brands/ecohome-logo.png",
+  "isActive": true
+}
+
+### Update brand
+PUT http://localhost:3001/admin/brands/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Brand Name",
+  "logo": "/images/brands/updated-logo.png"
+}
+
+### Delete a product
+DELETE http://localhost:3001/admin/products/5
+Authorization: Bearer {{token}}
+
+### Get inventory alerts
+GET http://localhost:3001/admin/inventory/alerts
+Authorization: Bearer {{token}}
+
+### Get dashboard stats
+GET http://localhost:3001/admin/dashboard
+Authorization: Bearer {{token}}
+
+### Get sales analytics
+GET http://localhost:3001/admin/analytics/sales?period=monthly
+Authorization: Bearer {{token}}
+
+### Get customer insights
+GET http://localhost:3001/admin/customers/insights
+Authorization: Bearer {{token}}

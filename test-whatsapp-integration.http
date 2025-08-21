@@ -1,0 +1,62 @@
+### WhatsApp Integration Tests
+
+### 1. Create WhatsApp Order (Manual Entry)
+POST http://localhost:3001/orders/whatsapp
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "customerPhone": "+254712345678",
+  "customerName": "John Doe",
+  "orderDetails": "2x Cooking Oil 1L - KSh 300 each\n1x Rice 2kg - KSh 250\n3x Soap bars - KSh 50 each",
+  "shippingAddress": "Nairobi, Westlands, ABC Plaza, Ground Floor",
+  "deliveryLocation": "westlands",
+  "estimatedTotal": 1000,
+  "notes": "Customer prefers morning delivery"
+}
+
+### 2. WhatsApp Webhook (Simulate incoming message)
+POST http://localhost:3001/orders/webhooks/whatsapp
+Content-Type: application/json
+
+{
+  "from": "+254712345678",
+  "body": "Hi, I want to order 2 bottles of cooking oil and 1 packet of rice. Can you deliver to Westlands?",
+  "timestamp": "2024-01-17T10:30:00Z",
+  "messageId": "wamid.12345"
+}
+
+### 3. Get Pending WhatsApp Messages
+GET http://localhost:3001/orders/whatsapp/pending
+Authorization: Bearer {{admin_token}}
+
+### 4. Mark WhatsApp Message as Processed
+PATCH http://localhost:3001/orders/whatsapp/wamid.12345/processed
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "orderId": 1
+}
+
+### 5. Test Order Message Detection
+POST http://localhost:3001/orders/webhooks/whatsapp
+Content-Type: application/json
+
+{
+  "from": "+254798765432",
+  "body": "I need to buy 3x soap, 2x cooking oil 500ml, and 1x rice 1kg. Please deliver to Karen",
+  "timestamp": "2024-01-17T11:00:00Z",
+  "messageId": "wamid.67890"
+}
+
+### 6. Test Non-Order Message
+POST http://localhost:3001/orders/webhooks/whatsapp
+Content-Type: application/json
+
+{
+  "from": "+254712345678",
+  "body": "Hello, what are your business hours?",
+  "timestamp": "2024-01-17T11:15:00Z",
+  "messageId": "wamid.11111"
+}

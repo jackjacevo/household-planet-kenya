@@ -1,0 +1,124 @@
+### Safaricom M-PESA Daraja API Integration Tests
+
+# 1. Register C2B URLs (Run this first)
+POST http://localhost:3001/payments/mpesa/register-c2b
+Content-Type: application/json
+
+### 2. Login to get JWT token
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@householdplanet.co.ke",
+  "password": "admin123"
+}
+
+### 3. Create test order
+POST http://localhost:3001/orders
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "variantId": 1,
+      "quantity": 1,
+      "price": 100
+    }
+  ],
+  "shippingAddress": {
+    "fullName": "Test User",
+    "phone": "254708374149",
+    "county": "Nairobi",
+    "town": "Nairobi",
+    "street": "Test Street"
+  },
+  "deliveryLocation": "Nairobi CBD",
+  "deliveryPrice": 50,
+  "paymentMethod": "MPESA"
+}
+
+### 4. Initiate STK Push (Lipa na M-PESA Online)
+POST http://localhost:3001/payments/initiate
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "orderId": 1,
+  "paymentMethod": "MPESA",
+  "phoneNumber": "254708374149"
+}
+
+### 5. Check payment status
+GET http://localhost:3001/payments/status/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 6. Get all transactions
+GET http://localhost:3001/payments/transactions
+
+### 7. STK Push Callback (Safaricom calls this)
+POST http://localhost:3001/payments/mpesa/callback
+Content-Type: application/json
+
+{
+  "Body": {
+    "stkCallback": {
+      "MerchantRequestID": "29115-34620561-1",
+      "CheckoutRequestID": "ws_CO_191220191020363925",
+      "ResultCode": 0,
+      "ResultDesc": "The service request is processed successfully.",
+      "CallbackMetadata": {
+        "Item": [
+          {
+            "Name": "Amount",
+            "Value": 150
+          },
+          {
+            "Name": "MpesaReceiptNumber",
+            "Value": "NLJ7RT61SV"
+          },
+          {
+            "Name": "TransactionDate",
+            "Value": 20191219102115
+          },
+          {
+            "Name": "PhoneNumber",
+            "Value": 254708374149
+          }
+        ]
+      }
+    }
+  }
+}
+
+### 8. C2B Confirmation (Manual Paybill Payment)
+POST http://localhost:3001/payments/mpesa/c2b/confirmation
+Content-Type: application/json
+
+{
+  "TransactionType": "Pay Bill",
+  "TransID": "NLJ7RT61SV",
+  "TransTime": "20191219102115",
+  "TransAmount": "150.00",
+  "BusinessShortCode": "247247",
+  "BillRefNumber": "0740271041",
+  "InvoiceNumber": "",
+  "MSISDN": "254708374149",
+  "FirstName": "John",
+  "LastName": "Doe"
+}
+
+### 9. C2B Validation (Always returns success)
+POST http://localhost:3001/payments/mpesa/c2b/validation
+Content-Type: application/json
+
+{
+  "TransactionType": "Pay Bill",
+  "TransID": "NLJ7RT61SV",
+  "TransTime": "20191219102115",
+  "TransAmount": "150.00",
+  "BusinessShortCode": "247247",
+  "BillRefNumber": "0740271041",
+  "MSISDN": "254708374149"
+}

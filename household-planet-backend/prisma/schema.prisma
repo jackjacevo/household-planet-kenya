@@ -4,231 +4,294 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id                    String                 @id @default(cuid())
-  email                 String                 @unique
-  phone                 String?
-  name                  String
-  firstName             String?
-  lastName              String?
-  role                  String                 @default("CUSTOMER")
-  password              String
-  emailVerified         Boolean                @default(false)
-  phoneVerified         Boolean                @default(false)
-  emailVerifyToken      String?
-  phoneVerifyToken      String?
-  resetPasswordToken    String?
-  resetPasswordExpires  DateTime?
-  refreshToken          String?
-  lastLoginAt           DateTime?
-  isActive              Boolean                @default(true)
-  avatar                String?
-  dateOfBirth           DateTime?
-  gender                String?
-  socialProviders       String?
-  twoFactorEnabled      Boolean                @default(false)
-  twoFactorSecret       String?
-  loyaltyPoints         Int                    @default(0)
-  totalSpent            Float                  @default(0)
-  preferredLanguage     String                 @default("en")
-  marketingEmails       Boolean                @default(true)
-  smsNotifications      Boolean                @default(true)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  optedOutAt            DateTime?
-  phoneNumber           String?
-  privacySettings       String?
-  abandonedCarts        AbandonedCart[]
-  addresses             Address[]
-  apiRequestLogs        ApiRequestLog[]
-  cart                  Cart[]
-  fileAccessLogs        FileAccessLog[]
-  loyaltyTransactions   LoyaltyTransaction[]
-  orders                Order[]
-  promoCodeUsages       PromoCodeUsage[]
-  recentlyViewed        RecentlyViewed[]
-  returnRequests        ReturnRequest[]
-  reviews               Review[]
-  savedForLater         SavedForLater[]
-  securityEvents        SecurityEvent[]
-  supportTickets        SupportTicket[]
-  uploadedFiles         UploadedFile[]
-  whatsappContacts      WhatsAppContact[]
-  whatsappMessages      WhatsAppMessage[]
-  wishlist              Wishlist[]
-  wishlistNotifications WishlistNotification[]
-  chatMessages          ChatMessage[]
+  id                      Int                      @id @default(autoincrement())
+  email                   String                   @unique
+  phone                   String?
+  phoneVerified           Boolean                  @default(false)
+  phoneVerificationToken  String?
+  phoneVerificationExpiry DateTime?
+  name                    String
+  role                    String                   @default("CUSTOMER")
+  firstName               String?
+  lastName                String?
+  password                String
+  emailVerified           Boolean                  @default(false)
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  verificationToken       String?
+  verificationTokenExpiry DateTime?
+  refreshToken            String?
+  socialProviders         String?
+  googleId                String?
+  facebookId              String?
+  appleId                 String?
+  twoFactorEnabled        Boolean                  @default(false)
+  twoFactorSecret         String?
+  backupCodes             String?
+  loginAttempts           Int                      @default(0)
+  lockedUntil             DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  avatar                  String?
+  dateOfBirth             String?
+  gender                  String?
+  notificationSettings    String?
+  privacySettings         String?
+  marketingConsent        Boolean                  @default(false)
+  analyticsConsent        Boolean                  @default(false)
+  permissions             String?
+  isActive                Boolean                  @default(true)
+  lastLogin               DateTime?
+  addresses               Address[]
+  activities              AdminActivity[]
+  cart                    Cart[]
+  consentLogs             ConsentLog[]
+  customerProfile         CustomerProfile?
+  dataDeletionRequests    DataDeletionRequest[]
+  dataExportRequests      DataExportRequest[]
+  emailVerificationTokens EmailVerificationToken[]
+  orders                  Order[]
+  passwordResetTokens     PasswordResetToken[]
+  phoneVerificationTokens PhoneVerificationToken[]
+  recentlyViewed          RecentlyViewed[]
+  reviews                 Review[]
+  supportTickets          SupportTicket[]
+  userConsent             UserConsent?
+  userPrivacySettings     UserPrivacySettings?
+  sessions                UserSession[]
+  wishlist                Wishlist[]
 
   @@map("users")
 }
 
 model Category {
-  id              String     @id @default(cuid())
-  name            String
-  slug            String     @unique
-  description     String?
-  image           String?
-  parentId        String?
-  isActive        Boolean    @default(true)
-  sortOrder       Int        @default(0)
-  metaDescription String?
-  parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children        Category[] @relation("CategoryHierarchy")
-  products        Product[]
+  id          Int        @id @default(autoincrement())
+  name        String
+  slug        String     @unique
+  description String?
+  image       String?
+  parentId    Int?
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
 
+  @@index([slug])
+  @@index([parentId])
   @@map("categories")
 }
 
-model Product {
-  id                     String                  @id @default(cuid())
-  name                   String
-  slug                   String                  @unique
-  description            String?
-  shortDescription       String?
-  sku                    String                  @unique
-  price                  Float
-  comparePrice           Float?
-  weight                 Float?
-  dimensions             String?
-  images                 String?
-  categoryId             String
-  brandId                String?
-  isActive               Boolean                 @default(true)
-  isFeatured             Boolean                 @default(false)
-  seoTitle               String?
-  seoDescription         String?
-  metaDescription        String?
-  tags                   String?
-  keywords               String?
-  stock                  Int                     @default(0)
-  lowStockThreshold      Int                     @default(10)
-  trackInventory         Boolean                 @default(true)
-  averageRating          Float?                  @default(0)
-  totalReviews           Int                     @default(0)
-  viewCount              Int                     @default(0)
-  searchKeywords         String?
-  relatedProducts        String?
-  ageRestricted          Boolean                 @default(false)
-  minimumAge             Int?
-  warrantyPeriod         String?
-  warrantyType           String?
-  warrantyTerms          String?
-  geographicRestrictions String?
-  restrictedRegions      String?
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
-  cart                   Cart[]
-  orderItems             OrderItem[]
-  recommendedBy          ProductRecommendation[] @relation("RecommendedProducts")
-  recommendations        ProductRecommendation[] @relation("ProductRecommendations")
-  variants               ProductVariant[]
-  category               Category                @relation(fields: [categoryId], references: [id])
-  recentlyViewed         RecentlyViewed[]
-  reviews                Review[]
-  savedForLater          SavedForLater[]
-  wishlist               Wishlist[]
+model Brand {
+  id       Int       @id @default(autoincrement())
+  name     String
+  slug     String    @unique
+  logo     String?
+  isActive Boolean   @default(true)
+  products Product[]
 
+  @@map("brands")
+}
+
+model Product {
+  id               Int                     @id @default(autoincrement())
+  name             String
+  slug             String                  @unique
+  description      String?
+  shortDescription String?
+  sku              String                  @unique
+  price            Float
+  comparePrice     Float?
+  weight           Float?
+  dimensions       String?
+  images           String
+  imageAltTexts    String?
+  categoryId       Int
+  brandId          Int?
+  isActive         Boolean                 @default(true)
+  isFeatured       Boolean                 @default(false)
+  seoTitle         String?
+  seoDescription   String?
+  tags             String
+  searchVector     String?
+  averageRating    Float?                  @default(0)
+  totalReviews     Int                     @default(0)
+  totalSales       Int                     @default(0)
+  viewCount        Int                     @default(0)
+  hasVariants      Boolean                 @default(false)
+  minPrice         Float?
+  maxPrice         Float?
+  stock            Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  cart             Cart[]
+  orderItems       OrderItem[]
+  recommendedBy    ProductRecommendation[] @relation("RecommendedProducts")
+  recommendations  ProductRecommendation[] @relation("ProductRecommendations")
+  variants         ProductVariant[]
+  brand            Brand?                  @relation(fields: [brandId], references: [id])
+  category         Category                @relation(fields: [categoryId], references: [id])
+  recentlyViewed   RecentlyViewed[]
+  reviews          Review[]
+  wishlist         Wishlist[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([searchVector])
+  @@index([averageRating])
+  @@index([totalSales])
   @@map("products")
 }
 
 model ProductVariant {
-  id                String          @id @default(cuid())
-  productId         String
+  id                Int            @id @default(autoincrement())
+  productId         Int
   name              String
-  sku               String          @unique
+  sku               String         @unique
   price             Float
-  stock             Int             @default(0)
-  lowStockThreshold Int             @default(5)
+  stock             Int            @default(0)
+  lowStockThreshold Int            @default(5)
   attributes        String?
   size              String?
   color             String?
   material          String?
-  isActive          Boolean         @default(true)
+  weight            Float?
+  dimensions        String?
+  images            String?
+  isActive          Boolean        @default(true)
+  sortOrder         Int            @default(0)
   cart              Cart[]
+  lowStockAlerts    LowStockAlert?
   orderItems        OrderItem[]
-  product           Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  savedForLater     SavedForLater[]
+  product           Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([productId])
+  @@index([isActive])
   @@map("product_variants")
 }
 
-model Order {
-  id                    String               @id @default(cuid())
-  userId                String?
-  orderNumber           String               @unique
-  status                String               @default("PENDING")
-  subtotal              Float
-  shippingCost          Float
-  discount              Float                @default(0)
-  total                 Float
-  shippingAddress       String
-  deliveryLocation      String
-  deliveryPrice         Float
-  paymentMethod         String
-  paymentStatus         String               @default("PENDING")
-  promoCodeId           String?
-  guestEmail            String?
-  guestName             String?
-  guestPhone            String?
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
-  estimatedDeliveryDate DateTime?
-  deliveryFeedback      DeliveryFeedback?
-  deliverySchedule      DeliverySchedule?
-  deliveryTracking      DeliveryTracking?
-  items                 OrderItem[]
-  statusHistory         OrderStatusHistory[]
-  promoCode             PromoCode?           @relation(fields: [promoCodeId], references: [id])
-  user                  User?                @relation(fields: [userId], references: [id])
-  partialPayments       PartialPayment[]
-  payments              Payment[]
-  returnRequests        ReturnRequest[]
+model ProductRecommendation {
+  id                   Int      @id @default(autoincrement())
+  productId            Int
+  recommendedProductId Int
+  score                Float    @default(0)
+  type                 String
+  createdAt            DateTime @default(now())
+  recommendedProduct   Product  @relation("RecommendedProducts", fields: [recommendedProductId], references: [id], onDelete: Cascade)
+  product              Product  @relation("ProductRecommendations", fields: [productId], references: [id], onDelete: Cascade)
 
+  @@unique([productId, recommendedProductId, type])
+  @@map("product_recommendations")
+}
+
+model RecentlyViewed {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  sessionId String?
+  productId Int
+  viewedAt  DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@unique([sessionId, productId])
+  @@index([userId, viewedAt])
+  @@index([sessionId, viewedAt])
+  @@map("recently_viewed")
+}
+
+model LowStockAlert {
+  id        Int            @id @default(autoincrement())
+  variantId Int            @unique
+  threshold Int
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@map("low_stock_alerts")
+}
+
+model Order {
+  id                  Int                  @id @default(autoincrement())
+  userId              Int
+  orderNumber         String               @unique
+  status              String               @default("PENDING")
+  subtotal            Float
+  shippingCost        Float
+  total               Float
+  shippingAddress     String
+  deliveryLocation    String?
+  deliveryPrice       Float?
+  paymentMethod       String
+  paymentStatus       String               @default("PENDING")
+  trackingNumber      String?
+  priority            String               @default("NORMAL")
+  tags                String?
+  source              String               @default("WEB")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  delivery            Delivery?
+  communications      OrderCommunication[]
+  items               OrderItem[]
+  notes               OrderNote[]
+  statusHistory       OrderStatusHistory[]
+  user                User                 @relation(fields: [userId], references: [id])
+  paymentTransactions PaymentTransaction[]
+  returnRequests      ReturnRequest[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([trackingNumber])
   @@map("orders")
 }
 
 model OrderItem {
-  id                 String              @id @default(cuid())
-  orderId            String
-  productId          String
-  variantId          String?
-  quantity           Int
-  price              Float
-  total              Float
-  variant            ProductVariant?     @relation(fields: [variantId], references: [id])
-  product            Product             @relation(fields: [productId], references: [id])
-  order              Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  returnRequestItems ReturnRequestItem[]
+  id          Int             @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  variantId   Int?
+  quantity    Int
+  price       Float
+  total       Float
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  product     Product         @relation(fields: [productId], references: [id])
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  returnItems ReturnItem[]
 
+  @@index([orderId])
   @@map("order_items")
 }
 
 model Address {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String   @default("HOME")
-  fullName  String
-  phone     String
-  county    String
-  town      String
-  street    String
-  landmark  String?
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           Int                  @id @default(autoincrement())
+  userId       Int
+  type         String
+  fullName     String
+  phone        String
+  county       String
+  town         String
+  street       String
+  isDefault    Boolean              @default(false)
+  verification AddressVerification?
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("addresses")
 }
 
 model Cart {
-  id        String          @id @default(cuid())
-  userId    String
-  productId String
-  variantId String?
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  productId Int
+  variantId Int?
   quantity  Int
   createdAt DateTime        @default(now())
   variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
@@ -236,935 +299,810 @@ model Cart {
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId, variantId])
+  @@index([userId])
   @@map("cart")
 }
 
 model Wishlist {
-  id            String   @id @default(cuid())
-  userId        String
-  productId     String
-  notifyOnStock Boolean  @default(true)
-  notifyOnSale  Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+  @@index([userId])
   @@map("wishlist")
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  productId  String
-  userId     String
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  userId     Int
   rating     Int
   title      String?
   comment    String?
+  images     String?
+  pros       String?
+  cons       String?
   isVerified Boolean  @default(false)
   isHelpful  Int      @default(0)
-  images     String?
+  isReported Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, userId])
+  @@index([productId])
+  @@index([rating])
+  @@index([isVerified])
   @@map("reviews")
 }
 
-model RecentlyViewed {
-  id        String   @id @default(cuid())
-  userId    String
-  productId String
-  viewedAt  DateTime @default(now())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, productId])
-  @@map("recently_viewed")
-}
-
-model ProductRecommendation {
-  id            String  @id @default(cuid())
-  productId     String
-  recommendedId String
-  score         Float   @default(0)
-  type          String
-  recommended   Product @relation("RecommendedProducts", fields: [recommendedId], references: [id], onDelete: Cascade)
-  product       Product @relation("ProductRecommendations", fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, recommendedId, type])
-  @@map("product_recommendations")
-}
-
-model InventoryAlert {
-  id        String   @id @default(cuid())
-  productId String?
-  variantId String?
-  type      String
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  @@map("inventory_alerts")
-}
-
-model SavedForLater {
-  id        String          @id @default(cuid())
-  userId    String
-  productId String
-  variantId String?
-  quantity  Int
-  createdAt DateTime        @default(now())
-  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, productId, variantId])
-  @@map("saved_for_later")
-}
-
-model OrderStatusHistory {
-  id        String   @id @default(cuid())
-  orderId   String
-  status    String
-  notes     String?
-  createdAt DateTime @default(now())
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@map("order_status_history")
-}
-
-model ReturnRequest {
-  id          String              @id @default(cuid())
-  orderId     String
-  userId      String
-  reason      String
-  description String?
-  status      String              @default("PENDING")
-  images      String?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  items       ReturnRequestItem[]
-  user        User                @relation(fields: [userId], references: [id])
-  order       Order               @relation(fields: [orderId], references: [id])
-
-  @@map("return_requests")
-}
-
-model ReturnRequestItem {
-  id              String        @id @default(cuid())
-  returnRequestId String
-  orderItemId     String
-  reason          String
-  condition       String?
-  orderItem       OrderItem     @relation(fields: [orderItemId], references: [id])
-  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
-
-  @@map("return_request_items")
-}
-
-model Payment {
-  id                 String         @id @default(cuid())
-  orderId            String
-  checkoutRequestId  String         @unique
+model PaymentTransaction {
+  id                 Int       @id @default(autoincrement())
+  orderId            Int
   merchantRequestId  String?
-  amount             Float
+  checkoutRequestId  String    @unique
   phoneNumber        String
-  status             String         @default("PENDING")
-  paymentMethod      String         @default("MPESA")
+  amount             Float
+  status             String    @default("PENDING")
+  provider           String    @default("MPESA")
   mpesaReceiptNumber String?
   transactionDate    DateTime?
-  failureReason      String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  retries            PaymentRetry[]
-  order              Order          @relation(fields: [orderId], references: [id])
-  refunds            Refund[]
+  resultCode         String?
+  resultDescription  String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@map("payments")
+  @@index([orderId])
+  @@index([checkoutRequestId])
+  @@index([status])
+  @@map("payment_transactions")
 }
 
-model Refund {
-  id        String   @id @default(cuid())
-  paymentId String
-  orderId   String
-  amount    Float
-  reason    String
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  payment   Payment  @relation(fields: [paymentId], references: [id])
+model Delivery {
+  id                  Int                     @id @default(autoincrement())
+  orderId             Int                     @unique
+  trackingNumber      String                  @unique
+  status              String                  @default("PENDING")
+  scheduledDate       DateTime?
+  timeSlot            String?
+  specialInstructions String?
+  notes               String?
+  photoProof          String?
+  failureReason       String?
+  rescheduleCount     Int                     @default(0)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  order               Order                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  feedback            DeliveryFeedback?
+  statusHistory       DeliveryStatusHistory[]
 
-  @@map("refunds")
+  @@index([trackingNumber])
+  @@index([status])
+  @@map("deliveries")
 }
 
-model PaymentRetry {
-  id        String   @id @default(cuid())
-  paymentId String
-  attempt   Int
-  createdAt DateTime @default(now())
-  payment   Payment  @relation(fields: [paymentId], references: [id])
-
-  @@map("payment_retries")
-}
-
-model PartialPayment {
-  id                String    @id @default(cuid())
-  orderId           String
-  installmentNumber Int
-  amount            Float
-  dueDate           DateTime
-  status            String    @default("PENDING")
-  paidAt            DateTime?
-  createdAt         DateTime  @default(now())
-  order             Order     @relation(fields: [orderId], references: [id])
-
-  @@map("partial_payments")
-}
-
-model PaymentSession {
-  id            String   @id @default(cuid())
-  sessionId     String   @unique
-  orderId       String
-  paymentMethod String
-  status        String   @default("ACTIVE")
-  expiresAt     DateTime
-  createdAt     DateTime @default(now())
-
-  @@map("payment_sessions")
-}
-
-model DeliveryLocation {
-  id               String   @id @default(cuid())
-  name             String   @unique
-  tier             Int
-  price            Float
-  description      String?
-  isActive         Boolean  @default(true)
-  estimatedDays    Int      @default(3)
-  expressAvailable Boolean  @default(false)
-  expressPrice     Float?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  @@map("delivery_locations")
-}
-
-model DeliveryTracking {
-  id          String           @id @default(cuid())
-  orderId     String           @unique
-  status      String           @default("PENDING")
-  location    String?
-  notes       String?
-  photoProof  String?
-  deliveredAt DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  order       Order            @relation(fields: [orderId], references: [id])
-  updates     DeliveryUpdate[]
-
-  @@map("delivery_tracking")
-}
-
-model DeliveryUpdate {
-  id         String           @id @default(cuid())
-  trackingId String
+model DeliveryStatusHistory {
+  id         Int      @id @default(autoincrement())
+  deliveryId Int
   status     String
-  location   String?
   notes      String?
-  timestamp  DateTime         @default(now())
-  tracking   DeliveryTracking @relation(fields: [trackingId], references: [id])
+  timestamp  DateTime @default(now())
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
 
-  @@map("delivery_updates")
-}
-
-model DeliverySchedule {
-  id            String   @id @default(cuid())
-  orderId       String   @unique
-  preferredDate DateTime
-  timeSlot      String
-  instructions  String?
-  isRescheduled Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  order         Order    @relation(fields: [orderId], references: [id])
-
-  @@map("delivery_schedules")
+  @@index([deliveryId])
+  @@map("delivery_status_history")
 }
 
 model DeliveryFeedback {
-  id        String   @id @default(cuid())
-  orderId   String   @unique
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now())
-  order     Order    @relation(fields: [orderId], references: [id])
+  id         Int      @id @default(autoincrement())
+  deliveryId Int      @unique
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
 
   @@map("delivery_feedback")
 }
 
-model PromoCode {
-  id                String           @id @default(cuid())
-  code              String           @unique
-  discountType      String
-  discountValue     Float
-  minimumAmount     Float?
-  maxDiscountAmount Float?
-  usageLimit        Int?
-  usedCount         Int              @default(0)
-  allowMultipleUse  Boolean          @default(false)
-  isActive          Boolean          @default(true)
-  expiresAt         DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  orders            Order[]
-  usages            PromoCodeUsage[]
-
-  @@map("promo_codes")
-}
-
-model PromoCodeUsage {
-  id          String    @id @default(cuid())
-  userId      String
-  promoCodeId String
-  orderId     String?
-  usedAt      DateTime  @default(now())
-  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-
-  @@unique([userId, promoCodeId])
-  @@map("promo_code_usage")
-}
-
 model SupportTicket {
-  id        String               @id @default(cuid())
-  userId    String
-  subject   String
-  message   String
-  status    String               @default("OPEN")
-  priority  String               @default("MEDIUM")
-  category  String
-  orderId   String?
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-  replies   SupportTicketReply[]
-  user      User                 @relation(fields: [userId], references: [id])
+  id           String          @id @default(cuid())
+  ticketNumber String          @unique
+  userId       Int
+  subject      String
+  category     String
+  priority     String
+  status       String          @default("OPEN")
+  description  String
+  orderId      String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages     TicketMessage[]
 
+  @@index([userId])
+  @@index([status])
   @@map("support_tickets")
 }
 
-model SupportTicketReply {
-  id        String        @id @default(cuid())
-  ticketId  String
-  message   String
-  isStaff   Boolean       @default(false)
-  createdAt DateTime      @default(now())
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
+model TicketMessage {
+  id             String        @id @default(cuid())
+  ticketId       String
+  message        String
+  isFromCustomer Boolean
+  attachments    String?
+  createdAt      DateTime      @default(now())
+  ticket         SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
-  @@map("support_ticket_replies")
+  @@index([ticketId])
+  @@map("ticket_messages")
+}
+
+model ReturnRequest {
+  id                  String       @id @default(cuid())
+  returnNumber        String       @unique
+  orderId             Int
+  type                String
+  status              String       @default("PENDING")
+  reason              String
+  preferredResolution String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  items               ReturnItem[]
+  order               Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@map("return_requests")
+}
+
+model ReturnItem {
+  id              String        @id @default(cuid())
+  returnRequestId String
+  orderItemId     Int
+  quantity        Int
+  reason          String
+  orderItem       OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@index([orderItemId])
+  @@map("return_items")
+}
+
+model OrderNote {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  note       String
+  isInternal Boolean  @default(true)
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_notes")
+}
+
+model OrderStatusHistory {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  status    String
+  notes     String?
+  changedBy String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+model OrderCommunication {
+  id       Int      @id @default(autoincrement())
+  orderId  Int
+  type     String
+  template String?
+  subject  String?
+  message  String
+  sentAt   DateTime @default(now())
+  sentBy   String?
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_communications")
+}
+
+model CustomerProfile {
+  id                       Int                     @id @default(autoincrement())
+  userId                   Int                     @unique
+  loyaltyPoints            Int                     @default(0)
+  totalSpent               Float                   @default(0)
+  totalOrders              Int                     @default(0)
+  averageOrderValue        Float                   @default(0)
+  lastOrderDate            DateTime?
+  preferredCategories      String?
+  communicationPreferences String?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  communications           CustomerCommunication[]
+  user                     User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags                     CustomerTag[]
+  loyaltyTransactions      LoyaltyTransaction[]
+
+  @@map("customer_profiles")
+}
+
+model CustomerTag {
+  id        Int             @id @default(autoincrement())
+  profileId Int
+  tag       String
+  createdAt DateTime        @default(now())
+  profile   CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, tag])
+  @@index([tag])
+  @@map("customer_tags")
+}
+
+model CustomerCommunication {
+  id        Int             @id @default(autoincrement())
+  profileId Int
+  type      String
+  subject   String?
+  message   String
+  channel   String
+  status    String          @default("SENT")
+  sentAt    DateTime        @default(now())
+  sentBy    String?
+  metadata  String?
+  profile   CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([type])
+  @@map("customer_communications")
+}
+
+model LoyaltyProgram {
+  id           Int                  @id @default(autoincrement())
+  name         String
+  description  String?
+  isActive     Boolean              @default(true)
+  pointsPerKsh Float                @default(1)
+  minimumSpend Float                @default(0)
+  rules        String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  rewards      LoyaltyReward[]
+  transactions LoyaltyTransaction[]
+
+  @@map("loyalty_programs")
 }
 
 model LoyaltyTransaction {
-  id          String   @id @default(cuid())
-  userId      String
-  points      Int
+  id          Int             @id @default(autoincrement())
+  profileId   Int
+  programId   Int
+  orderId     Int?
   type        String
-  description String
-  orderId     String?
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  points      Int
+  description String?
+  createdAt   DateTime        @default(now())
+  program     LoyaltyProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  profile     CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
+  @@index([profileId])
+  @@index([programId])
   @@map("loyalty_transactions")
 }
 
-model WishlistNotification {
-  id        String   @id @default(cuid())
-  userId    String
-  productId String
-  type      String
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+model LoyaltyReward {
+  id          Int                 @id @default(autoincrement())
+  programId   Int
+  name        String
+  description String?
+  pointsCost  Int
+  rewardType  String
+  rewardValue Float?
+  isActive    Boolean             @default(true)
+  validUntil  DateTime?
+  createdAt   DateTime            @default(now())
+  redemptions LoyaltyRedemption[]
+  program     LoyaltyProgram      @relation(fields: [programId], references: [id], onDelete: Cascade)
 
-  @@map("wishlist_notifications")
+  @@index([programId])
+  @@map("loyalty_rewards")
 }
 
-model Invoice {
-  id        String   @id @default(cuid())
-  orderId   String   @unique
-  number    String   @unique
-  pdfPath   String?
-  createdAt DateTime @default(now())
+model LoyaltyRedemption {
+  id         Int           @id @default(autoincrement())
+  profileId  Int
+  rewardId   Int
+  orderId    Int?
+  status     String        @default("PENDING")
+  redeemedAt DateTime      @default(now())
+  reward     LoyaltyReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
 
-  @@map("invoices")
+  @@index([profileId])
+  @@index([rewardId])
+  @@map("loyalty_redemptions")
+}
+
+model AddressVerification {
+  id          Int       @id @default(autoincrement())
+  addressId   Int       @unique
+  status      String    @default("PENDING")
+  verifiedBy  String?
+  verifiedAt  DateTime?
+  notes       String?
+  coordinates String?
+  createdAt   DateTime  @default(now())
+  address     Address   @relation(fields: [addressId], references: [id], onDelete: Cascade)
+
+  @@map("address_verifications")
 }
 
 model WhatsAppMessage {
-  id            String    @id @default(cuid())
-  phoneNumber   String
-  message       String
-  type          String
-  status        String    @default("PENDING")
-  orderId       String?
-  userId        String?
-  templateId    String?
-  mediaUrl      String?
-  failureReason String?
-  sentAt        DateTime?
-  deliveredAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  user          User?     @relation(fields: [userId], references: [id])
+  id               Int      @id @default(autoincrement())
+  phoneNumber      String
+  message          String
+  timestamp        DateTime
+  messageId        String?  @unique
+  isOrderCandidate Boolean  @default(false)
+  processed        Boolean  @default(false)
+  orderId          Int?
+  createdAt        DateTime @default(now())
 
+  @@index([phoneNumber])
+  @@index([processed])
+  @@index([isOrderCandidate])
   @@map("whatsapp_messages")
 }
 
-model WhatsAppTemplate {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  type      String
-  template  String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("whatsapp_templates")
-}
-
-model WhatsAppContact {
-  id            String    @id @default(cuid())
-  phoneNumber   String    @unique
-  name          String?
-  userId        String?
-  isOptedIn     Boolean   @default(true)
-  lastMessageAt DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  optedOutAt    DateTime?
-  user          User?     @relation(fields: [userId], references: [id])
-
-  @@map("whatsapp_contacts")
-}
-
-model AbandonedCart {
-  id             String    @id @default(cuid())
-  userId         String?
-  sessionId      String?
-  phoneNumber    String?
-  cartData       String
-  remindersSent  Int       @default(0)
-  lastReminderAt DateTime?
-  isRecovered    Boolean   @default(false)
-  recoveredAt    DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  user           User?     @relation(fields: [userId], references: [id])
-
-  @@map("abandoned_carts")
-}
-
-model UploadedFile {
-  id            String          @id @default(cuid())
-  originalName  String
-  filename      String
-  path          String
-  url           String
-  mimeType      String
-  size          Int
-  hash          String
-  category      String          @default("general")
-  userId        String
-  uploadedAt    DateTime        @default(now())
-  scannedAt     DateTime?
-  scanResult    String?
-  isQuarantined Boolean         @default(false)
-  metadata      String?
-  accessLogs    FileAccessLog[]
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("uploaded_files")
-}
-
-model FileAccessLog {
-  id         String       @id @default(cuid())
-  fileId     String
-  userId     String?
-  action     String
-  ipAddress  String?
-  userAgent  String?
-  accessedAt DateTime     @default(now())
-  user       User?        @relation(fields: [userId], references: [id])
-  file       UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
-
-  @@map("file_access_logs")
-}
-
-model ApiRequestLog {
-  id           String   @id @default(cuid())
-  method       String
-  url          String
-  statusCode   Int
-  responseTime Int
-  ipAddress    String?
-  userAgent    String?
-  userId       String?
-  requestedAt  DateTime @default(now())
-  user         User?    @relation(fields: [userId], references: [id])
-
-  @@map("api_request_logs")
-}
-
-model SecurityEvent {
-  id        String   @id @default(cuid())
-  event     String
-  severity  String   @default("medium")
-  details   String?
-  ipAddress String?
-  userId    String?
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
-
-  @@map("security_events")
-}
-
-model WhatsAppBusinessSettings {
-  id              String   @id @default(cuid())
-  businessName    String   @default("Household Planet Kenya")
-  businessPhone   String   @default("")
-  businessEmail   String?
-  businessAddress String?
-  businessHours   String?
-  welcomeMessage  String?
-  awayMessage     String?
-  isActive        Boolean  @default(true)
+model ContentPage {
+  id              Int      @id @default(autoincrement())
+  slug            String   @unique
+  title           String
+  content         String
+  metaTitle       String?
+  metaDescription String?
+  isPublished     Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@map("whatsapp_business_settings")
+  @@index([slug])
+  @@map("content_pages")
 }
 
-model WhatsAppAutoReply {
-  id        String   @id @default(cuid())
-  type      String   @unique
-  message   String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Banner {
+  id         Int       @id @default(autoincrement())
+  title      String
+  subtitle   String?
+  image      String
+  link       String?
+  buttonText String?
+  position   String    @default("HERO")
+  isActive   Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  startDate  DateTime?
+  endDate    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  @@map("whatsapp_auto_replies")
+  @@index([position, isActive])
+  @@map("banners")
 }
 
-model WhatsAppCustomerSegment {
-  id          String             @id @default(cuid())
-  name        String
-  description String?
-  criteria    String
-  isActive    Boolean            @default(true)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  campaigns   WhatsAppCampaign[]
-
-  @@map("whatsapp_customer_segments")
-}
-
-model WhatsAppCampaign {
-  id              String                   @id @default(cuid())
-  name            String
-  message         String
-  segmentId       String?
-  phoneNumbers    String?
-  mediaUrl        String?
-  status          String                   @default("DRAFT")
-  scheduledAt     DateTime?
-  sentAt          DateTime?
-  completedAt     DateTime?
-  totalSent       Int                      @default(0)
-  totalDelivered  Int                      @default(0)
-  totalFailed     Int                      @default(0)
-  totalRecipients Int                      @default(0)
-  successfulSends Int                      @default(0)
-  failedSends     Int                      @default(0)
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
-  segment         WhatsAppCustomerSegment? @relation(fields: [segmentId], references: [id])
-
-  @@map("whatsapp_campaigns")
-}
-
-model SmsLog {
-  id            String    @id @default(cuid())
-  phoneNumber   String
-  message       String
-  type          String    @default("GENERAL")
-  status        String    @default("PENDING")
-  provider      String    @default("AFRICASTALKING")
-  messageId     String?
-  cost          Float?
-  error         String?
-  failureReason String?
-  sentAt        DateTime?
-  deliveredAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@map("sms_logs")
-}
-
-model OtpCode {
-  id          String   @id @default(cuid())
-  phoneNumber String
-  code        String
-  isUsed      Boolean  @default(false)
-  expiresAt   DateTime
+model EmailTemplate {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  subject     String
+  htmlContent String
+  textContent String?
+  variables   String?
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@map("otp_codes")
-}
-
-model PerformanceMetric {
-  id        String   @id @default(cuid())
-  url       String
-  loadTime  Float
-  userId    String?
-  timestamp DateTime @default(now())
-
-  @@map("performance_metrics")
-}
-
-model TaxRecord {
-  id          String   @id @default(cuid())
-  orderId     String
-  baseAmount  Float
-  vatAmount   Float
-  totalAmount Float
-  vatRate     Float
-  isExempt    Boolean  @default(false)
-  recordedAt  DateTime @default(now())
-
-  @@map("tax_records")
-}
-
-model BlogPost {
-  id             String    @id @default(cuid())
-  title          String
-  slug           String    @unique
-  content        String
-  excerpt        String?
-  featuredImage  String?
-  status         String    @default("DRAFT")
-  publishedAt    DateTime?
-  seoTitle       String?
-  seoDescription String?
-  tags           String?
-  authorId       String?
-  viewCount      Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  @@map("blog_posts")
+  @@index([name])
+  @@map("email_templates")
 }
 
 model FAQ {
-  id        String   @id @default(cuid())
-  question  String
-  answer    String
-  category  String?
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  question    String
+  answer      String
+  category    String?
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  @@index([category, isPublished])
   @@map("faqs")
 }
 
-model Page {
+model BlogPost {
+  id              Int       @id @default(autoincrement())
+  slug            String    @unique
+  title           String
+  excerpt         String?
+  content         String
+  featuredImage   String?
+  author          String
+  tags            String?
+  metaTitle       String?
+  metaDescription String?
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished, publishedAt])
+  @@map("blog_posts")
+}
+
+model AnalyticsEvent {
+  id         Int      @id @default(autoincrement())
+  event      String
+  properties String
+  userId     String?
+  sessionId  String
+  timestamp  DateTime @default(now())
+  userAgent  String?
+  ipAddress  String?
+  referrer   String?
+  pageUrl    String?
+
+  @@index([event])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("analytics_events")
+}
+
+model ABTest {
+  id          Int                @id @default(autoincrement())
+  name        String             @unique
+  description String?
+  isActive    Boolean            @default(true)
+  variants    String
+  startDate   DateTime           @default(now())
+  endDate     DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  assignments ABTestAssignment[]
+  conversions ABTestConversion[]
+
+  @@index([name, isActive])
+  @@map("ab_tests")
+}
+
+model ABTestAssignment {
+  id         Int      @id @default(autoincrement())
+  testId     Int
+  userId     String?
+  sessionId  String
+  variant    String
+  assignedAt DateTime @default(now())
+  test       ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, sessionId])
+  @@index([testId, variant])
+  @@map("ab_test_assignments")
+}
+
+model ABTestConversion {
+  id             Int      @id @default(autoincrement())
+  testId         Int
+  sessionId      String
+  variant        String
+  conversionType String
+  value          Float?
+  convertedAt    DateTime @default(now())
+  test           ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId, variant])
+  @@index([conversionType])
+  @@map("ab_test_conversions")
+}
+
+model SearchQuery {
+  id          Int      @id @default(autoincrement())
+  query       String
+  userId      Int?
+  resultCount Int      @default(0)
+  timestamp   DateTime @default(now())
+  filters     String?
+  sessionId   String?
+
+  @@index([query])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("search_queries")
+}
+
+model ProductAttribute {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  type      String
+  values    String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@map("product_attributes")
+}
+
+model BulkImportJob {
+  id            String    @id @default(cuid())
+  filename      String
+  status        String    @default("PENDING")
+  totalRows     Int       @default(0)
+  processedRows Int       @default(0)
+  successRows   Int       @default(0)
+  errorRows     Int       @default(0)
+  errors        String?
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([status])
+  @@map("bulk_import_jobs")
+}
+
+model UserConsent {
   id             String   @id @default(cuid())
-  title          String
-  slug           String   @unique
-  content        String
-  seoTitle       String?
-  seoDescription String?
-  isActive       Boolean  @default(true)
+  userId         Int      @unique
+  cookieConsent  String
+  consentVersion String   @default("1.0")
+  ipAddress      String?
+  userAgent      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("pages")
+  @@map("user_consents")
 }
 
-model SearchLog {
-  id        String   @id @default(cuid())
-  query     String
-  results   Int      @default(0)
-  userId    String?
-  ipAddress String?
-  timestamp DateTime @default(now())
+model ConsentLog {
+  id          String   @id @default(cuid())
+  userId      Int
+  consentType String
+  granted     Boolean
+  purpose     String?
+  ipAddress   String
+  userAgent   String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("search_logs")
+  @@index([userId])
+  @@index([consentType])
+  @@map("consent_logs")
 }
 
-model PaymentToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String
-  type      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+model DataExportRequest {
+  id          String    @id @default(cuid())
+  userId      Int
+  reason      String?
+  status      String    @default("pending")
+  exportData  String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("payment_tokens")
+  @@index([userId])
+  @@index([status])
+  @@map("data_export_requests")
 }
 
-model PaymentAuditLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  action    String
-  event     String
-  details   String?
-  timestamp DateTime @default(now())
-  createdAt DateTime @default(now())
+model DataDeletionRequest {
+  id                String    @id @default(cuid())
+  userId            Int
+  reason            String
+  status            String    @default("pending")
+  scheduledDeletion DateTime
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("payment_audit_logs")
+  @@index([userId])
+  @@index([status])
+  @@index([scheduledDeletion])
+  @@map("data_deletion_requests")
 }
 
-model AuditLog {
-  id        String   @id @default(cuid())
-  action    String
-  details   String?
-  userId    String?
-  ipAddress String?
-  score     Int?
-  status    String?
-  timestamp DateTime @default(now())
+model UserPrivacySettings {
+  id                String   @id @default(cuid())
+  userId            Int      @unique
+  profileVisibility Boolean  @default(true)
+  dataProcessing    Boolean  @default(true)
+  marketingEmails   Boolean  @default(false)
+  analyticsTracking Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("audit_logs")
+  @@map("user_privacy_settings")
 }
 
-model DataBreach {
+model DataRetentionPolicy {
+  id            String   @id @default(cuid())
+  dataType      String   @unique
+  retentionDays Int
+  description   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("data_retention_policies")
+}
+
+model DataBreachLog {
   id            String    @id @default(cuid())
   type          String
   severity      String
   description   String
   affectedUsers Int       @default(0)
-  detectedAt    DateTime  @default(now())
   reportedAt    DateTime  @default(now())
   resolvedAt    DateTime?
+  status        String    @default("reported")
+  actions       String?
 
-  @@map("data_breaches")
+  @@index([type])
+  @@index([severity])
+  @@index([status])
+  @@map("data_breach_logs")
 }
 
-model SecurityIncident {
-  id          String    @id @default(cuid())
-  type        String
-  severity    String
-  description String
-  status      String    @default("OPEN")
-  createdAt   DateTime  @default(now())
-  reportedAt  DateTime  @default(now())
-  resolvedAt  DateTime?
+model LegalAgreement {
+  id           String   @id @default(cuid())
+  userId       String
+  documentType String
+  version      String
+  agreedAt     DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  @@map("security_incidents")
+  @@index([userId])
+  @@index([documentType])
+  @@index([status])
+  @@map("legal_agreements")
 }
 
-model SecurityTraining {
+model LegalDocumentRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  documentType String
+  requestType  String
+  reason       String?
+  status       String    @default("PENDING")
+  requestedAt  DateTime  @default(now())
+  processedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("legal_document_requests")
+}
+
+model ConsentWithdrawal {
   id          String   @id @default(cuid())
   userId      String
-  moduleId    String
-  completedAt DateTime @default(now())
-  score       Int?
-
-  @@map("security_training")
-}
-
-model SecurityScan {
-  id        String   @id @default(cuid())
-  type      String
-  results   String
-  score     Int?
-  timestamp DateTime @default(now())
-
-  @@map("security_scans")
-}
-
-model ABExperiment {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  type        String    @default("A_B_TEST")
-  status      String    @default("DRAFT")
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@map("ab_experiments")
-}
-
-model ABAssignment {
-  id           String   @id @default(cuid())
-  experimentId String
-  userId       String?
-  variant      String
-  assignedAt   DateTime @default(now())
-
-  @@map("ab_assignments")
-}
-
-model ABConversion {
-  id           String   @id @default(cuid())
-  experimentId String
-  userId       String?
-  variant      String
-  event        String
-  value        Float?
-  convertedAt  DateTime @default(now())
-
-  @@map("ab_conversions")
-}
-
-model ChatSession {
-  id             String        @id @default(cuid())
-  userId         String?
-  visitorId      String?
-  userAgent      String?
-  status         String        @default("ACTIVE")
-  lastActivityAt DateTime      @default(now())
-  assignedTo     String?
-  closedAt       DateTime?
-  startedAt      DateTime      @default(now())
-  endedAt        DateTime?
-  messages       ChatMessage[]
-
-  @@map("chat_sessions")
-}
-
-model ChatMessage {
-  id             String      @id @default(cuid())
-  sessionId      String
-  userId         String?
-  sender         String
-  message        String
-  content        String?
-  isFromCustomer Boolean     @default(false)
-  timestamp      DateTime    @default(now())
-  createdAt      DateTime    @default(now())
-  session        ChatSession @relation(fields: [sessionId], references: [id])
-  user           User?       @relation(fields: [userId], references: [id])
-
-  @@map("chat_messages")
-}
-
-model OfflineMessage {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  message   String
-  createdAt DateTime @default(now())
-
-  @@map("offline_messages")
-}
-
-model ChatAutoResponse {
-  id       String  @id @default(cuid())
-  trigger  String
-  response String
-  isActive Boolean @default(true)
-  priority Int     @default(0)
-  keywords String?
-
-  @@map("chat_auto_responses")
-}
-
-model AgeVerification {
-  id         String   @id @default(cuid())
-  userId     String
-  method     String
-  verified   Boolean  @default(false)
-  verifiedAt DateTime @default(now())
-  age        Int
-  createdAt  DateTime @default(now())
-
-  @@map("age_verifications")
-}
-
-model UserConsent {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String
-  granted   Boolean
-  grantedAt DateTime @default(now())
-  timestamp DateTime @default(now())
-
-  @@map("user_consents")
-}
-
-model DataDeletionRequest {
-  id          String    @id @default(cuid())
-  userId      String
-  reason      String
-  status      String    @default("PENDING")
-  requestedAt DateTime  @default(now())
-  completedAt DateTime?
-
-  @@map("data_deletion_requests")
-}
-
-model ConsumerComplaint {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String
-  description String
-  status      String   @default("PENDING")
+  consentType String
+  reason      String?
+  withdrawnAt DateTime @default(now())
+  status      String   @default("PROCESSED")
   createdAt   DateTime @default(now())
 
-  @@map("consumer_complaints")
+  @@index([userId])
+  @@index([consentType])
+  @@map("consent_withdrawals")
 }
 
-model CookieConsent {
-  id          String   @id @default(cuid())
-  sessionId   String
-  necessary   Boolean  @default(true)
-  analytics   Boolean  @default(false)
-  marketing   Boolean  @default(false)
-  preferences Boolean  @default(false)
-  timestamp   DateTime @default(now())
+model AdminActivity {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  action     String
+  details    String
+  entityType String?
+  entityId   Int?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("cookie_consents")
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("admin_activities")
 }
 
-model DataExportRequest {
-  id          String    @id @default(cuid())
-  userId      String
-  status      String    @default("PENDING")
-  requestedAt DateTime  @default(now())
-  completedAt DateTime?
-  downloadUrl String?
-  fileName    String?
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       Int
+  token        String   @unique
+  refreshToken String?  @unique
+  deviceInfo   String
+  ipAddress    String
+  userAgent    String
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("data_export_requests")
+  @@index([userId])
+  @@index([token])
+  @@index([isActive])
+  @@map("user_sessions")
 }
 
-model Dispute {
-  id                 String    @id @default(cuid())
-  userId             String
-  type               String
-  description        String
-  status             String    @default("OPEN")
-  initiatedAt        DateTime  @default(now())
-  escalatedAt        DateTime?
-  escalationReason   String?
-  assignedDepartment String?
+model LoginAttempt {
+  id            String   @id @default(cuid())
+  email         String
+  ipAddress     String
+  userAgent     String
+  success       Boolean
+  failureReason String?
+  createdAt     DateTime @default(now())
 
-  @@map("disputes")
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("login_attempts")
 }
 
-model GeographicAccessLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  productId  String
-  country    String
-  allowed    Boolean
-  reason     String?
-  accessedAt DateTime @default(now())
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("geographic_access_logs")
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model PhoneVerificationToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  phone     String
+  token     String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([phone])
+  @@index([userId])
+  @@map("phone_verification_tokens")
 }

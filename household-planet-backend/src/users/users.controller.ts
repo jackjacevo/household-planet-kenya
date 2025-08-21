@@ -1,118 +1,89 @@
-import { Controller, Get, Put, Post, Delete, Body, Param, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Put, Post, Delete, UseGuards, Request, Body, Param, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
-import { UpdateProfileDto, AddAddressDto } from './dto/update-profile.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
-import { ActiveUserGuard } from '../auth/guards/active-user.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../common/enums';
+import { UpdateProfileDto, ChangePasswordDto, NotificationSettingsDto, PrivacySettingsDto } from './dto/update-profile.dto';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, ActiveUserGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  getProfile(@CurrentUser() user: any) {
-    return this.usersService.getProfile(user.id);
+  getProfile(@Request() req) {
+    return this.usersService.findById(req.user.userId);
   }
 
-  @Patch('profile')
-  updateProfile(@CurrentUser() user: any, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.usersService.updateProfile(user.id, updateProfileDto);
+  @UseGuards(AuthGuard('jwt'))
+  @Put('profile')
+  updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.userId, updateProfileDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('avatar'))
+  uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    return this.usersService.uploadAvatar(req.user.userId, file);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('change-password')
+  changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.usersService.changePassword(req.user.userId, changePasswordDto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Put('notifications')
+  updateNotifications(@Request() req, @Body() notificationSettings: NotificationSettingsDto) {
+    return this.usersService.updateNotificationSettings(req.user.userId, notificationSettings);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Put('privacy')
+  updatePrivacy(@Request() req, @Body() privacySettings: PrivacySettingsDto) {
+    return this.usersService.updatePrivacySettings(req.user.userId, privacySettings);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('delete-account')
+  deleteAccount(@Request() req) {
+    return this.usersService.deleteAccount(req.user.userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('dashboard-stats')
+  getDashboardStats(@Request() req) {
+    return this.usersService.getDashboardStats(req.user.userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Get('addresses')
-  getAddresses(@CurrentUser() user: any) {
-    return this.usersService.getAddresses(user.id);
+  getAddresses(@Request() req) {
+    return this.usersService.getAddresses(req.user.userId);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('addresses')
-  @UseGuards(EmailVerifiedGuard)
-  addAddress(@CurrentUser() user: any, @Body() addAddressDto: AddAddressDto) {
-    return this.usersService.addAddress(user.id, addAddressDto);
+  createAddress(@Request() req, @Body() addressData: any) {
+    return this.usersService.createAddress(req.user.userId, addressData);
   }
 
-  @Patch('addresses/:id')
-  updateAddress(
-    @CurrentUser() user: any,
-    @Param('id') addressId: string,
-    @Body() updateAddressDto: AddAddressDto,
-  ) {
-    return this.usersService.updateAddress(user.id, addressId, updateAddressDto);
+  @UseGuards(AuthGuard('jwt'))
+  @Put('addresses/:id')
+  updateAddress(@Request() req, @Param('id') id: string, @Body() addressData: any) {
+    return this.usersService.updateAddress(req.user.userId, parseInt(id), addressData);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete('addresses/:id')
-  deleteAddress(@CurrentUser() user: any, @Param('id') addressId: string) {
-    return this.usersService.deleteAddress(user.id, addressId);
+  deleteAddress(@Request() req, @Param('id') id: string) {
+    return this.usersService.deleteAddress(req.user.userId, parseInt(id));
   }
 
-  @Post('verify-phone')
-  sendPhoneVerification(@CurrentUser() user: any) {
-    return this.usersService.sendPhoneVerification(user.id);
-  }
-
-  @Post('verify-phone/:token')
-  verifyPhone(@CurrentUser() user: any, @Param('token') token: string) {
-    return this.usersService.verifyPhone(user.id, token);
-  }
-
-  // Admin endpoints
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Get('admin/all')
-  getAllUsers() {
-    return { message: 'Admin endpoint - get all users' };
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
-  @Patch('admin/:id/role')
-  updateUserRole(
-    @Param('id') userId: string,
-    @Body('role') role: UserRole,
-  ) {
-    return { message: `Update user ${userId} role to ${role}` };
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Patch('admin/:id/status')
-  toggleUserStatus(
-    @Param('id') userId: string,
-    @Body('isActive') isActive: boolean,
-  ) {
-    return { message: `User ${userId} status updated to ${isActive ? 'active' : 'inactive'}` };
-  }
-
-  @Get('dashboard/stats')
-  getDashboardStats(@CurrentUser('id') userId: string) {
-    return this.usersService.getDashboardStats(userId);
-  }
-
-  @Patch('settings')
-  updateSettings(@CurrentUser('id') userId: string, @Body() settings: {
-    marketingEmails?: boolean;
-    smsNotifications?: boolean;
-    preferredLanguage?: string;
-  }) {
-    return this.usersService.updateSettings(userId, settings);
-  }
-
-  @Get('wishlist')
-  getWishlist(@CurrentUser('id') userId: string) {
-    return this.usersService.getWishlist(userId);
-  }
-
-  @Post('wishlist/:productId')
-  addToWishlist(@CurrentUser('id') userId: string, @Param('productId') productId: string) {
-    return this.usersService.addToWishlist(userId, productId);
-  }
-
-  @Delete('wishlist/:productId')
-  removeFromWishlist(@CurrentUser('id') userId: string, @Param('productId') productId: string) {
-    return this.usersService.removeFromWishlist(userId, productId);
+  @UseGuards(AuthGuard('jwt'))
+  @Put('addresses/:id/default')
+  setDefaultAddress(@Request() req, @Param('id') id: string) {
+    return this.usersService.setDefaultAddress(req.user.userId, parseInt(id));
   }
 }

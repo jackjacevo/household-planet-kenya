@@ -5,188 +5,238 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SeoService {
   constructor(private prisma: PrismaService) {}
 
-  async generateProductAltText(productId: string) {
+  // Product description SEO optimization
+  async optimizeProductDescription(productId: number) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      include: { category: true },
-    });
-
-    if (!product) return '';
-
-    const altText = `${product.name} - ${product.category?.name || 'Product'} available at Household Planet Kenya`;
-    
-    // Update product images with alt text
-    if (product.images && Array.isArray(product.images)) {
-      const updatedImages = product.images.map((image: any) => ({
-        ...image,
-        altText: image.altText || altText,
-      }));
-
-      await this.prisma.product.update({
-        where: { id: productId },
-        data: { images: JSON.stringify(updatedImages) },
-      });
-    }
-
-    return altText;
-  }
-
-  async generateCategoryContent(categoryId: string) {
-    const category = await this.prisma.category.findUnique({
-      where: { id: categoryId },
-      include: {
-        products: {
-          take: 5,
-          select: { name: true, price: true },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
-
-    if (!category) return null;
-
-    const productNames = category.products.map(p => p.name).join(', ');
-    const avgPrice = category.products.reduce((sum, p) => sum + p.price, 0) / category.products.length;
-
-    const seoContent = {
-      metaTitle: `${category.name} - Quality Products at Household Planet Kenya`,
-      metaDescription: `Shop premium ${category.name.toLowerCase()} including ${productNames}. Starting from KSh ${Math.floor(avgPrice)}. Free delivery in Kenya.`,
-      content: `
-        <h1>${category.name} Collection</h1>
-        <p>Discover our extensive range of ${category.name.toLowerCase()} at Household Planet Kenya. 
-        We offer high-quality products including ${productNames} and many more.</p>
-        
-        <h2>Why Choose Our ${category.name}?</h2>
-        <ul>
-          <li>Premium quality products</li>
-          <li>Competitive prices starting from KSh ${Math.floor(avgPrice)}</li>
-          <li>Fast delivery across Kenya</li>
-          <li>Excellent customer service</li>
-        </ul>
-        
-        <h2>Popular ${category.name} Products</h2>
-        <p>Browse our most popular items in this category and find exactly what you need.</p>
-      `,
-      keywords: [
-        category.name.toLowerCase(),
-        'kenya',
-        'household',
-        'quality',
-        'delivery',
-        ...productNames.split(', ').map(name => name.toLowerCase()),
-      ],
-    };
-
-    // Update category with SEO content
-    await this.prisma.category.update({
-      where: { id: categoryId },
-      data: {
-        metaDescription: seoContent.metaDescription,
-      },
-    });
-
-    return seoContent;
-  }
-
-  async generateSitemap() {
-    const [products, categories, blogPosts] = await Promise.all([
-      this.prisma.product.findMany({
-        select: { slug: true },
-        where: { isActive: true },
-      }),
-      this.prisma.category.findMany({
-        select: { slug: true },
-      }),
-      this.prisma.blogPost.findMany({
-        select: { slug: true },
-        where: { status: 'PUBLISHED' },
-      }),
-    ]);
-
-    const baseUrl = process.env.FRONTEND_URL || 'https://householdplanet.co.ke';
-    
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/products</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  ${categories.map(cat => `
-  <url>
-    <loc>${baseUrl}/categories/${cat.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`).join('')}
-  ${products.map(product => `
-  <url>
-    <loc>${baseUrl}/products/${product.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>`).join('')}
-  ${blogPosts.map(post => `
-  <url>
-    <loc>${baseUrl}/blog/${post.slug}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>`).join('')}
-</urlset>`;
-
-    return sitemap;
-  }
-
-  async optimizeProductSEO(productId: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { id: productId },
-      include: { 
-        category: true,
-        reviews: { take: 5, orderBy: { rating: 'desc' } },
-      },
+      include: { category: true, brand: true }
     });
 
     if (!product) return null;
 
-    const avgRating = product.reviews.length > 0 
-      ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length 
-      : 0;
+    const keywords = this.extractKeywords(product);
+    const optimizedDescription = this.generateSeoDescription(product, keywords);
+    const metaTitle = this.generateMetaTitle(product);
+    const altText = this.generateImageAltText(product);
 
-    const seoData = {
-      metaTitle: `${product.name} - KSh ${product.price} | Household Planet Kenya`,
-      metaDescription: `Buy ${product.name} for KSh ${product.price}. ${product.description.substring(0, 120)}... Free delivery in Kenya.`,
-      structuredData: {
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: product.name,
-        description: product.description,
-        image: product.images,
-        brand: 'Household Planet Kenya',
-        offers: {
-          '@type': 'Offer',
-          price: product.price,
-          priceCurrency: 'KES',
-          availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        },
-        aggregateRating: avgRating > 0 ? {
-          '@type': 'AggregateRating',
-          ratingValue: avgRating,
-          reviewCount: product.reviews.length,
-        } : undefined,
-      },
+    return {
+      metaTitle,
+      metaDescription: optimizedDescription,
+      keywords,
+      altText,
+      structuredData: this.generateProductSchema(product)
     };
+  }
 
-    await this.prisma.product.update({
-      where: { id: productId },
-      data: {
-        seoTitle: seoData.metaTitle,
-        seoDescription: seoData.metaDescription,
-      },
+  // Category page SEO optimization
+  async optimizeCategoryPage(categoryId: number) {
+    const category = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+      include: { 
+        products: { 
+          where: { isActive: true },
+          take: 10,
+          include: { brand: true }
+        }
+      }
     });
 
-    return seoData;
+    if (!category) return null;
+
+    const keywords = this.generateCategoryKeywords(category);
+    const content = this.generateCategoryContent(category, keywords);
+
+    return {
+      metaTitle: `${category.name} - Quality Home Products Kenya | Household Planet`,
+      metaDescription: `Shop premium ${category.name.toLowerCase()} in Kenya. Fast delivery, M-Pesa payments, quality guaranteed. ${category.products.length}+ products available.`,
+      keywords,
+      content,
+      structuredData: this.generateCategorySchema(category)
+    };
+  }
+
+
+
+  // URL structure optimization
+  generateOptimizedUrl(title: string, type: 'product' | 'category' | 'blog'): string {
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
+    const prefixes = {
+      product: 'products',
+      category: 'categories', 
+      blog: 'blog'
+    };
+
+    return `/${prefixes[type]}/${slug}`;
+  }
+
+  // Site search analytics
+  async trackSearch(query: string, userId?: number, results?: number) {
+    return this.prisma.searchQuery.create({
+      data: {
+        query: query.toLowerCase(),
+        userId,
+        resultCount: results || 0,
+        timestamp: new Date()
+      }
+    });
+  }
+
+  async getSearchAnalytics(days = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const [topQueries, noResults, trends] = await Promise.all([
+      this.prisma.searchQuery.groupBy({
+        by: ['query'],
+        where: { timestamp: { gte: since } },
+        _count: { query: true },
+        orderBy: { _count: { query: 'desc' } },
+        take: 20
+      }),
+      this.prisma.searchQuery.findMany({
+        where: { 
+          timestamp: { gte: since },
+          resultCount: 0
+        },
+        select: { query: true },
+        distinct: ['query'],
+        take: 10
+      }),
+      this.prisma.searchQuery.groupBy({
+        by: ['query'],
+        where: { 
+          timestamp: { gte: since },
+          resultCount: { gt: 0 }
+        },
+        _avg: { resultCount: true },
+        _count: { query: true },
+        orderBy: { _count: { query: 'desc' } }
+      })
+    ]);
+
+    return { topQueries, noResults, trends };
+  }
+
+  private extractKeywords(product: any): string[] {
+    const keywords = [];
+    
+    // Add product name words
+    keywords.push(...product.name.toLowerCase().split(' '));
+    
+    // Add category
+    if (product.category) {
+      keywords.push(product.category.name.toLowerCase());
+    }
+    
+    // Add brand
+    if (product.brand) {
+      keywords.push(product.brand.name.toLowerCase());
+    }
+    
+    // Add location-based keywords
+    keywords.push('kenya', 'nairobi', 'household', 'home');
+    
+    return [...new Set(keywords)].filter(k => k.length > 2);
+  }
+
+  private generateSeoDescription(product: any, keywords: string[]): string {
+    const keywordPhrase = keywords.slice(0, 3).join(' ');
+    return `Buy ${product.name} in Kenya. Quality ${keywordPhrase} with fast delivery and M-Pesa payment. ${product.description?.substring(0, 100) || 'Premium household products'}.`;
+  }
+
+  private generateMetaTitle(product: any): string {
+    return `${product.name} - ${product.category?.name || 'Home Products'} Kenya | Household Planet`;
+  }
+
+  private generateImageAltText(product: any): string[] {
+    const images = JSON.parse(product.images || '[]');
+    return images.map((_, index) => 
+      `${product.name} - ${product.category?.name || 'Home Product'} ${index + 1} - Kenya`
+    );
+  }
+
+  private generateProductSchema(product: any) {
+    return {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.name,
+      "description": product.description,
+      "sku": product.sku,
+      "brand": product.brand?.name,
+      "category": product.category?.name,
+      "offers": {
+        "@type": "Offer",
+        "price": product.price,
+        "priceCurrency": "KES",
+        "availability": "https://schema.org/InStock"
+      }
+    };
+  }
+
+  private generateCategoryKeywords(category: any): string[] {
+    const keywords = [
+      category.name.toLowerCase(),
+      `${category.name.toLowerCase()} kenya`,
+      `buy ${category.name.toLowerCase()}`,
+      `${category.name.toLowerCase()} nairobi`,
+      'household items',
+      'home products',
+      'quality',
+      'fast delivery',
+      'm-pesa payment'
+    ];
+
+    // Add product-based keywords
+    category.products.forEach(product => {
+      keywords.push(...product.name.toLowerCase().split(' ').filter(w => w.length > 3));
+    });
+
+    return [...new Set(keywords)];
+  }
+
+  private generateCategoryContent(category: any, keywords: string[]): string {
+    return `
+      <h1>${category.name} - Premium Quality for Kenyan Homes</h1>
+      <p>Discover our extensive collection of ${category.name.toLowerCase()} designed for modern Kenyan households. 
+      From ${keywords.slice(0, 3).join(', ')} to premium accessories, we offer quality products with fast delivery across Kenya.</p>
+      
+      <h2>Why Choose Our ${category.name}?</h2>
+      <ul>
+        <li>Quality guaranteed products</li>
+        <li>Fast delivery across Kenya</li>
+        <li>Secure M-Pesa payments</li>
+        <li>Competitive prices</li>
+        <li>Customer support in English and Swahili</li>
+      </ul>
+      
+      <h2>Popular ${category.name} Products</h2>
+      <p>Browse our top-selling ${category.name.toLowerCase()} including ${category.products.slice(0, 3).map(p => p.name).join(', ')} and more.</p>
+    `;
+  }
+
+  private generateCategorySchema(category: any) {
+    return {
+      "@context": "https://schema.org/",
+      "@type": "CollectionPage",
+      "name": category.name,
+      "description": `${category.name} products for Kenyan homes`,
+      "url": `/categories/${category.slug}`,
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": category.products.length,
+        "itemListElement": category.products.map((product, index) => ({
+          "@type": "Product",
+          "position": index + 1,
+          "name": product.name,
+          "url": `/products/${product.slug}`
+        }))
+      }
+    };
   }
 }

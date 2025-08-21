@@ -1,93 +1,116 @@
-import { Controller, Get, Post, Query, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Param, Put } from '@nestjs/common';
 import { DeliveryService } from './delivery.service';
-import { TrackingService } from './tracking.service';
-import { SchedulingService } from './scheduling.service';
-import { FeedbackService } from './feedback.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { DeliveryTrackingService } from './delivery-tracking.service';
+import { SmsService } from './sms.service';
+import { ScheduleDeliveryDto, UpdateDeliveryStatusDto, DeliveryFeedbackDto } from './dto/delivery.dto';
 
-@Controller('api/delivery')
+@Controller('delivery')
 export class DeliveryController {
   constructor(
-    private deliveryService: DeliveryService,
-    private trackingService: TrackingService,
-    private schedulingService: SchedulingService,
-    private feedbackService: FeedbackService
+    private readonly deliveryService: DeliveryService,
+    private readonly trackingService: DeliveryTrackingService,
+    private readonly smsService: SmsService
   ) {}
 
-  @Post('initialize')
-  async initializeLocations() {
-    await this.deliveryService.initializeLocations();
-    return { message: 'Delivery locations initialized successfully' };
-  }
-
   @Get('locations')
-  async getAllLocations() {
-    return this.deliveryService.getAllLocations();
-  }
-
-  @Get('price')
-  async getDeliveryPrice(@Query('location') location: string) {
-    const price = await this.deliveryService.calculateDeliveryPrice(location);
-    return { location, price };
+  getAllLocations() {
+    return {
+      success: true,
+      data: this.deliveryService.getAllLocations()
+    };
   }
 
   @Get('locations/tier')
-  async getLocationsByTier(@Query('tier') tier: string) {
-    return this.deliveryService.getLocationsByTier(parseInt(tier));
+  getLocationsByTier(@Query('tier') tier: string) {
+    const tierNumber = parseInt(tier);
+    return {
+      success: true,
+      data: this.deliveryService.getLocationsByTier(tierNumber)
+    };
+  }
+
+  @Get('price')
+  getDeliveryPrice(@Query('location') location: string) {
+    const result = this.deliveryService.getDeliveryPrice(location);
+    return {
+      success: true,
+      price: result.price,
+      location: result.location
+    };
   }
 
   @Get('estimate')
-  async getDeliveryEstimate(@Query('location') location: string) {
-    return this.deliveryService.getDeliveryEstimate(location);
+  getDeliveryEstimate(@Query('location') location: string) {
+    const result = this.deliveryService.getDeliveryEstimate(location);
+    return {
+      success: true,
+      ...result
+    };
   }
 
-  @Get('tracking/:orderId')
-  async getTracking(@Param('orderId') orderId: string) {
-    return this.trackingService.getTracking(orderId);
+  @Get('search')
+  searchLocations(@Query('q') query: string) {
+    return {
+      success: true,
+      data: this.deliveryService.searchLocations(query)
+    };
   }
 
-  @Post('tracking/:orderId/update')
-  async updateTracking(
-    @Param('orderId') orderId: string,
-    @Body() data: { status: string; location?: string; notes?: string }
+  @Get('tiers')
+  getTierInfo() {
+    return {
+      success: true,
+      data: this.deliveryService.getTierInfo()
+    };
+  }
+
+  @Post('calculate')
+  calculateShipping(@Body() body: { location: string; orderValue: number; isExpress?: boolean }) {
+    const result = this.deliveryService.calculateShippingCost(body.location, body.orderValue, body.isExpress);
+    return { success: true, ...result };
+  }
+
+  @Get('time-slots')
+  getTimeSlots() {
+    return {
+      success: true,
+      data: this.deliveryService.getTimeSlots()
+    };
+  }
+
+  @Post('schedule')
+  async scheduleDelivery(@Body() dto: ScheduleDeliveryDto) {
+    const delivery = await this.trackingService.scheduleDelivery(dto);
+    return { success: true, data: delivery };
+  }
+
+  @Get('track/:trackingNumber')
+  async trackDelivery(@Param('trackingNumber') trackingNumber: string) {
+    const tracking = await this.trackingService.getDeliveryTracking(trackingNumber);
+    return { success: true, data: tracking };
+  }
+
+  @Put('track/:trackingNumber/status')
+  async updateDeliveryStatus(
+    @Param('trackingNumber') trackingNumber: string,
+    @Body() dto: UpdateDeliveryStatusDto
   ) {
-    return this.trackingService.updateStatus(orderId, data.status, data.location, data.notes);
+    const delivery = await this.trackingService.updateDeliveryStatus(trackingNumber, dto);
+    return { success: true, data: delivery };
   }
 
-  @Post('tracking/:orderId/confirm')
-  async confirmDelivery(
-    @Param('orderId') orderId: string,
-    @Body() data: { photoProof?: string }
-  ) {
-    return this.trackingService.confirmDelivery(orderId, data.photoProof);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('schedule/:orderId')
-  async scheduleDelivery(
-    @Param('orderId') orderId: string,
-    @Body() data: { preferredDate: string; timeSlot: string; instructions?: string }
-  ) {
-    return this.schedulingService.scheduleDelivery(
-      orderId,
-      new Date(data.preferredDate),
-      data.timeSlot,
-      data.instructions
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('feedback/:orderId')
+  @Post('track/:trackingNumber/feedback')
   async submitFeedback(
-    @Param('orderId') orderId: string,
-    @Body() data: { rating: number; comment?: string }
+    @Param('trackingNumber') trackingNumber: string,
+    @Body() dto: DeliveryFeedbackDto
   ) {
-    return this.feedbackService.submitFeedback(orderId, data.rating, data.comment);
+    const feedback = await this.trackingService.submitFeedback(trackingNumber, dto);
+    return { success: true, data: feedback };
   }
 
-  @Get('feedback/stats')
-  async getFeedbackStats() {
-    return this.feedbackService.getFeedbackStats();
+  @Get('analytics')
+  async getAnalytics() {
+    const analytics = await this.trackingService.getDeliveryAnalytics();
+    return { success: true, data: analytics };
   }
 }

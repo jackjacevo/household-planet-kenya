@@ -1,73 +1,137 @@
-'use client';
+'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { api, User, AuthResponse } from '@/lib/api';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { api } from '@/lib/api'
+
+interface User {
+  id: number
+  email: string
+  name: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  role: string
+  avatar?: string
+  emailVerified: boolean
+  phoneVerified: boolean
+}
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
-  logout: () => void;
-  loading: boolean;
+  user: User | null
+  login: (email: string, password: string) => Promise<void>
+  register: (userData: any) => Promise<void>
+  logout: () => void
+  loading: boolean
+  updateProfile: (data: any) => Promise<void>
+  isAdmin: () => boolean
+  fetchUserProfile: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Ensure we're on the client side
-    if (typeof window === 'undefined') {
-      setLoading(false);
-      return;
-    }
-    
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('token')
     if (token) {
-      api.getProfile(token)
-        .then(({ user }) => setUser(user))
-        .catch(() => {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        })
-        .finally(() => setLoading(false));
+      // Check if token is expired before making API call
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const isExpired = payload.exp * 1000 < Date.now()
+        
+        if (isExpired) {
+          localStorage.removeItem('token')
+          setUser(null)
+          setLoading(false)
+        } else {
+          fetchUserProfile()
+        }
+      } catch (error) {
+        // Invalid token format
+        localStorage.removeItem('token')
+        setUser(null)
+        setLoading(false)
+      }
     } else {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await api.getUserProfile() as any
+      setUser(response.user)
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error)
+      localStorage.removeItem('token')
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const login = async (email: string, password: string) => {
-    const response: AuthResponse = await api.login(email, password);
-    localStorage.setItem('accessToken', response.accessToken);
-    localStorage.setItem('refreshToken', response.refreshToken);
-    setUser(response.user);
-  };
+    try {
+      const response = await api.login(email, password) as any
+      localStorage.setItem('token', response.accessToken)
+      setUser(response.user)
+    } catch (error) {
+      throw error
+    }
+  }
 
-  const register = async (data: { name: string; email: string; password: string; phone?: string }) => {
-    await api.register(data);
-  };
+  const register = async (userData: any) => {
+    try {
+      const response = await api.register(userData) as any
+      // Registration successful, but user needs to verify email
+      // Don't log them in automatically, redirect to login with success message
+      return response
+    } catch (error) {
+      throw error
+    }
+  }
 
   const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+    localStorage.removeItem('token')
+    setUser(null)
+  }
+
+  const updateProfile = async (data: any) => {
+    try {
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      })
+      if (response.ok) {
+        const updatedUser = await response.json()
+        setUser(updatedUser)
+      }
+    } catch (error) {
+      throw error
     }
-    setUser(null);
-  };
+  }
+
+  const isAdmin = () => {
+    return user?.role === 'ADMIN' || user?.role === 'admin'
+  }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateProfile, isAdmin, fetchUserProfile }}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}

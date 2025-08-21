@@ -1,13 +1,14 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '../../common/enums';
+import { UserRole } from '../enums/user-role.enum';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>('roles', [
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -19,15 +20,21 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
     
     if (!user) {
-      throw new ForbiddenException('User not authenticated');
+      return false;
     }
 
-    const hasRole = requiredRoles.some((role) => user.role === role);
-    
-    if (!hasRole) {
-      throw new ForbiddenException('Insufficient permissions');
-    }
+    // Define role hierarchy
+    const roleHierarchy = {
+      [UserRole.GUEST]: 0,
+      [UserRole.CUSTOMER]: 1,
+      [UserRole.STAFF]: 2,
+      [UserRole.ADMIN]: 3,
+      [UserRole.SUPER_ADMIN]: 4,
+    };
 
-    return true;
+    const userRoleLevel = roleHierarchy[user.role] || 0;
+    const requiredLevel = Math.min(...requiredRoles.map(role => roleHierarchy[role] || 0));
+
+    return userRoleLevel >= requiredLevel;
   }
 }

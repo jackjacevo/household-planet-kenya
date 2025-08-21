@@ -1,234 +1,210 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { BlogService } from './blog.service';
-import { SeoService } from './seo.service';
+import {
+  CreateContentPageDto,
+  UpdateContentPageDto,
+  CreateBannerDto,
+  UpdateBannerDto,
+  CreateEmailTemplateDto,
+  UpdateEmailTemplateDto,
+  CreateFAQDto,
+  UpdateFAQDto,
+  CreateBlogPostDto,
+  UpdateBlogPostDto,
+} from './dto/content.dto';
 
 @Injectable()
 export class ContentService {
-  constructor(
-    private prisma: PrismaService,
-    private blogService: BlogService,
-    private seoService: SeoService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async createFAQ(data: {
-    question: string;
-    answer: string;
-    category: string;
-  }) {
-    return this.prisma.fAQ.create({
-      data,
-    });
+  // Content Pages
+  async createPage(data: CreateContentPageDto) {
+    return this.prisma.contentPage.create({ data });
   }
 
-  async getFAQs(category?: string) {
-    return this.prisma.fAQ.findMany({
-      where: category ? { category } : undefined,
-      orderBy: { sortOrder: 'asc' },
-    });
-  }
-
-  async createPage(data: {
-    title: string;
-    slug: string;
-    content: string;
-    seoTitle?: string;
-    seoDescription?: string;
-  }) {
-    return this.prisma.page.create({
-      data,
+  async getPages() {
+    return this.prisma.contentPage.findMany({
+      orderBy: { updatedAt: 'desc' },
     });
   }
 
   async getPageBySlug(slug: string) {
-    return this.prisma.page.findUnique({
+    const page = await this.prisma.contentPage.findUnique({
       where: { slug },
     });
+    if (!page) throw new NotFoundException('Page not found');
+    return page;
   }
 
-  async searchContent(query: string, filters?: {
-    type?: 'product' | 'blog' | 'page';
-    category?: string;
-    limit?: number;
-  }) {
-    const limit = filters?.limit || 20;
-    const searchResults = [];
-
-    // Search products
-    if (!filters?.type || filters.type === 'product') {
-      const products = await this.prisma.product.findMany({
-        where: {
-          OR: [
-            { name: { contains: query } },
-            { description: { contains: query } },
-            { keywords: { contains: query } },
-          ],
-          isActive: true,
-          categoryId: filters?.category,
-        },
-        take: limit,
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          price: true,
-          images: true,
-          category: { select: { name: true } },
-        },
-      });
-
-      searchResults.push(...products.map(p => ({
-        ...p,
-        type: 'product',
-        url: `/products/${p.slug}`,
-      })));
-    }
-
-    // Search blog posts
-    if (!filters?.type || filters.type === 'blog') {
-      const posts = await this.prisma.blogPost.findMany({
-        where: {
-          OR: [
-            { title: { contains: query } },
-            { content: { contains: query } },
-          ],
-          status: 'PUBLISHED',
-        },
-        take: limit,
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          excerpt: true,
-          featuredImage: true,
-          publishedAt: true,
-        },
-      });
-
-      searchResults.push(...posts.map(p => ({
-        ...p,
-        type: 'blog',
-        url: `/blog/${p.slug}`,
-      })));
-    }
-
-    // Search pages
-    if (!filters?.type || filters.type === 'page') {
-      const pages = await this.prisma.page.findMany({
-        where: {
-          OR: [
-            { title: { contains: query } },
-            { content: { contains: query } },
-          ],
-          isActive: true,
-        },
-        take: limit,
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          content: true,
-        },
-      });
-
-      searchResults.push(...pages.map(p => ({
-        ...p,
-        type: 'page',
-        url: `/${p.slug}`,
-      })));
-    }
-
-    // Log search query for analytics
-    await this.logSearchQuery(query, searchResults.length);
-
-    return {
-      query,
-      results: searchResults.slice(0, limit),
-      total: searchResults.length,
-    };
-  }
-
-  private async logSearchQuery(query: string, resultCount: number) {
-    try {
-      await this.prisma.searchLog.create({
-        data: {
-          query: query.toLowerCase(),
-          results: resultCount,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to log search query:', error);
-    }
-  }
-
-  async getSearchAnalytics(days = 30) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const [topQueries, noResultQueries, totalSearches] = await Promise.all([
-      this.prisma.searchLog.groupBy({
-        by: ['query'],
-        where: {
-          timestamp: { gte: startDate },
-          results: { gt: 0 },
-        },
-        _count: { query: true },
-        orderBy: { _count: { query: 'desc' } },
-        take: 10,
-      }),
-      this.prisma.searchLog.groupBy({
-        by: ['query'],
-        where: {
-          timestamp: { gte: startDate },
-          results: 0,
-        },
-        _count: { query: true },
-        orderBy: { _count: { query: 'desc' } },
-        take: 10,
-      }),
-      this.prisma.searchLog.count({
-        where: { timestamp: { gte: startDate } },
-      }),
-    ]);
-
-    return {
-      totalSearches,
-      topQueries: topQueries.map(q => ({
-        query: q.query,
-        count: q._count.query,
-      })),
-      noResultQueries: noResultQueries.map(q => ({
-        query: q.query,
-        count: q._count.query,
-      })),
-    };
-  }
-
-  async optimizeAllContent() {
-    // Optimize all products
-    const products = await this.prisma.product.findMany({
-      select: { id: true },
-      // where: { status: 'ACTIVE' }, // Remove if status field doesn't exist
+  async updatePage(id: number, data: UpdateContentPageDto) {
+    return this.prisma.contentPage.update({
+      where: { id },
+      data,
     });
+  }
 
-    for (const product of products) {
-      await this.seoService.optimizeProductSEO(product.id);
-      await this.seoService.generateProductAltText(product.id);
-    }
+  async deletePage(id: number) {
+    return this.prisma.contentPage.delete({ where: { id } });
+  }
 
-    // Optimize all categories
-    const categories = await this.prisma.category.findMany({
-      select: { id: true },
+  // Banners
+  async createBanner(data: CreateBannerDto) {
+    return this.prisma.banner.create({
+      data: {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
+      },
     });
+  }
 
-    for (const category of categories) {
-      await this.seoService.generateCategoryContent(category.id);
-    }
+  async getBanners(position?: string) {
+    return this.prisma.banner.findMany({
+      where: {
+        isActive: true,
+        ...(position && { position }),
+        OR: [
+          { startDate: null },
+          { startDate: { lte: new Date() } },
+        ],
+        AND: [
+          {
+            OR: [
+              { endDate: null },
+              { endDate: { gte: new Date() } },
+            ],
+          },
+        ],
+      },
+      orderBy: { sortOrder: 'asc' },
+    });
+  }
 
-    return {
-      optimizedProducts: products.length,
-      optimizedCategories: categories.length,
-    };
+  async getAllBanners() {
+    return this.prisma.banner.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateBanner(id: number, data: UpdateBannerDto) {
+    return this.prisma.banner.update({
+      where: { id },
+      data: {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+      },
+    });
+  }
+
+  async deleteBanner(id: number) {
+    return this.prisma.banner.delete({ where: { id } });
+  }
+
+  // Email Templates
+  async createEmailTemplate(data: CreateEmailTemplateDto) {
+    return this.prisma.emailTemplate.create({ data });
+  }
+
+  async getEmailTemplates() {
+    return this.prisma.emailTemplate.findMany({
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getEmailTemplate(name: string) {
+    const template = await this.prisma.emailTemplate.findUnique({
+      where: { name },
+    });
+    if (!template) throw new NotFoundException('Template not found');
+    return template;
+  }
+
+  async updateEmailTemplate(id: number, data: UpdateEmailTemplateDto) {
+    return this.prisma.emailTemplate.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteEmailTemplate(id: number) {
+    return this.prisma.emailTemplate.delete({ where: { id } });
+  }
+
+  // FAQs
+  async createFAQ(data: CreateFAQDto) {
+    return this.prisma.fAQ.create({ data });
+  }
+
+  async getFAQs(category?: string) {
+    return this.prisma.fAQ.findMany({
+      where: {
+        isPublished: true,
+        ...(category && { category }),
+      },
+      orderBy: { sortOrder: 'asc' },
+    });
+  }
+
+  async getAllFAQs() {
+    return this.prisma.fAQ.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateFAQ(id: number, data: UpdateFAQDto) {
+    return this.prisma.fAQ.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteFAQ(id: number) {
+    return this.prisma.fAQ.delete({ where: { id } });
+  }
+
+
+
+  async getFAQCategories() {
+    const categories = await this.prisma.fAQ.findMany({
+      where: { isPublished: true, category: { not: null } },
+      select: { category: true },
+      distinct: ['category'],
+    });
+    return categories.map(c => c.category);
+  }
+
+  // Blog Posts
+  async createBlogPost(data: CreateBlogPostDto) {
+    return this.prisma.blogPost.create({ data });
+  }
+
+  async getBlogPosts(published?: boolean) {
+    return this.prisma.blogPost.findMany({
+      where: published !== undefined ? { isPublished: published } : {},
+      orderBy: { publishedAt: 'desc' },
+    });
+  }
+
+  async getBlogPostBySlug(slug: string) {
+    const post = await this.prisma.blogPost.findUnique({
+      where: { slug },
+    });
+    if (!post) throw new NotFoundException('Blog post not found');
+    return post;
+  }
+
+  async updateBlogPost(id: number, data: UpdateBlogPostDto) {
+    return this.prisma.blogPost.update({
+      where: { id },
+      data: {
+        ...data,
+        publishedAt: data.isPublished && !data.publishedAt ? new Date() : data.publishedAt ? new Date(data.publishedAt) : undefined,
+      },
+    });
+  }
+
+  async deleteBlogPost(id: number) {
+    return this.prisma.blogPost.delete({ where: { id } });
   }
 }

@@ -1,10 +1,13 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, Min } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsInt, IsDecimal, MaxLength, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
+  @MaxLength(200)
   name: string;
 
   @IsString()
+  @MaxLength(200)
   slug: string;
 
   @IsOptional()
@@ -13,73 +16,73 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   shortDescription?: string;
 
   @IsString()
+  @MaxLength(100)
   sku: string;
 
-  @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
+  @IsDecimal({ decimal_digits: '2' })
   @Min(0)
   price: number;
 
   @IsOptional()
-  @IsNumber()
+  @Transform(({ value }) => value ? parseFloat(value) : null)
+  @IsDecimal({ decimal_digits: '2' })
   @Min(0)
   comparePrice?: number;
 
   @IsOptional()
-  @IsNumber()
+  @Transform(({ value }) => value ? parseFloat(value) : null)
+  @IsDecimal({ decimal_digits: '3' })
   @Min(0)
   weight?: number;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   dimensions?: string;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
   @IsString()
-  categoryId: string;
+  images?: string;
 
   @IsOptional()
   @IsString()
-  brandId?: string;
+  imageAltTexts?: string;
+
+  @IsInt()
+  categoryId: number;
+
+  @IsOptional()
+  @IsInt()
+  brandId?: number;
 
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean;
+  isActive?: boolean = true;
 
   @IsOptional()
   @IsBoolean()
-  isFeatured?: boolean;
+  isFeatured?: boolean = false;
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   seoTitle?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   seoDescription?: string;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
+  @IsString()
+  tags?: string;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  stock?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  lowStockThreshold?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  trackInventory?: boolean;
+  @IsString()
+  searchVector?: string;
 }

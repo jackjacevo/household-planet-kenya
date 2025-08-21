@@ -1,0 +1,27 @@
+### Test Admin Dashboard Stats
+GET http://localhost:3001/admin/dashboard
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+### Test Sales Analytics - Daily
+GET http://localhost:3001/admin/analytics/sales?period=daily
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+### Test Sales Analytics - Monthly
+GET http://localhost:3001/admin/analytics/sales?period=monthly
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+### Test Inventory Alerts
+GET http://localhost:3001/admin/inventory/alerts
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+### Test Customer Insights
+GET http://localhost:3001/admin/customers/insights
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+### Test Payment Stats (existing)
+GET http://localhost:3001/payments/admin/stats
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+### Test Payment Transactions (existing)
+GET http://localhost:3001/payments/admin/transactions
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE

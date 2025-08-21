@@ -1,273 +1,324 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useCart } from '../../contexts/CartContext';
-import { useAuth } from '../../contexts/AuthContext';
-import Link from 'next/link';
+import { useState } from 'react';
+import { useCart } from '@/hooks/useCart';
+import { useDelivery } from '@/hooks/useDelivery';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Trash2, Plus, Minus, Heart, ShoppingCart, Tag, MapPin } from 'lucide-react';
 import Image from 'next/image';
-import { FiTrash2, FiHeart, FiPlus, FiMinus, FiTag, FiTruck } from 'react-icons/fi';
+import Link from 'next/link';
+import { formatPrice } from '@/lib/utils';
 
 export default function CartPage() {
-  const { state, updateQuantity, removeItem, saveForLater, applyPromoCode, removePromoCode, fetchCart, fetchSavedItems, updateGuestQuantity, removeGuestItem, getGuestCartTotal } = useCart();
-  const { user } = useAuth();
+  const { items, savedForLater, updateQuantity, removeFromCart, saveForLater, moveToCart, getTotalPrice } = useCart();
+  const { calculateDeliveryCost, deliveryLocations } = useDelivery();
   const [promoCode, setPromoCode] = useState('');
-  const [deliveryCost, setDeliveryCost] = useState(200);
+  const [appliedPromo, setAppliedPromo] = useState<{code: string, discount: number} | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [promoError, setPromoError] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      fetchCart();
-      fetchSavedItems();
-    }
-  }, [user]);
-
-  const cartItems = user ? state.items : state.guestCart;
-  const cartTotal = user ? state.total : getGuestCartTotal();
-  const finalTotal = user ? (state.finalTotal || state.total) : getGuestCartTotal();
-
-  const handleQuantityChange = async (itemId: string, productId: string, variantId: string | undefined, newQuantity: number) => {
-    if (newQuantity < 1) return;
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
     
-    try {
-      if (user) {
-        await updateQuantity(itemId, newQuantity);
-      } else {
-        updateGuestQuantity(productId, variantId, newQuantity);
-      }
-    } catch (error) {
-      console.error('Failed to update quantity:', error);
+    // Mock promo codes - replace with API call
+    const promoCodes = {
+      'SAVE10': { discount: 0.1, minAmount: 1000 },
+      'WELCOME20': { discount: 0.2, minAmount: 2000 },
+      'HOUSEHOLD15': { discount: 0.15, minAmount: 1500 }
+    };
+    
+    const promo = promoCodes[promoCode.toUpperCase() as keyof typeof promoCodes];
+    const subtotal = getTotalPrice();
+    
+    if (!promo) {
+      setPromoError('Invalid promo code');
+      return;
+    }
+    
+    if (subtotal < promo.minAmount) {
+      setPromoError(`Minimum order of ${formatPrice(promo.minAmount)} required`);
+      return;
+    }
+    
+    setAppliedPromo({ code: promoCode.toUpperCase(), discount: promo.discount });
+    setPromoError('');
+    setPromoCode('');
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    setPromoError('');
+  };
+
+  const handleLocationChange = async (locationId: string) => {
+    setSelectedLocation(locationId);
+    if (locationId) {
+      const cost = await calculateDeliveryCost(locationId, getTotalPrice());
+      setDeliveryCost(cost);
+    } else {
+      setDeliveryCost(0);
     }
   };
 
-  const handleRemoveItem = async (itemId: string, productId: string, variantId: string | undefined) => {
-    try {
-      if (user) {
-        await removeItem(itemId);
-      } else {
-        removeGuestItem(productId, variantId);
-      }
-    } catch (error) {
-      console.error('Failed to remove item:', error);
-    }
+  const getDiscountAmount = () => {
+    return appliedPromo ? getTotalPrice() * appliedPromo.discount : 0;
   };
 
-  const handleApplyPromo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !promoCode.trim()) return;
-
-    try {
-      await applyPromoCode(promoCode.trim());
-      setPromoCode('');
-    } catch (error) {
-      console.error('Failed to apply promo code:', error);
-    }
+  const getFinalTotal = () => {
+    return getTotalPrice() - getDiscountAmount() + deliveryCost;
   };
 
-  if (cartItems.length === 0) {
+  if (items.length === 0 && savedForLater.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
-            <div className="bg-white rounded-lg shadow-sm p-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="mx-auto h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h15.5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
-              <p className="text-gray-600 mb-6">Add some items to get started</p>
-              <Link href="/products" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                Continue Shopping
-              </Link>
-            </div>
-          </div>
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
+          <p className="text-gray-600 mb-8">Add some products to get started!</p>
+          <Link href="/products">
+            <Button size="lg">Continue Shopping</Button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
-        
-        <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
-          <div className="lg:col-span-7">
-            <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-4 py-6 sm:px-6">
-                <h2 className="text-lg font-medium text-gray-900">Cart Items ({cartItems.length})</h2>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Cart Items */}
+          {items.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="p-4 border-b">
+                <h2 className="text-lg font-semibold">Shopping Cart ({items.length} items)</h2>
               </div>
-              
-              <ul className="divide-y divide-gray-200">
-                {cartItems.map((item) => (
-                  <li key={item.id} className="px-4 py-6 sm:px-6">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <Image
-                          src={item.product.images[0] || '/placeholder.jpg'}
-                          alt={item.product.name}
-                          width={80}
-                          height={80}
-                          className="rounded-md object-cover"
-                        />
-                      </div>
-                      
-                      <div className="ml-6 flex-1">
-                        <div className="flex">
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-sm">
-                              <Link href={`/products/${item.product.slug}`} className="font-medium text-gray-700 hover:text-gray-800">
-                                {item.product.name}
-                              </Link>
-                            </h4>
-                            {item.variant && (
-                              <p className="mt-1 text-sm text-gray-500">{item.variant.name}</p>
-                            )}
-                            <p className="mt-1 text-sm font-medium text-gray-900">
-                              KES {(item.variant?.price || item.product.price).toLocaleString()}
-                            </p>
-                          </div>
-                          
-                          <div className="ml-4 flex-shrink-0 flow-root">
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center border border-gray-300 rounded-md">
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.productId, item.variantId, item.quantity - 1)}
-                                  className="p-1 text-gray-400 hover:text-gray-600"
-                                  disabled={item.quantity <= 1}
-                                >
-                                  <FiMinus className="h-4 w-4" />
-                                </button>
-                                <span className="px-3 py-1 text-sm font-medium text-gray-900">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.productId, item.variantId, item.quantity + 1)}
-                                  className="p-1 text-gray-400 hover:text-gray-600"
-                                >
-                                  <FiPlus className="h-4 w-4" />
-                                </button>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2">
-                                {user && (
-                                  <button
-                                    onClick={() => saveForLater(item.id)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                    title="Save for later"
-                                  >
-                                    <FiHeart className="h-5 w-5" />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleRemoveItem(item.id, item.productId, item.variantId)}
-                                  className="text-red-400 hover:text-red-600"
-                                  title="Remove item"
-                                >
-                                  <FiTrash2 className="h-5 w-5" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center p-4 border-b last:border-b-0">
+                  <div className="w-24 h-24 relative">
+                    <Image
+                      src={item.product.images[0] || '/placeholder.jpg'}
+                      alt={item.product.name}
+                      fill
+                      className="object-cover rounded-md"
+                    />
+                  </div>
+                  
+                  <div className="flex-1 ml-4">
+                    <h3 className="font-semibold">{item.product.name}</h3>
+                    <p className="text-gray-600">{formatPrice(item.product.price)}</p>
+                    {item.variant && (
+                      <p className="text-sm text-gray-500">
+                        {item.variant.size && `Size: ${item.variant.size}`}
+                        {item.variant.color && ` • Color: ${item.variant.color}`}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    
+                    <span className="w-8 text-center">{item.quantity}</span>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="ml-4">
+                    <p className="font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
+                  </div>
+                  
+                  <div className="ml-4 flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => saveForLater(item.id)}
+                      className="text-orange-600"
+                      title="Save for later"
+                    >
+                      <Heart className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-red-600"
+                      title="Remove from cart"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
+          )}
+
+          {/* Saved for Later */}
+          {savedForLater.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="p-4 border-b">
+                <h2 className="text-lg font-semibold">Saved for Later ({savedForLater.length} items)</h2>
+              </div>
+              {savedForLater.map((item) => (
+                <div key={item.id} className="flex items-center p-4 border-b last:border-b-0">
+                  <div className="w-20 h-20 relative">
+                    <Image
+                      src={item.product.images[0] || '/placeholder.jpg'}
+                      alt={item.product.name}
+                      fill
+                      className="object-cover rounded-md"
+                    />
+                  </div>
+                  
+                  <div className="flex-1 ml-4">
+                    <h3 className="font-semibold">{item.product.name}</h3>
+                    <p className="text-gray-600">{formatPrice(item.product.price)}</p>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveToCart(item.id)}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-1" />
+                      Move to Cart
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        <div className="space-y-6">
+          {/* Promo Code */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <Tag className="h-5 w-5 mr-2" />
+              Promo Code
+            </h3>
+            
+            {appliedPromo ? (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                <div>
+                  <p className="font-medium text-green-800">{appliedPromo.code}</p>
+                  <p className="text-sm text-green-600">-{formatPrice(getDiscountAmount())} discount applied</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={removePromoCode} className="text-red-600">
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="Enter promo code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button onClick={applyPromoCode} disabled={!promoCode.trim()}>
+                    Apply
+                  </Button>
+                </div>
+                {promoError && (
+                  <p className="text-sm text-red-600">{promoError}</p>
+                )}
+                <div className="text-xs text-gray-500">
+                  Try: SAVE10, WELCOME20, HOUSEHOLD15
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="mt-16 bg-white rounded-lg shadow-sm px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
-            <h2 className="text-lg font-medium text-gray-900">Order Summary</h2>
+          {/* Delivery Location */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <MapPin className="h-5 w-5 mr-2" />
+              Delivery Location
+            </h3>
             
-            {user && (
-              <div className="mt-6">
-                {!state.promo ? (
-                  <form onSubmit={handleApplyPromo} className="flex space-x-2">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Enter promo code"
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                    >
-                      <FiTag className="h-4 w-4 mr-1" />
-                      Apply
-                    </button>
-                  </form>
-                ) : (
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-md">
-                    <div className="flex items-center">
-                      <FiTag className="h-4 w-4 text-green-600 mr-2" />
-                      <span className="text-sm font-medium text-green-800">{state.promo.promoCode}</span>
-                    </div>
-                    <button
-                      onClick={() => removePromoCode()}
-                      className="text-sm text-green-600 hover:text-green-700 font-medium"
-                    >
-                      Remove
-                    </button>
+            <select
+              value={selectedLocation}
+              onChange={(e) => handleLocationChange(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Select delivery location</option>
+              {deliveryLocations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name} - {formatPrice(location.price)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Order Summary */}
+          {items.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+              
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between">
+                  <span>Subtotal ({items.length} items)</span>
+                  <span>{formatPrice(getTotalPrice())}</span>
+                </div>
+                
+                {appliedPromo && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({appliedPromo.code})</span>
+                    <span>-{formatPrice(getDiscountAmount())}</span>
                   </div>
                 )}
                 
-                {state.promoError && (
-                  <p className="mt-2 text-sm text-red-600">{state.promoError}</p>
-                )}
-              </div>
-            )}
-
-            <dl className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <dt className="text-sm text-gray-600">Subtotal</dt>
-                <dd className="text-sm font-medium text-gray-900">KES {cartTotal.toLocaleString()}</dd>
-              </div>
-              
-              {user && state.promo && (
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-green-600">Discount ({state.promo.promoCode})</dt>
-                  <dd className="text-sm font-medium text-green-600">-KES {state.promo.discount.toLocaleString()}</dd>
+                <div className="flex justify-between">
+                  <span>Delivery</span>
+                  <span>{deliveryCost > 0 ? formatPrice(deliveryCost) : 'Select location'}</span>
                 </div>
-              )}
-              
-              <div className="flex items-center justify-between">
-                <dt className="flex items-center text-sm text-gray-600">
-                  <FiTruck className="h-4 w-4 mr-1" />
-                  Delivery
-                </dt>
-                <dd className="text-sm font-medium text-gray-900">KES {deliveryCost.toLocaleString()}</dd>
               </div>
               
-              <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
-                <dt className="text-base font-medium text-gray-900">Total</dt>
-                <dd className="text-base font-medium text-gray-900">
-                  KES {(finalTotal + deliveryCost).toLocaleString()}
-                </dd>
+              <div className="border-t pt-4 mb-6">
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span>{formatPrice(getFinalTotal())}</span>
+                </div>
               </div>
-            </dl>
-
-            <div className="mt-6">
-              <Link
-                href="/checkout"
-                className="w-full bg-green-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center justify-center"
-              >
-                Proceed to Checkout
+              
+              <Link href="/checkout">
+                <Button size="lg" className="w-full mb-3">
+                  Proceed to Checkout
+                </Button>
+              </Link>
+              
+              <Link href="/products">
+                <Button variant="outline" className="w-full">
+                  Continue Shopping
+                </Button>
               </Link>
             </div>
-
-            <div className="mt-6 text-center">
-              <Link href="/products" className="text-sm font-medium text-green-600 hover:text-green-500">
-                Continue Shopping
-                <span aria-hidden="true"> &rarr;</span>
-              </Link>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

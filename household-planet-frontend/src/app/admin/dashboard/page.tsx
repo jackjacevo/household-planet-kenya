@@ -1,248 +1,311 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiDollarSign, FiShoppingCart, FiUsers, FiTrendingUp, FiAlertTriangle, FiPackage } from 'react-icons/fi';
+import { 
+  ShoppingCart, 
+  DollarSign, 
+  Users, 
+  Package,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Eye,
+  Calendar
+} from 'lucide-react';
+import axios from 'axios';
 
-interface DashboardData {
-  todaysSales: { revenue: number; count: number };
-  pendingOrders: number;
-  lowStockProducts: number;
-  totalCustomers: number;
-  monthlyRevenue: number;
-  totalOrders: number;
-  averageOrderValue: number;
-  conversionRate: number;
-}
-
-interface Activity {
-  type: string;
-  message: string;
-  timestamp: string;
-  amount?: number;
-  rating?: number;
-}
-
-interface Alert {
-  lowStock: Array<{ id: string; name: string; stock: number; lowStockThreshold: number }>;
-  failedPayments: number;
-  pendingReturns: number;
+interface DashboardStats {
+  overview: {
+    totalOrders: number;
+    totalRevenue: number;
+    totalCustomers: number;
+    totalProducts: number;
+    todayOrders: number;
+    todayRevenue: number;
+    pendingOrders: number;
+    lowStockProducts: number;
+  };
+  recentOrders: Array<{
+    id: number;
+    orderNumber: string;
+    total: number;
+    status: string;
+    createdAt: string;
+    user: { name: string; email: string };
+    orderItems: Array<{ product: { name: string } }>;
+  }>;
+  topProducts: Array<{
+    id: number;
+    name: string;
+    price: number;
+    totalSold: number;
+    images: string[];
+  }>;
+  customerGrowth: Array<{
+    month: string;
+    customers: number;
+  }>;
+  salesByCounty: Array<{
+    county: string;
+    revenue: number;
+    orders: number;
+  }>;
 }
 
 export default function AdminDashboard() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [alerts, setAlerts] = useState<Alert | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchActivities();
-    fetchAlerts();
+    fetchDashboardStats();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/admin/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      setDashboardData(data);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setStats(response.data);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    }
-  };
-
-  const fetchActivities = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/admin/activities', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      setActivities(data);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-    }
-  };
-
-  const fetchAlerts = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/admin/alerts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      setAlerts(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="animate-pulse">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white overflow-hidden shadow rounded-lg h-24" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
+  if (!stats) return <div>Error loading dashboard</div>;
+
+  const statCards = [
+    {
+      name: 'Total Revenue',
+      value: `KSh ${stats.overview.totalRevenue.toLocaleString()}`,
+      change: '+12.5%',
+      changeType: 'increase',
+      icon: DollarSign,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+    },
+    {
+      name: 'Total Orders',
+      value: stats.overview.totalOrders.toLocaleString(),
+      change: '+8.2%',
+      changeType: 'increase',
+      icon: ShoppingCart,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+    {
+      name: 'Total Customers',
+      value: stats.overview.totalCustomers.toLocaleString(),
+      change: '+15.3%',
+      changeType: 'increase',
+      icon: Users,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+    },
+    {
+      name: 'Products',
+      value: stats.overview.totalProducts.toLocaleString(),
+      change: '+2.1%',
+      changeType: 'increase',
+      icon: Package,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+    },
+  ];
+
+  const todayStats = [
+    {
+      name: "Today's Orders",
+      value: stats.overview.todayOrders,
+      icon: ShoppingCart,
+    },
+    {
+      name: "Today's Revenue",
+      value: `KSh ${stats.overview.todayRevenue.toLocaleString()}`,
+      icon: DollarSign,
+    },
+    {
+      name: 'Pending Orders',
+      value: stats.overview.pendingOrders,
+      icon: Calendar,
+    },
+    {
+      name: 'Low Stock Alerts',
+      value: stats.overview.lowStockProducts,
+      icon: AlertTriangle,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Welcome to Household Planet Kenya Admin Panel</p>
-        </div>
+    <div className="px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+        <p className="mt-2 text-sm text-gray-700">
+          Welcome to your admin dashboard. Here's what's happening with your store today.
+        </p>
+      </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FiDollarSign className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Sales</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  KSh {dashboardData?.todaysSales.revenue.toLocaleString() || 0}
-                </p>
-                <p className="text-sm text-gray-500">{dashboardData?.todaysSales.count || 0} orders</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FiShoppingCart className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.pendingOrders || 0}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <FiUsers className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.totalCustomers || 0}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <FiTrendingUp className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  KSh {dashboardData?.monthlyRevenue.toLocaleString() || 0}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Average Order Value</h3>
-            <p className="text-3xl font-bold text-blue-600">
-              KSh {dashboardData?.averageOrderValue.toFixed(2) || 0}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Conversion Rate</h3>
-            <p className="text-3xl font-bold text-green-600">
-              {dashboardData?.conversionRate.toFixed(1) || 0}%
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Orders</h3>
-            <p className="text-3xl font-bold text-purple-600">{dashboardData?.totalOrders || 0}</p>
-          </div>
-        </div>
-
-        {/* Alerts Section */}
-        {alerts && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center mb-4">
-                <FiAlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Low Stock Alert</h3>
-              </div>
-              <p className="text-2xl font-bold text-red-600">{alerts.lowStock.length}</p>
-              <p className="text-sm text-gray-500">Products running low</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center mb-4">
-                <FiAlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Failed Payments</h3>
-              </div>
-              <p className="text-2xl font-bold text-yellow-600">{alerts.failedPayments}</p>
-              <p className="text-sm text-gray-500">Last 24 hours</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center mb-4">
-                <FiPackage className="h-5 w-5 text-blue-500 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Pending Returns</h3>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{alerts.pendingReturns}</p>
-              <p className="text-sm text-gray-500">Awaiting review</p>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Activities */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {activities.slice(0, 10).map((activity, index) => (
-                <div key={index} className="flex items-center space-x-4">
-                  <div className={`p-2 rounded-full ${
-                    activity.type === 'order' ? 'bg-green-100' :
-                    activity.type === 'customer' ? 'bg-blue-100' : 'bg-yellow-100'
-                  }`}>
-                    {activity.type === 'order' && <FiShoppingCart className="h-4 w-4 text-green-600" />}
-                    {activity.type === 'customer' && <FiUsers className="h-4 w-4 text-blue-600" />}
-                    {activity.type === 'review' && <FiTrendingUp className="h-4 w-4 text-yellow-600" />}
+      {/* Main Stats */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        {statCards.map((item) => (
+          <div key={item.name} className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className={`p-3 rounded-md ${item.bgColor}`}>
+                    <item.icon className={`h-6 w-6 ${item.color}`} />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(activity.timestamp).toLocaleString()}
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {item.name}
+                    </dt>
+                    <dd className="flex items-baseline">
+                      <div className="text-2xl font-semibold text-gray-900">
+                        {item.value}
+                      </div>
+                      <div className={`ml-2 flex items-baseline text-sm font-semibold ${
+                        item.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {item.changeType === 'increase' ? (
+                          <TrendingUp className="self-center flex-shrink-0 h-4 w-4" />
+                        ) : (
+                          <TrendingDown className="self-center flex-shrink-0 h-4 w-4" />
+                        )}
+                        <span className="ml-1">{item.change}</span>
+                      </div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Today's Stats */}
+      <div className="bg-white shadow rounded-lg mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Today's Performance</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {todayStats.map((stat, index) => (
+            <div key={stat.name} className={`px-6 py-4 ${index < todayStats.length - 1 ? 'border-r border-gray-200' : ''}`}>
+              <div className="flex items-center">
+                <stat.icon className="h-5 w-5 text-gray-400 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-600">{stat.name}</p>
+                  <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Orders */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {stats.recentOrders.slice(0, 5).map((order) => (
+              <div key={order.id} className="px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      #{order.orderNumber}
+                    </p>
+                    <p className="text-sm text-gray-500">{order.user.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  {activity.amount && (
-                    <div className="text-sm font-medium text-green-600">
-                      KSh {activity.amount.toLocaleString()}
-                    </div>
-                  )}
-                  {activity.rating && (
-                    <div className="text-sm font-medium text-yellow-600">
-                      ⭐ {activity.rating}/5
-                    </div>
-                  )}
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      KSh {order.total.toLocaleString()}
+                    </p>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                      order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top Products */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Top Selling Products</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {stats.topProducts.map((product) => (
+              <div key={product.id} className="px-6 py-4">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 flex-shrink-0">
+                    <img
+                      className="h-10 w-10 rounded object-cover"
+                      src={product.images[0] || '/images/products/placeholder.svg'}
+                      alt={product.name}
+                    />
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                    <p className="text-sm text-gray-500">KSh {product.price.toLocaleString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {product.totalSold} sold
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sales by County */}
+      <div className="mt-8 bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Sales by County</h2>
+        </div>
+        <div className="px-6 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stats.salesByCounty.map((county) => (
+              <div key={county.county} className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-900">{county.county}</h3>
+                <p className="text-2xl font-bold text-gray-900">
+                  KSh {county.revenue.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-500">{county.orders} orders</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

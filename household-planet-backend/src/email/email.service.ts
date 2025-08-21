@@ -1,288 +1,239 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
+  constructor(private prisma: PrismaService) {}
 
-  constructor(private prisma: PrismaService) {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-  }
+  // Welcome email series
+  async sendWelcomeEmail(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
 
-  async sendEmail(to: string, subject: string, html: string, templateData?: any) {
-    try {
-      const result = await this.transporter.sendMail({
-        from: `"Household Planet Kenya" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        html,
-      });
-
-      await this.logEmail(to, subject, 'SENT', templateData?.templateName);
-      return result;
-    } catch (error) {
-      await this.logEmail(to, subject, 'FAILED', templateData?.templateName, error.message);
-      throw error;
-    }
-  }
-
-  async sendWelcomeEmail(userEmail: string, userName: string) {
     const template = await this.getTemplate('welcome');
-    const html = this.renderTemplate(template.content, {
-      userName,
-      shopUrl: process.env.BASE_URL || 'https://householdplanet.co.ke',
-    });
-
-    return this.sendEmail(userEmail, 'Welcome to Household Planet Kenya!', html, {
-      templateName: 'welcome'
-    });
+    await this.sendEmail(user.email, template.subject, this.replaceVariables(template.htmlContent, { name: user.name }));
+    
+    // Schedule follow-up emails
+    setTimeout(() => this.sendWelcomeEmail2(userId), 24 * 60 * 60 * 1000); // 1 day
+    setTimeout(() => this.sendWelcomeEmail3(userId), 3 * 24 * 60 * 60 * 1000); // 3 days
   }
 
-  async sendOrderConfirmation(userEmail: string, orderData: any) {
-    const template = await this.getTemplate('order_confirmation');
-    const html = this.renderTemplate(template.content, {
-      customerName: orderData.customerName,
-      orderNumber: orderData.orderNumber,
-      orderTotal: orderData.total,
-      orderItems: orderData.items,
-      trackingUrl: `${process.env.BASE_URL}/orders/${orderData.orderNumber}`,
-    });
-
-    return this.sendEmail(userEmail, `Order Confirmation #${orderData.orderNumber}`, html, {
-      templateName: 'order_confirmation'
-    });
+  private async sendWelcomeEmail2(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+    
+    const template = await this.getTemplate('welcome-2');
+    await this.sendEmail(user.email, template.subject, this.replaceVariables(template.htmlContent, { name: user.name }));
   }
 
-  async sendAbandonedCartEmail(userEmail: string, cartData: any, sequence: number = 1) {
-    const templates = {
-      1: 'abandoned_cart_1',
-      2: 'abandoned_cart_2', 
-      3: 'abandoned_cart_3'
-    };
-
-    const template = await this.getTemplate(templates[sequence]);
-    const html = this.renderTemplate(template.content, {
-      customerName: cartData.customerName,
-      cartItems: cartData.items,
-      cartTotal: cartData.total,
-      cartUrl: `${process.env.BASE_URL}/cart`,
-      discountCode: sequence === 3 ? 'SAVE15' : null,
-    });
-
-    const subjects = {
-      1: 'You left something in your cart',
-      2: 'Still thinking about your cart?',
-      3: 'Last chance - 15% off your cart!'
-    };
-
-    return this.sendEmail(userEmail, subjects[sequence], html, {
-      templateName: templates[sequence]
-    });
+  private async sendWelcomeEmail3(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+    
+    const template = await this.getTemplate('welcome-3');
+    await this.sendEmail(user.email, template.subject, this.replaceVariables(template.htmlContent, { name: user.name }));
   }
 
-  async sendShippingNotification(userEmail: string, orderData: any) {
-    const template = await this.getTemplate('shipping_notification');
-    const html = this.renderTemplate(template.content, {
-      customerName: orderData.customerName,
-      orderNumber: orderData.orderNumber,
-      trackingNumber: orderData.trackingNumber,
-      estimatedDelivery: orderData.estimatedDelivery,
-      trackingUrl: `${process.env.BASE_URL}/orders/${orderData.orderNumber}`,
+  // Abandoned cart recovery
+  async sendAbandonedCartEmail(userId: number) {
+    const user = await this.prisma.user.findUnique({ 
+      where: { id: userId },
+      include: { cart: { include: { product: true } } }
     });
+    
+    if (!user || user.cart.length === 0) return;
 
-    return this.sendEmail(userEmail, `Your order #${orderData.orderNumber} has shipped!`, html, {
-      templateName: 'shipping_notification'
-    });
+    const template = await this.getTemplate('abandoned-cart-1');
+    const cartItems = user.cart.map(item => `${item.product.name} (${item.quantity})`).join(', ');
+    
+    await this.sendEmail(user.email, template.subject, 
+      this.replaceVariables(template.htmlContent, { name: user.name, cartItems }));
+    
+    // Schedule follow-up emails
+    setTimeout(() => this.sendAbandonedCartEmail2(userId), 24 * 60 * 60 * 1000);
+    setTimeout(() => this.sendAbandonedCartEmail3(userId), 3 * 24 * 60 * 60 * 1000);
   }
 
-  async sendDeliveryConfirmation(userEmail: string, orderData: any) {
-    const template = await this.getTemplate('delivery_confirmation');
-    const html = this.renderTemplate(template.content, {
-      customerName: orderData.customerName,
-      orderNumber: orderData.orderNumber,
-      reviewUrl: `${process.env.BASE_URL}/orders/${orderData.orderNumber}/review`,
+  private async sendAbandonedCartEmail2(userId: number) {
+    const user = await this.prisma.user.findUnique({ 
+      where: { id: userId },
+      include: { cart: { include: { product: true } } }
     });
+    
+    if (!user || user.cart.length === 0) return;
 
-    return this.sendEmail(userEmail, `Order #${orderData.orderNumber} delivered!`, html, {
-      templateName: 'delivery_confirmation'
-    });
+    const template = await this.getTemplate('abandoned-cart-2');
+    await this.sendEmail(user.email, template.subject, 
+      this.replaceVariables(template.htmlContent, { name: user.name }));
   }
 
-  async sendReviewReminder(userEmail: string, orderData: any) {
-    const template = await this.getTemplate('review_reminder');
-    const html = this.renderTemplate(template.content, {
-      customerName: orderData.customerName,
-      orderNumber: orderData.orderNumber,
-      reviewUrl: `${process.env.BASE_URL}/orders/${orderData.orderNumber}/review`,
+  private async sendAbandonedCartEmail3(userId: number) {
+    const user = await this.prisma.user.findUnique({ 
+      where: { id: userId },
+      include: { cart: { include: { product: true } } }
     });
+    
+    if (!user || user.cart.length === 0) return;
 
-    return this.sendEmail(userEmail, 'How was your recent purchase?', html, {
-      templateName: 'review_reminder'
-    });
+    const template = await this.getTemplate('abandoned-cart-3');
+    await this.sendEmail(user.email, template.subject, 
+      this.replaceVariables(template.htmlContent, { name: user.name }));
   }
 
-  async sendBirthdayOffer(userEmail: string, userData: any) {
-    const template = await this.getTemplate('birthday_offer');
-    const html = this.renderTemplate(template.content, {
-      customerName: userData.name,
-      discountCode: 'BIRTHDAY20',
-      shopUrl: `${process.env.BASE_URL}`,
+  // Order confirmation
+  async sendOrderConfirmation(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: true, items: { include: { product: true } } }
     });
 
-    return this.sendEmail(userEmail, 'Happy Birthday! Special offer inside 🎉', html, {
-      templateName: 'birthday_offer'
-    });
+    if (!order) return;
+
+    const template = await this.getTemplate('order-confirmation');
+    const orderItems = order.items.map(item => `${item.product.name} x${item.quantity}`).join(', ');
+    
+    await this.sendEmail(order.user.email, template.subject,
+      this.replaceVariables(template.htmlContent, {
+        name: order.user.name,
+        orderNumber: order.orderNumber,
+        total: order.total.toString(),
+        items: orderItems
+      }));
   }
 
-  async sendNewsletter(userEmail: string, newsletterData: any) {
+  // Shipping notification
+  async sendShippingNotification(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: true }
+    });
+
+    if (!order) return;
+
+    const template = await this.getTemplate('shipping-notification');
+    await this.sendEmail(order.user.email, template.subject,
+      this.replaceVariables(template.htmlContent, {
+        name: order.user.name,
+        orderNumber: order.orderNumber,
+        trackingNumber: order.trackingNumber || 'N/A'
+      }));
+  }
+
+  // Delivery confirmation
+  async sendDeliveryConfirmation(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: true }
+    });
+
+    if (!order) return;
+
+    const template = await this.getTemplate('delivery-confirmation');
+    await this.sendEmail(order.user.email, template.subject,
+      this.replaceVariables(template.htmlContent, {
+        name: order.user.name,
+        orderNumber: order.orderNumber
+      }));
+
+    // Schedule review reminder
+    setTimeout(() => this.sendReviewReminder(orderId), 3 * 24 * 60 * 60 * 1000);
+  }
+
+  // Review reminder
+  async sendReviewReminder(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: true, items: { include: { product: true } } }
+    });
+
+    if (!order) return;
+
+    const template = await this.getTemplate('review-reminder');
+    const products = order.items.map(item => item.product.name).join(', ');
+    
+    await this.sendEmail(order.user.email, template.subject,
+      this.replaceVariables(template.htmlContent, {
+        name: order.user.name,
+        products
+      }));
+  }
+
+  // Birthday offer
+  async sendBirthdayOffer(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+
+    const template = await this.getTemplate('birthday-offer');
+    await this.sendEmail(user.email, template.subject,
+      this.replaceVariables(template.htmlContent, { name: user.name }));
+  }
+
+  // Newsletter
+  async sendNewsletter(userIds: number[]) {
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: userIds } }
+    });
+
     const template = await this.getTemplate('newsletter');
-    const html = this.renderTemplate(template.content, {
-      customerName: newsletterData.customerName,
-      featuredProducts: newsletterData.products,
-      promotions: newsletterData.promotions,
-      shopUrl: `${process.env.BASE_URL}`,
-    });
-
-    return this.sendEmail(userEmail, newsletterData.subject, html, {
-      templateName: 'newsletter'
-    });
-  }
-
-  @Cron('0 9 * * *') // Daily at 9 AM
-  async processAbandonedCarts() {
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    // First email after 24 hours
-    const firstReminders = await this.prisma.abandonedCart.findMany({
-      where: {
-        isRecovered: false,
-        remindersSent: 0,
-        createdAt: { lte: oneDayAgo, gte: threeDaysAgo },
-      },
-      include: { user: true },
-    });
-
-    for (const cart of firstReminders) {
-      if (cart.user?.email) {
-        await this.sendAbandonedCartEmail(cart.user.email, {
-          customerName: cart.user.name,
-          items: JSON.parse(cart.cartData || '[]'),
-          total: 0,
-        }, 1);
-
-        await this.prisma.abandonedCart.update({
-          where: { id: cart.id },
-          data: { remindersSent: 1 },
-        });
-      }
-    }
-
-    // Second email after 3 days
-    const secondReminders = await this.prisma.abandonedCart.findMany({
-      where: {
-        isRecovered: false,
-        remindersSent: 1,
-        createdAt: { lte: threeDaysAgo, gte: sevenDaysAgo },
-      },
-      include: { user: true },
-    });
-
-    for (const cart of secondReminders) {
-      if (cart.user?.email) {
-        await this.sendAbandonedCartEmail(cart.user.email, {
-          customerName: cart.user.name,
-          items: JSON.parse(cart.cartData || '[]'),
-          total: 0,
-        }, 2);
-
-        await this.prisma.abandonedCart.update({
-          where: { id: cart.id },
-          data: { remindersSent: 2 },
-        });
-      }
-    }
-
-    // Third email after 7 days
-    const thirdReminders = await this.prisma.abandonedCart.findMany({
-      where: {
-        isRecovered: false,
-        remindersSent: 2,
-        createdAt: { lte: sevenDaysAgo },
-      },
-      include: { user: true },
-    });
-
-    for (const cart of thirdReminders) {
-      if (cart.user?.email) {
-        await this.sendAbandonedCartEmail(cart.user.email, {
-          customerName: cart.user.name,
-          items: JSON.parse(cart.cartData || '[]'),
-          total: 0,
-        }, 3);
-
-        await this.prisma.abandonedCart.update({
-          where: { id: cart.id },
-          data: { remindersSent: 3 },
-        });
-      }
+    
+    for (const user of users) {
+      await this.sendEmail(user.email, template.subject,
+        this.replaceVariables(template.htmlContent, { name: user.name }));
     }
   }
 
-  @Cron('0 10 * * *') // Daily at 10 AM
-  async processBirthdayOffers() {
-    const today = new Date();
-    const todayString = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  // Customer reactivation
+  async sendReactivationEmail(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
 
-    const birthdayUsers = await this.prisma.user.findMany({
-      where: {
-        isActive: true,
-      },
+    const template = await this.getTemplate('reactivation');
+    await this.sendEmail(user.email, template.subject,
+      this.replaceVariables(template.htmlContent, { name: user.name }));
+  }
+
+  // Template management
+  async createTemplate(name: string, subject: string, htmlContent: string, variables?: any) {
+    return this.prisma.emailTemplate.create({
+      data: { name, subject, htmlContent, variables }
     });
+  }
 
-    for (const user of birthdayUsers) {
-      await this.sendBirthdayOffer(user.email, user);
-    }
+  async updateTemplate(name: string, data: any) {
+    return this.prisma.emailTemplate.update({
+      where: { name },
+      data
+    });
   }
 
   private async getTemplate(name: string) {
-    // Mock template for now
-    return {
-      name,
-      content: `<html><body><h1>{{title}}</h1><p>{{content}}</p></body></html>`
-    };
+    return this.prisma.emailTemplate.findUnique({ where: { name } });
   }
 
-  private renderTemplate(template: string, variables: Record<string, any>): string {
-    let rendered = template;
-    
+  private replaceVariables(content: string, variables: Record<string, string>) {
+    let result = content;
     Object.entries(variables).forEach(([key, value]) => {
-      const placeholder = `{{${key}}}`;
-      rendered = rendered.replace(new RegExp(placeholder, 'g'), String(value || ''));
+      result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
     });
-
-    return rendered;
+    return result;
   }
 
-  private async logEmail(to: string, subject: string, status: string, templateName?: string, error?: string) {
-    try {
-      // Log to console for now
-      this.logger.log(`Email ${status}: ${to} - ${subject}`);
-    } catch (error) {
-      this.logger.error('Failed to log email:', error);
-    }
+  private async sendEmail(to: string, subject: string, html: string) {
+    // Mock email sending - replace with actual email service
+    console.log(`Sending email to: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Content: ${html.substring(0, 100)}...`);
+    
+    // Log to database
+    await this.prisma.customerCommunication.create({
+      data: {
+        profileId: 1, // This should be dynamic based on user
+        type: 'EMAIL',
+        subject,
+        message: html,
+        channel: 'EMAIL',
+        status: 'SENT'
+      }
+    });
   }
 }

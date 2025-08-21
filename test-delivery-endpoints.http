@@ -1,0 +1,37 @@
+### Test Delivery Endpoints
+
+### Get all delivery locations
+GET http://localhost:3001/delivery/locations
+
+### Get locations by tier (Tier 1 - cheapest)
+GET http://localhost:3001/delivery/locations/tier?tier=1
+
+### Get locations by tier (Tier 2)
+GET http://localhost:3001/delivery/locations/tier?tier=2
+
+### Get locations by tier (Tier 3)
+GET http://localhost:3001/delivery/locations/tier?tier=3
+
+### Get locations by tier (Tier 4 - most expensive)
+GET http://localhost:3001/delivery/locations/tier?tier=4
+
+### Get delivery price for Nairobi CBD
+GET http://localhost:3001/delivery/price?location=Nairobi CBD
+
+### Get delivery price for Karen
+GET http://localhost:3001/delivery/price?location=Karen
+
+### Get delivery price for Ngong Town (most expensive)
+GET http://localhost:3001/delivery/price?location=Ngong Town
+
+### Get delivery estimate for Westlands
+GET http://localhost:3001/delivery/estimate?location=Westlands
+
+### Search locations by name
+GET http://localhost:3001/delivery/search?q=Nairobi
+
+### Search locations by partial name
+GET http://localhost:3001/delivery/search?q=Kah
+
+### Get tier information summary
+GET http://localhost:3001/delivery/tiers

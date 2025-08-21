@@ -1,0 +1,167 @@
+### Security Testing Endpoints
+### Test CSRF Token Generation
+GET http://localhost:3001/security/csrf-token
+Content-Type: application/json
+
+###
+
+### Test Rate Limiting (Support Ticket Creation)
+POST http://localhost:3001/support/tickets
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+  "subject": "Test Rate Limiting",
+  "message": "Testing rate limiting functionality",
+  "priority": "medium"
+}
+
+###
+
+### Test Rate Limiting (Support Messages)
+POST http://localhost:3001/support/tickets/1/messages
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+  "message": "Testing message rate limiting"
+}
+
+###
+
+### Test Security Health Check
+GET http://localhost:3001/security/health
+Content-Type: application/json
+
+###
+
+### Test Security Violation Reporting
+POST http://localhost:3001/security/report-violation
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+  "type": "xss_attempt",
+  "details": "Detected XSS attempt in user input",
+  "url": "/products/search",
+  "userAgent": "Mozilla/5.0..."
+}
+
+###
+
+### Test Input Sanitization (Should be sanitized)
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "SecurePass123!",
+  "firstName": "John<script>alert('xss')</script>",
+  "lastName": "Doe",
+  "phone": "+254712345678"
+}
+
+###
+
+### Test Strong Password Validation
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "weak",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "phone": "+254712345679"
+}
+
+###
+
+### Test Account Lockout (Multiple Failed Logins)
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "wrongpassword"
+}
+
+###
+
+### Test Secure Headers (Check Response Headers)
+GET http://localhost:3001/products
+Content-Type: application/json
+
+###
+
+### Test CORS Configuration
+OPTIONS http://localhost:3001/auth/login
+Origin: http://localhost:3000
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Content-Type
+
+###
+
+### Test JWT Token Security
+GET http://localhost:3001/auth/profile
+Authorization: Bearer invalid_token
+
+###
+
+### Test SQL Injection Prevention
+GET http://localhost:3001/products?search='; DROP TABLE products; --
+Content-Type: application/json
+
+###
+
+### Test XSS Prevention in Search
+GET http://localhost:3001/products?search=<script>alert('xss')</script>
+Content-Type: application/json
+
+###
+
+### Test File Upload Security (if implemented)
+POST http://localhost:3001/products/upload
+Content-Type: multipart/form-data
+Authorization: Bearer {{jwt_token}}
+
+###
+
+### Test Session Security
+GET http://localhost:3001/auth/session
+Content-Type: application/json
+Cookie: session=test_session_cookie
+
+###
+
+### Test Audit Logging (Check Server Logs)
+POST http://localhost:3001/orders
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+  "items": [
+    {
+      "productId": "1",
+      "quantity": 2
+    }
+  ],
+  "deliveryAddress": {
+    "street": "123 Test St",
+    "city": "Nairobi",
+    "postalCode": "00100"
+  }
+}
+
+###
+
+### Test Encryption Service (Internal - Check Logs)
+POST http://localhost:3001/users/update-sensitive-data
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+  "sensitiveData": "This should be encrypted"
+}
+
+###

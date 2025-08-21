@@ -2,100 +2,54 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { FiClock, FiX } from 'react-icons/fi';
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  images: string[];
-  viewedAt: string;
-}
+import { Clock, Heart, ShoppingCart, MessageCircle, Loader2 } from 'lucide-react';
+import { Product } from '@/types';
+import { api } from '@/lib/api';
+import { openWhatsAppForProduct } from '@/lib/whatsapp';
 
 interface RecentlyViewedProps {
-  currentProductId: string;
+  limit?: number;
 }
 
-export default function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
-  const [products, setProducts] = useState<Product[]>([]);
+
+
+export function RecentlyViewed({ limit = 4 }: RecentlyViewedProps) {
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchRecentlyViewed();
-  }, [currentProductId]);
-
-  const fetchRecentlyViewed = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+    const fetchRecentlyViewed = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/api/products/user/recently-viewed?limit=${limit}`) as any;
+        const data = response?.data || [];
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching recently viewed:', error);
+        // Always set empty array on error - no fallback demo data
+        setProducts([]);
+      } finally {
         setLoading(false);
-        return;
       }
+    };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/user/recently-viewed`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+    fetchRecentlyViewed();
+  }, [limit]);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Filter out current product
-        const filteredProducts = data.filter((product: Product) => product.id !== currentProductId);
-        setProducts(filteredProducts.slice(0, 6)); // Show max 6 items
-      }
-    } catch (error) {
-      console.error('Error fetching recently viewed products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeFromRecentlyViewed = async (productId: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/user/recently-viewed/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      setProducts(prev => prev.filter(product => product.id !== productId));
-    } catch (error) {
-      console.error('Error removing from recently viewed:', error);
-    }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const viewed = new Date(dateString);
-    const diffInHours = Math.floor((now.getTime() - viewed.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    return viewed.toLocaleDateString();
+  const handleWhatsAppOrder = (product: any) => {
+    openWhatsAppForProduct(product);
   };
 
   if (loading) {
     return (
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recently Viewed</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm p-3 animate-pulse">
-              <div className="aspect-square bg-gray-200 rounded-lg mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded mb-1"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-            </div>
-          ))}
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+            <span className="ml-2 text-gray-600">Loading recently viewed...</span>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -104,52 +58,58 @@ export default function RecentlyViewed({ currentProductId }: RecentlyViewedProps
   }
 
   return (
-    <div className="mb-12">
-      <div className="flex items-center gap-2 mb-6">
-        <FiClock className="text-gray-600" size={24} />
-        <h2 className="text-2xl font-bold text-gray-900">Recently Viewed</h2>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-lg transition-shadow relative">
-            <button
-              onClick={() => removeFromRecentlyViewed(product.id)}
-              className="absolute top-2 right-2 z-10 p-1 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <FiX size={14} className="text-gray-600" />
-            </button>
-            
-            <div className="relative aspect-square">
-              <Link href={`/products/${product.slug}`}>
-                <Image
-                  src={product.images[0] || '/placeholder-product.jpg'}
-                  alt={product.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </Link>
-            </div>
-            
-            <div className="p-3">
-              <Link href={`/products/${product.slug}`}>
-                <h3 className="text-sm font-medium text-gray-900 mb-1 hover:text-blue-600 transition-colors line-clamp-2">
+    <section className="py-12 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center">
+            <Clock className="h-6 w-6 text-green-600 mr-3" />
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Recently Viewed</h2>
+          </div>
+          <Link href="/products" className="text-green-600 hover:text-green-800 font-medium">
+            View All
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 product-card transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+              <div className="relative">
+                <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+                <div className="absolute top-2 right-2">
+                  <button className="bg-white rounded-full p-2 shadow hover:bg-green-100 text-gray-600 hover:text-green-600">
+                    <Heart className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                  <span className="text-xs text-white">Recently Viewed</span>
+                </div>
+              </div>
+              <div className="p-4">
+                <Link href={`/products/${product.id}`} className="text-sm font-medium text-gray-800 hover:text-green-600 line-clamp-2">
                   {product.name}
-                </h3>
-              </Link>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-900">
-                  KSh {product.price.toLocaleString()}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {formatTimeAgo(product.viewedAt)}
-                </span>
+                </Link>
+                <div className="mt-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-green-600 font-bold">Ksh {product.price.toLocaleString()}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleWhatsAppOrder(product)}
+                      className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition"
+                      title="Order via WhatsApp"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
+                    <button className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition">
+                      <ShoppingCart className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

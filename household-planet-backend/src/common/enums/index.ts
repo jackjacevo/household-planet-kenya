@@ -1,2 +1,37 @@
-export { UserRole } from './user-role.enum';
-export { AddressType } from './address-type.enum';
+export enum Role {
+  GUEST = 'GUEST',
+  CUSTOMER = 'CUSTOMER',
+  STAFF = 'STAFF',
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN'
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
+}
+
+export enum PaymentMethod {
+  MPESA = 'MPESA',
+  CASH_ON_DELIVERY = 'CASH_ON_DELIVERY',
+  BANK_TRANSFER = 'BANK_TRANSFER'
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED'
+}
+
+export enum PaymentTransactionStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED'
+}

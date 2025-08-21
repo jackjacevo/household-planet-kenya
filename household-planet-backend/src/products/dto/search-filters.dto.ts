@@ -1,14 +1,20 @@
-import { IsOptional, IsString, IsNumber, IsArray, IsBoolean } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, IsArray, IsBoolean, IsIn } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class SearchFiltersDto {
   @IsOptional()
   @IsString()
-  q?: string;
+  query?: string;
 
   @IsOptional()
-  @IsString()
-  categoryId?: string;
+  @IsArray()
+  @Type(() => Number)
+  categoryIds?: number[];
+
+  @IsOptional()
+  @IsArray()
+  @Type(() => Number)
+  brandIds?: number[];
 
   @IsOptional()
   @Transform(({ value }) => parseFloat(value))
@@ -21,19 +27,9 @@ export class SearchFiltersDto {
   maxPrice?: number;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  colors?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  sizes?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  materials?: string[];
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
+  rating?: number;
 
   @IsOptional()
   @Transform(({ value }) => value === 'true')
@@ -41,20 +37,21 @@ export class SearchFiltersDto {
   inStock?: boolean;
 
   @IsOptional()
-  @IsString()
-  sortBy?: 'price' | 'rating' | 'newest' | 'popular';
+  attributes?: any;
 
   @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
+  @IsIn(['name', 'price', 'createdAt', 'totalSales', 'averageRating'])
+  sortBy?: string = 'createdAt';
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @Transform(({ value }) => parseInt(value) || 1)
   @IsNumber()
-  page?: number = 1;
+  page: number = 1;
 
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => parseInt(value) || 20)
   @IsNumber()
-  limit?: number = 10;
+  limit: number = 20;
 }

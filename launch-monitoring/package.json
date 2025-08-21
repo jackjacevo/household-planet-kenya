@@ -1,0 +1,20 @@
+{
+  "name": "household-planet-launch-monitoring",
+  "version": "1.0.0",
+  "description": "Launch monitoring and verification system for Household Planet Kenya",
+  "main": "launch-runner.js",
+  "scripts": {
+    "verify": "node launch-runner.js verify",
+    "launch": "node launch-runner.js launch",
+    "monitor": "node launch-runner.js monitor",
+    "full-launch": "node launch-runner.js full",
+    "dashboard": "node launch-dashboard.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "express": "^4.18.0"
+  },
+  "bin": {
+    "launch-runner": "./launch-runner.js"
+  }
+}

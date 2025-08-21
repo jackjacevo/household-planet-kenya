@@ -1,73 +1,57 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CartService } from './cart.service';
-import { AddToCartDto } from './dto/add-to-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
-import { ApplyPromoDto } from './dto/apply-promo.dto';
-import { SaveForLaterDto } from './dto/save-for-later.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AddToCartDto, UpdateCartDto } from './dto/cart.dto';
 
 @Controller('cart')
-@UseGuards(JwtAuthGuard)
 export class CartController {
   constructor(private cartService: CartService) {}
 
-  @Post()
-  addToCart(@CurrentUser('id') userId: string, @Body() addToCartDto: AddToCartDto) {
-    return this.cartService.addToCart(userId, addToCartDto);
-  }
-
   @Get()
-  getCart(@CurrentUser('id') userId: string, @Query('promoCode') promoCode?: string) {
-    return this.cartService.getCartWithPromo(userId, promoCode);
+  @UseGuards(AuthGuard('jwt'))
+  getCart(@Request() req) {
+    return this.cartService.getCart(req.user.id);
   }
 
-  @Put(':itemId')
-  updateCartItem(
-    @CurrentUser('id') userId: string,
-    @Param('itemId') itemId: string,
-    @Body() updateCartDto: UpdateCartDto
-  ) {
-    return this.cartService.updateCartItem(userId, itemId, updateCartDto);
+  @Get('summary')
+  @UseGuards(AuthGuard('jwt'))
+  getCartSummary(@Request() req) {
+    return this.cartService.getCartSummary(req.user.id);
   }
 
-  @Delete(':itemId')
-  removeFromCart(@CurrentUser('id') userId: string, @Param('itemId') itemId: string) {
-    return this.cartService.removeFromCart(userId, itemId);
+  @Post()
+  @UseGuards(AuthGuard('jwt'))
+  addToCart(@Request() req, @Body() addToCartDto: AddToCartDto) {
+    return this.cartService.addToCart(req.user.id, addToCartDto);
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard('jwt'))
+  updateCart(@Request() req, @Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
+    return this.cartService.updateCart(req.user.id, +id, updateCartDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  removeFromCart(@Request() req, @Param('id') id: string) {
+    return this.cartService.removeFromCart(req.user.id, +id);
   }
 
   @Delete()
-  clearCart(@CurrentUser('id') userId: string) {
-    return this.cartService.clearCart(userId);
+  @UseGuards(AuthGuard('jwt'))
+  clearCart(@Request() req) {
+    return this.cartService.clearCart(req.user.id);
   }
 
-  @Post(':itemId/wishlist')
-  moveToWishlist(@CurrentUser('id') userId: string, @Param('itemId') itemId: string) {
-    return this.cartService.moveToWishlist(userId, itemId);
+  @Post('save-for-later/:id')
+  @UseGuards(AuthGuard('jwt'))
+  saveForLater(@Request() req, @Param('id') id: string) {
+    return this.cartService.saveForLater(req.user.id, +id);
   }
 
-  @Post('save-for-later')
-  saveForLater(@CurrentUser('id') userId: string, @Body() saveForLaterDto: SaveForLaterDto) {
-    return this.cartService.saveForLater(userId, saveForLaterDto);
-  }
-
-  @Get('saved-items')
-  getSavedForLater(@CurrentUser('id') userId: string) {
-    return this.cartService.getSavedForLater(userId);
-  }
-
-  @Post('saved-items/:savedItemId/move-to-cart')
-  moveBackToCart(@CurrentUser('id') userId: string, @Param('savedItemId') savedItemId: string) {
-    return this.cartService.moveBackToCart(userId, savedItemId);
-  }
-
-  @Delete('saved-items/:savedItemId')
-  removeSavedItem(@CurrentUser('id') userId: string, @Param('savedItemId') savedItemId: string) {
-    return this.cartService.removeSavedItem(userId, savedItemId);
-  }
-
-  @Post('apply-promo')
-  applyPromoCode(@CurrentUser('id') userId: string, @Body() applyPromoDto: ApplyPromoDto) {
-    return this.cartService.applyPromoCode(userId, applyPromoDto);
+  @Post('validate')
+  @UseGuards(AuthGuard('jwt'))
+  validateCart(@Request() req) {
+    return this.cartService.validateCartForCheckout(req.user.id);
   }
 }

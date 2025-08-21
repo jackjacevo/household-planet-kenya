@@ -1,40 +1,45 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { FaChevronRight, FaHome } from 'react-icons/fa';
-import SchemaMarkup from './SchemaMarkup';
-import { generateBreadcrumbSchema } from '@/lib/seo';
+import Link from 'next/link'
+import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline'
+import { StructuredData } from './StructuredData'
+import { generateBreadcrumbSchema } from '@/lib/seo'
 
 interface BreadcrumbItem {
-  name: string;
-  url: string;
+  name: string
+  url: string
 }
 
 interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
+  items: BreadcrumbItem[]
+  className?: string
 }
 
-export default function Breadcrumbs({ items }: BreadcrumbsProps) {
-  const breadcrumbItems = [{ name: 'Home', url: '/' }, ...items];
-  const schema = generateBreadcrumbSchema(breadcrumbItems);
+export function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
+  const allItems = [{ name: 'Home', url: '/' }, ...items]
+  const schema = generateBreadcrumbSchema(allItems)
 
   return (
     <>
-      <SchemaMarkup schema={schema} />
-      <nav aria-label="Breadcrumb" className="py-4">
-        <ol className="flex items-center space-x-2 text-sm text-gray-600">
-          {breadcrumbItems.map((item, index) => (
-            <li key={index} className="flex items-center">
-              {index > 0 && <FaChevronRight className="mx-2 text-gray-400" />}
-              {index === 0 ? (
-                <Link href={item.url} className="flex items-center hover:text-blue-600">
-                  <FaHome className="mr-1" />
+      <StructuredData data={schema} />
+      <nav className={`flex items-center space-x-2 text-sm ${className}`} aria-label="Breadcrumb">
+        <ol className="flex items-center space-x-2">
+          {allItems.map((item, index) => (
+            <li key={item.url} className="flex items-center">
+              {index > 0 && (
+                <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />
+              )}
+              {index === allItems.length - 1 ? (
+                <span className="text-gray-600 font-medium flex items-center">
+                  {index === 0 && <HomeIcon className="h-4 w-4 mr-1" />}
                   {item.name}
-                </Link>
-              ) : index === breadcrumbItems.length - 1 ? (
-                <span className="text-gray-900 font-medium">{item.name}</span>
+                </span>
               ) : (
-                <Link href={item.url} className="hover:text-blue-600">
+                <Link
+                  href={item.url}
+                  className="text-orange-600 hover:text-orange-700 transition-colors flex items-center"
+                >
+                  {index === 0 && <HomeIcon className="h-4 w-4 mr-1" />}
                   {item.name}
                 </Link>
               )}
@@ -43,5 +48,5 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
         </ol>
       </nav>
     </>
-  );
+  )
 }

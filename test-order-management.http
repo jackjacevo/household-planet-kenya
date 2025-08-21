@@ -1,0 +1,401 @@
+### Order Management API Testing
+### Base URL and Authentication
+@baseUrl = http://localhost:3001
+@adminToken = your-admin-jwt-token-here
+@staffToken = your-staff-jwt-token-here
+@customerToken = your-customer-jwt-token-here
+
+### 1. Get all orders with filtering and pagination
+GET {{baseUrl}}/orders?status=PENDING&page=1&limit=10&customerEmail=test@example.com
+Authorization: Bearer {{adminToken}}
+
+### 2. Get order statistics
+GET {{baseUrl}}/orders/admin/stats
+Authorization: Bearer {{adminToken}}
+
+### 3. Get order analytics
+GET {{baseUrl}}/orders/admin/analytics?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{adminToken}}
+
+### 4. Get sales report
+GET {{baseUrl}}/orders/admin/sales-report?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{adminToken}}
+
+### 5. Get specific order details
+GET {{baseUrl}}/orders/1
+Authorization: Bearer {{adminToken}}
+
+### 6. Update order status
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED",
+  "notes": "Payment verified and order confirmed",
+  "trackingNumber": "HP123456789"
+}
+
+### 7. Bulk update order status
+PUT {{baseUrl}}/orders/bulk/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "orderIds": [1, 2, 3],
+  "status": "PROCESSING",
+  "notes": "Bulk processing started for selected orders"
+}
+
+### 8. Add order note
+POST {{baseUrl}}/orders/1/notes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "note": "Customer called to confirm delivery address. Updated to new location.",
+  "isInternal": true
+}
+
+### 9. Add customer-visible note
+POST {{baseUrl}}/orders/1/notes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "note": "Your order is being prepared with extra care. Expected to ship tomorrow.",
+  "isInternal": false
+}
+
+### 10. Get order notes
+GET {{baseUrl}}/orders/1/notes
+Authorization: Bearer {{adminToken}}
+
+### 11. Send customer email - Order confirmation
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "order_confirmation"
+}
+
+### 12. Send customer email - Shipping notification
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "shipping_notification"
+}
+
+### 13. Send customer email - Delivery confirmation
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "delivery_confirmation"
+}
+
+### 14. Send custom email to customer
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "custom",
+  "subject": "Special Update on Your Order",
+  "customMessage": "We wanted to personally let you know that your order is receiving special attention and will be delivered with premium packaging."
+}
+
+### 15. Generate shipping label
+POST {{baseUrl}}/orders/1/shipping-label
+Authorization: Bearer {{adminToken}}
+
+### 16. Create new order (customer)
+POST {{baseUrl}}/orders
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "variantId": 1,
+      "quantity": 2,
+      "price": 1500
+    },
+    {
+      "productId": 2,
+      "quantity": 1,
+      "price": 2500
+    }
+  ],
+  "shippingAddress": {
+    "fullName": "John Doe",
+    "phone": "+254712345678",
+    "street": "123 Main Street",
+    "town": "Nairobi",
+    "county": "Nairobi"
+  },
+  "deliveryLocation": "Nairobi CBD",
+  "paymentMethod": "MPESA"
+}
+
+### 17. Get customer's orders
+GET {{baseUrl}}/orders/my-orders
+Authorization: Bearer {{customerToken}}
+
+### 18. Track order by order number
+GET {{baseUrl}}/orders/track/HP-1704067200000
+Authorization: Bearer {{customerToken}}
+
+### 19. Create return request
+POST {{baseUrl}}/orders/returns
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "orderId": 1,
+  "itemIds": [1, 2],
+  "reason": "Product damaged during shipping",
+  "description": "The items arrived with visible damage to the packaging and the products inside were also affected."
+}
+
+### 20. Get inventory report
+GET {{baseUrl}}/orders/admin/inventory-report
+Authorization: Bearer {{adminToken}}
+
+### 21. Generate invoice for order
+GET {{baseUrl}}/orders/1/invoice?preview=true
+Authorization: Bearer {{customerToken}}
+
+### 22. Generate bulk invoices
+POST {{baseUrl}}/orders/invoices/bulk
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "orderIds": ["1", "2", "3"]
+}
+
+### 23. Test order filtering by date range
+GET {{baseUrl}}/orders?startDate=2024-01-01&endDate=2024-01-31&status=DELIVERED
+Authorization: Bearer {{adminToken}}
+
+### 24. Test order search by order number
+GET {{baseUrl}}/orders?orderNumber=HP-1704067200000
+Authorization: Bearer {{adminToken}}
+
+### 25. Test order search by customer email
+GET {{baseUrl}}/orders?customerEmail=customer@example.com
+Authorization: Bearer {{adminToken}}
+
+### 26. Update order with tracking number only
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "SHIPPED",
+  "trackingNumber": "HP987654321",
+  "notes": "Order shipped with express delivery"
+}
+
+### 27. Test pagination
+GET {{baseUrl}}/orders?page=2&limit=5
+Authorization: Bearer {{adminToken}}
+
+### 28. Test staff access (should work)
+GET {{baseUrl}}/orders
+Authorization: Bearer {{staffToken}}
+
+### 29. Test customer access to admin endpoint (should fail)
+GET {{baseUrl}}/orders
+Authorization: Bearer {{customerToken}}
+
+### 30. Test unauthorized access (should fail)
+GET {{baseUrl}}/orders
+
+### Error Testing
+
+### 31. Test invalid order ID
+GET {{baseUrl}}/orders/99999
+Authorization: Bearer {{adminToken}}
+
+### 32. Test invalid status update
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "INVALID_STATUS"
+}
+
+### 33. Test bulk update with invalid order IDs
+PUT {{baseUrl}}/orders/bulk/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "orderIds": [99999, 99998],
+  "status": "PROCESSING"
+}
+
+### 34. Test empty note addition
+POST {{baseUrl}}/orders/1/notes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "note": "",
+  "isInternal": true
+}
+
+### 35. Test invalid email template
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "invalid_template"
+}
+
+### Performance Testing
+
+### 36. Test large page size
+GET {{baseUrl}}/orders?limit=100
+Authorization: Bearer {{adminToken}}
+
+### 37. Test complex filtering
+GET {{baseUrl}}/orders?status=PENDING&startDate=2024-01-01&endDate=2024-12-31&customerEmail=test&page=1&limit=50
+Authorization: Bearer {{adminToken}}
+
+### Integration Testing
+
+### 38. Complete order workflow test
+# Step 1: Create order
+POST {{baseUrl}}/orders
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 1,
+      "price": 1000
+    }
+  ],
+  "shippingAddress": {
+    "fullName": "Test Customer",
+    "phone": "+254700000000",
+    "street": "Test Street",
+    "town": "Test Town",
+    "county": "Test County"
+  },
+  "paymentMethod": "MPESA"
+}
+
+### 39. Step 2: Confirm order (use order ID from step 38)
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED",
+  "notes": "Payment verified"
+}
+
+### 40. Step 3: Add processing note
+POST {{baseUrl}}/orders/1/notes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "note": "Order moved to processing queue",
+  "isInternal": true
+}
+
+### 41. Step 4: Update to processing
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "PROCESSING",
+  "notes": "Order being prepared for shipment"
+}
+
+### 42. Step 5: Generate shipping label and ship
+POST {{baseUrl}}/orders/1/shipping-label
+Authorization: Bearer {{adminToken}}
+
+### 43. Step 6: Update to shipped
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "SHIPPED",
+  "notes": "Order dispatched for delivery"
+}
+
+### 44. Step 7: Send shipping notification
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "shipping_notification"
+}
+
+### 45. Step 8: Mark as delivered
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "DELIVERED",
+  "notes": "Order successfully delivered to customer"
+}
+
+### 46. Step 9: Send delivery confirmation
+POST {{baseUrl}}/orders/1/email
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "template": "delivery_confirmation"
+}
+
+### 47. Step 10: Customer tracks order
+GET {{baseUrl}}/orders/track/HP-1704067200000
+
+### Load Testing Scenarios
+
+### 48. Concurrent order creation (simulate multiple customers)
+POST {{baseUrl}}/orders
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "items": [{"productId": 1, "quantity": 1, "price": 1000}],
+  "shippingAddress": {"fullName": "Load Test", "phone": "+254700000000", "street": "Test", "town": "Test", "county": "Test"},
+  "paymentMethod": "MPESA"
+}
+
+### 49. Concurrent status updates (simulate multiple staff)
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{staffToken}}
+Content-Type: application/json
+
+{
+  "status": "PROCESSING",
+  "notes": "Concurrent update test"
+}
+
+### 50. High-frequency order queries
+GET {{baseUrl}}/orders?page=1&limit=20
+Authorization: Bearer {{adminToken}}

@@ -1,395 +1,225 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AddToCartDto } from './dto/add-to-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
-import { ApplyPromoDto } from './dto/apply-promo.dto';
-import { SaveForLaterDto } from './dto/save-for-later.dto';
-import { AbandonedCartService } from '../whatsapp/abandoned-cart.service';
-import { ensureStringUserId } from '../common/utils/type-conversion.util';
+import { AddToCartDto, UpdateCartDto } from './dto/cart.dto';
 
 @Injectable()
 export class CartService {
-  constructor(
-    private prisma: PrismaService,
-    private abandonedCartService: AbandonedCartService
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async addToCart(userId: string | number, addToCartDto: AddToCartDto) {
-    const userIdStr = ensureStringUserId(userId);
-    const { productId, variantId, quantity } = addToCartDto;
+  async getCart(userId: number) {
+    const cartItems = await this.prisma.cart.findMany({
+      where: { userId },
+      include: {
+        product: {
+          include: { category: true, brand: true }
+        },
+        variant: true
+      }
+    });
 
-    // Verify product exists
-    const product = await this.prisma.product.findUnique({
-      where: { id: productId },
+    const subtotal = cartItems.reduce((sum, item) => {
+      const price = item.variant ? item.variant.price : item.product.price;
+      return sum + (Number(price) * item.quantity);
+    }, 0);
+
+    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    return {
+      items: cartItems.map(item => ({
+        ...item,
+        product: {
+          ...item.product,
+          images: JSON.parse(item.product.images),
+          tags: JSON.parse(item.product.tags)
+        },
+        itemTotal: Number(item.variant ? item.variant.price : item.product.price) * item.quantity
+      })),
+      summary: {
+        subtotal,
+        totalItems,
+        estimatedShipping: subtotal > 5000 ? 0 : 200, // Free shipping over 5000
+        total: subtotal + (subtotal > 5000 ? 0 : 200)
+      }
+    };
+  }
+
+  async addToCart(userId: number, dto: AddToCartDto) {
+    // Validate product exists and is active
+    const product = await this.prisma.product.findFirst({
+      where: { id: dto.productId, isActive: true },
       include: { variants: true }
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Product not found or inactive');
     }
 
-    // Check stock
-    let availableStock = product.stock;
-    if (variantId) {
-      const variant = product.variants.find(v => v.id === variantId);
+    // Validate variant if specified
+    if (dto.variantId) {
+      const variant = product.variants.find(v => v.id === dto.variantId);
       if (!variant) {
         throw new NotFoundException('Product variant not found');
       }
-      availableStock = variant.stock;
+      if (variant.stock < dto.quantity) {
+        throw new BadRequestException(`Only ${variant.stock} items available in stock`);
+      }
     }
 
-    if (quantity > availableStock) {
-      throw new BadRequestException('Insufficient stock');
-    }
-
-    // Check if item already in cart
-    const existingItem = await this.prisma.cart.findUnique({
+    const existing = await this.prisma.cart.findUnique({
       where: {
         userId_productId_variantId: {
-          userId: userIdStr,
-          productId,
-          variantId: variantId || null
+          userId,
+          productId: dto.productId,
+          variantId: dto.variantId || null
         }
       }
     });
 
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      if (newQuantity > availableStock) {
-        throw new BadRequestException('Total quantity exceeds available stock');
+    if (existing) {
+      const newQuantity = existing.quantity + dto.quantity;
+      
+      // Check stock for updated quantity
+      if (dto.variantId) {
+        const variant = product.variants.find(v => v.id === dto.variantId);
+        if (variant && variant.stock < newQuantity) {
+          throw new BadRequestException(`Only ${variant.stock} items available in stock`);
+        }
       }
 
-      const updatedItem = await this.prisma.cart.update({
-        where: { id: existingItem.id },
+      return this.prisma.cart.update({
+        where: { id: existing.id },
         data: { quantity: newQuantity },
-        include: {
-          product: true,
-          variant: true
-        }
+        include: { product: true, variant: true }
       });
-
-      // Track for abandoned cart
-      await this.trackAbandonedCart(userIdStr);
-
-      return updatedItem;
     }
 
-    const cartItem = await this.prisma.cart.create({
-      data: {
-        userId: userIdStr,
-        productId,
-        variantId,
-        quantity
-      },
-      include: {
-        product: true,
-        variant: true
+    return this.prisma.cart.create({
+      data: { userId, ...dto },
+      include: { product: true, variant: true }
+    });
+  }
+
+  async updateCart(userId: number, cartId: number, dto: UpdateCartDto) {
+    const cart = await this.prisma.cart.findFirst({
+      where: { id: cartId, userId },
+      include: { product: true, variant: true }
+    });
+
+    if (!cart) throw new NotFoundException('Cart item not found');
+
+    // Validate stock if updating quantity
+    if (dto.quantity > 0 && cart.variant) {
+      if (cart.variant.stock < dto.quantity) {
+        throw new BadRequestException(`Only ${cart.variant.stock} items available in stock`);
       }
-    });
-
-    // Track for abandoned cart
-    await this.trackAbandonedCart(userIdStr);
-
-    return cartItem;
-  }
-
-  async getCart(userId: string | number) {
-    const userIdStr = ensureStringUserId(userId);
-    const cartItems = await this.prisma.cart.findMany({
-      where: { userId: userIdStr },
-      include: {
-        product: {
-          include: {
-            category: true
-          }
-        },
-        variant: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const total = cartItems.reduce((sum, item) => {
-      const price = item.variant?.price || item.product.price;
-      return sum + (price * item.quantity);
-    }, 0);
-
-    return {
-      items: cartItems,
-      total,
-      itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0)
-    };
-  }
-
-  async updateCartItem(userId: string | number, itemId: string, updateCartDto: UpdateCartDto) {
-    const userIdStr = ensureStringUserId(userId);
-    const { quantity } = updateCartDto;
-
-    const cartItem = await this.prisma.cart.findFirst({
-      where: { id: itemId, userId: userIdStr },
-      include: {
-        product: { include: { variants: true } },
-        variant: true
-      }
-    });
-
-    if (!cartItem) {
-      throw new NotFoundException('Cart item not found');
     }
 
-    if (quantity === 0) {
-      return this.prisma.cart.delete({ where: { id: itemId } });
+    if (dto.quantity <= 0) {
+      return this.prisma.cart.delete({ where: { id: cartId } });
     }
 
-    // Check stock
-    let availableStock = cartItem.product.stock;
-    if (cartItem.variantId) {
-      availableStock = cartItem.variant.stock;
-    }
-
-    if (quantity > availableStock) {
-      throw new BadRequestException('Insufficient stock');
-    }
-
-    const updatedItem = await this.prisma.cart.update({
-      where: { id: itemId },
-      data: { quantity },
-      include: {
-        product: true,
-        variant: true
-      }
-    });
-
-    // Track for abandoned cart
-    await this.trackAbandonedCart(userIdStr);
-
-    return updatedItem;
-  }
-
-  async removeFromCart(userId: string | number, itemId: string) {
-    const userIdStr = ensureStringUserId(userId);
-    const cartItem = await this.prisma.cart.findFirst({
-      where: { id: itemId, userId: userIdStr }
-    });
-
-    if (!cartItem) {
-      throw new NotFoundException('Cart item not found');
-    }
-
-    return this.prisma.cart.delete({ where: { id: itemId } });
-  }
-
-  async clearCart(userId: string | number) {
-    const userIdStr = ensureStringUserId(userId);
-    return this.prisma.cart.deleteMany({
-      where: { userId: userIdStr }
+    return this.prisma.cart.update({
+      where: { id: cartId },
+      data: { quantity: dto.quantity },
+      include: { product: true, variant: true }
     });
   }
 
-  async moveToWishlist(userId: string | number, itemId: string) {
-    const userIdStr = ensureStringUserId(userId);
-    const cartItem = await this.prisma.cart.findFirst({
-      where: { id: itemId, userId: userIdStr }
+  async removeFromCart(userId: number, cartId: number) {
+    const cart = await this.prisma.cart.findFirst({
+      where: { id: cartId, userId }
     });
 
-    if (!cartItem) {
-      throw new NotFoundException('Cart item not found');
-    }
+    if (!cart) throw new NotFoundException('Cart item not found');
 
-    // Add to wishlist if not already there
+    return this.prisma.cart.delete({ where: { id: cartId } });
+  }
+
+  async clearCart(userId: number) {
+    return this.prisma.cart.deleteMany({ where: { userId } });
+  }
+
+  async saveForLater(userId: number, cartId: number) {
+    const cart = await this.prisma.cart.findFirst({
+      where: { id: cartId, userId },
+      include: { product: true }
+    });
+
+    if (!cart) throw new NotFoundException('Cart item not found');
+
     await this.prisma.wishlist.upsert({
       where: {
         userId_productId: {
-          userId: userIdStr,
-          productId: cartItem.productId
+          userId,
+          productId: cart.productId
         }
       },
       create: {
-        userId: userIdStr,
-        productId: cartItem.productId
+        userId,
+        productId: cart.productId
       },
       update: {}
     });
 
-    // Remove from cart
-    await this.prisma.cart.delete({ where: { id: itemId } });
-
-    return { message: 'Item moved to wishlist' };
+    return this.prisma.cart.delete({ where: { id: cartId } });
   }
 
-  async saveForLater(userId: string, saveForLaterDto: SaveForLaterDto) {
-    const { cartItemId } = saveForLaterDto;
-    
-    const cartItem = await this.prisma.cart.findFirst({
-      where: { id: cartItemId, userId },
-      include: { product: true, variant: true }
-    });
-
-    if (!cartItem) {
-      throw new NotFoundException('Cart item not found');
-    }
-
-    // Create saved item
-    const savedItem = await this.prisma.savedForLater.create({
-      data: {
-        userId,
-        productId: cartItem.productId,
-        variantId: cartItem.variantId,
-        quantity: cartItem.quantity
-      },
+  async getCartSummary(userId: number) {
+    const cartItems = await this.prisma.cart.findMany({
+      where: { userId },
       include: {
         product: true,
         variant: true
       }
     });
 
-    // Remove from cart
-    await this.prisma.cart.delete({ where: { id: cartItemId } });
+    const subtotal = cartItems.reduce((sum, item) => {
+      const price = item.variant ? item.variant.price : item.product.price;
+      return sum + (Number(price) * item.quantity);
+    }, 0);
 
-    return savedItem;
-  }
-
-  async getSavedForLater(userId: string) {
-    return this.prisma.savedForLater.findMany({
-      where: { userId },
-      include: {
-        product: {
-          include: { category: true }
-        },
-        variant: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-  }
-
-  async moveBackToCart(userId: string, savedItemId: string) {
-    const savedItem = await this.prisma.savedForLater.findFirst({
-      where: { id: savedItemId, userId }
-    });
-
-    if (!savedItem) {
-      throw new NotFoundException('Saved item not found');
-    }
-
-    // Add back to cart
-    const cartItem = await this.addToCart(userId, {
-      productId: savedItem.productId,
-      variantId: savedItem.variantId,
-      quantity: savedItem.quantity
-    });
-
-    // Remove from saved items
-    await this.prisma.savedForLater.delete({ where: { id: savedItemId } });
-
-    return cartItem;
-  }
-
-  async applyPromoCode(userId: string, applyPromoDto: ApplyPromoDto) {
-    const { promoCode } = applyPromoDto;
-    
-    // Find promo code
-    const promo = await this.prisma.promoCode.findUnique({
-      where: { code: promoCode }
-    });
-
-    if (!promo) {
-      throw new NotFoundException('Invalid promo code');
-    }
-
-    if (!promo.isActive || promo.expiresAt < new Date()) {
-      throw new BadRequestException('Promo code has expired');
-    }
-
-    if (promo.usageLimit && promo.usedCount >= promo.usageLimit) {
-      throw new BadRequestException('Promo code usage limit reached');
-    }
-
-    // Get cart total
-    const cart = await this.getCart(userId);
-    
-    if (promo.minimumAmount && cart.total < promo.minimumAmount) {
-      throw new BadRequestException(`Minimum order amount of KES ${promo.minimumAmount} required`);
-    }
-
-    // Calculate discount
-    let discount = 0;
-    if (promo.discountType === 'PERCENTAGE') {
-      discount = (cart.total * promo.discountValue) / 100;
-      if (promo.maxDiscountAmount) {
-        discount = Math.min(discount, promo.maxDiscountAmount);
-      }
-    } else {
-      discount = promo.discountValue;
-    }
-
-    const finalTotal = Math.max(0, cart.total - discount);
+    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const shippingCost = subtotal > 5000 ? 0 : 200;
 
     return {
-      promoCode: promo.code,
-      discountType: promo.discountType,
-      discountValue: promo.discountValue,
-      discount,
-      originalTotal: cart.total,
-      finalTotal,
-      savings: discount
+      subtotal,
+      totalItems,
+      shippingCost,
+      total: subtotal + shippingCost,
+      freeShippingThreshold: 5000,
+      freeShippingEligible: subtotal >= 5000
     };
   }
 
-  async getCartWithPromo(userId: string, promoCode?: string) {
-    const cart = await this.getCart(userId);
-    
-    if (!promoCode) {
-      return cart;
-    }
-
-    try {
-      const promoResult = await this.applyPromoCode(userId, { promoCode });
-      return {
-        ...cart,
-        promo: promoResult,
-        finalTotal: promoResult.finalTotal
-      };
-    } catch (error) {
-      return {
-        ...cart,
-        promoError: error.message
-      };
-    }
-  }
-
-  async removeSavedItem(userId: string, savedItemId: string) {
-    const savedItem = await this.prisma.savedForLater.findFirst({
-      where: { id: savedItemId, userId }
+  async validateCartForCheckout(userId: number) {
+    const cartItems = await this.prisma.cart.findMany({
+      where: { userId },
+      include: {
+        product: true,
+        variant: true
+      }
     });
 
-    if (!savedItem) {
-      throw new NotFoundException('Saved item not found');
+    if (cartItems.length === 0) {
+      throw new BadRequestException('Cart is empty');
     }
 
-    return this.prisma.savedForLater.delete({ where: { id: savedItemId } });
-  }
-
-  private async trackAbandonedCart(userId: string) {
-    try {
-      const cart = await this.getCart(userId);
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      
-      if (cart.items.length > 0 && user?.phone) {
-        await this.abandonedCartService.trackAbandonedCart(
-          userId,
-          undefined,
-          user.phone,
-          cart.items.map(item => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity,
-            price: item.variant?.price || item.product.price,
-            name: item.product.name
-          }))
-        );
+    const issues = [];
+    for (const item of cartItems) {
+      if (!item.product || !item.product.isActive) {
+        issues.push(`Product ${item.productId} is no longer available`);
+        continue;
       }
-    } catch (error) {
-      // Silently fail - don't break cart functionality
-      console.error('Failed to track abandoned cart:', error);
+
+      if (item.variant && item.variant.stock < item.quantity) {
+        issues.push(`${item.product.name} - Only ${item.variant.stock} items available`);
+      }
     }
+
+    if (issues.length > 0) {
+      throw new BadRequestException(`Cart validation failed: ${issues.join(', ')}`);
+    }
+
+    return true;
   }
 }

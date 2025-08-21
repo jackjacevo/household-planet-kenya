@@ -1,40 +1,45 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { SupportService } from './support.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CreateTicketDto, CreateMessageDto } from './dto/support.dto';
+import { RateLimitGuard } from '../common/guards/rate-limit.guard';
+import { SecurityGuard } from '../common/guards/security.guard';
+import { RateLimit } from '../common/decorators/rate-limit.decorator';
+import { ApiVersion } from '../common/decorators/api-version.decorator';
+import { ApiSecurity } from '../common/decorators/api-security.decorator';
 
 @Controller('support')
-@UseGuards(JwtAuthGuard)
+@ApiVersion('v1')
+@ApiSecurity({ requireAuth: true, auditLog: true })
+@UseGuards(AuthGuard('jwt'), RateLimitGuard, SecurityGuard)
 export class SupportController {
   constructor(private supportService: SupportService) {}
 
-  @Post('tickets')
-  createTicket(@CurrentUser('id') userId: string, @Body() data: {
-    subject: string;
-    message: string;
-    category: string;
-    priority?: string;
-    orderId?: string;
-  }) {
-    return this.supportService.createTicket(userId, data);
-  }
-
   @Get('tickets')
-  getUserTickets(@CurrentUser('id') userId: string) {
-    return this.supportService.getUserTickets(userId);
+  getUserTickets(@Request() req) {
+    return this.supportService.getUserTickets(req.user.userId);
   }
 
-  @Get('tickets/:ticketId')
-  getTicket(@CurrentUser('id') userId: string, @Param('ticketId') ticketId: string) {
-    return this.supportService.getTicketById(userId, ticketId);
+  @Post('tickets')
+  @RateLimit(5, 60000) // 5 tickets per minute
+  @ApiSecurity({ sensitiveData: true, auditLog: true })
+  createTicket(@Request() req, @Body() createTicketDto: CreateTicketDto) {
+    return this.supportService.createTicket(req.user.userId, createTicketDto);
   }
 
-  @Post('tickets/:ticketId/replies')
-  addReply(
-    @CurrentUser('id') userId: string,
-    @Param('ticketId') ticketId: string,
-    @Body() data: { message: string }
-  ) {
-    return this.supportService.addReply(userId, ticketId, data.message);
+  @Get('tickets/:id')
+  getTicket(@Request() req, @Param('id') ticketId: string) {
+    return this.supportService.getTicket(req.user.userId, ticketId);
+  }
+
+  @Post('tickets/:id/messages')
+  @RateLimit(10, 60000) // 10 messages per minute
+  addMessage(@Request() req, @Param('id') ticketId: string, @Body() createMessageDto: CreateMessageDto) {
+    return this.supportService.addMessage(req.user.userId, ticketId, createMessageDto);
+  }
+
+  @Put('tickets/:id/close')
+  closeTicket(@Request() req, @Param('id') ticketId: string) {
+    return this.supportService.closeTicket(req.user.userId, ticketId);
   }
 }

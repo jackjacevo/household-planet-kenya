@@ -1,142 +1,171 @@
-export default function CookiePolicy() {
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy - Household Planet Kenya',
+  description: 'Learn about how we use cookies and similar technologies on our website.',
+};
+
+export default function CookiePolicyPage() {
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <h1 className="text-3xl font-bold">Cookie Policy</h1>
-      <p className="text-gray-600">Last updated: January 1, 2025</p>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-sm p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Cookie Policy</h1>
+          
+          <div className="prose prose-gray max-w-none">
+            <p className="text-lg text-gray-600 mb-8">
+              Last updated: {new Date().toLocaleDateString()}
+            </p>
 
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">1. What Are Cookies</h2>
-        <p>Cookies are small text files stored on your device when you visit our website. They help us provide you with a better browsing experience.</p>
-      </section>
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">What Are Cookies?</h2>
+              <p className="text-gray-700 mb-4">
+                Cookies are small text files that are placed on your device when you visit our website. They help us provide you with a better experience by remembering your preferences and understanding how you use our site.
+              </p>
+            </section>
 
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">2. Types of Cookies We Use</h2>
-        
-        <div className="space-y-4">
-          <div className="border-l-4 border-red-500 pl-4">
-            <h3 className="font-semibold text-lg">Necessary Cookies</h3>
-            <p className="text-gray-700">Essential for website functionality and security. These cannot be disabled.</p>
-            <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-              <li><code>session_id</code> - Maintains your session while browsing</li>
-              <li><code>csrf_token</code> - Protects against security attacks</li>
-              <li><code>auth_token</code> - Keeps you logged in</li>
-            </ul>
-          </div>
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Types of Cookies We Use</h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Essential Cookies</h3>
+                  <p className="text-gray-700 mb-2">These cookies are necessary for the website to function properly:</p>
+                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
+                    <li>Authentication cookies to keep you logged in</li>
+                    <li>Shopping cart cookies to remember your items</li>
+                    <li>Security cookies to protect against fraud</li>
+                    <li>Session cookies for basic site functionality</li>
+                  </ul>
+                </div>
 
-          <div className="border-l-4 border-blue-500 pl-4">
-            <h3 className="font-semibold text-lg">Analytics Cookies</h3>
-            <p className="text-gray-700">Help us understand how visitors use our website.</p>
-            <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-              <li><code>_ga</code> - Google Analytics visitor identification</li>
-              <li><code>_gid</code> - Google Analytics session identification</li>
-              <li><code>analytics_session</code> - Our internal analytics tracking</li>
-            </ul>
-          </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Performance Cookies</h3>
+                  <p className="text-gray-700 mb-2">These cookies help us understand how visitors interact with our website:</p>
+                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
+                    <li>Google Analytics cookies for website analytics</li>
+                    <li>Page load time measurement cookies</li>
+                    <li>Error tracking cookies for site improvement</li>
+                    <li>User behavior analysis cookies</li>
+                  </ul>
+                </div>
 
-          <div className="border-l-4 border-green-500 pl-4">
-            <h3 className="font-semibold text-lg">Marketing Cookies</h3>
-            <p className="text-gray-700">Used to deliver personalized advertisements.</p>
-            <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-              <li><code>marketing_id</code> - Tracks marketing campaign effectiveness</li>
-              <li><code>ad_preferences</code> - Stores your advertising preferences</li>
-            </ul>
-          </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Functional Cookies</h3>
+                  <p className="text-gray-700 mb-2">These cookies enhance your experience by remembering your choices:</p>
+                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
+                    <li>Language preference cookies</li>
+                    <li>Currency selection cookies</li>
+                    <li>Theme preference cookies (light/dark mode)</li>
+                    <li>Recently viewed products cookies</li>
+                  </ul>
+                </div>
 
-          <div className="border-l-4 border-purple-500 pl-4">
-            <h3 className="font-semibold text-lg">Preference Cookies</h3>
-            <p className="text-gray-700">Remember your settings and preferences.</p>
-            <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-              <li><code>theme</code> - Your preferred color theme</li>
-              <li><code>language</code> - Your language preference</li>
-              <li><code>currency</code> - Your preferred currency</li>
-            </ul>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Marketing Cookies</h3>
+                  <p className="text-gray-700 mb-2">These cookies are used to deliver relevant advertisements:</p>
+                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
+                    <li>Facebook Pixel for social media advertising</li>
+                    <li>Google Ads cookies for targeted advertising</li>
+                    <li>Retargeting cookies to show relevant ads</li>
+                    <li>Email marketing tracking cookies</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Third-Party Cookies</h2>
+              <p className="text-gray-700 mb-4">We also use third-party services that may set cookies:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                <li><strong>Google Analytics:</strong> For website analytics and performance monitoring</li>
+                <li><strong>Facebook:</strong> For social media integration and advertising</li>
+                <li><strong>Payment Processors:</strong> For secure payment processing</li>
+                <li><strong>Customer Support:</strong> For live chat and support services</li>
+                <li><strong>Content Delivery Networks:</strong> For faster content delivery</li>
+              </ul>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Cookie Duration</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Session Cookies</h3>
+                  <p className="text-gray-700">These are temporary cookies that expire when you close your browser.</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Persistent Cookies</h3>
+                  <p className="text-gray-700">These cookies remain on your device for a set period or until you delete them:</p>
+                  <ul className="list-disc pl-6 space-y-1 text-gray-700 mt-2">
+                    <li>Authentication cookies: 30 days</li>
+                    <li>Preference cookies: 1 year</li>
+                    <li>Analytics cookies: 2 years</li>
+                    <li>Marketing cookies: 90 days</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Managing Your Cookie Preferences</h2>
+              <div className="space-y-4 text-gray-700">
+                <h3 className="text-lg font-medium text-gray-900">Cookie Consent Banner</h3>
+                <p>When you first visit our website, you'll see a cookie consent banner where you can:</p>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Accept all cookies</li>
+                  <li>Reject non-essential cookies</li>
+                  <li>Customize your cookie preferences</li>
+                </ul>
+
+                <h3 className="text-lg font-medium text-gray-900">Browser Settings</h3>
+                <p>You can also manage cookies through your browser settings:</p>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Block all cookies</li>
+                  <li>Block third-party cookies only</li>
+                  <li>Delete existing cookies</li>
+                  <li>Set up notifications when cookies are being set</li>
+                </ul>
+
+                <h3 className="text-lg font-medium text-gray-900">Privacy Dashboard</h3>
+                <p>Registered users can manage their cookie preferences through our Privacy Dashboard in their account settings.</p>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Impact of Disabling Cookies</h2>
+              <p className="text-gray-700 mb-4">
+                If you choose to disable cookies, some features of our website may not function properly:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                <li>You may need to log in repeatedly</li>
+                <li>Your shopping cart may not remember items</li>
+                <li>Personalized recommendations may not work</li>
+                <li>Some pages may load more slowly</li>
+                <li>You may see less relevant advertisements</li>
+              </ul>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Updates to This Policy</h2>
+              <p className="text-gray-700 mb-4">
+                We may update this Cookie Policy from time to time. When we do, we will post the updated policy on this page and update the "Last updated" date. We encourage you to review this policy periodically.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Contact Us</h2>
+              <div className="space-y-2 text-gray-700">
+                <p>If you have questions about our use of cookies, please contact us:</p>
+                <ul className="list-none space-y-2">
+                  <li><strong>Email:</strong> privacy@householdplanet.co.ke</li>
+                  <li><strong>Phone:</strong> +254 700 000 000</li>
+                  <li><strong>Address:</strong> Nairobi, Kenya</li>
+                </ul>
+              </div>
+            </section>
           </div>
         </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">3. How We Use Cookies</h2>
-        <p>We use cookies to:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Keep you logged in to your account</li>
-          <li>Remember items in your shopping cart</li>
-          <li>Understand how you use our website</li>
-          <li>Show you relevant advertisements</li>
-          <li>Improve our website performance</li>
-          <li>Provide customer support</li>
-        </ul>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">4. Third-Party Cookies</h2>
-        <p>We may use third-party services that set their own cookies:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li><strong>Google Analytics:</strong> Website usage analytics</li>
-          <li><strong>Stripe:</strong> Secure payment processing</li>
-          <li><strong>Facebook Pixel:</strong> Social media advertising</li>
-          <li><strong>WhatsApp Business:</strong> Customer communication</li>
-        </ul>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">5. Managing Your Cookie Preferences</h2>
-        <p>You can control cookies through:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Our cookie consent banner (appears on first visit)</li>
-          <li>Your browser settings</li>
-          <li>Your account privacy settings</li>
-        </ul>
-        
-        <div className="bg-blue-50 p-4 rounded mt-4">
-          <p className="font-medium">Update Your Cookie Preferences</p>
-          <p className="text-sm text-gray-600 mt-1">
-            You can change your cookie preferences at any time by clicking the "Cookie Settings" link in our footer.
-          </p>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">6. Browser Cookie Settings</h2>
-        <p>Most browsers allow you to:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>View and delete cookies</li>
-          <li>Block cookies from specific websites</li>
-          <li>Block all cookies</li>
-          <li>Delete cookies when you close your browser</li>
-        </ul>
-        
-        <div className="bg-yellow-50 p-4 rounded mt-4">
-          <p className="font-medium">⚠️ Important Note</p>
-          <p className="text-sm text-gray-600 mt-1">
-            Disabling necessary cookies may prevent you from using certain features of our website, including making purchases.
-          </p>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">7. Cookie Retention</h2>
-        <p>Different cookies have different lifespans:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li><strong>Session cookies:</strong> Deleted when you close your browser</li>
-          <li><strong>Persistent cookies:</strong> Remain until they expire or you delete them</li>
-          <li><strong>Our cookies typically expire:</strong> 1-24 months after being set</li>
-        </ul>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">8. Updates to This Policy</h2>
-        <p>We may update this cookie policy from time to time. We'll notify you of any significant changes by updating the "Last updated" date at the top of this page.</p>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">9. Contact Us</h2>
-        <p>If you have questions about our use of cookies, please contact us:</p>
-        <div className="bg-gray-50 p-4 rounded">
-          <p><strong>Email:</strong> privacy@householdplanet.co.ke</p>
-          <p><strong>Phone:</strong> +254-XXX-XXXX-XXX</p>
-          <p><strong>Address:</strong> Nairobi, Kenya</p>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }

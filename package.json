@@ -1,22 +1,29 @@
 {
   "name": "household-planet-kenya",
   "version": "1.0.0",
-  "description": "E-commerce platform for Household Planet Kenya",
-  "main": "server.js",
+  "description": "Complete e-commerce platform for household items in Kenya",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "axios": "^1.11.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.5.0"
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd household-planet-frontend && npm run dev",
+    "dev:backend": "cd household-planet-backend && npm run start:dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd household-planet-frontend && npm run build",
+    "build:backend": "cd household-planet-backend && npm run build",
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:frontend": "cd household-planet-frontend && npm run start",
+    "start:backend": "cd household-planet-backend && npm run start:prod",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd household-planet-frontend && npm test",
+    "test:backend": "cd household-planet-backend && npm test",
+    "verify": "cd launch-monitoring && npm run verify",
+    "monitor": "cd launch-monitoring && npm run monitor",
+    "launch": "cd launch-monitoring && npm run full-launch",
+    "install-all": "npm install && cd household-planet-frontend && npm install && cd ../household-planet-backend && npm install && cd ../launch-monitoring && npm install"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
   }
 }

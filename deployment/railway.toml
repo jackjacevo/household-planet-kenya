@@ -1,0 +1,39 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "npm run start:prod"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[environments.production]
+variables = { NODE_ENV = "production" }
+
+[[services]]
+name = "household-planet-backend"
+source = "household-planet-backend"
+
+[services.variables]
+PORT = { default = "3001" }
+NODE_ENV = { default = "production" }
+JWT_SECRET = { default = "${{JWT_SECRET}}" }
+JWT_EXPIRES_IN = { default = "7d" }
+DATABASE_URL = { default = "${{DATABASE_URL}}" }
+CORS_ORIGIN = { default = "${{CORS_ORIGIN}}" }
+REDIS_URL = { default = "${{REDIS_URL}}" }
+CLOUDINARY_CLOUD_NAME = { default = "${{CLOUDINARY_CLOUD_NAME}}" }
+CLOUDINARY_API_KEY = { default = "${{CLOUDINARY_API_KEY}}" }
+CLOUDINARY_API_SECRET = { default = "${{CLOUDINARY_API_SECRET}}" }
+MPESA_CONSUMER_KEY = { default = "${{MPESA_CONSUMER_KEY}}" }
+MPESA_CONSUMER_SECRET = { default = "${{MPESA_CONSUMER_SECRET}}" }
+MPESA_SHORTCODE = { default = "${{MPESA_SHORTCODE}}" }
+MPESA_PASSKEY = { default = "${{MPESA_PASSKEY}}" }
+WHATSAPP_TOKEN = { default = "${{WHATSAPP_TOKEN}}" }
+WHATSAPP_PHONE_ID = { default = "${{WHATSAPP_PHONE_ID}}" }
+EMAIL_HOST = { default = "${{EMAIL_HOST}}" }
+EMAIL_PORT = { default = "${{EMAIL_PORT}}" }
+EMAIL_USER = { default = "${{EMAIL_USER}}" }
+EMAIL_PASS = { default = "${{EMAIL_PASS}}" }

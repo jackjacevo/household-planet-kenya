@@ -1,0 +1,86 @@
+{
+  "dns_records": [
+    {
+      "type": "A",
+      "name": "householdplanet.co.ke",
+      "content": "YOUR_SERVER_IP",
+      "ttl": 300,
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "content": "YOUR_SERVER_IP",
+      "ttl": 300,
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "api",
+      "content": "householdplanet.co.ke",
+      "ttl": 300,
+      "proxied": true
+    },
+    {
+      "type": "MX",
+      "name": "householdplanet.co.ke",
+      "content": "mail.householdplanet.co.ke",
+      "priority": 10,
+      "ttl": 300
+    },
+    {
+      "type": "TXT",
+      "name": "householdplanet.co.ke",
+      "content": "v=spf1 include:_spf.google.com ~all",
+      "ttl": 300
+    }
+  ],
+  "page_rules": [
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "householdplanet.co.ke/*"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "ssl",
+          "value": "full"
+        },
+        {
+          "id": "always_use_https",
+          "value": "on"
+        },
+        {
+          "id": "browser_cache_ttl",
+          "value": 31536000
+        },
+        {
+          "id": "cache_level",
+          "value": "aggressive"
+        }
+      ]
+    }
+  ],
+  "security_settings": {
+    "security_level": "medium",
+    "ssl": "full",
+    "always_use_https": "on",
+    "min_tls_version": "1.2",
+    "opportunistic_encryption": "on",
+    "tls_1_3": "on",
+    "automatic_https_rewrites": "on",
+    "security_header": {
+      "strict_transport_security": {
+        "enabled": true,
+        "max_age": 31536000,
+        "include_subdomains": true,
+        "preload": true
+      }
+    }
+  }
+}

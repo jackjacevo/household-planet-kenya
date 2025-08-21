@@ -1,4 +1,5 @@
-import { IsString, IsNumber, IsOptional, IsInt, Min, IsBoolean } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, IsJSON } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateVariantDto {
   @IsString()
@@ -7,19 +8,22 @@ export class CreateVariantDto {
   @IsString()
   sku: string;
 
+  @Transform(({ value }) => parseFloat(value))
   @IsNumber()
-  @Min(0)
   price: number;
 
+  @Transform(({ value }) => parseInt(value))
+  @IsNumber()
+  stock: number;
+
+  @Transform(({ value }) => parseInt(value))
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  stock?: number;
+  @IsNumber()
+  lowStockThreshold?: number = 5;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  lowStockThreshold?: number;
+  @IsJSON()
+  attributes?: string;
 
   @IsOptional()
   @IsString()
@@ -34,10 +38,24 @@ export class CreateVariantDto {
   material?: string;
 
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
+  weight?: number;
 
   @IsOptional()
   @IsString()
-  attributes?: string;
+  dimensions?: string;
+
+  @IsOptional()
+  @IsJSON()
+  images?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean = true;
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value))
+  @IsNumber()
+  sortOrder?: number = 0;
 }

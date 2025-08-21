@@ -1,0 +1,166 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+
+@Injectable()
+export class CategoriesService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(createCategoryDto: CreateCategoryDto) {
+    const existingCategory = await this.prisma.category.findUnique({
+      where: { slug: createCategoryDto.slug }
+    });
+
+    if (existingCategory) {
+      throw new BadRequestException('Category with this slug already exists');
+    }
+
+    return this.prisma.category.create({
+      data: createCategoryDto,
+      include: {
+        parent: true,
+        children: true,
+        _count: { select: { products: true } }
+      }
+    });
+  }
+
+  async findAll(includeInactive = false) {
+    return this.prisma.category.findMany({
+      where: includeInactive ? {} : { isActive: true },
+      include: {
+        parent: true,
+        children: {
+          where: includeInactive ? {} : { isActive: true },
+          orderBy: { sortOrder: 'asc' }
+        },
+        _count: { select: { products: true } }
+      },
+      orderBy: { sortOrder: 'asc' }
+    });
+  }
+
+  async getHierarchy() {
+    const categories = await this.prisma.category.findMany({
+      where: { isActive: true, parentId: null },
+      include: {
+        children: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            _count: { select: { products: true } }
+          }
+        },
+        _count: { select: { products: true } }
+      },
+      orderBy: { sortOrder: 'asc' }
+    });
+
+    return categories;
+  }
+
+  async findOne(id: number) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        parent: true,
+        children: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' }
+        },
+        products: {
+          where: { isActive: true },
+          take: 10,
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            price: true,
+            images: true,
+            isFeatured: true
+          }
+        },
+        _count: { select: { products: true } }
+      }
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return category;
+  }
+
+  async findBySlug(slug: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { slug },
+      include: {
+        parent: true,
+        children: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' }
+        },
+        _count: { select: { products: true } }
+      }
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return category;
+  }
+
+  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    if (updateCategoryDto.slug && updateCategoryDto.slug !== category.slug) {
+      const existingCategory = await this.prisma.category.findUnique({
+        where: { slug: updateCategoryDto.slug }
+      });
+      
+      if (existingCategory) {
+        throw new BadRequestException('Category with this slug already exists');
+      }
+    }
+
+    return this.prisma.category.update({
+      where: { id },
+      data: updateCategoryDto,
+      include: {
+        parent: true,
+        children: true,
+        _count: { select: { products: true } }
+      }
+    });
+  }
+
+  async remove(id: number) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        children: true,
+        _count: { select: { products: true } }
+      }
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    if (category._count.products > 0) {
+      throw new BadRequestException('Cannot delete category with products');
+    }
+
+    if (category.children.length > 0) {
+      throw new BadRequestException('Cannot delete category with subcategories');
+    }
+
+    return this.prisma.category.delete({ where: { id } });
+  }
+}

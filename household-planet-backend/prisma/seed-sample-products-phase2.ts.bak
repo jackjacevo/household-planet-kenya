@@ -1,0 +1,145 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const sampleProducts = [
+  {
+    name: 'Premium Non-Stick Cookware Set',
+    slug: 'premium-non-stick-cookware-set',
+    description: 'Complete 12-piece non-stick cookware set perfect for modern kitchens. Features durable aluminum construction with ceramic non-stick coating.',
+    shortDescription: '12-piece non-stick cookware set with ceramic coating',
+    sku: 'COOK-001',
+    price: 8500.00,
+    comparePrice: 12000.00,
+    weight: 5.2,
+    dimensions: '45x35x25cm',
+    categoryName: 'Kitchen and Dining',
+    isActive: true,
+    isFeatured: true,
+    seoTitle: 'Premium Non-Stick Cookware Set - Household Planet Kenya',
+    seoDescription: 'High-quality 12-piece non-stick cookware set with ceramic coating. Perfect for healthy cooking. Free delivery in Kenya.',
+    tags: 'cookware,non-stick,kitchen,cooking,ceramic,aluminum',
+    images: JSON.stringify(['/images/products/cookware-set-1.jpg', '/images/products/cookware-set-2.jpg'])
+  },
+  {
+    name: 'Luxury Egyptian Cotton Bed Sheets',
+    slug: 'luxury-egyptian-cotton-bed-sheets',
+    description: 'Premium 400 thread count Egyptian cotton bed sheets. Soft, breathable, and durable for the perfect night\'s sleep.',
+    shortDescription: '400 thread count Egyptian cotton sheets',
+    sku: 'BED-001',
+    price: 4500.00,
+    comparePrice: 6500.00,
+    weight: 1.8,
+    dimensions: '200x180cm',
+    categoryName: 'Beddings and Bedroom Accessories',
+    isActive: true,
+    isFeatured: true,
+    seoTitle: 'Luxury Egyptian Cotton Bed Sheets - Household Planet Kenya',
+    seoDescription: 'Premium 400 thread count Egyptian cotton bed sheets. Soft, breathable, and comfortable. Available in multiple colors.',
+    tags: 'bedding,sheets,cotton,egyptian,luxury,bedroom',
+    images: JSON.stringify(['/images/products/bed-sheets-1.jpg', '/images/products/bed-sheets-2.jpg'])
+  },
+  {
+    name: 'Stainless Steel Kitchen Utensil Set',
+    slug: 'stainless-steel-kitchen-utensil-set',
+    description: 'Professional grade stainless steel kitchen utensils. Set includes spatula, ladle, whisk, tongs, and more.',
+    shortDescription: '8-piece stainless steel utensil set',
+    sku: 'UTIL-001',
+    price: 2800.00,
+    comparePrice: 3500.00,
+    weight: 1.2,
+    dimensions: '35x15x8cm',
+    categoryName: 'Kitchen and Dining',
+    isActive: true,
+    isFeatured: false,
+    seoTitle: 'Stainless Steel Kitchen Utensil Set - Household Planet Kenya',
+    seoDescription: 'Professional grade stainless steel kitchen utensils. Durable, easy to clean, and dishwasher safe.',
+    tags: 'utensils,kitchen,stainless steel,cooking,tools',
+    images: JSON.stringify(['/images/products/utensils-1.jpg'])
+  },
+  {
+    name: 'Bamboo Storage Containers Set',
+    slug: 'bamboo-storage-containers-set',
+    description: 'Eco-friendly bamboo storage containers with airtight lids. Perfect for pantry organization and food storage.',
+    shortDescription: 'Eco-friendly bamboo storage containers',
+    sku: 'STOR-001',
+    price: 3200.00,
+    comparePrice: 4000.00,
+    weight: 2.1,
+    dimensions: '30x20x15cm',
+    categoryName: 'Storage and Organization',
+    isActive: true,
+    isFeatured: true,
+    seoTitle: 'Bamboo Storage Containers Set - Household Planet Kenya',
+    seoDescription: 'Eco-friendly bamboo storage containers with airtight lids. Perfect for kitchen and pantry organization.',
+    tags: 'storage,containers,bamboo,eco-friendly,kitchen,organization',
+    images: JSON.stringify(['/images/products/bamboo-containers-1.jpg', '/images/products/bamboo-containers-2.jpg'])
+  },
+  {
+    name: 'LED Desk Lamp with USB Charging',
+    slug: 'led-desk-lamp-usb-charging',
+    description: 'Modern LED desk lamp with adjustable brightness and built-in USB charging port. Perfect for home office or study.',
+    shortDescription: 'LED desk lamp with USB charging port',
+    sku: 'LAMP-001',
+    price: 3800.00,
+    comparePrice: 5200.00,
+    weight: 1.5,
+    dimensions: '45x20x15cm',
+    categoryName: 'Lighting and Electrical',
+    isActive: true,
+    isFeatured: false,
+    seoTitle: 'LED Desk Lamp with USB Charging - Household Planet Kenya',
+    seoDescription: 'Modern LED desk lamp with adjustable brightness and USB charging. Energy efficient and stylish design.',
+    tags: 'lighting,lamp,led,desk,office,usb,charging',
+    images: JSON.stringify(['/images/products/desk-lamp-1.jpg'])
+  }
+];
+
+async function seedSampleProducts() {
+  console.log('Seeding sample products for Phase 2...');
+  
+  for (const productData of sampleProducts) {
+    try {
+      // Find category by name
+      const category = await prisma.category.findFirst({
+        where: { name: productData.categoryName }
+      });
+
+      if (!category) {
+        console.log(`Category ${productData.categoryName} not found, skipping product ${productData.name}`);
+        continue;
+      }
+
+      const { categoryName, ...productCreateData } = productData;
+
+      await prisma.product.create({
+        data: {
+          ...productCreateData,
+          categoryId: category.id,
+          price: productData.price,
+          comparePrice: productData.comparePrice,
+          weight: productData.weight
+        }
+      });
+
+      console.log(`Created product: ${productData.name}`);
+    } catch (error) {
+      console.log(`Error creating product ${productData.name}:`, error.message);
+    }
+  }
+  
+  console.log('Sample products seeded successfully!');
+}
+
+if (require.main === module) {
+  seedSampleProducts()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+export { seedSampleProducts };

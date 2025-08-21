@@ -1,66 +1,223 @@
-import { Metadata } from 'next';
-import HeroSection from '@/components/sections/HeroSection';
-import CategoriesCarousel from '@/components/sections/CategoriesCarousel';
-import BestSellers from '@/components/sections/BestSellers';
-import NewArrivals from '@/components/sections/NewArrivals';
-import Testimonials from '@/components/sections/Testimonials';
-import Newsletter from '@/components/sections/Newsletter';
-import ValuePropositions from '@/components/sections/ValuePropositions';
-import SocialMedia from '@/components/sections/SocialMedia';
-import Footer from '@/components/sections/Footer';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Household Planet Kenya - Premium Home Essentials Delivered',
-  description: 'Shop premium household essentials across Kenya. Quality products, fast delivery, and exceptional service for your home. Free delivery in Nairobi, Mombasa, and major cities.',
-  keywords: 'household items Kenya, home essentials, kitchen appliances, cleaning supplies, home decor, furniture Kenya, online shopping Kenya',
-  openGraph: {
-    title: 'Household Planet Kenya - Premium Home Essentials',
-    description: 'Transform your home with quality household essentials delivered across Kenya',
-    images: ['/og-image.jpg'],
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Household Planet Kenya - Premium Home Essentials',
-    description: 'Quality household items delivered across Kenya',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+import { motion } from 'framer-motion';
+import { HeroSection } from '@/components/home/HeroSection'
+import { FeaturedCategories } from '@/components/home/FeaturedCategories'
+import { BestSellers } from '@/components/home/BestSellers'
+import { NewArrivals } from '@/components/home/NewArrivals'
+import { PopularItems } from '@/components/home/PopularItems'
+import { Testimonials } from '@/components/home/Testimonials'
+import { NewsletterSignup } from '@/components/home/NewsletterSignup'
+import { InstagramFeed } from '@/components/home/InstagramFeed'
+import { StoreLocation } from '@/components/home/StoreLocation'
+import { TrustBadges } from '@/components/home/TrustBadges'
+import { ValuePropositions } from '@/components/home/ValuePropositions'
+import { RecentlyViewed } from '@/components/products/RecentlyViewed'
+import { SEOHead } from '@/components/seo/SEOHead'
+import { InternalLinks } from '@/components/seo/InternalLinks'
+import { SocialMediaIcons } from '@/components/layout/SocialMediaIcons'
+import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
+import { getHomepageLinks } from '@/lib/internal-links'
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.8 }
+  }
 };
 
-export default function Home() {
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+export default function HomePage() {
+  const structuredData = [
+    generateOrganizationSchema(),
+    generateWebsiteSchema(),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Store',
+      name: 'Household Planet Kenya',
+      description: 'Quality household items, kitchen appliances, home decor, and more with fast delivery across Kenya',
+      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanet.co.ke',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Nairobi',
+        addressCountry: 'KE'
+      },
+      priceRange: 'KES 100 - KES 100,000',
+      paymentAccepted: ['Cash', 'M-Pesa', 'Credit Card'],
+      currenciesAccepted: 'KES'
+    }
+  ]
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: 'Household Planet Kenya',
-            url: 'https://householdplanet.co.ke',
-            description: 'Premium household essentials delivered across Kenya',
-            potentialAction: {
-              '@type': 'SearchAction',
-              target: 'https://householdplanet.co.ke/search?q={search_term_string}',
-              'query-input': 'required name=search_term_string',
-            },
-          }),
-        }}
+      <SEOHead
+        title="Quality Home Products & Appliances - Fast Delivery Kenya"
+        description="Shop quality household items, kitchen appliances, home decor, and more at Household Planet Kenya. Fast delivery across Kenya with secure M-Pesa payments."
+        keywords={[
+          'household items Kenya',
+          'kitchen appliances Nairobi',
+          'home products Kenya',
+          'online shopping Kenya',
+          'M-Pesa payments',
+          'fast delivery Kenya',
+          'quality home goods',
+          'household planet'
+        ]}
+        url="/"
+        type="website"
+        structuredData={structuredData}
       />
-      <main className="min-h-screen" role="main">
+      
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/30 overflow-hidden">
+        {/* Sticky Social Media Icons */}
+        <SocialMediaIcons />
+        
+        {/* Dynamic Hero Banner */}
         <HeroSection />
-        <CategoriesCarousel />
+        
+        {/* Value Propositions - Why Choose Us */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={sectionVariants}
+          className="px-4 sm:px-0"
+        >
+          <ValuePropositions />
+        </motion.div>
+      
+      {/* Featured Categories with enhanced hover effects */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+        className="px-4 sm:px-0"
+      >
+        <FeaturedCategories />
+      </motion.div>
+      
+
+      {/* Best Sellers */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
         <BestSellers />
+      </motion.div>
+      
+      {/* New Arrivals */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
         <NewArrivals />
-        <ValuePropositions />
+      </motion.div>
+      
+      {/* Popular Items */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
+        <PopularItems />
+      </motion.div>
+      
+      {/* Recently Viewed */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
+        <RecentlyViewed />
+      </motion.div>
+      
+      {/* Trust Badges - Build confidence */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
+        <TrustBadges />
+      </motion.div>
+      
+      {/* Testimonials with enhanced design */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
         <Testimonials />
-        <Newsletter />
-        <SocialMedia />
-        <Footer />
+      </motion.div>
+      
+      {/* Newsletter Signup with discount incentives */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+      >
+        <NewsletterSignup />
+      </motion.div>
+
+      {/* Instagram Feed */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+        className="mb-16"
+      >
+        <InstagramFeed />
+      </motion.div>
+      
+      {/* Internal Links for SEO */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={sectionVariants}
+        className="px-4 py-16"
+      >
+        <div className="container mx-auto max-w-7xl">
+          <InternalLinks
+            title="Explore More"
+            links={getHomepageLinks()}
+          />
+        </div>
+      </motion.div>
+      
+        {/* Store Location - Find Us */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={sectionVariants}
+          className="pb-16"
+        >
+          <StoreLocation />
+        </motion.div>
       </main>
     </>
-  );
+  )
 }

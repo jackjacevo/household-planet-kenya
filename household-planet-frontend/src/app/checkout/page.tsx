@@ -1,601 +1,716 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useCart } from '../../contexts/CartContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { api } from '../../lib/api';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiCheck, FiCreditCard, FiTruck, FiUser, FiMapPin } from 'react-icons/fi';
+import { useCart } from '@/hooks/useCart';
+import { usePayment } from '@/hooks/usePayment';
+import { useDelivery } from '@/hooks/useDelivery';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { PaymentMethods } from '@/components/payment/PaymentMethods';
+import { PaymentStatus } from '@/components/payment/PaymentStatus';
+import { formatPrice } from '@/lib/utils';
+import { MapPin, Phone, Mail, User, Check, ChevronRight, Plus, Edit2 } from 'lucide-react';
+import { Address } from '@/types';
+import axios from 'axios';
+import Image from 'next/image';
 
-interface DeliveryLocation {
-  id: string;
-  name: string;
-  price: number;
-  estimatedDays: string;
-}
-
-interface Address {
-  id: string;
-  type: string;
-  street: string;
-  city: string;
-  county: string;
-  isDefault: boolean;
-}
+type CheckoutStep = 'account' | 'shipping' | 'delivery' | 'payment' | 'review' | 'processing';
 
 export default function CheckoutPage() {
-  const { state, getGuestCartTotal, clearCart, clearGuestCart } = useCart();
-  const { user } = useAuth();
   const router = useRouter();
-  
-  const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [deliveryLocations, setDeliveryLocations] = useState<DeliveryLocation[]>([]);
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  
-  // Form data
-  const [guestInfo, setGuestInfo] = useState({
+  const { items, getTotalPrice, clearCart } = useCart();
+  const { initiatePayment, retryPayment, loading } = usePayment();
+  const { calculateDeliveryCost, deliveryLocations } = useDelivery();
+  const [step, setStep] = useState<CheckoutStep>('account');
+  const [orderId, setOrderId] = useState<number | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [selectedDeliveryLocation, setSelectedDeliveryLocation] = useState('');
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
-    firstName: '',
-    lastName: '',
-    phone: ''
-  });
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [newAddress, setNewAddress] = useState({
-    street: '',
-    city: '',
+    phone: '',
     county: '',
-    type: 'HOME'
+    town: '',
+    street: '',
+    notes: '',
+    createAccount: false,
+    password: '',
   });
-  const [selectedDeliveryLocation, setSelectedDeliveryLocation] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState('MPESA');
-  const [mpesaPhone, setMpesaPhone] = useState('');
-  const [createAccount, setCreateAccount] = useState(false);
 
-  const cartItems = user ? state.items : state.guestCart;
-  const cartTotal = user ? state.total : getGuestCartTotal();
-  const finalTotal = user ? (state.finalTotal || state.total) : getGuestCartTotal();
-  const selectedLocation = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
-  const deliveryCost = selectedLocation?.price || 0;
-  const grandTotal = finalTotal + deliveryCost;
+  const steps = [
+    { id: 'account', title: 'Account', icon: User },
+    { id: 'shipping', title: 'Shipping', icon: MapPin },
+    { id: 'delivery', title: 'Delivery', icon: MapPin },
+    { id: 'payment', title: 'Payment', icon: Phone },
+    { id: 'review', title: 'Review', icon: Check },
+  ];
 
   useEffect(() => {
-    fetchDeliveryLocations();
-    if (user) {
-      fetchAddresses();
+    const token = localStorage.getItem('token');
+    if (token) {
+      loadSavedAddresses();
     }
-  }, [user]);
+  }, []);
 
-  const fetchDeliveryLocations = async () => {
+  const loadSavedAddresses = async () => {
     try {
-      const response = await api.get('/delivery/locations');
-      setDeliveryLocations(response.data);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setSavedAddresses(response.data);
     } catch (error) {
-      console.error('Failed to fetch delivery locations:', error);
+      console.error('Error loading addresses:', error);
     }
   };
 
-  const fetchAddresses = async () => {
+  const saveAddress = async () => {
     try {
-      const response = await api.get('/users/addresses');
-      setAddresses(response.data);
-      const defaultAddress = response.data.find((addr: Address) => addr.isDefault);
-      if (defaultAddress) {
-        setSelectedAddress(defaultAddress.id);
-      }
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`,
+        {
+          type: 'SHIPPING',
+          fullName: formData.fullName,
+          phone: formData.phone,
+          county: formData.county,
+          town: formData.town,
+          street: formData.street,
+          isDefault: savedAddresses.length === 0
+        },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setSavedAddresses([...savedAddresses, response.data]);
+      setSelectedAddressId(response.data.id);
+      setShowAddressForm(false);
     } catch (error) {
-      console.error('Failed to fetch addresses:', error);
+      console.error('Error saving address:', error);
     }
   };
 
-  const handleStepChange = (step: number) => {
-    if (step <= currentStep + 1) {
-      setCurrentStep(step);
+  const createOrder = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const selectedAddress = savedAddresses.find(addr => addr.id === selectedAddressId) || {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        county: formData.county,
+        town: formData.town,
+        street: formData.street,
+      };
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
+        {
+          items: items.map(item => ({
+            productId: item.product.id,
+            variantId: item.variantId,
+            quantity: item.quantity,
+          })),
+          shippingAddress: selectedAddress,
+          deliveryLocationId: selectedDeliveryLocation,
+          notes: formData.notes,
+          isGuest,
+          guestEmail: isGuest ? formData.email : undefined,
+        },
+        {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        }
+      );
+      return response.data.id;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
     }
   };
 
-  const handleGuestInfoSubmit = (e: React.FormEvent) => {
+  const handleAccountStep = () => {
+    if (isGuest && formData.createAccount) {
+      // Create account logic here
+    }
+    setStep('shipping');
+  };
+
+  const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (guestInfo.email && guestInfo.firstName && guestInfo.lastName && guestInfo.phone) {
-      setCurrentStep(2);
+    if (!isGuest && !selectedAddressId && !showAddressForm) {
+      setShowAddressForm(true);
+      return;
     }
+    if (showAddressForm) {
+      saveAddress();
+    }
+    setStep('delivery');
   };
 
-  const handleAddressSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (user && selectedAddress) {
-      setCurrentStep(3);
-    } else if (!user && newAddress.street && newAddress.city && newAddress.county) {
-      setCurrentStep(3);
-    }
-  };
-
-  const handleDeliverySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDeliverySubmit = async () => {
     if (selectedDeliveryLocation) {
-      setCurrentStep(4);
+      const cost = await calculateDeliveryCost(selectedDeliveryLocation, getTotalPrice());
+      setDeliveryCost(cost);
+      setStep('payment');
     }
   };
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (paymentMethod === 'MPESA' && !mpesaPhone) return;
-    setCurrentStep(5);
+  const handlePaymentSubmit = () => {
+    setStep('review');
   };
 
   const handlePlaceOrder = async () => {
-    setLoading(true);
     try {
-      let orderData;
+      const newOrderId = await createOrder();
+      setOrderId(newOrderId);
       
-      if (user) {
-        // Authenticated user order
-        const addressData = addresses.find(addr => addr.id === selectedAddress);
-        const shippingAddress = `${addressData?.street}, ${addressData?.city}, ${addressData?.county}`;
-        
-        orderData = {
-          shippingAddress,
-          deliveryLocation: selectedDeliveryLocation,
-          paymentMethod,
-          phoneNumber: paymentMethod === 'MPESA' ? mpesaPhone : undefined
-        };
-        
-        const response = await api.post('/orders/from-cart', orderData);
-        await clearCart();
-        router.push(`/orders/${response.data.order.id}/confirmation`);
+      if (selectedPaymentMethod === 'CASH_ON_DELIVERY') {
+        clearCart();
+        router.push(`/order-confirmation/${newOrderId}`);
       } else {
-        // Guest checkout
-        const shippingAddress = `${newAddress.street}, ${newAddress.city}, ${newAddress.county}`;
-        
-        orderData = {
-          items: cartItems.map(item => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity
-          })),
-          email: guestInfo.email,
-          firstName: guestInfo.firstName,
-          lastName: guestInfo.lastName,
-          phone: guestInfo.phone,
-          shippingAddress,
-          deliveryLocation: selectedDeliveryLocation,
-          paymentMethod,
-          phoneNumber: paymentMethod === 'MPESA' ? mpesaPhone : undefined
-        };
-        
-        const response = await api.post('/orders/guest-checkout', orderData);
-        clearGuestCart();
-        router.push(`/orders/guest/${response.data.order.orderNumber}/confirmation?email=${guestInfo.email}`);
+        await initiatePayment({
+          orderId: newOrderId,
+          paymentMethod: selectedPaymentMethod,
+          phoneNumber: formData.phone,
+        });
+        setStep('processing');
       }
     } catch (error) {
-      console.error('Failed to place order:', error);
-    } finally {
-      setLoading(false);
+      console.error('Order error:', error);
+      alert('Order failed. Please try again.');
     }
   };
 
-  const steps = [
-    { id: 1, name: user ? 'Review Cart' : 'Guest Information', icon: FiUser },
-    { id: 2, name: 'Shipping Address', icon: FiMapPin },
-    { id: 3, name: 'Delivery Options', icon: FiTruck },
-    { id: 4, name: 'Payment Method', icon: FiCreditCard },
-    { id: 5, name: 'Review Order', icon: FiCheck }
-  ];
+  const handlePaymentComplete = () => {
+    clearCart();
+    router.push('/orders');
+  };
 
-  if (cartItems.length === 0) {
+  const handlePaymentRetry = async () => {
+    if (orderId) {
+      try {
+        await retryPayment(orderId);
+      } catch (error) {
+        console.error('Retry error:', error);
+      }
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    });
+  };
+
+  const selectAddress = (address: Address) => {
+    setSelectedAddressId(address.id);
+    setFormData({
+      ...formData,
+      fullName: address.fullName,
+      phone: address.phone,
+      county: address.county,
+      town: address.town,
+      street: address.street,
+    });
+    setShowAddressForm(false);
+  };
+
+  const getCurrentStepIndex = () => {
+    return steps.findIndex(s => s.id === step);
+  };
+
+  const getSubtotal = () => getTotalPrice();
+  const getTotal = () => getTotalPrice() + deliveryCost;
+
+  if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-            <p className="text-gray-600 mb-8">Add some items to proceed with checkout</p>
-            <button
-              onClick={() => router.push('/products')}
-              className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700"
-            >
-              Continue Shopping
-            </button>
-          </div>
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
+          <p className="text-gray-600 mb-8">Add some items to your cart before checking out.</p>
+          <Button onClick={() => router.push('/products')}>Continue Shopping</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'processing' && orderId) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <PaymentStatus
+            orderId={orderId}
+            onComplete={handlePaymentComplete}
+            onRetry={handlePaymentRetry}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
-        
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <nav aria-label="Progress">
-            <ol className="flex items-center">
-              {steps.map((step, stepIdx) => (
-                <li key={step.id} className={`${stepIdx !== steps.length - 1 ? 'pr-8 sm:pr-20' : ''} relative`}>
-                  <div className="flex items-center">
-                    <div
-                      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                        step.id <= currentStep
-                          ? 'bg-green-600 border-green-600 text-white'
-                          : 'border-gray-300 text-gray-500'
-                      }`}
-                    >
-                      <step.icon className="w-5 h-5" />
-                    </div>
-                    <span className={`ml-4 text-sm font-medium ${
-                      step.id <= currentStep ? 'text-green-600' : 'text-gray-500'
-                    }`}>
-                      {step.name}
-                    </span>
-                  </div>
-                  {stepIdx !== steps.length - 1 && (
-                    <div className="absolute top-5 left-5 -ml-px mt-0.5 h-full w-0.5 bg-gray-300" aria-hidden="true" />
-                  )}
-                </li>
-              ))}
-            </ol>
-          </nav>
-        </div>
-
-        <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
-          {/* Main Content */}
-          <div className="lg:col-span-7">
-            {/* Step 1: Guest Information or Cart Review */}
-            {currentStep === 1 && (
-              <div className="bg-white shadow-sm rounded-lg p-6">
-                {!user ? (
-                  <>
-                    <h2 className="text-lg font-medium text-gray-900 mb-6">Guest Information</h2>
-                    <form onSubmit={handleGuestInfoSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">First Name</label>
-                          <input
-                            type="text"
-                            required
-                            value={guestInfo.firstName}
-                            onChange={(e) => setGuestInfo({...guestInfo, firstName: e.target.value})}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                          <input
-                            type="text"
-                            required
-                            value={guestInfo.lastName}
-                            onChange={(e) => setGuestInfo({...guestInfo, lastName: e.target.value})}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                          type="email"
-                          required
-                          value={guestInfo.email}
-                          onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
-                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input
-                          type="tel"
-                          required
-                          value={guestInfo.phone}
-                          onChange={(e) => setGuestInfo({...guestInfo, phone: e.target.value})}
-                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                        />
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={createAccount}
-                          onChange={(e) => setCreateAccount(e.target.checked)}
-                          className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                        />
-                        <label className="ml-2 block text-sm text-gray-900">
-                          Create an account for faster checkout next time
-                        </label>
-                      </div>
-                      <button
-                        type="submit"
-                        className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-                      >
-                        Continue to Shipping
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="text-lg font-medium text-gray-900 mb-6">Review Your Cart</h2>
-                    <div className="space-y-4">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-4">
-                          <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md"></div>
-                          <div className="flex-1">
-                            <h3 className="text-sm font-medium text-gray-900">{item.product.name}</h3>
-                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                          </div>
-                          <div className="text-sm font-medium text-gray-900">
-                            KES {((item.variant?.price || item.product.price) * item.quantity).toLocaleString()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setCurrentStep(2)}
-                      className="mt-6 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-                    >
-                      Continue to Shipping
-                    </button>
-                  </>
+    <div className="container mx-auto px-4 py-4 md:py-8 pb-20 md:pb-8">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Checkout</h1>
+      
+      {/* Progress Indicator */}
+      <div className="mb-6 md:mb-8">
+        <div className="hidden md:flex items-center justify-between">
+          {steps.map((stepItem, index) => {
+            const Icon = stepItem.icon;
+            const isActive = step === stepItem.id;
+            const isCompleted = getCurrentStepIndex() > index;
+            
+            return (
+              <div key={stepItem.id} className="flex items-center">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                  isCompleted ? 'bg-green-500 border-green-500 text-white' :
+                  isActive ? 'bg-orange-500 border-orange-500 text-white' :
+                  'bg-white border-gray-300 text-gray-400'
+                }`}>
+                  {isCompleted ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                </div>
+                <span className={`ml-2 text-sm font-medium ${
+                  isActive ? 'text-orange-600' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                }`}>
+                  {stepItem.title}
+                </span>
+                {index < steps.length - 1 && (
+                  <ChevronRight className="h-5 w-5 text-gray-300 mx-4" />
                 )}
               </div>
-            )}
-
-            {/* Step 2: Shipping Address */}
-            {currentStep === 2 && (
-              <div className="bg-white shadow-sm rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-6">Shipping Address</h2>
-                <form onSubmit={handleAddressSubmit} className="space-y-4">
-                  {user && addresses.length > 0 ? (
-                    <div className="space-y-3">
-                      {addresses.map((address) => (
-                        <div key={address.id} className="flex items-center">
-                          <input
-                            type="radio"
-                            name="address"
-                            value={address.id}
-                            checked={selectedAddress === address.id}
-                            onChange={(e) => setSelectedAddress(e.target.value)}
-                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                          />
-                          <label className="ml-3 block text-sm text-gray-900">
-                            <div className="font-medium">{address.type}</div>
-                            <div className="text-gray-500">{address.street}, {address.city}, {address.county}</div>
-                          </label>
-                        </div>
-                      ))}
+            );
+          })}
+        </div>
+        
+        {/* Mobile Progress */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Step {getCurrentStepIndex() + 1} of {steps.length}</span>
+            <span className="text-sm font-medium text-orange-600">
+              {steps.find(s => s.id === step)?.title}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((getCurrentStepIndex() + 1) / steps.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="lg:col-span-2 order-2 lg:order-1">
+          {/* Account Step */}
+          {step === 'account' && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-4">Account Information</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email Address</label>
+                  <Input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="john@example.com"
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant={!isGuest ? 'default' : 'outline'}
+                    onClick={() => setIsGuest(false)}
+                  >
+                    Create Account
+                  </Button>
+                  <Button
+                    variant={isGuest ? 'default' : 'outline'}
+                    onClick={() => setIsGuest(true)}
+                  >
+                    Guest Checkout
+                  </Button>
+                </div>
+                
+                {!isGuest && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Password</label>
+                    <Input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required={!isGuest}
+                      placeholder="Create a password"
+                    />
+                  </div>
+                )}
+                
+                {isGuest && (
+                  <div className="bg-blue-50 p-4 rounded-md">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="createAccount"
+                        checked={formData.createAccount}
+                        onChange={handleInputChange}
+                        className="mr-2"
+                      />
+                      <label className="text-sm">Create an account for faster checkout next time</label>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Street Address</label>
-                        <input
-                          type="text"
-                          required
-                          value={newAddress.street}
-                          onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
-                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    {formData.createAccount && (
+                      <div className="mt-2">
+                        <Input
+                          type="password"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          placeholder="Create a password"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">City</label>
-                          <input
-                            type="text"
-                            required
-                            value={newAddress.city}
-                            onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">County</label>
-                          <input
-                            type="text"
-                            required
-                            value={newAddress.county}
-                            onChange={(e) => setNewAddress({...newAddress, county: e.target.value})}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <button
-                    type="submit"
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-                  >
-                    Continue to Delivery
-                  </button>
-                </form>
+                    )}
+                  </div>
+                )}
+                
+                <Button onClick={handleAccountStep} className="w-full min-h-44" size="lg">
+                  Continue to Shipping
+                </Button>
               </div>
-            )}
-
-            {/* Step 3: Delivery Options */}
-            {currentStep === 3 && (
-              <div className="bg-white shadow-sm rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-6">Delivery Options</h2>
-                <form onSubmit={handleDeliverySubmit} className="space-y-4">
+            </div>
+          )}
+          
+          {/* Shipping Step */}
+          {step === 'shipping' && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
+              
+              {/* Saved Addresses */}
+              {!isGuest && savedAddresses.length > 0 && !showAddressForm && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-3">Saved Addresses</h3>
                   <div className="space-y-3">
-                    {deliveryLocations.map((location) => (
-                      <div key={location.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                        <div className="flex items-center">
+                    {savedAddresses.map((address) => (
+                      <div
+                        key={address.id}
+                        className={`p-4 border rounded-lg cursor-pointer ${
+                          selectedAddressId === address.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                        }`}
+                        onClick={() => selectAddress(address)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{address.fullName}</p>
+                            <p className="text-sm text-gray-600">
+                              {address.street}, {address.town}, {address.county}
+                            </p>
+                            <p className="text-sm text-gray-600">{address.phone}</p>
+                          </div>
                           <input
                             type="radio"
-                            name="delivery"
-                            value={location.id}
-                            checked={selectedDeliveryLocation === location.id}
-                            onChange={(e) => setSelectedDeliveryLocation(e.target.value)}
-                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                            checked={selectedAddressId === address.id}
+                            onChange={() => selectAddress(address)}
                           />
-                          <div className="ml-3">
-                            <div className="font-medium text-gray-900">{location.name}</div>
-                            <div className="text-sm text-gray-500">Delivery in {location.estimatedDays}</div>
-                          </div>
-                        </div>
-                        <div className="text-lg font-medium text-gray-900">
-                          KES {location.price.toLocaleString()}
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddressForm(true)}
+                    className="mt-4"
                   >
-                    Continue to Payment
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Step 4: Payment Method */}
-            {currentStep === 4 && (
-              <div className="bg-white shadow-sm rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-6">Payment Method</h2>
-                <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="MPESA"
-                        checked={paymentMethod === 'MPESA'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                      />
-                      <label className="ml-3 block text-sm font-medium text-gray-900">M-Pesa</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="CARD"
-                        checked={paymentMethod === 'CARD'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                      />
-                      <label className="ml-3 block text-sm font-medium text-gray-900">Credit/Debit Card</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="COD"
-                        checked={paymentMethod === 'COD'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                      />
-                      <label className="ml-3 block text-sm font-medium text-gray-900">Cash on Delivery</label>
-                    </div>
-                  </div>
-                  
-                  {paymentMethod === 'MPESA' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">M-Pesa Phone Number</label>
-                      <input
-                        type="tel"
-                        required
-                        value={mpesaPhone}
-                        onChange={(e) => setMpesaPhone(e.target.value)}
-                        placeholder="254XXXXXXXXX"
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                      />
-                    </div>
-                  )}
-                  
-                  <button
-                    type="submit"
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-                  >
-                    Review Order
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Step 5: Review Order */}
-            {currentStep === 5 && (
-              <div className="bg-white shadow-sm rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-6">Review Your Order</h2>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Order Items</h3>
-                    <div className="space-y-2">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span>{item.product.name} x {item.quantity}</span>
-                          <span>KES {((item.variant?.price || item.product.price) * item.quantity).toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Shipping Address</h3>
-                    <p className="text-sm text-gray-600">
-                      {user && selectedAddress 
-                        ? (() => {
-                            const addr = addresses.find(a => a.id === selectedAddress);
-                            return `${addr?.street}, ${addr?.city}, ${addr?.county}`;
-                          })()
-                        : `${newAddress.street}, ${newAddress.city}, ${newAddress.county}`
-                      }
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Delivery</h3>
-                    <p className="text-sm text-gray-600">
-                      {selectedLocation?.name} - KES {selectedLocation?.price.toLocaleString()}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Payment Method</h3>
-                    <p className="text-sm text-gray-600">
-                      {paymentMethod === 'MPESA' ? `M-Pesa (${mpesaPhone})` : 
-                       paymentMethod === 'CARD' ? 'Credit/Debit Card' : 'Cash on Delivery'}
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={handlePlaceOrder}
-                    disabled={loading}
-                    className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {loading ? 'Placing Order...' : `Place Order - KES ${grandTotal.toLocaleString()}`}
-                  </button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Address
+                  </Button>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Order Summary Sidebar */}
-          <div className="mt-10 lg:mt-0 lg:col-span-5">
-            <div className="bg-white shadow-sm rounded-lg px-4 py-6 sm:p-6 lg:p-8 sticky top-8">
-              <h2 className="text-lg font-medium text-gray-900">Order Summary</h2>
+              )}
               
-              <dl className="mt-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-gray-600">Subtotal</dt>
-                  <dd className="text-sm font-medium text-gray-900">KES {cartTotal.toLocaleString()}</dd>
-                </div>
-                
-                {user && state.promo && (
-                  <div className="flex items-center justify-between">
-                    <dt className="text-sm text-green-600">Discount</dt>
-                    <dd className="text-sm font-medium text-green-600">-KES {state.promo.discount.toLocaleString()}</dd>
+              {/* Address Form */}
+              {(showAddressForm || isGuest || savedAddresses.length === 0) && (
+                <form onSubmit={handleShippingSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Full Name</label>
+                    <Input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="John Doe"
+                    />
                   </div>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-gray-600">Delivery</dt>
-                  <dd className="text-sm font-medium text-gray-900">
-                    {selectedLocation ? `KES ${selectedLocation.price.toLocaleString()}` : 'Select delivery option'}
-                  </dd>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Phone</label>
+                    <Input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="+254700000000"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">County</label>
+                    <Input
+                      type="text"
+                      name="county"
+                      value={formData.county}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Nairobi"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Town</label>
+                      <Input
+                        type="text"
+                        name="town"
+                        value={formData.town}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Westlands"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Street Address</label>
+                      <Input
+                        type="text"
+                        name="street"
+                        value={formData.street}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="123 Moi Avenue"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" className="w-full min-h-44" size="lg">
+                    Continue to Delivery
+                  </Button>
+                </form>
+              )}
+              
+              {!showAddressForm && selectedAddressId && (
+                <Button onClick={() => setStep('delivery')} className="w-full min-h-44" size="lg">
+                  Continue to Delivery
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {/* Delivery Step */}
+          {step === 'delivery' && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-4">Delivery Options</h2>
+              
+              <div className="space-y-4">
+                {deliveryLocations.map((location) => (
+                  <div
+                    key={location.id}
+                    className={`p-4 border rounded-lg cursor-pointer ${
+                      selectedDeliveryLocation === location.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                    }`}
+                    onClick={() => setSelectedDeliveryLocation(location.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{location.name}</p>
+                        <p className="text-sm text-gray-600">{location.county}</p>
+                        <p className="text-sm text-gray-600">{location.estimatedDays} days delivery</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{formatPrice(location.price)}</p>
+                        <input
+                          type="radio"
+                          checked={selectedDeliveryLocation === location.id}
+                          onChange={() => setSelectedDeliveryLocation(location.id)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-2">Delivery Notes (Optional)</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Any special delivery instructions..."
+                />
+              </div>
+              
+              <Button
+                onClick={handleDeliverySubmit}
+                disabled={!selectedDeliveryLocation}
+                className="w-full mt-4 min-h-44"
+                size="lg"
+              >
+                Continue to Payment
+              </Button>
+            </div>
+          )}
+          
+          {/* Payment Step */}
+          {step === 'payment' && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+              
+              <div className="space-y-4">
+                {[
+                  { id: 'MPESA', name: 'M-Pesa', icon: '📱' },
+                  { id: 'CARD', name: 'Credit/Debit Card', icon: '💳' },
+                  { id: 'CASH_ON_DELIVERY', name: 'Cash on Delivery', icon: '💵' }
+                ].map((method) => (
+                  <div
+                    key={method.id}
+                    className={`p-4 border rounded-lg cursor-pointer ${
+                      selectedPaymentMethod === method.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                    }`}
+                    onClick={() => setSelectedPaymentMethod(method.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">{method.icon}</span>
+                        <span className="font-medium">{method.name}</span>
+                      </div>
+                      <input
+                        type="radio"
+                        checked={selectedPaymentMethod === method.id}
+                        onChange={() => setSelectedPaymentMethod(method.id)}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <Button
+                onClick={handlePaymentSubmit}
+                disabled={!selectedPaymentMethod}
+                className="w-full mt-4 min-h-44"
+                size="lg"
+              >
+                Review Order
+              </Button>
+            </div>
+          )}
+          
+          {/* Review Step */}
+          {step === 'review' && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-4">Order Review</h2>
+              
+              {/* Order Items */}
+              <div className="mb-6">
+                <h3 className="font-medium mb-3">Items ({items.length})</h3>
+                <div className="space-y-3">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-3">
+                      <div className="w-16 h-16 relative">
+                        <Image
+                          src={item.product.images[0] || '/placeholder.jpg'}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover rounded-md"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{item.product.name}</p>
+                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
+                    </div>
+                  ))}
                 </div>
-                
-                <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
-                  <dt className="text-base font-medium text-gray-900">Total</dt>
-                  <dd className="text-base font-medium text-gray-900">KES {grandTotal.toLocaleString()}</dd>
+              </div>
+              
+              {/* Shipping Address */}
+              <div className="mb-6">
+                <h3 className="font-medium mb-2">Shipping Address</h3>
+                <div className="text-sm text-gray-600">
+                  <p>{formData.fullName}</p>
+                  <p>{formData.street}</p>
+                  <p>{formData.town}, {formData.county}</p>
+                  <p>{formData.phone}</p>
                 </div>
-              </dl>
+              </div>
+              
+              {/* Payment Method */}
+              <div className="mb-6">
+                <h3 className="font-medium mb-2">Payment Method</h3>
+                <p className="text-sm text-gray-600">
+                  {selectedPaymentMethod === 'MPESA' && 'M-Pesa'}
+                  {selectedPaymentMethod === 'CARD' && 'Credit/Debit Card'}
+                  {selectedPaymentMethod === 'CASH_ON_DELIVERY' && 'Cash on Delivery'}
+                </p>
+              </div>
+              
+              <Button
+                onClick={handlePlaceOrder}
+                className="w-full min-h-44"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : 'Place Order'}
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        <div className="order-1 lg:order-2">
+          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 lg:sticky lg:top-4">
+            <h2 className="text-lg md:text-xl font-semibold mb-4">Order Summary</h2>
+            
+            <div className="space-y-3 mb-4">
+              {items.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span>{item.product.name} x {item.quantity}</span>
+                  <span>{formatPrice(item.product.price * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="border-t pt-4 space-y-2">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatPrice(getSubtotal())}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Delivery</span>
+                <span>{deliveryCost > 0 ? formatPrice(deliveryCost) : 'TBD'}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                <span>Total</span>
+                <span>{formatPrice(getTotal())}</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 text-xs text-gray-600">
+              <p className="flex items-center mb-1">
+                <Phone className="h-3 w-3 mr-1" />
+                Need help? Call +254790 227 760
+              </p>
+              <p className="flex items-center">
+                <Mail className="h-3 w-3 mr-1" />
+                householdplanet819@gmail.com
+              </p>
             </div>
           </div>
         </div>

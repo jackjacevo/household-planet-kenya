@@ -1,252 +1,217 @@
-import { 
-  Controller, Get, Post, Body, Patch, Param, Delete, Query, 
-  UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseIntPipe, UseInterceptors, UploadedFiles, UploadedFile, Req, Res } from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { BulkUpdateDto } from './dto/bulk-update.dto';
 import { CreateVariantDto } from './dto/create-variant.dto';
-import { CreateReviewDto } from './dto/create-review.dto';
 import { SearchFiltersDto } from './dto/search-filters.dto';
-import { BulkImportService } from './services/bulk-import.service';
+import { BulkImportDto } from './dto/bulk-import.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { UserRole } from '../common/enums/user-role.enum';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums';
 import { Response } from 'express';
-import * as XLSX from 'xlsx';
 
 @Controller('products')
 export class ProductsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly bulkImportService: BulkImportService
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Post()
-  @UseInterceptors(FilesInterceptor('images', 10, {
-    storage: diskStorage({
-      destination: './uploads/products',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
-      },
-    }),
-  }))
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseInterceptors(FilesInterceptor('images', 10))
   create(@Body() createProductDto: CreateProductDto, @UploadedFiles() files: Express.Multer.File[]) {
-    if (files && files.length > 0) {
-      createProductDto.images = files.map(file => `/uploads/products/${file.filename}`);
-    }
-    return this.productsService.create(createProductDto);
+    return this.productsService.create(createProductDto, files);
   }
 
-  @Public()
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  bulkCreate(@Body() products: CreateProductDto[]) {
+    return this.productsService.bulkCreate(products);
+  }
+
+  @Patch('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  bulkUpdate(@Body() bulkUpdateDto: BulkUpdateDto) {
+    return this.productsService.bulkUpdate(bulkUpdateDto);
+  }
+
   @Get()
   findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('featured') featured?: string
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('featured') featured?: string,
+    @Query('active') active?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string
   ) {
-    return this.productsService.findAll(
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 10,
-      categoryId,
-      featured === 'true'
-    );
+    return this.productsService.findAll({
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
+      category,
+      search,
+      featured: featured === 'true',
+      active: active !== 'false',
+      sortBy: sortBy || 'createdAt',
+      sortOrder: sortOrder as 'asc' | 'desc' || 'desc'
+    });
   }
 
-  @Public()
+  @Get('featured')
+  getFeatured(@Query('limit') limit?: string) {
+    return this.productsService.getFeatured(parseInt(limit) || 10);
+  }
+
   @Get('search')
-  search(@Query() filters: SearchFiltersDto) {
+  search(@Query('q') query: string, @Query('limit') limit?: string) {
+    return this.productsService.search(query, parseInt(limit) || 20);
+  }
+
+  @Post('search/advanced')
+  advancedSearch(@Body() filters: SearchFiltersDto) {
     return this.productsService.advancedSearch(filters);
   }
 
-  @Public()
-  @Get('search/suggestions')
-  getSearchSuggestions(@Query('q') query: string) {
-    return this.productsService.getSearchSuggestions(query);
+  @Get('search/autocomplete')
+  getAutocomplete(@Query('q') query: string, @Query('limit') limit?: string) {
+    return this.productsService.getAutocomplete(query, parseInt(limit) || 10);
   }
 
-  @Public()
-  @Get('slug/:slug')
-  findBySlug(@Param('slug') slug: string, @CurrentUser() user?: any) {
-    return this.productsService.findBySlug(slug, user?.id);
-  }
-
-  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser() user?: any) {
-    return this.productsService.findOne(id, user?.id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    const userId = req.user?.id;
+    const sessionId = req.sessionID || req.headers['x-session-id'];
+    return this.productsService.findOne(id, userId, sessionId);
   }
 
-  @Public()
-  @Get(':id/related')
-  getRelatedProducts(@Param('id') id: string) {
-    return this.productsService.getRelatedProducts(id);
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string, @Req() req: any) {
+    const userId = req.user?.id;
+    const sessionId = req.sessionID || req.headers['x-session-id'];
+    return this.productsService.findBySlug(slug, userId, sessionId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/view')
-  trackView(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.productsService.trackView(id, user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete('user/recently-viewed/:id')
-  removeFromRecentlyViewed(@Param('id') productId: string, @CurrentUser() user: any) {
-    return this.productsService.removeFromRecentlyViewed(user.id, productId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/reviews')
-  @UseInterceptors(FilesInterceptor('images', 5, {
-    storage: diskStorage({
-      destination: './uploads/reviews',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
-      },
-    }),
-  }))
-  createReview(
-    @Param('id') productId: string,
-    @CurrentUser() user: any,
-    @Body() createReviewDto: CreateReviewDto,
-    @UploadedFiles() files: Express.Multer.File[]
-  ) {
-    if (files && files.length > 0) {
-      createReviewDto.images = files.map(file => `/uploads/reviews/${file.filename}`);
-    }
-    return this.productsService.createReview(productId, user.id, createReviewDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('user/recently-viewed')
-  getRecentlyViewed(@CurrentUser() user: any) {
-    return this.productsService.getRecentlyViewed(user.id);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Patch(':id')
-  @UseInterceptors(FilesInterceptor('images', 10, {
-    storage: diskStorage({
-      destination: './uploads/products',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
-      },
-    }),
-  }))
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @UploadedFiles() files: Express.Multer.File[]) {
-    if (files && files.length > 0) {
-      updateProductDto.images = files.map(file => `/uploads/products/${file.filename}`);
-    }
-    return this.productsService.update(id, updateProductDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseInterceptors(FilesInterceptor('images', 10))
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto, @UploadedFiles() files?: Express.Multer.File[]) {
+    return this.productsService.update(id, updateProductDto, files);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.remove(id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // Variant Management
   @Post(':id/variants')
-  createVariant(@Param('id') productId: string, @Body() createVariantDto: CreateVariantDto) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  createVariant(@Param('id', ParseIntPipe) productId: number, @Body() createVariantDto: CreateVariantDto) {
     return this.productsService.createVariant(productId, createVariantDto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Patch('variants/:variantId')
-  updateVariant(@Param('variantId') variantId: string, @Body() updateData: Partial<CreateVariantDto>) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  updateVariant(@Param('variantId', ParseIntPipe) variantId: number, @Body() updateData: Partial<CreateVariantDto>) {
     return this.productsService.updateVariant(variantId, updateData);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Delete('variants/:variantId')
-  removeVariant(@Param('variantId') variantId: string) {
-    return this.productsService.removeVariant(variantId);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  deleteVariant(@Param('variantId', ParseIntPipe) variantId: number) {
+    return this.productsService.deleteVariant(variantId);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Post('bulk/prices')
-  bulkUpdatePrices(@Body() updates: { id: string; price: number }[]) {
-    return this.productsService.bulkUpdatePrices(updates);
+  // Recommendations
+  @Get(':id/recommendations')
+  getRecommendations(
+    @Param('id', ParseIntPipe) productId: number,
+    @Query('type') type?: 'RELATED' | 'SIMILAR' | 'FREQUENTLY_BOUGHT_TOGETHER',
+    @Query('limit') limit?: string
+  ) {
+    return this.productsService.getRecommendations(productId, type, parseInt(limit) || 6);
   }
 
+  @Post(':id/recommendations/generate')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Post('bulk/import/csv')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  generateRecommendations(@Param('id', ParseIntPipe) productId: number) {
+    return this.productsService.generateRecommendations(productId);
+  }
+
+  // Recently Viewed
+  @Get('recently-viewed')
+  getRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
+    const userId = req.user?.id;
+    const sessionId = req.sessionID || req.headers['x-session-id'];
+    return this.productsService.getRecentlyViewed(userId, sessionId, parseInt(limit) || 10);
+  }
+
+  @Get('user/recently-viewed')
+  getUserRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
+    const userId = req.user?.id;
+    const sessionId = req.sessionID || req.headers['x-session-id'];
+    return this.productsService.getRecentlyViewed(userId, sessionId, parseInt(limit) || 10);
+  }
+
+  // Low Stock Management
+  @Get('inventory/low-stock')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  getLowStockProducts(@Query('threshold') threshold?: string) {
+    return this.productsService.getLowStockProducts(parseInt(threshold) || 5);
+  }
+
+  @Post('variants/:variantId/low-stock-alert')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  createLowStockAlert(
+    @Param('variantId', ParseIntPipe) variantId: number,
+    @Body('threshold') threshold: number
+  ) {
+    return this.productsService.createLowStockAlert(variantId, threshold);
+  }
+
+  // Bulk Import/Export
+  @Post('import/csv')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @UseInterceptors(FileInterceptor('file'))
-  async importCSV(@UploadedFile() file: Express.Multer.File) {
-    return this.bulkImportService.importFromCSV(file.path);
+  bulkImportCSV(@UploadedFile() file: Express.Multer.File, @Body() importDto: BulkImportDto) {
+    return this.productsService.bulkImportFromCSV(file, importDto.userId);
   }
 
+  @Get('export/csv')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Post('bulk/import/excel')
-  @UseInterceptors(FileInterceptor('file'))
-  async importExcel(@UploadedFile() file: Express.Multer.File) {
-    return this.bulkImportService.importFromExcel(file.path);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get('bulk/export/csv')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   async exportCSV(@Res() res: Response) {
-    const data = await this.bulkImportService.exportToCSV();
+    const data = await this.productsService.exportToCSV();
+    
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=products.csv');
-    res.send(data);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get('bulk/export/excel')
-  async exportExcel(@Res() res: Response) {
-    const workbook = await this.bulkImportService.exportToExcel();
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
     
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=products.xlsx');
-    res.send(buffer);
+    const csvHeader = Object.keys(data[0] || {}).join(',');
+    const csvRows = data.map(row => Object.values(row).join(','));
+    const csvContent = [csvHeader, ...csvRows].join('\n');
+    
+    res.send(csvContent);
   }
 
+  @Get('import/status/:jobId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Post(':id/stock')
-  updateStock(
-    @Param('id') productId: string,
-    @Body() body: { variantId?: string; quantity: number; operation: 'add' | 'subtract' }
-  ) {
-    return this.productsService.updateStock(productId, body.variantId || null, body.quantity, body.operation);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get('inventory/low-stock')
-  getLowStockProducts() {
-    return this.productsService.getLowStockProducts();
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get('inventory/alerts')
-  getInventoryAlerts() {
-    return this.productsService.getInventoryAlerts();
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  getImportJobStatus(@Param('jobId') jobId: string) {
+    return this.productsService.getImportJobStatus(jobId);
   }
 }

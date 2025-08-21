@@ -1,14 +1,17 @@
-import { IsString, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsInt, Min, MaxLength } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
+  @MaxLength(100)
   name: string;
 
   @IsString()
+  @MaxLength(100)
   slug: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   description?: string;
 
   @IsOptional()
@@ -16,15 +19,15 @@ export class CreateCategoryDto {
   image?: string;
 
   @IsOptional()
-  @IsString()
-  parentId?: string;
+  @IsInt()
+  parentId?: number;
 
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean;
+  isActive?: boolean = true;
 
   @IsOptional()
   @IsInt()
   @Min(0)
-  sortOrder?: number;
+  sortOrder?: number = 0;
 }

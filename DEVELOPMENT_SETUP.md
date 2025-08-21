@@ -1,211 +1,195 @@
-# 🛠️ Development Environment Setup Guide
+# Development Environment Setup Guide
 
 ## Prerequisites
 
-- Node.js 18+ installed
-- npm or yarn package manager
-- Git for version control
+- **Node.js** (v18 or higher)
+- **npm** (v9 or higher)
+- **Git**
 
-## 🔧 Backend Setup (NestJS)
+## Quick Start
 
-### 1. Navigate to Backend Directory
+### 1. Clone Repository
 ```bash
-cd household-planet-backend
+git clone <repository-url>
+cd HouseholdPlanetKenya
 ```
 
 ### 2. Install Dependencies
 ```bash
+# Install root dependencies
+npm install
+
+# Install backend dependencies
+cd household-planet-backend
+npm install
+
+# Install frontend dependencies
+cd ../household-planet-frontend
 npm install
 ```
 
 ### 3. Environment Configuration
-Create `.env` file in the backend root:
+
+#### Backend (.env)
 ```env
-# Database
-DATABASE_URL="file:./dev.db"
-
-# JWT Configuration
-JWT_SECRET="your-super-secret-jwt-key-change-in-production"
-
-# Server Configuration
 PORT=3001
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+DATABASE_URL=file:./dev.db
+CORS_ORIGIN=http://localhost:3000
+```
+
+#### Frontend (.env.local)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
 ### 4. Database Setup
 ```bash
+cd household-planet-backend
+
 # Generate Prisma client
 npx prisma generate
 
 # Run database migrations
 npx prisma migrate dev
 
-# (Optional) View database in Prisma Studio
-npx prisma studio
+# (Optional) Seed database
+npx prisma db seed
 ```
 
-### 5. Start Development Server
-```bash
-npm run start:dev
-```
+### 5. Start Development Servers
 
-Backend will be available at: `http://localhost:3001`
-
-## 🖥️ Frontend Setup (Next.js)
-
-### 1. Navigate to Frontend Directory
-```bash
-cd household-planet-frontend
-```
-
-### 2. Install Dependencies
-```bash
-npm install
-```
-
-### 3. Environment Configuration
-Create `.env.local` file in the frontend root:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-### 4. Start Development Server
-```bash
-npm run dev
-```
-
-Frontend will be available at: `http://localhost:3000`
-
-## 🧪 Testing the System
-
-### 1. Access the Application
-Open your browser and go to `http://localhost:3000`
-
-### 2. Test User Registration
-- Click "Get Started"
-- Fill in the registration form
-- Use a strong password (8+ chars, uppercase, lowercase, number, special char)
-
-### 3. Test User Login
-- Navigate to login page
-- Use the credentials you just created
-- Access the dashboard
-
-### 4. Test API Endpoints
-Use the provided test script:
+#### Terminal 1 - Backend
 ```bash
 cd household-planet-backend
-node test-auth.js
+npm run start:dev
 ```
+Backend runs on: http://localhost:3001
 
-## 📁 Project Structure
+#### Terminal 2 - Frontend
+```bash
+cd household-planet-frontend
+npm run dev
+```
+Frontend runs on: http://localhost:3000
+
+## Project Structure
 
 ```
 HouseholdPlanetKenya/
-├── household-planet-backend/          # NestJS Backend
+├── household-planet-backend/     # NestJS API
+│   ├── prisma/                  # Database schema & migrations
 │   ├── src/
-│   │   ├── auth/                     # Authentication module
-│   │   ├── users/                    # User management
-│   │   ├── prisma/                   # Database service
-│   │   └── common/                   # Shared utilities
-│   ├── prisma/                       # Database schema & migrations
-│   └── test-auth.js                  # API testing script
-├── household-planet-frontend/         # Next.js Frontend
+│   │   ├── auth/               # Authentication module
+│   │   ├── users/              # User management
+│   │   ├── products/           # Product management
+│   │   ├── orders/             # Order management
+│   │   └── common/             # Shared utilities
+│   └── package.json
+├── household-planet-frontend/    # Next.js frontend
 │   ├── src/
-│   │   ├── app/                      # App router pages
-│   │   ├── contexts/                 # React contexts
-│   │   └── lib/                      # Utilities & API client
-└── Documentation files
+│   │   ├── app/                # App router pages
+│   │   ├── components/         # React components
+│   │   ├── lib/                # Utilities
+│   │   └── types/              # TypeScript types
+│   └── package.json
+└── README.md
 ```
 
-## 🔍 Available Scripts
+## Available Scripts
 
-### Backend Scripts
+### Backend
+- `npm run start:dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run start:prod` - Start production server
+- `npm run test` - Run tests
+- `npm run lint` - Run ESLint
+
+### Frontend
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Database Management
+
+### View Database
 ```bash
-npm run start:dev      # Start development server
-npm run build          # Build for production
-npm run start:prod     # Start production server
-npm run test           # Run tests
-npx prisma studio      # Open database GUI
-npx prisma migrate dev # Run migrations
+cd household-planet-backend
+npx prisma studio
 ```
 
-### Frontend Scripts
+### Reset Database
 ```bash
-npm run dev           # Start development server
-npm run build         # Build for production
-npm run start         # Start production server
-npm run lint          # Run ESLint
+npx prisma migrate reset
 ```
 
-## 🐛 Troubleshooting
+### Create Migration
+```bash
+npx prisma migrate dev --name migration_name
+```
+
+## Testing API Endpoints
+
+### Using curl
+```bash
+# Register user
+curl -X POST http://localhost:3001/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"password123"}'
+
+# Login user
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+### Using REST Client (VS Code)
+Install REST Client extension and use the `test-api.http` file in the root directory.
+
+## Troubleshooting
 
 ### Port Already in Use
-If you get "EADDRINUSE" error:
-- Change the port in `src/main.ts` (backend) or use different port
-- Kill existing processes using the port
+```bash
+# Kill process on port 3001 (backend)
+npx kill-port 3001
+
+# Kill process on port 3000 (frontend)
+npx kill-port 3000
+```
 
 ### Database Issues
 ```bash
 # Reset database
+cd household-planet-backend
 npx prisma migrate reset --force
-
-# Regenerate client
 npx prisma generate
 ```
 
-### Frontend Build Issues
+### Node Modules Issues
 ```bash
-# Clear Next.js cache
-rm -rf .next
-npm run build
+# Clean install
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-## 🔐 Default User Roles
-
-- **CUSTOMER**: Default role for new registrations
-- **ADMIN**: Administrative access (manually set in database)
-- **SUPER_ADMIN**: Full system access (manually set in database)
-
-## 📊 Database Access
-
-### Prisma Studio (GUI)
-```bash
-cd household-planet-backend
-npx prisma studio
-```
-
-### Direct Database Access
-The SQLite database file is located at:
-`household-planet-backend/prisma/dev.db`
-
-## 🚀 Production Deployment
+## Production Deployment
 
 ### Backend
 1. Set production environment variables
-2. Use PostgreSQL instead of SQLite
-3. Run `npm run build`
-4. Deploy with `npm run start:prod`
+2. Build: `npm run build`
+3. Start: `npm run start:prod`
 
 ### Frontend
-1. Set production API URL
-2. Run `npm run build`
-3. Deploy the `.next` folder
+1. Set production environment variables
+2. Build: `npm run build`
+3. Start: `npm run start`
 
-## 📞 Support
+## Security Notes
 
-- Check `AUTH_SYSTEM.md` for detailed API documentation
-- Use `test-auth.js` for backend API testing
-- Review error logs in terminal for debugging
-
-## ✅ Verification Checklist
-
-- [ ] Backend starts without errors on port 3001
-- [ ] Frontend starts without errors on port 3000
-- [ ] Database migrations applied successfully
-- [ ] User registration works
-- [ ] User login works
-- [ ] Dashboard displays user information
-- [ ] Admin users see admin panel
-- [ ] API endpoints respond correctly
-
-**Setup Status: Ready for Development** 🎉
+- Change JWT_SECRET in production
+- Use HTTPS in production
+- Set proper CORS origins
+- Use environment variables for sensitive data
+- Enable rate limiting for production

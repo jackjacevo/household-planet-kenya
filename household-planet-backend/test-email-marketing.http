@@ -1,0 +1,59 @@
+### Test Email Marketing Automation
+
+### Send Welcome Email
+POST http://localhost:3001/email/welcome/1
+Content-Type: application/json
+
+### Send Abandoned Cart Email
+POST http://localhost:3001/email/abandoned-cart/1
+Content-Type: application/json
+
+### Send Order Confirmation
+POST http://localhost:3001/email/order-confirmation/1
+Content-Type: application/json
+
+### Send Shipping Notification
+POST http://localhost:3001/email/shipping/1
+Content-Type: application/json
+
+### Send Delivery Confirmation
+POST http://localhost:3001/email/delivery/1
+Content-Type: application/json
+
+### Send Birthday Offer
+POST http://localhost:3001/email/birthday/1
+Content-Type: application/json
+
+### Send Newsletter
+POST http://localhost:3001/email/newsletter
+Content-Type: application/json
+
+{
+  "userIds": [1, 2, 3]
+}
+
+### Send Reactivation Email
+POST http://localhost:3001/email/reactivation/1
+Content-Type: application/json
+
+### Create Email Template
+POST http://localhost:3001/email/templates
+Content-Type: application/json
+
+{
+  "name": "custom-template",
+  "subject": "Custom Email Subject",
+  "htmlContent": "<h2>Hello {{name}}</h2><p>This is a custom template</p>",
+  "variables": {
+    "name": "string"
+  }
+}
+
+### Update Email Template
+PUT http://localhost:3001/email/templates/welcome
+Content-Type: application/json
+
+{
+  "subject": "Updated Welcome Subject",
+  "htmlContent": "<h2>Updated Welcome {{name}}</h2>"
+}

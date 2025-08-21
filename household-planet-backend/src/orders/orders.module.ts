@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
-import { PrismaModule } from '../prisma/prisma.module';
-import { PaymentsModule } from '../payments/payments.module';
+import { WhatsAppService } from './whatsapp.service';
+import { ShippingService } from './shipping.service';
+import { OrdersController } from './orders.controller';
 import { DeliveryModule } from '../delivery/delivery.module';
-import { WhatsAppModule } from '../whatsapp/whatsapp.module';
+import { CustomersModule } from '../customers/customers.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule, PaymentsModule, DeliveryModule, WhatsAppModule],
+  imports: [PrismaModule, DeliveryModule, CustomersModule],
+  providers: [OrdersService, WhatsAppService, ShippingService],
   controllers: [OrdersController],
-  providers: [OrdersService],
-  exports: [OrdersService],
 })
 export class OrdersModule {}
