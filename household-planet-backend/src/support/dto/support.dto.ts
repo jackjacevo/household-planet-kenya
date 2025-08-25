@@ -5,15 +5,16 @@ export class CreateTicketDto {
   @MinLength(5)
   subject: string;
 
+  @IsOptional()
   @IsEnum(['ORDER', 'PRODUCT', 'PAYMENT', 'DELIVERY', 'ACCOUNT', 'OTHER'])
-  category: string;
+  category?: string;
 
   @IsEnum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])
   priority: string;
 
   @IsString()
-  @MinLength(20)
-  description: string;
+  @MinLength(1)
+  message: string;
 
   @IsOptional()
   @IsString()

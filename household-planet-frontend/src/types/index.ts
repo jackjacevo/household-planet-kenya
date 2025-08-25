@@ -14,12 +14,12 @@ export interface User {
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'CUSTOMER' | 'GUEST';
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description?: string;
   image?: string;
-  parentId?: string;
+  parentId?: number;
   isActive: boolean;
   sortOrder: number;
   children?: Category[];
@@ -27,7 +27,7 @@ export interface Category {
 }
 
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description: string;
@@ -40,12 +40,12 @@ export interface Product {
     length: number;
     width: number;
     height: number;
-  };
+  } | null;
   images: string[];
   images360?: string[];
   videos?: string[];
-  categoryId: string;
-  brandId?: string;
+  categoryId: number;
+  brandId?: number;
   isActive: boolean;
   isFeatured: boolean;
   seoTitle?: string;
@@ -64,8 +64,8 @@ export interface Product {
 }
 
 export interface ProductVariant {
-  id: string;
-  productId: string;
+  id: number;
+  productId: number;
   name: string;
   sku: string;
   price: number;
@@ -78,8 +78,8 @@ export interface ProductVariant {
 }
 
 export interface Review {
-  id: string;
-  productId: string;
+  id: number;
+  productId: number;
   userId: string;
   rating: number;
   title?: string;
@@ -95,8 +95,8 @@ export interface Review {
 export interface CartItem {
   id: string;
   userId?: string;
-  productId: string;
-  variantId?: string;
+  productId: number;
+  variantId?: number;
   quantity: number;
   product: Product;
   variant?: ProductVariant;

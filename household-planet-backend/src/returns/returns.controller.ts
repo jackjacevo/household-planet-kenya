@@ -10,21 +10,21 @@ export class ReturnsController {
 
   @Get()
   getUserReturns(@Request() req) {
-    return this.returnsService.getUserReturns(req.user.userId);
+    return this.returnsService.getUserReturns(req.user.id);
   }
 
   @Post()
   createReturn(@Request() req, @Body() createReturnDto: CreateReturnDto) {
-    return this.returnsService.createReturn(req.user.userId, createReturnDto);
+    return this.returnsService.createReturn(req.user.id, createReturnDto);
   }
 
   @Get(':id')
   getReturn(@Request() req, @Param('id') returnId: string) {
-    return this.returnsService.getReturn(req.user.userId, returnId);
+    return this.returnsService.getReturn(req.user.id, returnId);
   }
 
   @Put(':id/cancel')
   cancelReturn(@Request() req, @Param('id') returnId: string) {
-    return this.returnsService.cancelReturn(req.user.userId, returnId);
+    return this.returnsService.cancelReturn(req.user.id, returnId);
   }
 }

@@ -29,13 +29,13 @@ export const useWishlist = create<WishlistStore>()(
       
       removeFromWishlist: (id) => {
         set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
+          items: state.items.filter((item) => item.id !== Number(id)),
         }));
       },
       
       isInWishlist: (id) => {
         const state = get();
-        return state.items.some((item) => item.id === id);
+        return state.items.some((item) => item.id === Number(id));
       },
       
       clearWishlist: () => set({ items: [] }),

@@ -40,7 +40,7 @@ export function usePayment() {
       }
 
       const response = await axios.post<PaymentResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/initiate`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/initiate`,
         data,
         {
           headers: {
@@ -68,7 +68,7 @@ export function usePayment() {
       }
 
       const response = await axios.get<PaymentStatusResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/status/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/status/${orderId}`,
         {
           headers: { 'Authorization': `Bearer ${token}` },
         }
@@ -89,7 +89,7 @@ export function usePayment() {
       }
 
       const response = await axios.post<PaymentResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/retry/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/retry/${orderId}`,
         {},
         {
           headers: { 'Authorization': `Bearer ${token}` },

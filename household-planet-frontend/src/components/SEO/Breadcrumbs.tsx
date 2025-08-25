@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline'
+import { ChevronRight, Home } from 'lucide-react'
 import { StructuredData } from './StructuredData'
 import { generateBreadcrumbSchema } from '@/lib/seo'
 
@@ -27,11 +27,11 @@ export function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
           {allItems.map((item, index) => (
             <li key={item.url} className="flex items-center">
               {index > 0 && (
-                <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />
+                <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />
               )}
               {index === allItems.length - 1 ? (
                 <span className="text-gray-600 font-medium flex items-center">
-                  {index === 0 && <HomeIcon className="h-4 w-4 mr-1" />}
+                  {index === 0 && <Home className="h-4 w-4 mr-1" />}
                   {item.name}
                 </span>
               ) : (
@@ -39,7 +39,7 @@ export function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
                   href={item.url}
                   className="text-orange-600 hover:text-orange-700 transition-colors flex items-center"
                 >
-                  {index === 0 && <HomeIcon className="h-4 w-4 mr-1" />}
+                  {index === 0 && <Home className="h-4 w-4 mr-1" />}
                   {item.name}
                 </Link>
               )}

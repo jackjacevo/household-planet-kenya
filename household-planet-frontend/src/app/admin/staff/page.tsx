@@ -48,7 +48,7 @@ export default function StaffManagementPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/staff`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setStaff(response.data);
@@ -63,7 +63,7 @@ export default function StaffManagementPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/staff`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
         formData,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -180,21 +180,21 @@ export default function StaffManagementPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex flex-wrap gap-1">
-                    {member.permissions.slice(0, 2).map(permission => (
+                    {(member.permissions || []).slice(0, 2).map(permission => (
                       <span key={permission} className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
                         {permission.replace('_', ' ')}
                       </span>
                     ))}
-                    {member.permissions.length > 2 && (
+                    {(member.permissions || []).length > 2 && (
                       <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
-                        +{member.permissions.length - 2}
+                        +{(member.permissions || []).length - 2}
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div>
-                    <div>{member._count.activities} actions</div>
+                    <div>{member._count?.orders || 0} orders</div>
                     <div className="text-gray-400">
                       {member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : 'Never'}
                     </div>

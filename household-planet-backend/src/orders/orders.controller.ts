@@ -20,17 +20,38 @@ export class OrdersController {
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
-  findAll(@Query() filters: OrderFilterDto) {
-    return this.ordersService.findAll(filters);
+  async findAll(@Query() filters: OrderFilterDto) {
+    try {
+      console.log('Orders controller findAll called with filters:', filters);
+      const result = await this.ordersService.findAll(filters);
+      console.log('Orders found:', result.orders?.length || 0);
+      return result;
+    } catch (error) {
+      console.error('Error in orders controller findAll:', error);
+      throw error;
+    }
   }
 
   @Get('my-orders')
   @UseGuards(AuthGuard('jwt'))
-  getMyOrders(@Request() req) {
+  getMyOrders(@Request() req, @Query() query: { status?: string; returnable?: string }) {
+    console.log('getMyOrders called with query:', query);
+    console.log('User:', req.user?.id);
+    
     if (!req.user || !req.user.id) {
       throw new BadRequestException('User not authenticated');
     }
-    return this.ordersService.findByUser(req.user.id);
+    
+    const filters: any = {};
+    if (query.status) {
+      filters.status = query.status;
+    }
+    if (query.returnable === 'true') {
+      filters.returnable = true;
+    }
+    
+    console.log('Filters applied:', filters);
+    return this.ordersService.findByUser(req.user.id, filters);
   }
 
   @Get('admin/stats')

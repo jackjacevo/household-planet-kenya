@@ -1,31 +1,38 @@
 'use client';
 
 interface ProductSortProps {
-  onSortChange: (sortBy: string) => void;
+  onSortChange: (sortBy: string, sortOrder?: string) => void;
 }
 
 export function ProductSort({ onSortChange }: ProductSortProps) {
   const sortOptions = [
-    { value: 'newest', label: 'Newest' },
-    { value: 'price-asc', label: 'Price: Low to High' },
-    { value: 'price-desc', label: 'Price: High to Low' },
-    { value: 'popular', label: 'Most Popular' },
-    { value: 'rating', label: 'Highest Rated' },
+    { value: 'createdAt-desc', label: 'Newest First', sortBy: 'createdAt', sortOrder: 'desc' },
+    { value: 'createdAt-asc', label: 'Oldest First', sortBy: 'createdAt', sortOrder: 'asc' },
+    { value: 'name-asc', label: 'Name A-Z', sortBy: 'name', sortOrder: 'asc' },
+    { value: 'name-desc', label: 'Name Z-A', sortBy: 'name', sortOrder: 'desc' },
+    { value: 'price-asc', label: 'Price Low to High', sortBy: 'price', sortOrder: 'asc' },
+    { value: 'price-desc', label: 'Price High to Low', sortBy: 'price', sortOrder: 'desc' },
+    { value: 'rating-desc', label: 'Highest Rated', sortBy: 'rating', sortOrder: 'desc' },
   ];
 
+  const handleSortChange = (value: string) => {
+    const option = sortOptions.find(opt => opt.value === value);
+    if (option) {
+      onSortChange(option.sortBy, option.sortOrder);
+    }
+  };
+
   return (
-    <div>
-      <label className="block text-sm font-medium mb-2">Sort by</label>
-      <select
-        onChange={(e) => onSortChange(e.target.value)}
-        className="p-2 border border-gray-300 rounded-md"
-      >
-        {sortOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
+    <select
+      onChange={(e) => handleSortChange(e.target.value)}
+      className="px-3 py-2 border border-gray-300 rounded-xl bg-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+      defaultValue="createdAt-desc"
+    >
+      {sortOptions.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }

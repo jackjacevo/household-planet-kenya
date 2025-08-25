@@ -32,7 +32,7 @@ export default function CustomerProfile() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/customers/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/profile`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },

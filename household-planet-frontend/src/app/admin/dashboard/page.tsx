@@ -63,13 +63,21 @@ export default function AdminDashboard() {
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     } finally {
       setLoading(false);
     }

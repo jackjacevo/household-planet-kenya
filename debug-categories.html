@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Categories</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .category { border: 1px solid #ccc; margin: 10px 0; padding: 10px; }
+        .category img { width: 200px; height: 150px; object-fit: cover; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Categories Debug Page</h1>
+    <div id="status">Loading...</div>
+    <div id="categories"></div>
+
+    <script>
+        async function testCategories() {
+            const statusDiv = document.getElementById('status');
+            const categoriesDiv = document.getElementById('categories');
+            
+            try {
+                statusDiv.innerHTML = 'Fetching categories...';
+                
+                const response = await fetch('http://localhost:3001/api/categories/hierarchy');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Categories data:', data);
+                
+                statusDiv.innerHTML = `<span class="success">✓ Successfully loaded ${data.length} categories</span>`;
+                
+                data.forEach((category, index) => {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'category';
+                    
+                    const hasImage = category.image ? 'Has image' : 'No image';
+                    const imageUrl = category.image || `https://images.unsplash.com/photo-1600585152220-90363fe7e115?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+                    
+                    categoryDiv.innerHTML = `
+                        <h3>${category.name}</h3>
+                        <p><strong>Slug:</strong> ${category.slug}</p>
+                        <p><strong>Description:</strong> ${category.description || 'No description'}</p>
+                        <p><strong>Image Status:</strong> ${hasImage}</p>
+                        <p><strong>Image URL:</strong> ${imageUrl}</p>
+                        <img src="${imageUrl}" alt="${category.name}" 
+                             onload="console.log('Image loaded:', '${category.name}')"
+                             onerror="console.log('Image failed:', '${category.name}'); this.style.border='2px solid red';">
+                        <p><strong>Children:</strong> ${category.children?.length || 0}</p>
+                    `;
+                    
+                    categoriesDiv.appendChild(categoryDiv);
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
+            }
+        }
+        
+        testCategories();
+    </script>
+</body>
+</html>

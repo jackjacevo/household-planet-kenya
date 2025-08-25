@@ -18,6 +18,9 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { SupportModule } from './support/support.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { EmailModule } from './email/email.module';
+import { LoyaltyModule } from './loyalty/loyalty.module';
+import { ReturnsModule } from './returns/returns.module';
+import { StaffModule } from './staff/staff.module';
 
 @Module({
   imports: [
@@ -45,6 +48,9 @@ import { EmailModule } from './email/email.module';
     SupportModule,
     AnalyticsModule,
     EmailModule,
+    LoyaltyModule,
+    ReturnsModule,
+    StaffModule,
   ],
 })
 export class AppModule {}

@@ -26,7 +26,7 @@ export default function PaymentAnalytics() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/analytics?period=${period}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/analytics?period=${period}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setAnalytics(response.data);

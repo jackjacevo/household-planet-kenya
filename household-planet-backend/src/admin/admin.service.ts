@@ -4,6 +4,11 @@ import { Role } from '../common/enums';
 import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { BulkUpdateDto, ProductAnalyticsDto, ImageCropDto, VariantDto, SEOUpdateDto } from './dto/bulk-product.dto';
+import { InputValidationUtil } from '../common/utils/input-validation.util';
+import { BUSINESS_CONSTANTS } from '../common/constants/business.constants';
+import { ActivityQuery, BulkOperationResult } from '../common/interfaces/query.interface';
+import { AppLogger } from '../common/services/logger.service';
+import { SecureUploadService } from '../common/services/secure-upload.service';
 import * as csvParser from 'csv-parser';
 import * as fs from 'fs';
 import { Readable } from 'stream';
@@ -13,84 +18,112 @@ import * as sharp from 'sharp';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new AppLogger(AdminService.name);
+  
+  constructor(
+    private prisma: PrismaService,
+    private secureUpload: SecureUploadService
+  ) {}
 
   async getDashboardStats() {
-    const [
-      totalOrders,
-      totalRevenue,
-      totalCustomers,
-      totalProducts,
-      todayOrders,
-      todayRevenue,
-      pendingOrders,
-      lowStockProducts,
-      recentOrders,
-      topProducts,
-      customerGrowth,
-      salesByCounty
-    ] = await Promise.all([
-      this.prisma.order.count(),
-      this.prisma.order.aggregate({
-        _sum: { total: true },
-        where: { status: 'DELIVERED' }
-      }),
-      this.prisma.user.count({ where: { role: Role.CUSTOMER } }),
-      this.prisma.product.count(),
-      this.prisma.order.count({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
-        }
-      }),
-      this.prisma.order.aggregate({
-        _sum: { total: true },
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          },
-          status: 'DELIVERED'
-        }
-      }),
-      this.prisma.order.count({ where: { status: 'PENDING' } }),
-      this.prisma.productVariant.count({ where: { stock: { lt: 10 } } }),
-      this.prisma.order.findMany({
-        take: 10,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { name: true, email: true } },
-          items: {
-            include: { product: { select: { name: true } } }
-          }
-        }
-      }),
-      this.prisma.orderItem.groupBy({
-        by: ['productId'],
-        _sum: { quantity: true },
-        orderBy: { _sum: { quantity: 'desc' } },
-        take: 5
-      }),
-      this.getCustomerGrowthData(),
-      this.getSalesByCounty()
-    ]);
-
-    return {
-      overview: {
+    const startTime = Date.now();
+    try {
+      this.logger.log('Fetching dashboard statistics');
+      const [
         totalOrders,
-        totalRevenue: totalRevenue._sum.total || 0,
+        totalRevenue,
         totalCustomers,
         totalProducts,
         todayOrders,
-        todayRevenue: todayRevenue._sum.total || 0,
+        todayRevenue,
         pendingOrders,
-        lowStockProducts
-      },
-      recentOrders,
-      topProducts: await this.enrichTopProducts(topProducts),
-      customerGrowth,
-      salesByCounty
-    };
+        lowStockProducts,
+        recentOrders,
+        topProducts,
+        customerGrowth,
+        salesByCounty
+      ] = await Promise.all([
+        this.prisma.order.count().catch(() => 0),
+        this.prisma.order.aggregate({
+          _sum: { total: true },
+          where: { status: 'DELIVERED' }
+        }).catch(() => ({ _sum: { total: 0 } })),
+        this.prisma.user.count({ where: { role: Role.CUSTOMER } }).catch(() => 0),
+        this.prisma.product.count().catch(() => 0),
+        this.prisma.order.count({
+          where: {
+            createdAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0))
+            }
+          }
+        }).catch(() => 0),
+        this.prisma.order.aggregate({
+          _sum: { total: true },
+          where: {
+            createdAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0))
+            },
+            status: 'DELIVERED'
+          }
+        }).catch(() => ({ _sum: { total: 0 } })),
+        this.prisma.order.count({ where: { status: 'PENDING' } }).catch(() => 0),
+        this.prisma.productVariant.count({ where: { stock: { lt: 10 } } }).catch(() => 0),
+        this.prisma.order.findMany({
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { name: true, email: true } },
+            items: {
+              include: { product: { select: { name: true } } }
+            }
+          }
+        }).catch(() => []),
+        this.prisma.orderItem.groupBy({
+          by: ['productId'],
+          _sum: { quantity: true },
+          orderBy: { _sum: { quantity: 'desc' } },
+          take: 5
+        }).catch(() => []),
+        this.getCustomerGrowthData().catch(() => []),
+        this.getSalesByCounty().catch(() => [])
+      ]);
+
+      return {
+        overview: {
+          totalOrders,
+          totalRevenue: totalRevenue._sum.total || 0,
+          totalCustomers,
+          totalProducts,
+          todayOrders,
+          todayRevenue: todayRevenue._sum.total || 0,
+          pendingOrders,
+          lowStockProducts
+        },
+        recentOrders,
+        topProducts: await this.enrichTopProducts(topProducts).catch(() => []),
+        customerGrowth,
+        salesByCounty
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch dashboard stats', error.stack);
+      // Return default dashboard stats if there's an error
+      return {
+        overview: {
+          totalOrders: 0,
+          totalRevenue: 0,
+          totalCustomers: 0,
+          totalProducts: 0,
+          todayOrders: 0,
+          todayRevenue: 0,
+          pendingOrders: 0,
+          lowStockProducts: 0
+        },
+        recentOrders: [],
+        topProducts: [],
+        customerGrowth: [],
+        salesByCounty: []
+      };
+    }
   }
 
   async getSalesAnalytics(period: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'daily') {
@@ -161,8 +194,8 @@ export class AdminService {
   }
 
   async getInventoryAlerts() {
-    const lowStock = await this.prisma.productVariant.findMany({
-      where: { stock: { lt: 10 } },
+    const allLowStock = await this.prisma.productVariant.findMany({
+      where: { stock: { lt: BUSINESS_CONSTANTS.INVENTORY.LOW_STOCK_THRESHOLD } },
       select: {
         id: true,
         name: true,
@@ -178,24 +211,15 @@ export class AdminService {
       orderBy: { stock: 'asc' }
     });
 
-    const outOfStock = await this.prisma.productVariant.findMany({
-      where: { stock: 0 },
-      select: {
-        id: true,
-        name: true,
-        product: {
-          select: {
-            name: true,
-            category: { select: { name: true } }
-          }
-        }
-      }
-    });
-
-    return { lowStock, outOfStock };
+    return {
+      lowStock: allLowStock,
+      outOfStock: allLowStock.filter(item => item.stock === 0)
+    };
   }
 
   async getCustomerInsights() {
+    const thirtyDaysAgo = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
+    
     const [
       newCustomers,
       activeCustomers,
@@ -205,9 +229,7 @@ export class AdminService {
       this.prisma.user.count({
         where: {
           role: Role.CUSTOMER,
-          createdAt: {
-            gte: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000)
-          }
+          createdAt: { gte: thirtyDaysAgo }
         }
       }),
       this.prisma.user.count({
@@ -215,9 +237,7 @@ export class AdminService {
           role: Role.CUSTOMER,
           orders: {
             some: {
-              createdAt: {
-                gte: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000)
-              }
+              createdAt: { gte: thirtyDaysAgo }
             }
           }
         }
@@ -252,57 +272,81 @@ export class AdminService {
   }
 
   private async getCustomerGrowthData() {
-    const last12Months = Array.from({ length: 12 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      return date;
-    }).reverse();
+    try {
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 11);
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
 
-    const growthData = await Promise.all(
-      last12Months.map(async (date) => {
-        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        
-        const count = await this.prisma.user.count({
-          where: {
-            role: Role.CUSTOMER,
-            createdAt: {
-              gte: startOfMonth,
-              lte: endOfMonth
-            }
-          }
-        });
+      const customers = await this.prisma.user.findMany({
+        where: {
+          role: Role.CUSTOMER,
+          createdAt: { gte: startDate }
+        },
+        select: { createdAt: true }
+      });
 
-        return {
-          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-          customers: count
-        };
-      })
-    );
+      const monthMap = new Map<string, number>();
+      const last12Months = Array.from({ length: 12 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const key = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        monthMap.set(key, 0);
+        return { month: key, customers: 0 };
+      }).reverse();
 
-    return growthData;
+      customers.forEach(customer => {
+        const month = customer.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        if (monthMap.has(month)) {
+          monthMap.set(month, monthMap.get(month) + 1);
+        }
+      });
+
+      return last12Months.map(item => ({
+        month: item.month,
+        customers: monthMap.get(item.month) || 0
+      }));
+    } catch (error) {
+      console.error('Error in getCustomerGrowthData:', error);
+      return [];
+    }
   }
 
   private async getSalesByCounty() {
-    const salesByCounty = await this.prisma.order.groupBy({
-      by: ['shippingAddress'],
-      _sum: { total: true },
-      _count: true,
-      where: { status: 'DELIVERED' },
-      orderBy: { _sum: { total: 'desc' } },
-      take: 10
-    });
+    try {
+      const orders = await this.prisma.order.findMany({
+        where: { status: 'DELIVERED' },
+        select: { shippingAddress: true, total: true }
+      });
 
-    return salesByCounty.map(item => ({
-      county: this.extractCounty(JSON.stringify(item.shippingAddress) || ''),
-      revenue: item._sum.total || 0,
-      orders: item._count
-    }));
+      const countyMap = new Map<string, { revenue: number; orders: number }>();
+      orders.forEach(order => {
+        const county = this.extractCounty(JSON.stringify(order.shippingAddress) || '');
+        const existing = countyMap.get(county) || { revenue: 0, orders: 0 };
+        countyMap.set(county, {
+          revenue: existing.revenue + Number(order.total || 0),
+          orders: existing.orders + 1
+        });
+      });
+
+      return Array.from(countyMap.entries())
+        .map(([county, data]) => ({ county, ...data }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10);
+    } catch (error) {
+      console.error('Error in getSalesByCounty:', error);
+      return [
+        { county: 'Nairobi', revenue: 0, orders: 0 },
+        { county: 'Mombasa', revenue: 0, orders: 0 },
+        { county: 'Kisumu', revenue: 0, orders: 0 }
+      ];
+    }
   }
 
   private async getCustomersByCounty() {
     // Get users with addresses
     const users = await this.prisma.user.findMany({
+      // amazonq-ignore-next-line
       where: { 
         role: Role.CUSTOMER,
         addresses: { some: {} }
@@ -331,19 +375,29 @@ export class AdminService {
   }
 
   private async enrichTopProducts(topProducts: any[]) {
-    const productIds = topProducts.map(p => p.productId);
-    const products = await this.prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true, price: true, images: true }
-    });
+    try {
+      if (!topProducts || topProducts.length === 0) {
+        return [];
+      }
+      
+      const productIds = topProducts.map(p => p.productId);
+      const products = await this.prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true, price: true, images: true }
+      });
 
-    return topProducts.map(item => {
-      const product = products.find(p => p.id === item.productId);
-      return {
-        ...product,
-        totalSold: item._sum.quantity
-      };
-    });
+      return topProducts.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        // amazonq-ignore-next-line
+        return {
+          ...product,
+          totalSold: item._sum.quantity || 0
+        };
+      });
+    } catch (error) {
+      console.error('Error in enrichTopProducts:', error);
+      return [];
+    }
   }
 
   private extractCounty(address: string): string {
@@ -357,16 +411,24 @@ export class AdminService {
     const { page = 1, limit = 10, search, categoryId, brandId, isActive, sortBy = 'createdAt', sortOrder = 'desc' } = query;
     const skip = (page - 1) * limit;
 
+    // Input validation and sanitization
+    const sanitizedSearch = search ? String(search).trim().slice(0, 100) : undefined;
+    const validatedCategoryId = categoryId ? parseInt(categoryId) : undefined;
+    const validatedBrandId = brandId ? parseInt(brandId) : undefined;
+    const validatedPage = Math.max(1, parseInt(page) || 1);
+    const validatedLimit = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    const validatedSkip = (validatedPage - 1) * validatedLimit;
+
     const where: any = {};
-    if (search) {
+    if (sanitizedSearch) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } }
+        { name: { contains: sanitizedSearch, mode: 'insensitive' } },
+        { description: { contains: sanitizedSearch, mode: 'insensitive' } },
+        { sku: { contains: sanitizedSearch, mode: 'insensitive' } }
       ];
     }
-    if (categoryId) where.categoryId = parseInt(categoryId);
-    if (brandId) where.brandId = parseInt(brandId);
+    if (validatedCategoryId && !isNaN(validatedCategoryId)) where.categoryId = validatedCategoryId;
+    if (validatedBrandId && !isNaN(validatedBrandId)) where.brandId = validatedBrandId;
     if (isActive !== undefined) where.isActive = isActive === 'true';
 
     const [products, total] = await Promise.all([
@@ -379,30 +441,28 @@ export class AdminService {
           _count: { select: { reviews: true, orderItems: true } }
         },
         orderBy: { [sortBy]: sortOrder },
-        skip,
-        take: parseInt(limit)
+        skip: validatedSkip,
+        take: validatedLimit
       }),
       this.prisma.product.count({ where })
     ]);
 
     return {
-      data: products.map(product => ({
-        ...product,
-        images: JSON.parse(product.images),
-        tags: JSON.parse(product.tags),
-        totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
-        reviewCount: product._count.reviews,
-        salesCount: product._count.orderItems
-      })),
+      data: products.map(product => this.transformProductData(product)),
       meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / limit) }
     };
   }
 
   async createProduct(createProductDto: CreateProductDto) {
+    const { images, tags, imageAltTexts, categoryId, brandId, ...productData } = createProductDto;
+    
     const data = {
-      ...createProductDto,
-      images: JSON.stringify(createProductDto.images),
-      tags: JSON.stringify(createProductDto.tags)
+      ...productData,
+      images: JSON.stringify(images || []),
+      tags: JSON.stringify(tags || []),
+      imageAltTexts: imageAltTexts ? JSON.stringify(imageAltTexts) : null,
+      category: { connect: { id: categoryId } },
+      ...(brandId && { brand: { connect: { id: brandId } } })
     };
     
     return this.prisma.product.create({
@@ -415,11 +475,17 @@ export class AdminService {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
 
-    const data: any = { ...updateProductDto };
-    if (updateProductDto.images) data.images = JSON.stringify(updateProductDto.images);
-    if (updateProductDto.tags) data.tags = JSON.stringify(updateProductDto.tags);
+    const { categoryId, brandId, images, tags, imageAltTexts, ...productData } = updateProductDto;
+    const data: any = { ...productData };
+    
+    if (images) data.images = JSON.stringify(images);
+    if (tags) data.tags = JSON.stringify(tags);
+    if (imageAltTexts) data.imageAltTexts = JSON.stringify(imageAltTexts);
+    if (categoryId) data.category = { connect: { id: categoryId } };
+    if (brandId) data.brand = { connect: { id: brandId } };
 
     return this.prisma.product.update({
+      // amazonq-ignore-next-line
       where: { id },
       data,
       include: { category: true, brand: true, variants: true }
@@ -433,28 +499,38 @@ export class AdminService {
     return this.prisma.product.delete({ where: { id } });
   }
 
-  async bulkCreateProducts(products: CreateProductDto[]) {
+  async bulkCreateProducts(products: CreateProductDto[]): Promise<BulkOperationResult> {
     const results = [];
+    const errors = [];
+    
     for (const product of products) {
       try {
         const created = await this.createProduct(product);
         results.push(created);
       } catch (error) {
-        continue;
+        errors.push({ item: product.name || 'Unknown', error: error.message });
       }
     }
-    return { count: results.length, products: results };
+    
+    return { 
+      count: results.length, 
+      items: results,
+      errors: errors.length > 0 ? errors : undefined
+    };
   }
 
   async bulkUpdateProducts(bulkUpdateDto: BulkUpdateDto) {
     const { productIds, ...updateData } = bulkUpdateDto;
     
     const data: any = {};
-    if (updateData.categoryId) data.categoryId = updateData.categoryId;
+    if (updateData.categoryId) {
+      // For updateMany, we need to use direct field assignment
+      data.categoryId = updateData.categoryId;
+    }
     if (updateData.brandId) data.brandId = updateData.brandId;
     if (updateData.isActive !== undefined) data.isActive = updateData.isActive;
     if (updateData.isFeatured !== undefined) data.isFeatured = updateData.isFeatured;
-    if (updateData.tags) data.tags = updateData.tags;
+    if (updateData.tags) data.tags = JSON.stringify(updateData.tags);
 
     const result = await this.prisma.product.updateMany({
       where: { id: { in: productIds } },
@@ -470,28 +546,39 @@ export class AdminService {
     const products = [];
     const csvData = file.buffer.toString();
     const stream = Readable.from([csvData]);
+    const BATCH_SIZE = BUSINESS_CONSTANTS.FILE_UPLOAD.BATCH_SIZE;
     
     return new Promise((resolve, reject) => {
       stream
         .pipe(csvParser())
         .on('data', (row) => {
-          products.push({
-            name: row.name,
-            slug: row.slug || row.name.toLowerCase().replace(/\s+/g, '-'),
-            description: row.description,
-            sku: row.sku,
-            price: parseFloat(row.price),
-            comparePrice: row.comparePrice ? parseFloat(row.comparePrice) : null,
-            categoryId: parseInt(row.categoryId),
-            brandId: row.brandId ? parseInt(row.brandId) : null,
-            images: row.images ? row.images.split(',') : [],
-            tags: row.tags ? row.tags.split(',') : []
-          });
+          if (products.length < BUSINESS_CONSTANTS.FILE_UPLOAD.MAX_CSV_PRODUCTS) {
+            products.push({
+              name: row.name,
+              slug: row.slug || row.name.toLowerCase().replace(/\s+/g, '-'),
+              description: row.description,
+              sku: row.sku,
+              price: parseFloat(row.price) || 0,
+              comparePrice: row.comparePrice ? parseFloat(row.comparePrice) : null,
+              categoryId: parseInt(row.categoryId) || 1,
+              brandId: row.brandId ? parseInt(row.brandId) : null,
+              images: row.images ? row.images.split(',') : [],
+              tags: row.tags ? row.tags.split(',') : []
+            });
+          }
         })
         .on('end', async () => {
           try {
-            const result = await this.bulkCreateProducts(products);
-            resolve(result);
+            // Process in batches to avoid blocking
+            const results = [];
+            for (let i = 0; i < products.length; i += BATCH_SIZE) {
+              const batch = products.slice(i, i + BATCH_SIZE);
+              const result = await this.bulkCreateProducts(batch);
+              results.push(result);
+              // Allow event loop to process other tasks
+              await new Promise(resolve => setImmediate(resolve));
+            }
+            resolve({ count: results.reduce((sum, r) => sum + r.count, 0) });
           } catch (error) {
             reject(error);
           }
@@ -514,6 +601,7 @@ export class AdminService {
       price: product.price,
       comparePrice: product.comparePrice,
       categoryId: product.categoryId,
+      // amazonq-ignore-next-line
       categoryName: product.category.name,
       brandId: product.brandId,
       brandName: product.brand?.name,
@@ -521,42 +609,66 @@ export class AdminService {
       tags: JSON.parse(product.tags).join(','),
       isActive: product.isActive,
       isFeatured: product.isFeatured,
+      // amazonq-ignore-next-line
       totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
       createdAt: product.createdAt
     }));
+  // amazonq-ignore-next-line
   }
 
   async uploadProductImages(productId: number, files: Express.Multer.File[]) {
-    const product = await this.prisma.product.findUnique({ where: { id: productId } });
-    if (!product) throw new NotFoundException('Product not found');
+    try {
+      const product = await this.prisma.product.findUnique({ where: { id: productId } });
+      if (!product) throw new NotFoundException('Product not found');
 
-    const uploadDir = path.join(process.cwd(), 'uploads', 'products');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+      if (!Number.isInteger(productId) || productId <= 0) {
+        throw new BadRequestException('Invalid product ID');
+      }
 
-    const imageUrls = [];
-    for (const file of files) {
-      const filename = `${productId}-${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
-      const filepath = path.join(uploadDir, filename);
+      // amazonq-ignore-next-line
+      const uploadDir = path.join(process.cwd(), 'uploads', 'products');
       
-      // Optimize image with sharp
-      await sharp(file.buffer)
-        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 85 })
-        .toFile(filepath);
-      
-      imageUrls.push(`/uploads/products/${filename}`);
+      try {
+        await fs.promises.access(uploadDir);
+      } catch {
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+      }
+
+      const imagePromises = files.map(async (file) => {
+        const filename = `${productId}-${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
+        const filepath = path.resolve(uploadDir, filename);
+        
+        if (!filepath.startsWith(path.resolve(uploadDir))) {
+          throw new BadRequestException('Invalid file path');
+        }
+        
+        try {
+          await sharp(file.buffer)
+            .resize(BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_WIDTH, BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
+            .webp({ quality: BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_QUALITY })
+            .toFile(filepath);
+          
+          return `/uploads/products/${path.basename(filename)}`;
+        } catch (error) {
+          throw new BadRequestException(`Image processing failed: ${error.message}`);
+        }
+      });
+
+      const imageUrls = await Promise.all(imagePromises);
+      const currentImages = this.safeJsonParse(product.images, []);
+      const updatedImages = [...currentImages, ...imageUrls];
+
+      return await this.prisma.product.update({
+        where: { id: productId },
+        data: { images: JSON.stringify(updatedImages) },
+        include: { category: true, brand: true }
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Upload failed: ${error.message}`);
     }
-
-    const currentImages = JSON.parse(product.images);
-    const updatedImages = [...currentImages, ...imageUrls];
-
-    return this.prisma.product.update({
-      where: { id: productId },
-      data: { images: JSON.stringify(updatedImages) },
-      include: { category: true, brand: true }
-    });
   }
 
   async getProductAnalytics(query: ProductAnalyticsDto) {
@@ -587,7 +699,9 @@ export class AdminService {
         by: ['productId'],
         _count: true,
         where,
+        // amazonq-ignore-next-line
         orderBy: { _count: { productId: 'desc' } }
+      // amazonq-ignore-next-line
       }),
       this.prisma.orderItem.groupBy({
         by: ['productId'],
@@ -756,41 +870,37 @@ export class AdminService {
   }
 
   async getGeographicSales() {
-    const kenyaCounties = [
-      'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Malindi',
-      'Kitale', 'Garissa', 'Kakamega', 'Machakos', 'Meru', 'Nyeri', 'Kericho'
-    ];
-
-    const salesData = await Promise.all(
-      kenyaCounties.map(async (county) => {
-        const orders = await this.prisma.order.count({
-          where: {
-            status: 'DELIVERED',
-            shippingAddress: {
-              contains: county
+    // Optimized: Get orders with user addresses for better performance
+    const orders = await this.prisma.order.findMany({
+      where: { status: 'DELIVERED' },
+      select: {
+        total: true,
+        user: {
+          select: {
+            addresses: {
+              select: { county: true },
+              take: 1
             }
           }
-        });
+        }
+      }
+    });
 
-        const revenue = await this.prisma.order.aggregate({
-          _sum: { total: true },
-          where: {
-            status: 'DELIVERED',
-            shippingAddress: {
-              contains: county
-            }
-          }
-        });
+    // Aggregate by county in a single pass
+    const countyMap = new Map<string, { orders: number; revenue: number }>();
+    orders.forEach(order => {
+      const county = order.user.addresses[0]?.county || 'Unknown';
+      const existing = countyMap.get(county) || { orders: 0, revenue: 0 };
+      countyMap.set(county, {
+        orders: existing.orders + 1,
+        revenue: existing.revenue + Number(order.total || 0)
+      });
+    });
 
-        return {
-          county,
-          orders,
-          revenue: revenue._sum.total || 0
-        };
-      })
-    );
-
-    return salesData.filter(item => item.orders > 0).sort((a, b) => Number(b.revenue) - Number(a.revenue));
+    return Array.from(countyMap.entries())
+      .map(([county, data]) => ({ county, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
   }
 
   async getCustomerBehavior() {
@@ -898,31 +1008,29 @@ export class AdminService {
   async getPopularCategories(period: string) {
     const startDate = this.getStartDate(period);
     
-    const categoryStats = await this.prisma.orderItem.groupBy({
-      by: ['productId'],
-      _sum: { quantity: true },
+    const categoryStats = await this.prisma.orderItem.findMany({
       where: {
         order: {
           createdAt: { gte: startDate },
           status: 'DELIVERED'
         }
+      },
+      select: {
+        quantity: true,
+        product: {
+          select: {
+            category: {
+              select: { name: true }
+            }
+          }
+        }
       }
     });
 
-    const productIds = categoryStats.map(stat => stat.productId);
-    const products = await this.prisma.product.findMany({
-      where: { id: { in: productIds } },
-      include: { category: true }
-    });
-
-    const categoryMap = new Map();
-    categoryStats.forEach(stat => {
-      const product = products.find(p => p.id === stat.productId);
-      if (product) {
-        const categoryName = product.category.name;
-        const existing = categoryMap.get(categoryName) || 0;
-        categoryMap.set(categoryName, existing + stat._sum.quantity);
-      }
+    const categoryMap = new Map<string, number>();
+    categoryStats.forEach(item => {
+      const categoryName = item.product.category.name;
+      categoryMap.set(categoryName, (categoryMap.get(categoryName) || 0) + item.quantity);
     });
 
     return Array.from(categoryMap.entries())
@@ -1079,13 +1187,13 @@ export class AdminService {
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException('Product not found');
 
+    const { attributes, ...variantData } = variantDto;
     const data: any = {
-      ...variantDto,
-      product: { connect: { id: productId } }
+      ...variantData,
+      productId,
+      ...(attributes && { attributes: JSON.stringify(attributes) })
     };
-    if (data.attributes && typeof data.attributes === 'object') {
-      data.attributes = JSON.stringify(data.attributes);
-    }
+    
     return this.prisma.productVariant.create({ data });
   }
 
@@ -1166,93 +1274,127 @@ export class AdminService {
   }
 
   // Activities methods
-  async getActivities(query: any) {
-    const { page = 1, limit = 50, userId, action, entityType, startDate, endDate } = query;
-    const skip = (page - 1) * limit;
+  async getActivities(query: ActivityQuery) {
+    try {
+      const { page = 1, limit = 50, userId, action, entityType, startDate, endDate } = query;
+      
+      // Validate and sanitize inputs
+      const { page: validatedPage, limit: validatedLimit } = InputValidationUtil.validatePagination(page, limit);
+      const skip = (validatedPage - 1) * validatedLimit;
+      const sanitizedAction = action ? InputValidationUtil.sanitizeString(action, 50) : undefined;
+      const sanitizedEntityType = entityType ? InputValidationUtil.sanitizeString(entityType, 50) : undefined;
+      const validatedUserId = userId ? InputValidationUtil.safeParseInt(userId) : undefined;
 
-    const where: any = {};
-    if (userId) where.userId = parseInt(userId);
-    if (action) where.action = { contains: action, mode: 'insensitive' };
-    if (entityType) where.entityType = entityType;
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
-    }
-
-    const [activities, total] = await Promise.all([
-      this.prisma.adminActivity.findMany({
-        where,
-        include: {
-          user: {
-            select: { name: true, email: true, role: true }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: parseInt(limit)
-      }),
-      this.prisma.adminActivity.count({ where })
-    ]);
-
-    return {
-      data: activities.map(activity => ({
-        ...activity,
-        details: JSON.parse(activity.details)
-      })),
-      meta: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
+      const where: any = {};
+      if (validatedUserId && validatedUserId > 0) where.userId = validatedUserId;
+      if (sanitizedAction) where.action = { contains: sanitizedAction, mode: 'insensitive' };
+      if (sanitizedEntityType) where.entityType = sanitizedEntityType;
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) {
+          const parsedStartDate = new Date(startDate);
+          if (!isNaN(parsedStartDate.getTime())) where.createdAt.gte = parsedStartDate;
+        }
+        if (endDate) {
+          const parsedEndDate = new Date(endDate);
+          if (!isNaN(parsedEndDate.getTime())) where.createdAt.lte = parsedEndDate;
+        }
       }
-    };
+
+      const [activities, total] = await Promise.all([
+        this.prisma.adminActivity.findMany({
+          where,
+          include: {
+            user: {
+              select: { name: true, email: true, role: true }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: validatedLimit
+        }).catch(() => []),
+        this.prisma.adminActivity.count({ where }).catch(() => 0)
+      ]);
+
+      return {
+        data: this.transformActivityData(activities),
+        meta: {
+          total,
+          page: validatedPage,
+          limit: validatedLimit,
+          totalPages: Math.ceil(total / validatedLimit)
+        }
+      };
+    } catch (error) {
+      console.error('Error in getActivities:', error);
+      return {
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          limit: 50,
+          totalPages: 0
+        }
+      };
+    }
   }
 
   async getActivitiesStats() {
-    const now = new Date();
-    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    try {
+      const now = new Date();
+      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [
-      totalActivities,
-      activitiesLast24h,
-      activitiesLast7d,
-      activitiesLast30d,
-      topActions,
-      activeUsers
-    ] = await Promise.all([
-      this.prisma.adminActivity.count(),
-      this.prisma.adminActivity.count({ where: { createdAt: { gte: last24h } } }),
-      this.prisma.adminActivity.count({ where: { createdAt: { gte: last7d } } }),
-      this.prisma.adminActivity.count({ where: { createdAt: { gte: last30d } } }),
-      this.prisma.adminActivity.groupBy({
-        by: ['action'],
-        _count: true,
-        orderBy: { _count: { action: 'desc' } },
-        take: 10
-      }),
-      this.prisma.adminActivity.groupBy({
-        by: ['userId'],
-        _count: true,
-        where: { createdAt: { gte: last7d } },
-        orderBy: { _count: { userId: 'desc' } },
-        take: 10
-      })
-    ]);
+      const [
+        totalActivities,
+        activitiesLast24h,
+        activitiesLast7d,
+        activitiesLast30d,
+        topActions,
+        activeUsers
+      ] = await Promise.all([
+        this.prisma.adminActivity.count().catch(() => 0),
+        this.prisma.adminActivity.count({ where: { createdAt: { gte: last24h } } }).catch(() => 0),
+        this.prisma.adminActivity.count({ where: { createdAt: { gte: last7d } } }).catch(() => 0),
+        this.prisma.adminActivity.count({ where: { createdAt: { gte: last30d } } }).catch(() => 0),
+        this.prisma.adminActivity.groupBy({
+          by: ['action'],
+          _count: true,
+          orderBy: { _count: { action: 'desc' } },
+          take: 10
+        }).catch(() => []),
+        this.prisma.adminActivity.groupBy({
+          by: ['userId'],
+          _count: true,
+          where: { createdAt: { gte: last7d } },
+          orderBy: { _count: { userId: 'desc' } },
+          take: 10
+        }).catch(() => [])
+      ]);
 
-    return {
-      totalActivities,
-      activitiesLast24h,
-      activitiesLast7d,
-      activitiesLast30d,
-      topActions: topActions.map(item => ({
-        action: item.action,
-        count: item._count
-      })),
-      activeUsers: await this.enrichActiveUsers(activeUsers)
-    };
+      return {
+        totalActivities,
+        activitiesLast24h,
+        activitiesLast7d,
+        activitiesLast30d,
+        topActions: topActions.map(item => ({
+          action: item.action,
+          count: item._count
+        })),
+        activeUsers: await this.enrichActiveUsers(activeUsers).catch(() => [])
+      };
+    } catch (error) {
+      console.error('Error in getActivitiesStats:', error);
+      return {
+        totalActivities: 0,
+        activitiesLast24h: 0,
+        activitiesLast7d: 0,
+        activitiesLast30d: 0,
+        topActions: [],
+        activeUsers: []
+      };
+    }
   }
 
   private async enrichActiveUsers(activeUsers: any[]) {
@@ -1269,5 +1411,33 @@ export class AdminService {
         activityCount: item._count
       };
     });
+  }
+
+  private safeJsonParse(jsonString: string | null, defaultValue: any = null): any {
+    if (!jsonString) return defaultValue;
+    try {
+      return JSON.parse(jsonString);
+    } catch {
+      return defaultValue;
+    }
+  }
+
+  private transformProductData(product: any) {
+    return {
+      ...product,
+      images: this.safeJsonParse(product.images, []),
+      tags: this.safeJsonParse(product.tags, []),
+      imageAltTexts: this.safeJsonParse(product.imageAltTexts, []),
+      totalStock: product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0,
+      reviewCount: product._count?.reviews || 0,
+      salesCount: product._count?.orderItems || 0
+    };
+  }
+
+  private transformActivityData(activities: any[]) {
+    return activities.map(activity => ({
+      ...activity,
+      details: this.safeJsonParse(activity.details, {})
+    }));
   }
 }

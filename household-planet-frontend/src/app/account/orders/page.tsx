@@ -19,13 +19,15 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
         setOrders(data.orders || []);
+      } else {
+        console.error('Failed to fetch orders:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -37,7 +39,7 @@ export default function OrdersPage() {
   const reorderItems = async (orderId: number) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/reorder`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/reorder`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

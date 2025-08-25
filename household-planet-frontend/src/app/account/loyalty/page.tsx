@@ -26,13 +26,13 @@ export default function LoyaltyPage() {
     try {
       const token = localStorage.getItem('token');
       const [loyaltyRes, transactionsRes, rewardsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/loyalty/profile`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/loyalty/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/loyalty/transactions`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/loyalty/transactions`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/loyalty/rewards`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/loyalty/rewards`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -61,7 +61,7 @@ export default function LoyaltyPage() {
   const redeemReward = async (rewardId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/loyalty/redeem/${rewardId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/loyalty/redeem/${rewardId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

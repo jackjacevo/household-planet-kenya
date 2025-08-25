@@ -17,7 +17,7 @@ export default function InvoicesPage() {
   const fetchInvoices = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders?status=DELIVERED`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?status=DELIVERED`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -35,7 +35,7 @@ export default function InvoicesPage() {
   const downloadInvoice = async (orderId: string, orderNumber: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/invoice`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/invoice`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

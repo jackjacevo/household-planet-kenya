@@ -40,7 +40,7 @@ export default function SupportPage() {
   const fetchTickets = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/support/tickets`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/support/tickets`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -60,7 +60,7 @@ export default function SupportPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/support/tickets`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/support/tickets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export default function SupportPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/support/tickets/${ticketId}/reply`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/support/tickets/${ticketId}/reply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

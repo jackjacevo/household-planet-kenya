@@ -12,7 +12,7 @@ export class SecurityLoggingInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse();
     const { method, url, ip, headers } = request;
     const userAgent = headers['user-agent'] || 'Unknown';
-    const userId = request.user?.userId || 'Anonymous';
+    const userId = request.user?.id || 'Anonymous';
     const startTime = Date.now();
 
     // Log security-relevant request details

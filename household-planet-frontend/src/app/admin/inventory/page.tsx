@@ -30,7 +30,7 @@ export default function InventoryPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/alerts`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inventory/alerts`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setAlerts(response.data);

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseIntPipe, UseInterceptors, UploadedFiles, UploadedFile, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseIntPipe, UseInterceptors, UploadedFiles, UploadedFile, Req, Res, ValidationPipe, UsePipes } from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -7,6 +7,7 @@ import { BulkUpdateDto } from './dto/bulk-update.dto';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { SearchFiltersDto } from './dto/search-filters.dto';
 import { BulkImportDto } from './dto/bulk-import.dto';
+import { ProductQueryDto, SearchDto } from '../common/dto/query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -40,36 +41,21 @@ export class ProductsController {
   }
 
   @Get()
-  findAll(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-    @Query('featured') featured?: string,
-    @Query('active') active?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: string
-  ) {
-    return this.productsService.findAll({
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 20,
-      category,
-      search,
-      featured: featured === 'true',
-      active: active !== 'false',
-      sortBy: sortBy || 'createdAt',
-      sortOrder: sortOrder as 'asc' | 'desc' || 'desc'
-    });
+  @UsePipes(new ValidationPipe({ transform: true }))
+  findAll(@Query() query: ProductQueryDto) {
+    return this.productsService.findAll(query);
   }
 
   @Get('featured')
   getFeatured(@Query('limit') limit?: string) {
-    return this.productsService.getFeatured(parseInt(limit) || 10);
+    const validatedLimit = Math.min(50, Math.max(1, parseInt(limit || '10') || 10));
+    return this.productsService.getFeatured(validatedLimit);
   }
 
   @Get('search')
-  search(@Query('q') query: string, @Query('limit') limit?: string) {
-    return this.productsService.search(query, parseInt(limit) || 20);
+  @UsePipes(new ValidationPipe({ transform: true }))
+  search(@Query() searchDto: SearchDto) {
+    return this.productsService.search(searchDto.search, searchDto.limit);
   }
 
   @Post('search/advanced')
@@ -79,7 +65,8 @@ export class ProductsController {
 
   @Get('search/autocomplete')
   getAutocomplete(@Query('q') query: string, @Query('limit') limit?: string) {
-    return this.productsService.getAutocomplete(query, parseInt(limit) || 10);
+    const validatedLimit = Math.min(20, Math.max(1, parseInt(limit || '10') || 10));
+    return this.productsService.getAutocomplete(query, validatedLimit);
   }
 
   @Get(':id')

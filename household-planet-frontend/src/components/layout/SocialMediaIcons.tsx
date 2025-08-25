@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
+import { Facebook, Instagram } from 'lucide-react';
 
 const socialLinks = [
   {
@@ -13,6 +13,12 @@ const socialLinks = [
       </svg>
     ),
     color: 'bg-green-600 hover:bg-green-700'
+  },
+  {
+    name: 'Facebook',
+    href: 'https://www.facebook.com/share/1Np1NSY2bm/',
+    icon: Facebook,
+    color: 'bg-blue-600 hover:bg-blue-700'
   },
   {
     name: 'Instagram',

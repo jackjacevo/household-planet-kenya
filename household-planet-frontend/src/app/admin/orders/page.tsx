@@ -102,6 +102,12 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+      
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -109,13 +115,25 @@ export default function AdminOrdersPage() {
         ...(searchTerm && { customerEmail: searchTerm })
       });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          return;
+        }
+        const errorText = await response.text();
+        console.error('Orders API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: `${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`
+        });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
@@ -125,8 +143,8 @@ export default function AdminOrdersPage() {
       }
       
       const data = await response.json();
-      setOrders(data.orders || []);
-      setPagination(prev => ({ ...prev, ...data.pagination }));
+      setOrders(data.orders || data || []);
+      setPagination(prev => ({ ...prev, ...(data.pagination || data.meta || {}) }));
     } catch (error) {
       console.error('Error fetching orders:', error);
       setOrders([]);
@@ -137,13 +155,19 @@ export default function AdminOrdersPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/admin/stats`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Stats API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
@@ -161,13 +185,19 @@ export default function AdminOrdersPage() {
 
   const fetchReturns = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/returns`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Returns API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
@@ -186,7 +216,7 @@ export default function AdminOrdersPage() {
 
   const processReturn = async (returnId: string, status: string, notes?: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/returns/process`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns/process`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +233,7 @@ export default function AdminOrdersPage() {
 
   const updateOrderStatus = async (orderId: number, status: string, notes?: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/status`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +251,7 @@ export default function AdminOrdersPage() {
     if (!bulkAction || selectedOrders.length === 0) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/bulk/status`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -245,7 +275,7 @@ export default function AdminOrdersPage() {
 
   const generateShippingLabel = async (orderId: number) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/shipping-label`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/shipping-label`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -261,7 +291,7 @@ export default function AdminOrdersPage() {
 
   const sendCustomerEmail = async (orderId: number, template: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/email`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

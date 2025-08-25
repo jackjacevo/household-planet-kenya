@@ -20,7 +20,7 @@ export default function PaymentRetry({ orderId, onRetrySuccess }: PaymentRetryPr
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/retry/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/retry/${orderId}`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

@@ -38,7 +38,7 @@ export default function AdminCategoriesPage() {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(response.data);
@@ -57,11 +57,11 @@ export default function AdminCategoriesPage() {
       };
 
       if (editingCategory) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${editingCategory.id}`, data, {
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${editingCategory.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, data, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }

@@ -65,7 +65,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(response.data);
@@ -77,7 +77,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBrands(response.data);
@@ -96,7 +96,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${product?.id || 'temp'}/images`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${product?.id || 'temp'}/images`,
         formData,
         {
           headers: {

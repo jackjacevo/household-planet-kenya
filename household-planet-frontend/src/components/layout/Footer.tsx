@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -15,14 +15,14 @@ export function Footer() {
               Household Planet Kenya is your premier destination for high-quality home goods that transform your living spaces.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-green-600">
+              <a href="https://www.facebook.com/share/1Np1NSY2bm/" className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-green-600">
                 <Facebook className="h-5 w-5" />
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-green-600">
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-green-600">
-                <Twitter className="h-5 w-5" />
+              <a href="tel:+254790227760" className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-green-600">
+                <Phone className="h-5 w-5" />
               </a>
               <a href="https://wa.me/254790227760" className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-green-600">
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -129,10 +129,9 @@ export function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-gray-400 mb-4 md:mb-0">
-              <p>© 2025 Household Planet Kenya. All rights reserved.</p>
-              <p className="text-sm">Developed by Jacevo Systems</p>
-            </div>
+            <p className="text-gray-400 mb-4 md:mb-0">
+              © 2025 Household Planet Kenya. All rights reserved. | Developed by Jacevo Systems (+254) 704 000 165
+            </p>
             <div className="flex space-x-6">
               <div className="h-6 w-10 bg-green-600 rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold">M-PESA</span>

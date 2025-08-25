@@ -25,7 +25,7 @@ export default function CommunicationHistory() {
 
   const fetchCommunications = async () => {
     try {
-      const response = await fetch(`/api/customers/communications?page=${page}&limit=20`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/communications?page=${page}&limit=20`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },

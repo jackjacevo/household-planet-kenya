@@ -62,7 +62,7 @@ export default function CheckoutPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setSavedAddresses(response.data);
@@ -75,7 +75,7 @@ export default function CheckoutPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`,
         {
           type: 'SHIPPING',
           fullName: formData.fullName,
@@ -107,7 +107,7 @@ export default function CheckoutPage() {
       };
       
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
         {
           items: items.map(item => ({
             productId: item.product.id,

@@ -8,7 +8,7 @@ export class StaffService {
   constructor(private prisma: PrismaService) {}
 
   async getAllStaff() {
-    return this.prisma.user.findMany({
+    const staff = await this.prisma.user.findMany({
       where: { role: { in: ['ADMIN', 'STAFF'] } },
       select: {
         id: true,
@@ -16,6 +16,7 @@ export class StaffService {
         email: true,
         role: true,
         isActive: true,
+        permissions: true,
         createdAt: true,
         lastLogin: true,
         _count: {
@@ -26,6 +27,11 @@ export class StaffService {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    return staff.map(member => ({
+      ...member,
+      permissions: member.permissions ? JSON.parse(member.permissions) : []
+    }));
   }
 
   async createStaff(createStaffDto: CreateStaffDto) {

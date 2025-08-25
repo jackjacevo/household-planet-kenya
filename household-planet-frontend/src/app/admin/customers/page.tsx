@@ -32,7 +32,7 @@ export default function CustomersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/customers/insights`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/customers/insights`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setInsights(response.data);

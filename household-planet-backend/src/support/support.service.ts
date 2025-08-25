@@ -6,9 +6,9 @@ import { CreateTicketDto, CreateMessageDto } from './dto/support.dto';
 export class SupportService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserTickets(userId: string) {
-    return this.prisma.supportTicket.findMany({
-      where: { userId: parseInt(userId) },
+  async getUserTickets(userId: number) {
+    const tickets = await this.prisma.supportTicket.findMany({
+      where: { userId },
       include: {
         messages: {
           orderBy: { createdAt: 'asc' }
@@ -16,24 +16,35 @@ export class SupportService {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    return tickets.map(ticket => ({
+      ...ticket,
+      message: ticket.description,
+      responses: ticket.messages.map(msg => ({
+        id: msg.id,
+        message: msg.message,
+        isStaff: !msg.isFromCustomer,
+        createdAt: msg.createdAt
+      }))
+    }));
   }
 
-  async createTicket(userId: string, createTicketDto: CreateTicketDto) {
+  async createTicket(userId: number, createTicketDto: CreateTicketDto) {
     const ticketNumber = `HP-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
     
     const ticket = await this.prisma.supportTicket.create({
       data: {
         ticketNumber,
-        userId: parseInt(userId),
+        userId,
         subject: createTicketDto.subject,
-        category: createTicketDto.category,
+        category: createTicketDto.category || 'OTHER',
         priority: createTicketDto.priority,
-        description: createTicketDto.description,
+        description: createTicketDto.message,
         orderId: createTicketDto.orderId,
         status: 'OPEN',
         messages: {
           create: {
-            message: createTicketDto.description,
+            message: createTicketDto.message,
             isFromCustomer: true
           }
         }
@@ -46,7 +57,7 @@ export class SupportService {
     return ticket;
   }
 
-  async getTicket(userId: string, ticketId: string) {
+  async getTicket(userId: number, ticketId: string) {
     const ticket = await this.prisma.supportTicket.findUnique({
       where: { id: ticketId },
       include: {
@@ -60,14 +71,14 @@ export class SupportService {
       throw new NotFoundException('Ticket not found');
     }
 
-    if (ticket.userId !== parseInt(userId)) {
+    if (ticket.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
     return ticket;
   }
 
-  async addMessage(userId: string, ticketId: string, createMessageDto: CreateMessageDto) {
+  async addMessage(userId: number, ticketId: string, createMessageDto: CreateMessageDto) {
     const ticket = await this.getTicket(userId, ticketId);
 
     if (ticket.status === 'CLOSED') {
@@ -94,7 +105,7 @@ export class SupportService {
     return message;
   }
 
-  async closeTicket(userId: string, ticketId: string) {
+  async closeTicket(userId: number, ticketId: string) {
     const ticket = await this.getTicket(userId, ticketId);
 
     return this.prisma.supportTicket.update({

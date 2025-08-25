@@ -1,51 +1,124 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppLogger } from '../common/services/logger.service';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new AppLogger(ProductsService.name);
+  
   constructor(private prisma: PrismaService) {}
 
   async findAll(params: any) {
-    const { page = 1, limit = 20, category, search, featured, active = true, sortBy = 'createdAt', sortOrder = 'desc' } = params;
+    try {
+      const startTime = Date.now();
+      const { page = 1, limit = 20, category, search, featured, active = true, sortBy = 'newest', sortOrder = 'desc' } = params;
+      
+      const where: any = { isActive: active };
+      
+      if (category) {
+        where.categoryId = category;
+      }
+      
+      if (search) {
+        where.OR = [
+          { name: { contains: search } },
+          { description: { contains: search } }
+        ];
+      }
+      
+      if (featured !== undefined) {
+        where.isFeatured = featured;
+      }
+
+    // Map frontend sort values to database fields
+    let orderBy: any = { createdAt: 'desc' };
     
-    const where: any = { isActive: active };
-    
-    if (category) {
-      where.categoryId = parseInt(category);
-    }
-    
-    if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } }
-      ];
-    }
-    
-    if (featured !== undefined) {
-      where.isFeatured = featured;
+    switch (sortBy) {
+      case 'newest':
+        orderBy = { createdAt: 'desc' };
+        break;
+      case 'oldest':
+        orderBy = { createdAt: 'asc' };
+        break;
+      case 'price-asc':
+        orderBy = { price: 'asc' };
+        break;
+      case 'price-desc':
+        orderBy = { price: 'desc' };
+        break;
+      case 'popular':
+        orderBy = { totalSales: 'desc' };
+        break;
+      case 'rating':
+        orderBy = { averageRating: 'desc' };
+        break;
+      case 'name-asc':
+        orderBy = { name: 'asc' };
+        break;
+      case 'name-desc':
+        orderBy = { name: 'desc' };
+        break;
+      default:
+        orderBy = { createdAt: 'desc' };
     }
 
-    const products = await this.prisma.product.findMany({
-      where,
-      include: { category: true },
-      orderBy: { [sortBy]: sortOrder },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+      const [products, total] = await Promise.all([
+        this.prisma.product.findMany({
+          where,
+          include: { category: true },
+          orderBy,
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        this.prisma.product.count({ where })
+      ]);
 
-    const total = await this.prisma.product.count({ where });
+      this.logger.logDatabaseOperation('SELECT', 'products', Date.now() - startTime);
 
-    return { products, total, page, limit };
+    // Process products to parse JSON fields and add computed properties
+    const processedProducts = products.map(product => ({
+      ...product,
+      images: this.safeJsonParse(product.images, []),
+      tags: this.safeJsonParse(product.tags, []),
+      dimensions: this.safeJsonParse(product.dimensions, null),
+      averageRating: product.averageRating || 0,
+      reviewCount: 0
+    }));
+
+      return { 
+        data: processedProducts, 
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Failed to fetch products: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   async findOne(id: number, userId?: string, sessionId?: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { category: true, reviews: true },
+      include: { category: true },
     });
 
     if (product && (userId || sessionId)) {
       await this.recordRecentlyViewed(id, userId, sessionId);
+    }
+
+    if (product) {
+      return {
+        ...product,
+        images: this.safeJsonParse(product.images, []),
+        tags: this.safeJsonParse(product.tags, []),
+        dimensions: this.safeJsonParse(product.dimensions, null),
+        averageRating: product.averageRating || 0,
+        reviewCount: 0
+      };
     }
 
     return product;
@@ -54,46 +127,91 @@ export class ProductsService {
   async findBySlug(slug: string, userId?: string, sessionId?: string) {
     const product = await this.prisma.product.findUnique({
       where: { slug },
-      include: { category: true, reviews: true },
+      include: { category: true },
     });
 
     if (product && (userId || sessionId)) {
       await this.recordRecentlyViewed(product.id, userId, sessionId);
     }
 
+    if (product) {
+      return {
+        ...product,
+        images: this.safeJsonParse(product.images, []),
+        tags: this.safeJsonParse(product.tags, []),
+        dimensions: this.safeJsonParse(product.dimensions, null),
+        averageRating: product.averageRating || 0,
+        reviewCount: 0
+      };
+    }
+
     return product;
   }
 
   async getFeatured(limit = 10) {
-    return this.prisma.product.findMany({
+    const products = await this.prisma.product.findMany({
       where: { isFeatured: true, isActive: true },
       include: { category: true },
       take: limit,
     });
+
+    return products.map(product => ({
+      ...product,
+      images: this.safeJsonParse(product.images, []),
+      tags: this.safeJsonParse(product.tags, []),
+      dimensions: this.safeJsonParse(product.dimensions, null),
+      averageRating: product.averageRating || 0,
+      reviewCount: 0
+    }));
   }
 
   async search(query: string, limit = 20) {
-    return this.prisma.product.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { name: { contains: query } },
-          { description: { contains: query } }
-        ]
-      },
-      include: { category: true },
-      take: limit,
-    });
-  }
+    // Sanitize and validate search input
+    const sanitizedQuery = query ? String(query).trim().slice(0, 100) : '';
+    const validatedLimit = Math.min(100, Math.max(1, parseInt(String(limit)) || 20));
+    
+    if (!sanitizedQuery) {
+      return [];
+    }
 
-  async getAutocomplete(query: string, limit = 10) {
     const products = await this.prisma.product.findMany({
       where: {
         isActive: true,
-        name: { contains: query }
+        OR: [
+          { name: { contains: sanitizedQuery } },
+          { description: { contains: sanitizedQuery } }
+        ]
+      },
+      include: { category: true },
+      take: validatedLimit,
+    });
+
+    return products.map(product => ({
+      ...product,
+      images: this.safeJsonParse(product.images, []),
+      tags: this.safeJsonParse(product.tags, []),
+      dimensions: this.safeJsonParse(product.dimensions, null),
+      averageRating: product.averageRating || 0,
+      reviewCount: 0
+    }));
+  }
+
+  async getAutocomplete(query: string, limit = 10) {
+    // Sanitize and validate input
+    const sanitizedQuery = query ? String(query).trim().slice(0, 50) : '';
+    const validatedLimit = Math.min(20, Math.max(1, parseInt(String(limit)) || 10));
+    
+    if (!sanitizedQuery) {
+      return [];
+    }
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        isActive: true,
+        name: { contains: sanitizedQuery }
       },
       select: { id: true, name: true, slug: true },
-      take: limit,
+      take: validatedLimit,
     });
     
     return products.map(p => ({ id: p.id, name: p.name, slug: p.slug }));
@@ -123,7 +241,12 @@ export class ProductsService {
     const where: any = {};
     
     if (userId) {
-      where.userId = parseInt(userId);
+      const validatedUserId = parseInt(String(userId));
+      if (!isNaN(validatedUserId)) {
+        where.userId = validatedUserId;
+      } else {
+        return [];
+      }
     } else if (sessionId) {
       where.sessionId = sessionId;
     } else {
@@ -150,7 +273,7 @@ export class ProductsService {
       name: rv.product.name,
       slug: rv.product.slug,
       price: rv.product.price,
-      image: rv.product.images ? JSON.parse(rv.product.images)[0] || '/images/placeholder.jpg' : '/images/placeholder.jpg',
+      image: this.safeJsonParse(rv.product.images, [])[0] || '/images/placeholder.jpg',
       category: rv.product.category,
       viewedAt: rv.viewedAt
     }));
@@ -164,23 +287,24 @@ export class ProductsService {
       };
 
       if (userId) {
-        data.userId = parseInt(userId);
-        // Upsert for logged-in users
-        await this.prisma.recentlyViewed.upsert({
-          where: {
-            userId_productId: {
-              userId: parseInt(userId),
-              productId
-            }
-          },
-          update: {
-            viewedAt: new Date()
-          },
-          create: data
-        });
+        const validatedUserId = parseInt(String(userId));
+        if (!isNaN(validatedUserId)) {
+          data.userId = validatedUserId;
+          await this.prisma.recentlyViewed.upsert({
+            where: {
+              userId_productId: {
+                userId: validatedUserId,
+                productId
+              }
+            },
+            update: {
+              viewedAt: new Date()
+            },
+            create: data
+          });
+        }
       } else if (sessionId) {
         data.sessionId = sessionId;
-        // Upsert for session-based tracking
         await this.prisma.recentlyViewed.upsert({
           where: {
             sessionId_productId: {
@@ -195,38 +319,64 @@ export class ProductsService {
         });
       }
     } catch (error) {
-      // Silently fail to avoid breaking product viewing
       console.error('Error recording recently viewed:', error);
+    }
+  }
+
+  private safeJsonParse(jsonString: string | null, defaultValue: any = null): any {
+    if (!jsonString) return defaultValue;
+    try {
+      return JSON.parse(jsonString);
+    } catch {
+      return defaultValue;
     }
   }
 
   // Admin methods (simplified)
   async create(createProductDto: any, files?: any[]) {
-    const { categoryId, ...data } = createProductDto;
-    return this.prisma.product.create({
-      data: {
-        ...data,
-        categoryId: parseInt(categoryId),
-        images: files ? JSON.stringify(files.map(f => f.filename)) : null,
-      },
-      include: { category: true },
-    });
+    try {
+      const { categoryId, ...data } = createProductDto;
+      const validatedCategoryId = parseInt(String(categoryId));
+      if (isNaN(validatedCategoryId)) {
+        throw new Error('Invalid category ID');
+      }
+      
+      return await this.prisma.product.create({
+        data: {
+          ...data,
+          categoryId: validatedCategoryId,
+          images: files ? JSON.stringify(files.map(f => f.filename)) : null,
+        },
+        include: { category: true },
+      });
+    } catch (error) {
+      throw new Error(`Failed to create product: ${error.message}`);
+    }
   }
 
   async update(id: number, updateProductDto: any, files?: any[]) {
-    const { categoryId, ...data } = updateProductDto;
-    const updateData: any = { ...data };
-    
-    if (categoryId) updateData.categoryId = parseInt(categoryId);
-    if (files && files.length > 0) {
-      updateData.images = JSON.stringify(files.map(f => f.filename));
-    }
+    try {
+      const { categoryId, ...data } = updateProductDto;
+      const updateData: any = { ...data };
+      
+      if (categoryId) {
+        const validatedCategoryId = parseInt(String(categoryId));
+        if (!isNaN(validatedCategoryId)) {
+          updateData.categoryId = validatedCategoryId;
+        }
+      }
+      if (files && files.length > 0) {
+        updateData.images = JSON.stringify(files.map(f => f.filename));
+      }
 
-    return this.prisma.product.update({
-      where: { id },
-      data: updateData,
-      include: { category: true },
-    });
+      return await this.prisma.product.update({
+        where: { id },
+        data: updateData,
+        include: { category: true },
+      });
+    } catch (error) {
+      throw new Error(`Failed to update product: ${error.message}`);
+    }
   }
 
   async remove(id: number) {

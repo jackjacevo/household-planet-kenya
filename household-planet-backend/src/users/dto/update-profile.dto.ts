@@ -24,6 +24,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEnum(['male', 'female', 'other'])
   gender?: string;
+
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  lastName?: string;
 }
 
 export class ChangePasswordDto {

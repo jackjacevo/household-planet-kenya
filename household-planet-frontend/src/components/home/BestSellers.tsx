@@ -35,7 +35,7 @@ export function BestSellers() {
           setProducts([]);
         }
       } catch (error) {
-        console.log('No products available');
+        console.error('Failed to fetch products:', error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -46,14 +46,6 @@ export function BestSellers() {
   }, []);
 
   const getProductImage = (product: Product) => {
-    if (product.images) {
-      try {
-        const images = JSON.parse(product.images);
-        return Array.isArray(images) ? images[0] : product.images;
-      } catch {
-        return product.images;
-      }
-    }
     return '/images/products/placeholder.svg';
   };
 
@@ -67,7 +59,20 @@ export function BestSellers() {
           </Link>
         </div>
         
-        {products.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
+                <div className="h-48 bg-gray-200 animate-pulse" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4" />
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <ShoppingCart className="h-16 w-16 mx-auto" />

@@ -138,12 +138,19 @@ export class OrderFilterDto {
   orderNumber?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   page?: number = 1;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   limit?: number = 20;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  returnable?: boolean;
 }
 
 export class AddOrderNoteDto {

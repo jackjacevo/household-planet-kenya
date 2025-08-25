@@ -23,43 +23,7 @@ const fallbackImages = [
   'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'  // Home Decor
 ];
 
-const defaultCategories = [
-  {
-    id: '1',
-    name: 'Kitchen & Dining',
-    slug: 'kitchen-dining',
-    image: fallbackImages[0],
-    description: 'Premium cookware & dining essentials'
-  },
-  {
-    id: '2',
-    name: 'Bathroom Accessories',
-    slug: 'bathroom-accessories',
-    image: fallbackImages[1],
-    description: 'Luxury bathroom fixtures & accessories'
-  },
-  {
-    id: '3',
-    name: 'Bedding & Bedroom',
-    slug: 'bedding-bedroom',
-    image: fallbackImages[2],
-    description: 'Comfortable bedding & bedroom furniture'
-  },
-  {
-    id: '4',
-    name: 'Home Decor',
-    slug: 'home-decor',
-    image: fallbackImages[3],
-    description: 'Stylish decor & artistic pieces'
-  },
-  {
-    id: '5',
-    name: 'Storage & Organization',
-    slug: 'storage-organization',
-    image: fallbackImages[4],
-    description: 'Smart storage solutions'
-  }
-];
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -84,7 +48,7 @@ const itemVariants = {
 };
 
 export function FeaturedCategories() {
-  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -93,30 +57,44 @@ export function FeaturedCategories() {
     
     const fetchCategories = async () => {
       try {
-        const data = await api.getCategories() as any;
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/categories/hierarchy`;
+        console.log('Fetching categories from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Featured categories raw data:', data);
+        console.log('Data type:', typeof data, 'Is array:', Array.isArray(data), 'Length:', data?.length);
+        
         if (data && Array.isArray(data) && data.length > 0) {
-          // Map API categories to include default images
-          const mappedCategories = data.slice(0, 5).map((cat: any, index: number) => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            description: cat.description,
-            image: fallbackImages[index] || fallbackImages[0]
-          }));
-          console.log('Mapped categories:', mappedCategories.length, mappedCategories);
+          // Filter to only show parent categories (main categories)
+          const parentCategories = data.filter((cat: any) => !cat.parentId);
+          const mappedCategories = parentCategories.slice(0, 6).map((cat: any, index: number) => {
+            const categoryImage = cat.image || fallbackImages[index % fallbackImages.length];
+            console.log(`Homepage - Category ${cat.name}: image = ${categoryImage}`);
+            return {
+              id: cat.id.toString(),
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description || 'Explore our quality products in this category',
+              image: categoryImage
+            };
+          });
+          console.log('Homepage - Mapped featured categories:', mappedCategories);
           setCategories(mappedCategories);
-        } else if (data && data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
-          const mappedCategories = data.categories.slice(0, 5).map((cat: any, index: number) => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            description: cat.description,
-            image: fallbackImages[index] || fallbackImages[0]
-          }));
-          setCategories(mappedCategories);
+        } else {
+          console.log('No featured categories data received or invalid format');
+          setCategories([]);
         }
       } catch (error) {
-        console.log('Using default categories - API not available');
+        console.error('Failed to fetch categories:', error);
+        console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -159,14 +137,31 @@ export function FeaturedCategories() {
         </motion.div>
         
         {/* Categories Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
-        >
-          {categories.map((category, index) => (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-64 bg-gray-200 rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Categories Available</h3>
+            <p className="text-gray-600">Categories added by admin will appear here.</p>
+          </div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-6"
+          >
+            {categories.map((category, index) => (
             <motion.div key={category.slug} variants={itemVariants}>
               <Link 
                 href={`/products?category=${category.slug}`} 
@@ -180,8 +175,12 @@ export function FeaturedCategories() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     {...(isMounted && { loading: "lazy" })}
                     onError={(e) => {
+                      console.log(`Homepage image failed to load for ${category.name}, using fallback`);
                       const target = e.target as HTMLImageElement;
                       target.src = fallbackImages[0];
+                    }}
+                    onLoad={() => {
+                      console.log(`Homepage image loaded successfully for ${category.name}`);
                     }}
                   />
                   
@@ -212,9 +211,10 @@ export function FeaturedCategories() {
                 {/* Border Effect */}
                 <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-white/30 transition-colors duration-300" />
               </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
     </section>
   );

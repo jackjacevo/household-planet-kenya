@@ -33,7 +33,7 @@ export default function PaymentReconciliation() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/transactions`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/transactions`,
         {
           params: dateRange,
           headers: { 'Authorization': `Bearer ${token}` }
@@ -62,7 +62,7 @@ export default function PaymentReconciliation() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/transactions`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/transactions`,
         {
           params: { ...dateRange, limit: 10000 },
           headers: { 'Authorization': `Bearer ${token}` }

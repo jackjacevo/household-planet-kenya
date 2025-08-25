@@ -45,7 +45,7 @@ export function AddressManager({
       if (!token) return;
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setAddresses(response.data);
@@ -73,7 +73,7 @@ export function AddressManager({
       let response;
       if (editingId) {
         response = await axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/addresses/${editingId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses/${editingId}`,
           addressData,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
@@ -82,7 +82,7 @@ export function AddressManager({
         ));
       } else {
         response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`,
           addressData,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
@@ -106,7 +106,7 @@ export function AddressManager({
       if (!token) return;
 
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/addresses/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses/${id}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       

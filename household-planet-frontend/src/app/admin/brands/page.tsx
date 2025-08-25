@@ -32,7 +32,7 @@ export default function AdminBrandsPage() {
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBrands(response.data);
@@ -47,11 +47,11 @@ export default function AdminBrandsPage() {
       const token = localStorage.getItem('token');
 
       if (editingBrand) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands/${editingBrand.id}`, formData, {
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${editingBrand.id}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands`, formData, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }

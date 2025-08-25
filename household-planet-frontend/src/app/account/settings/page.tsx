@@ -8,7 +8,7 @@ import { User, Camera, Lock, Bell, Shield, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateProfile, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -46,19 +46,26 @@ export default function SettingsPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
+      // Don't send avatar in profile update - it's handled separately
+      const { avatar, ...profileUpdateData } = profileData;
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(profileData)
+        body: JSON.stringify(profileUpdateData)
       });
 
       if (response.ok) {
         const updatedUser = await response.json();
-        updateUser(updatedUser);
+        updateProfile(updatedUser);
         alert('Profile updated successfully!');
+      } else {
+        const error = await response.json();
+        console.error('Profile update error:', error);
+        alert(error.message || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -80,8 +87,8 @@ export default function SettingsPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/change-password`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -116,7 +123,7 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/avatar`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/avatar`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData

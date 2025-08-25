@@ -26,64 +26,7 @@ const fallbackImages = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
 ];
 
-const defaultCategories: Category[] = [
-  {
-    id: '1',
-    name: 'Kitchen & Dining',
-    slug: 'kitchen-dining',
-    description: 'Premium cookware, utensils, and dining essentials for your culinary adventures',
-    productCount: 45,
-  },
-  {
-    id: '2',
-    name: 'Bathroom Accessories',
-    slug: 'bathroom-accessories',
-    description: 'Luxury bathroom fixtures, towels, and accessories for a spa-like experience',
-    productCount: 32,
-  },
-  {
-    id: '3',
-    name: 'Bedding & Bedroom',
-    slug: 'bedding-bedroom',
-    description: 'Comfortable bedding, pillows, and bedroom furniture for restful nights',
-    productCount: 28,
-  },
-  {
-    id: '4',
-    name: 'Home Decor',
-    slug: 'home-decor',
-    description: 'Stylish decor pieces, artwork, and accessories to beautify your space',
-    productCount: 67,
-  },
-  {
-    id: '5',
-    name: 'Storage & Organization',
-    slug: 'storage-organization',
-    description: 'Smart storage solutions and organizers to keep your home tidy',
-    productCount: 23,
-  },
-  {
-    id: '6',
-    name: 'Cleaning Supplies',
-    slug: 'cleaning-supplies',
-    description: 'Eco-friendly cleaning products and tools for a spotless home',
-    productCount: 19,
-  },
-  {
-    id: '7',
-    name: 'Furniture',
-    slug: 'furniture',
-    description: 'Quality furniture pieces for every room in your home',
-    productCount: 41,
-  },
-  {
-    id: '8',
-    name: 'Lighting',
-    slug: 'lighting',
-    description: 'Beautiful lighting solutions to illuminate and enhance your space',
-    productCount: 35,
-  },
-];
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -108,12 +51,7 @@ const itemVariants = {
 };
 
 export default function CategoriesPage() {
-  const categoriesWithImages = defaultCategories.map((cat, index) => ({
-    ...cat,
-    image: fallbackImages[index % fallbackImages.length]
-  }));
-  
-  const [categories, setCategories] = useState<Category[]>(categoriesWithImages);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -121,28 +59,48 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await api.getCategories();
-        console.log('API Response:', data);
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/categories/hierarchy`;
+        console.log('🔍 Categories page - Fetching categories from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        console.log('🔍 Categories page - Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('🔍 Categories page - Raw data:', data);
+        console.log('🔍 Categories page - Data type:', typeof data, 'Is array:', Array.isArray(data), 'Length:', data?.length);
+        
         if (data && Array.isArray(data) && data.length > 0) {
-          const mappedCategories = data.map((cat: any, index: number) => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            description: cat.description || defaultCategories[index % defaultCategories.length]?.description,
-            image: fallbackImages[index % fallbackImages.length],
-            productCount: Math.floor(Math.random() * 50) + 10
-          }));
+          // The API already returns parent categories only (parentId: null), so no need to filter
+          console.log('🔍 Categories page - All categories from API are parent categories:', data.length);
+          
+          const mappedCategories = data.map((cat: any, index: number) => {
+            const categoryImage = cat.image || fallbackImages[index % fallbackImages.length];
+            console.log(`🔍 Category ${cat.name}: image = ${categoryImage}, children = ${cat.children?.length || 0}`);
+            return {
+              id: cat.id.toString(),
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description || 'Explore our quality products in this category',
+              image: categoryImage,
+              productCount: cat.children?.length || 0
+            };
+          });
+          console.log('🔍 Categories page - Mapped categories with images:', mappedCategories);
           setCategories(mappedCategories);
         } else {
-          console.log('No API categories, using defaults');
+          console.log('❌ Categories page - No categories data received or invalid format');
+          console.log('❌ Categories page - Data received:', data);
+          setCategories([]);
         }
       } catch (error) {
-        console.log('API error, using defaults:', error);
+        console.error('❌ Categories page - Failed to fetch categories:', error);
+        console.error('❌ Categories page - Error details:', error instanceof Error ? error.message : 'Unknown error');
+        setCategories([]);
       } finally {
-        setCategories(prev => prev.map((cat, index) => ({
-          ...cat,
-          image: cat.image || fallbackImages[index % fallbackImages.length]
-        })));
         setLoading(false);
       }
     };
@@ -277,14 +235,20 @@ export default function CategoriesPage() {
               <div className="bg-gradient-to-r from-gray-400 to-gray-600 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                 <Search className="h-10 w-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Categories Found</h3>
-              <p className="text-gray-600 mb-6">Try adjusting your search criteria</p>
-              <button
-                onClick={() => setSearchTerm('')}
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
-              >
-                Clear Search
-              </button>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {searchTerm ? 'No Categories Found' : 'No Categories Available'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {searchTerm ? 'Try adjusting your search criteria' : 'Check console for API connection issues'}
+              </p>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+                >
+                  Clear Search
+                </button>
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -307,13 +271,17 @@ export default function CategoriesPage() {
                       {/* Image */}
                       <div className="absolute inset-0">
                         <img 
-                          src={category.image || fallbackImages[0]} 
+                          src={category.image} 
                           alt={category.name} 
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           loading={index < 4 ? "eager" : "lazy"}
                           onError={(e) => {
+                            console.log(`Image failed to load for ${category.name}, using fallback`);
                             const target = e.target as HTMLImageElement;
-                            target.src = fallbackImages[0];
+                            target.src = fallbackImages[index % fallbackImages.length];
+                          }}
+                          onLoad={() => {
+                            console.log(`Image loaded successfully for ${category.name}`);
                           }}
                         />
                         
@@ -332,7 +300,7 @@ export default function CategoriesPage() {
                               {category.name}
                             </h3>
                             <span className="bg-white/20 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-full">
-                              {category.productCount} items
+                              {category.productCount} subcategories
                             </span>
                           </div>
                           <p className="text-gray-200 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
@@ -356,13 +324,17 @@ export default function CategoriesPage() {
                     >
                       <div className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden mr-6">
                         <img 
-                          src={category.image || fallbackImages[0]} 
+                          src={category.image} 
                           alt={category.name} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           loading="lazy"
                           onError={(e) => {
+                            console.log(`List view image failed to load for ${category.name}, using fallback`);
                             const target = e.target as HTMLImageElement;
-                            target.src = fallbackImages[0];
+                            target.src = fallbackImages[index % fallbackImages.length];
+                          }}
+                          onLoad={() => {
+                            console.log(`List view image loaded successfully for ${category.name}`);
                           }}
                         />
                       </div>
@@ -373,7 +345,7 @@ export default function CategoriesPage() {
                             {category.name}
                           </h3>
                           <span className="bg-green-100 text-green-600 text-sm px-3 py-1 rounded-full font-medium">
-                            {category.productCount} items
+                            {category.productCount} subcategories
                           </span>
                         </div>
                         <p className="text-gray-600 mb-3">{category.description}</p>

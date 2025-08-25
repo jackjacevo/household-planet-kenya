@@ -6,10 +6,10 @@ import { CreateReturnDto } from './dto/return.dto';
 export class ReturnsService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserReturns(userId: string) {
+  async getUserReturns(userId: number) {
     return this.prisma.returnRequest.findMany({
       where: { 
-        order: { userId: parseInt(userId) }
+        order: { userId }
       },
       include: {
         order: {
@@ -35,12 +35,12 @@ export class ReturnsService {
     });
   }
 
-  async createReturn(userId: string, createReturnDto: CreateReturnDto) {
+  async createReturn(userId: number, createReturnDto: CreateReturnDto) {
     // Verify order belongs to user and is eligible for return
     const order = await this.prisma.order.findFirst({
       where: {
         id: parseInt(createReturnDto.orderId),
-        userId: parseInt(userId),
+        userId,
         status: 'DELIVERED'
       },
       include: {
@@ -114,7 +114,7 @@ export class ReturnsService {
     return returnRequest;
   }
 
-  async getReturn(userId: string, returnId: string) {
+  async getReturn(userId: number, returnId: string) {
     const returnRequest = await this.prisma.returnRequest.findUnique({
       where: { id: returnId },
       include: {
@@ -144,14 +144,14 @@ export class ReturnsService {
       throw new NotFoundException('Return request not found');
     }
 
-    if (returnRequest.order.userId !== parseInt(userId)) {
+    if (returnRequest.order.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
     return returnRequest;
   }
 
-  async cancelReturn(userId: string, returnId: string) {
+  async cancelReturn(userId: number, returnId: string) {
     const returnRequest = await this.getReturn(userId, returnId);
 
     if (returnRequest.status !== 'PENDING') {

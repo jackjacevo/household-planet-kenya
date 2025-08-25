@@ -9,14 +9,16 @@ import {
   Request, 
   Param, 
   Res,
-  NotFoundException 
+  NotFoundException,
+  BadRequestException 
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { UploadService } from './upload.service';
+
+import { resolve, basename } from 'path';
+import { SecureUploadService } from '../common/services/secure-upload.service';
+import { AppLogger } from '../common/services/logger.service';
 import { FileUploadGuard } from './guards/file-upload.guard';
 import { RateLimitGuard } from '../common/guards/rate-limit.guard';
 import { RateLimit } from '../common/decorators/rate-limit.decorator';
@@ -24,14 +26,26 @@ import { RateLimit } from '../common/decorators/rate-limit.decorator';
 @Controller('upload')
 @UseGuards(AuthGuard('jwt'), RateLimitGuard)
 export class UploadController {
-  constructor(private uploadService: UploadService) {}
+  private readonly logger = new AppLogger(UploadController.name);
+  
+  constructor(private secureUpload: SecureUploadService) {}
 
   @Post()
-  @RateLimit(10, 60000) // 10 uploads per minute
+  @RateLimit(10, 60000)
   @UseGuards(FileUploadGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req) {
-    return this.uploadService.upload(file, 'user-uploads');
+    try {
+      if (!file) {
+        throw new BadRequestException('No file uploaded');
+      }
+      
+      this.logger.log(`File upload attempt by user ${req.user?.userId}`);
+      return await this.secureUpload.uploadFile(file, 'user-uploads');
+    } catch (error) {
+      this.logger.error(`File upload failed: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   @Get('secure/:userId/:filename')
@@ -46,14 +60,33 @@ export class UploadController {
       throw new NotFoundException('File not found');
     }
 
-    const filePath = path.join('./secure-uploads', userId, filename);
+    // Sanitize inputs to prevent path traversal
+    const sanitizedUserId = userId.replace(/[^a-zA-Z0-9-_]/g, '');
+    const sanitizedFilename = basename(filename).replace(/[^a-zA-Z0-9.-_]/g, '');
     
-    try {
-      await fs.access(filePath);
-      res.sendFile(path.resolve(filePath));
-    } catch {
+    // Validate filename doesn't contain path traversal sequences
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      this.logger.logSecurityEvent('Path traversal attempt', { userId, filename });
       throw new NotFoundException('File not found');
     }
+
+    const baseDir = resolve('./secure-uploads', sanitizedUserId);
+    const filePath = resolve(baseDir, sanitizedFilename);
+    
+    // Ensure the resolved path is within the user's directory
+    if (!filePath.startsWith(baseDir)) {
+      this.logger.logSecurityEvent('Directory traversal attempt', { userId, filename, filePath });
+      throw new NotFoundException('File not found');
+    }
+  
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        this.logger.logFileOperation('access', filename, false);
+        throw new NotFoundException('File not found');
+      } else {
+        this.logger.logFileOperation('access', sanitizedFilename, true);
+      }
+    });
   }
 
   @Delete(':filename')

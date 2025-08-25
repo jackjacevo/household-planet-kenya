@@ -1,15 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001'
-
-// Empty fallback data when API is not available
-const fallbackData = {
-  products: [],
-  categories: [],
-  deliveryLocations: [
-    { name: 'Nairobi CBD', tier: 1, price: 200 },
-    { name: 'Westlands', tier: 1, price: 200 },
-    { name: 'Karen', tier: 2, price: 300 },
-  ]
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 class ApiClient {
   private baseURL: string
@@ -47,48 +36,12 @@ class ApiClient {
 
       return response.json()
     } catch (error) {
-      // For auth endpoints, re-throw the error instead of using fallback
-      if (endpoint.includes('/api/auth/')) {
-        throw error
-      }
-      console.warn('API request failed, returning empty data:', error)
-      return this.getFallbackResponse(endpoint, options) as T
+      console.error('API request failed:', error)
+      throw error
     }
   }
 
-  private getFallbackResponse(endpoint: string, options: RequestInit = {}) {
-    // Return empty data when API is not available
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (endpoint.includes('/api/auth/login') || endpoint.includes('/api/auth/register') || endpoint.includes('/api/auth/profile')) {
-          // Reject auth requests when backend is not available
-          reject(new Error('Authentication service is not available. Please ensure the backend server is running.'))
-        } else if (endpoint.includes('/products/search/autocomplete')) {
-          resolve([])
-        } else if (endpoint.includes('/recommendations')) {
-          resolve([])
-        } else if (endpoint.includes('/recently-viewed')) {
-          resolve([])
-        } else if (endpoint.includes('/low-stock-alerts')) {
-          resolve([])
-        } else if (endpoint.includes('/products')) {
-          resolve({ products: [], total: 0 })
-        } else if (endpoint.includes('/categories')) {
-          resolve({ categories: fallbackData.categories })
-        } else if (endpoint.includes('/delivery/locations')) {
-          resolve({ success: true, data: fallbackData.deliveryLocations })
-        } else if (endpoint.includes('/delivery/price')) {
-          resolve({ success: true, price: 300, location: null })
-        } else if (endpoint.includes('/delivery')) {
-          resolve({ success: true, data: fallbackData.deliveryLocations })
-        } else if (endpoint.includes('/cart')) {
-          resolve({ items: [], total: 0 })
-        } else {
-          resolve({ success: true, data: null })
-        }
-      }, 100)
-    })
-  }
+
 
   // Auth endpoints
   async login(email: string, password: string) {
@@ -122,6 +75,10 @@ class ApiClient {
   // Categories endpoints
   async getCategories() {
     return this.request('/api/categories')
+  }
+
+  async getCategoryHierarchy() {
+    return this.request('/api/categories/hierarchy')
   }
 
   // Cart endpoints
@@ -179,7 +136,7 @@ class ApiClient {
   }
 
   async getLowStockAlerts() {
-    return this.request('/api/products/admin/low-stock-alerts')
+    return this.request('/api/products/inventory/low-stock')
   }
 
   async generateRecommendations() {

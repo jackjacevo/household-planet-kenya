@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ProductCard } from '@/components/products/ProductCard';
 import { ProductFilters } from '@/components/products/ProductFilters';
@@ -32,6 +32,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -40,11 +41,8 @@ export default function ProductsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [filters, setFilters] = useState({
-    category: '',
-    minPrice: 0,
-    maxPrice: 100000,
-    rating: 0,
-    sortBy: 'newest',
+    category: undefined as number | undefined,
+    sortBy: 'createdAt',
   });
 
   useEffect(() => {
@@ -66,17 +64,33 @@ export default function ProductsPage() {
 
   const fetchProducts = async (append = false, refresh = false) => {
     try {
+      setError(null);
       if (refresh) {
         setIsRefreshing(true);
       } else {
         setLoading(true);
       }
       
-      const response = await api.getProducts({
+      const queryParams: any = {
         page: currentPage,
         limit: 12,
-        ...filters,
-      }) as any;
+        sortBy: filters.sortBy || 'createdAt',
+      };
+      
+      if (filters.category) {
+        queryParams.category = filters.category;
+      }
+      if (filters.search) {
+        queryParams.search = filters.search;
+      }
+      if (filters.featured) {
+        queryParams.featured = filters.featured;
+      }
+      if (filters.sortOrder) {
+        queryParams.sortOrder = filters.sortOrder;
+      }
+      
+      const response = await api.getProducts(queryParams) as any;
       
       const newProducts = response.data || [];
       if (append && scrollMode === 'infinite') {
@@ -89,6 +103,10 @@ export default function ProductsPage() {
       setHasMore(currentPage < (response.pagination?.totalPages || 1));
     } catch (error) {
       console.error('Error fetching products:', error);
+      setError('Failed to load products. Please try again.');
+      if (!append) {
+        setProducts([]);
+      }
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -107,11 +125,11 @@ export default function ProductsPage() {
   };
 
   const handleFilterChange = (newFilters: any) => {
-    setFilters(newFilters);
+    setFilters(prev => ({ ...prev, ...newFilters }));
     setCurrentPage(1);
   };
 
-  const structuredData = {
+  const structuredData = useMemo(() => ({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: 'All Products - Household Planet Kenya',
@@ -125,7 +143,7 @@ export default function ProductsPage() {
         position: index + 1,
         name: product.name,
         url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product.slug}`,
-        image: product.images?.[0]?.url,
+        image: product.images?.[0],
         offers: {
           '@type': 'Offer',
           price: product.price,
@@ -133,7 +151,7 @@ export default function ProductsPage() {
         }
       }))
     }
-  }
+  }), [products])
 
   return (
     <>
@@ -325,14 +343,37 @@ export default function ProductsPage() {
                         </button>
                       </div>
                       
-                      <ProductSort onSortChange={(sortBy) => handleFilterChange({ ...filters, sortBy })} />
+                      <ProductSort onSortChange={(sortBy, sortOrder) => handleFilterChange({ sortBy, sortOrder })} />
                     </div>
                   </div>
                 </div>
               </motion.div>
 
+              {/* Error State */}
+              {error && (
+                <motion.div 
+                  className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="text-center">
+                    <div className="bg-red-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <span className="text-red-600 text-2xl">⚠️</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Products</h3>
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button
+                      onClick={() => fetchProducts()}
+                      className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Products Grid/List */}
-              {loading ? (
+              {!error && loading ? (
                 <motion.div 
                   className="flex flex-col justify-center items-center h-64 bg-white rounded-3xl shadow-lg"
                   initial={{ opacity: 0 }}
@@ -343,7 +384,7 @@ export default function ProductsPage() {
                   </div>
                   <p className="text-gray-600 font-medium">Loading amazing products...</p>
                 </motion.div>
-              ) : (
+              ) : !error ? (
                 <>
                   {products.length === 0 ? (
                     <motion.div 
@@ -358,11 +399,8 @@ export default function ProductsPage() {
                       <p className="text-gray-600 mb-6">Try adjusting your filters or search criteria</p>
                       <button
                         onClick={() => handleFilterChange({
-                          category: '',
-                          minPrice: 0,
-                          maxPrice: 100000,
-                          rating: 0,
-                          sortBy: 'newest',
+                          category: undefined,
+                          sortBy: 'createdAt',
                         })}
                         className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
                       >
@@ -439,7 +477,7 @@ export default function ProductsPage() {
                     </motion.div>
                   )}
                 </>
-              )}
+              ) : null}
             </main>
             </div>
           </div>

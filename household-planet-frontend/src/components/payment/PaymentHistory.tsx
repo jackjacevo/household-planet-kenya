@@ -31,7 +31,7 @@ export function PaymentHistory() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/history`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/history`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setTransactions(response.data);

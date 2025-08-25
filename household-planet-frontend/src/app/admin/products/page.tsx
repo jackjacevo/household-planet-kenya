@@ -52,7 +52,7 @@ export default function AdminProductsPage() {
       });
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProducts(response.data.data);
@@ -68,7 +68,7 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -84,7 +84,7 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${editingProduct.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -101,7 +101,7 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchProducts();

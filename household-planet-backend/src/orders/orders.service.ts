@@ -43,75 +43,105 @@ export class OrdersService {
   ) {}
 
   async findAll(filters?: OrderFilterDto) {
-    const where: Prisma.OrderWhereInput = {};
-    
-    if (filters?.status) where.status = filters.status;
-    if (filters?.customerEmail) {
-      where.user = { email: { contains: filters.customerEmail } };
-    }
-    if (filters?.orderNumber) {
-      where.orderNumber = { contains: filters.orderNumber };
-    }
-    if (filters?.startDate && filters?.endDate) {
-      const startDate = new Date(filters.startDate);
-      const endDate = new Date(filters.endDate);
-      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-        where.createdAt = { gte: startDate, lte: endDate };
+    try {
+      const where: Prisma.OrderWhereInput = {};
+      
+      if (filters?.status) where.status = filters.status;
+      if (filters?.customerEmail) {
+        where.user = { email: { contains: filters.customerEmail } };
       }
-    }
+      if (filters?.orderNumber) {
+        where.orderNumber = { contains: filters.orderNumber };
+      }
+      if (filters?.startDate && filters?.endDate) {
+        const startDate = new Date(filters.startDate);
+        const endDate = new Date(filters.endDate);
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          where.createdAt = { gte: startDate, lte: endDate };
+        }
+      }
+      if (filters?.returnable) {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        where.status = 'DELIVERED';
+        where.createdAt = { gte: thirtyDaysAgo };
+      }
 
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 20;
-    const skip = (page - 1) * limit;
+      const page = Math.max(1, filters?.page || 1);
+      const limit = Math.min(100, Math.max(1, filters?.limit || 20));
+      const skip = (page - 1) * limit;
 
-    const [orders, total] = await Promise.all([
-      this.prisma.order.findMany({
-        where,
-        include: {
-          user: { select: { name: true, email: true, phone: true } },
-          items: {
-            include: {
-              product: { select: { name: true, images: true } },
-              variant: { select: { name: true, sku: true } },
+      this.logger.debug(`Finding orders with filters: ${JSON.stringify(filters)}, where: ${JSON.stringify(where)}`);
+
+      const [orders, total] = await Promise.all([
+        this.prisma.order.findMany({
+          where,
+          include: {
+            user: { select: { name: true, email: true, phone: true } },
+            items: {
+              include: {
+                product: { select: { name: true, images: true } },
+                variant: { select: { name: true, sku: true } },
+              },
             },
+            statusHistory: {
+              orderBy: { createdAt: 'desc' },
+              take: 1
+            }
           },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        this.prisma.order.count({ where })
+      ]);
 
-          statusHistory: {
-            orderBy: { createdAt: 'desc' },
-            take: 1
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit
-      }),
-      this.prisma.order.count({ where })
-    ]);
-
-    return {
-      orders,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    };
+      return {
+        orders,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error in findAll orders:', error.message, error.stack);
+      throw new BadRequestException('Failed to fetch orders: ' + error.message);
+    }
   }
 
-  findByUser(userId: number) {
-    return this.prisma.order.findMany({
-      where: { userId },
-      include: {
-        items: {
-          include: {
-            product: true,
-            variant: true,
+  async findByUser(userId: number, filters?: { status?: string; returnable?: boolean }) {
+    try {
+      const where: Prisma.OrderWhereInput = { userId };
+      
+      if (filters?.returnable) {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        where.status = 'DELIVERED';
+        where.createdAt = { gte: thirtyDaysAgo };
+      } else if (filters?.status) {
+        where.status = filters.status as OrderStatus;
+      }
+      
+      this.logger.debug(`Finding orders for user ${userId} with filters:`, filters);
+      
+      const orders = await this.prisma.order.findMany({
+        where,
+        include: {
+          items: {
+            include: {
+              product: true,
+              variant: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+        orderBy: { createdAt: 'desc' }
+      });
+      
+      return { orders };
+    } catch (error) {
+      this.logger.error('Error in findByUser:', error.message, error.stack);
+      throw new BadRequestException('Failed to fetch user orders: ' + error.message);
+    }
   }
 
   async findOne(id: number) {

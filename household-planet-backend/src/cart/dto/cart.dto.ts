@@ -1,20 +1,44 @@
-import { IsInt, IsPositive, IsOptional } from 'class-validator';
+import { IsInt, IsPositive, IsOptional, Min, Max } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class AddToCartDto {
-  @IsInt()
+  @Transform(({ value }) => parseInt(value))
+  @IsInt({ message: 'Product ID must be a valid integer' })
+  @Min(1, { message: 'Product ID must be greater than 0' })
   productId: number;
 
   @IsOptional()
-  @IsInt()
+  @Transform(({ value }) => value ? parseInt(value) : null)
+  @IsInt({ message: 'Variant ID must be a valid integer' })
+  @Min(1, { message: 'Variant ID must be greater than 0' })
   variantId?: number;
 
-  @IsInt()
-  @IsPositive()
+  @Transform(({ value }) => parseInt(value))
+  @IsInt({ message: 'Quantity must be a valid integer' })
+  @IsPositive({ message: 'Quantity must be positive' })
+  @Min(1, { message: 'Quantity must be at least 1' })
+  @Max(99, { message: 'Quantity cannot exceed 99' })
   quantity: number;
 }
 
 export class UpdateCartDto {
-  @IsInt()
-  @IsPositive()
+  @Transform(({ value }) => parseInt(value))
+  @IsInt({ message: 'Quantity must be a valid integer' })
+  @IsPositive({ message: 'Quantity must be positive' })
+  @Min(1, { message: 'Quantity must be at least 1' })
+  @Max(99, { message: 'Quantity cannot exceed 99' })
   quantity: number;
+}
+
+export class RemoveFromCartDto {
+  @Transform(({ value }) => parseInt(value))
+  @IsInt({ message: 'Product ID must be a valid integer' })
+  @Min(1, { message: 'Product ID must be greater than 0' })
+  productId: number;
+
+  @IsOptional()
+  @Transform(({ value }) => value ? parseInt(value) : null)
+  @IsInt({ message: 'Variant ID must be a valid integer' })
+  @Min(1, { message: 'Variant ID must be greater than 0' })
+  variantId?: number;
 }

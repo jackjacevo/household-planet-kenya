@@ -22,7 +22,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
 
   const handleAddToCart = () => {
     addToCart({
-      id: product.id,
+      id: `${product.id}-default`,
       productId: product.id,
       quantity: 1,
       product,
@@ -55,7 +55,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         <Link href={`/products/${product.slug}`}>
           <div className="w-full h-32 sm:h-36 bg-gray-100 flex items-center justify-center overflow-hidden relative">
             <Image
-              src={product.images?.[0] || '/images/products/placeholder.svg'}
+              src={product.images && product.images.length > 0 ? product.images[0] : '/images/products/placeholder.svg'}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -73,7 +73,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             <span className="text-orange-600 font-bold text-sm">Ksh {product.price.toLocaleString()}</span>
             <button
               onClick={handleWhatsAppOrder}
-              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-colors min-h-44 min-w-44"
+              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-colors w-8 h-8 flex items-center justify-center"
               title="Order via WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
@@ -94,7 +94,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
           <Link href={`/products/${product.slug}`}>
             <Image
-              src={product.images?.[0] || '/images/products/placeholder.svg'}
+              src={product.images && product.images.length > 0 ? product.images[0] : '/images/products/placeholder.svg'}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -136,7 +136,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleAddToWishlist}
-                className="bg-white border border-gray-300 rounded-lg p-2 hover:bg-gray-50 text-gray-600 hover:text-red-600 transition-colors min-h-44 min-w-44"
+                className="bg-white border border-gray-300 rounded-lg p-2 hover:bg-gray-50 text-gray-600 hover:text-red-600 transition-colors w-10 h-10 flex items-center justify-center"
               >
                 <Heart
                   className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`}
@@ -144,7 +144,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               </button>
               <button
                 onClick={handleWhatsAppOrder}
-                className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors flex items-center space-x-2 min-h-44"
+                className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors flex items-center space-x-2"
                 title="Order via WhatsApp"
               >
                 <MessageCircle className="h-4 w-4" />
@@ -153,7 +153,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               <Button
                 onClick={handleAddToCart}
                 disabled={!product.stock || product.stock <= 0}
-                className="flex items-center space-x-2 min-h-44"
+                className="flex items-center space-x-2"
               >
                 <ShoppingCart className="h-4 w-4" />
                 <span className="hidden sm:inline">Add to Cart</span>
@@ -175,7 +175,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         <Link href={`/products/${product.slug}`}>
           <div className="w-full h-48 sm:h-56 bg-gray-100 flex items-center justify-center overflow-hidden relative">
             <Image
-              src={product.images?.[0] || '/images/products/placeholder.svg'}
+              src={product.images && product.images.length > 0 ? product.images[0] : '/images/products/placeholder.svg'}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -199,7 +199,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         
         <button
           onClick={handleAddToWishlist}
-          className="absolute top-2 right-2 bg-white rounded-full p-2 shadow hover:bg-green-100 text-gray-600 hover:text-green-600 transition-colors min-h-44 min-w-44"
+          className="absolute top-2 right-2 bg-white rounded-full p-2 shadow hover:bg-green-100 text-gray-600 hover:text-green-600 transition-colors w-8 h-8 flex items-center justify-center"
         >
           <Heart
             className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`}
@@ -242,7 +242,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
           <div className="flex items-center space-x-2">
             <button
               onClick={handleWhatsAppOrder}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1 min-h-44"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
               title="Order via WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
@@ -251,7 +251,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             <button
               onClick={handleAddToCart}
               disabled={!product.stock || product.stock <= 0}
-              className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors disabled:bg-gray-300 min-h-44 min-w-44"
+              className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors disabled:bg-gray-300 w-10 h-10 flex items-center justify-center"
               title="Add to Cart"
             >
               <ShoppingCart className="h-4 w-4" />

@@ -37,7 +37,7 @@ export default function PartialPayment({
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/partial`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/partial`,
         {
           orderId,
           amount: paymentAmount,

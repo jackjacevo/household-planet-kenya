@@ -24,7 +24,7 @@ export default function AnalyticsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/analytics/sales?period=${period}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=${period}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setSalesData(response.data);

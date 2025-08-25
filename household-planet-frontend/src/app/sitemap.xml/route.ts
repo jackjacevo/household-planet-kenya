@@ -16,7 +16,7 @@ const staticPages = [
 
 async function getProducts() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?limit=1000`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=1000`, {
       next: { revalidate: 3600 } // Revalidate every hour
     })
     if (!response.ok) return []
@@ -30,7 +30,7 @@ async function getProducts() {
 
 async function getCategories() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
       next: { revalidate: 3600 }
     })
     if (!response.ok) return []

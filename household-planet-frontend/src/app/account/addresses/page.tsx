@@ -38,7 +38,7 @@ export default function AddressesPage() {
   const fetchAddresses = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/addresses`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -59,8 +59,8 @@ export default function AddressesPage() {
     try {
       const token = localStorage.getItem('token');
       const url = editingAddress 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/users/addresses/${editingAddress.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/users/addresses`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses/${editingAddress.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`;
       
       const response = await fetch(url, {
         method: editingAddress ? 'PUT' : 'POST',
@@ -109,7 +109,7 @@ export default function AddressesPage() {
     
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/addresses/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -123,7 +123,7 @@ export default function AddressesPage() {
   const setAsDefault = async (id: string) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/addresses/${id}/default`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses/${id}/default`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });

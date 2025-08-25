@@ -117,7 +117,7 @@ export default function OrderDetailsPage() {
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await fetch(`/api/orders/${params.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -133,7 +133,7 @@ export default function OrderDetailsPage() {
 
   const updateOrderStatus = async (status: string, notes?: string) => {
     try {
-      await fetch(`/api/orders/${params.id}/status`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ export default function OrderDetailsPage() {
     if (!newNote.trim()) return;
 
     try {
-      await fetch(`/api/orders/${params.id}/notes`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ export default function OrderDetailsPage() {
 
   const sendCustomerEmail = async () => {
     try {
-      await fetch(`/api/orders/${params.id}/email`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ export default function OrderDetailsPage() {
 
   const generateShippingLabel = async () => {
     try {
-      const response = await fetch(`/api/orders/${params.id}/shipping-label`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}/shipping-label`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

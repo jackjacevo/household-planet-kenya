@@ -50,10 +50,10 @@ export default function LoyaltyDashboard() {
   const fetchLoyaltyData = async () => {
     try {
       const [statusResponse, programsResponse] = await Promise.all([
-        fetch('/api/customers/loyalty', {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/loyalty`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         }),
-        fetch('/api/customers/loyalty/programs', {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/loyalty/programs`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         }),
       ]);
@@ -76,7 +76,7 @@ export default function LoyaltyDashboard() {
 
   const redeemReward = async (rewardId: number) => {
     try {
-      const response = await fetch(`/api/customers/loyalty/redeem/${rewardId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/loyalty/redeem/${rewardId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });

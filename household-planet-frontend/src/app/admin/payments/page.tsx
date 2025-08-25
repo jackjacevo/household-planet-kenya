@@ -54,7 +54,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/stats`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/stats`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setStats(response.data);
@@ -72,7 +72,7 @@ export default function AdminPaymentsPage() {
       });
       
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/transactions?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/transactions?${params}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setTransactions(response.data);
@@ -90,7 +90,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/refund`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/refund`,
         { transactionId, reason: 'Admin refund' },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -107,7 +107,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/invoice/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/invoice/${orderId}`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

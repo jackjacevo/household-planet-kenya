@@ -1,5 +1,6 @@
 'use client';
 
+// Fixed API endpoint to use /api/orders instead of /api/delivery/admin/orders
 import { useState, useEffect } from 'react';
 import { Truck, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -29,10 +30,25 @@ export default function AdminDeliveryPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/delivery/admin/orders`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setDeliveries(response.data);
+      // Map orders data to delivery format
+      const orders = response.data.orders || response.data;
+      const mappedDeliveries = orders.map((order: any) => ({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.user?.name || order.customerName || 'Unknown',
+        customerPhone: order.user?.phone || order.customerPhone || 'N/A',
+        shippingAddress: typeof order.shippingAddress === 'string' 
+          ? order.shippingAddress 
+          : JSON.stringify(order.shippingAddress) || 'N/A',
+        status: order.status,
+        estimatedDelivery: order.estimatedDelivery || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        trackingNumber: order.trackingNumber || `TRK-${order.id}`,
+        total: order.total || 0
+      }));
+      setDeliveries(mappedDeliveries);
     } catch (error) {
       console.error('Error fetching deliveries:', error);
       // Mock data for demo
@@ -57,8 +73,8 @@ export default function AdminDeliveryPage() {
   const updateDeliveryStatus = async (deliveryId: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/delivery/${deliveryId}/status`,
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/orders/${deliveryId}/status`,
         { status: newStatus },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

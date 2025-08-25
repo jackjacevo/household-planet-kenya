@@ -39,10 +39,10 @@ export default function AccountDashboard() {
     try {
       const token = localStorage.getItem('token');
       const [statsRes, ordersRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/dashboard-stats`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/dashboard-stats`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/my-orders`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);

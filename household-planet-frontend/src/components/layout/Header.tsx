@@ -45,10 +45,11 @@ export function Header() {
       hasDropdown: true,
       dropdownItems: [
         { href: '/categories', label: 'All Categories' },
-        { href: '/products?category=kitchen', label: 'Kitchen & Dining' },
-        { href: '/products?category=bathroom', label: 'Bathroom Accessories' },
-        { href: '/products?category=bedroom', label: 'Bedding & Bedroom' },
-        { href: '/products?category=decor', label: 'Home Decor' },
+        { href: '/products?category=kitchen-dining', label: 'Kitchen & Dining' },
+        { href: '/products?category=bathroom-accessories', label: 'Bathroom Accessories' },
+        { href: '/products?category=beddings-bedroom', label: 'Bedding & Bedroom' },
+        { href: '/products?category=home-decor-accessories', label: 'Home Decor' },
+        { href: '/products?category=storage-organization', label: 'Storage & Organization' },
         { href: '/products', label: 'All Products' },
       ]
     },

@@ -27,7 +27,7 @@ export default function ReturnsPage() {
   const fetchReturns = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/returns`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -43,13 +43,28 @@ export default function ReturnsPage() {
   const fetchEligibleOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders?status=DELIVERED&returnable=true`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      if (!token) {
+        console.error('No authentication token found');
+        setLoading(false);
+        return;
+      }
+      
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders?status=DELIVERED&returnable=true`;
+      console.log('Fetching eligible orders from:', url);
+      
+      const response = await fetch(url, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
         const data = await response.json();
-        setEligibleOrders(data.orders || []);
+        setEligibleOrders(data || []);
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Failed to fetch eligible orders:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error fetching eligible orders:', error);
@@ -63,15 +78,22 @@ export default function ReturnsPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/returns`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          orderId: selectedOrder.id,
-          ...formData
+          orderId: selectedOrder.id.toString(),
+          type: 'RETURN',
+          reason: formData.reason,
+          preferredResolution: 'REFUND',
+          items: formData.items.map(itemId => ({
+            orderItemId: itemId,
+            quantity: 1,
+            reason: formData.reason
+          }))
         })
       });
 
@@ -81,9 +103,13 @@ export default function ReturnsPage() {
         setSelectedOrder(null);
         setFormData({ reason: '', description: '', items: [] });
         alert('Return request submitted successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message || 'Failed to submit return request'}`);
       }
     } catch (error) {
       console.error('Error submitting return:', error);
+      alert('Failed to submit return request. Please try again.');
     }
   };
 
@@ -204,12 +230,12 @@ export default function ReturnsPage() {
                       <div key={item.id} className="flex items-center space-x-3 p-2 border rounded">
                         <input
                           type="checkbox"
-                          checked={formData.items.includes(item.id)}
+                          checked={formData.items.includes(item.id.toString())}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setFormData(prev => ({ ...prev, items: [...prev.items, item.id] }));
+                              setFormData(prev => ({ ...prev, items: [...prev.items, item.id.toString()] }));
                             } else {
-                              setFormData(prev => ({ ...prev, items: prev.items.filter(id => id !== item.id) }));
+                              setFormData(prev => ({ ...prev, items: prev.items.filter(id => id !== item.id.toString()) }));
                             }
                           }}
                         />
