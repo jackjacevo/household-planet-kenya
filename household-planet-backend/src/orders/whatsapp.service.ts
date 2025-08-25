@@ -34,21 +34,25 @@ export class WhatsAppService {
 
       // Create order with WhatsApp source
       const orderNumber = `WA-${Date.now()}-${randomBytes(2).toString('hex').toUpperCase()}`;
+      const subtotal = dto.estimatedTotal || 0;
+      const shippingCost = dto.deliveryCost;
+      const total = subtotal + shippingCost;
+      
       const order = await this.prisma.order.create({
         data: {
           userId: user.id,
           orderNumber,
-          subtotal: dto.estimatedTotal || 0,
-          shippingCost: 0,
-          total: dto.estimatedTotal || 0,
+          subtotal,
+          shippingCost,
+          total,
           shippingAddress: JSON.stringify({
             fullName: dto.customerName,
             phone: dto.customerPhone,
-            street: dto.shippingAddress,
-            town: dto.deliveryLocation || 'Unknown',
-            county: 'Unknown'
+            street: dto.deliveryLocation || 'Manual Entry',
+            town: dto.deliveryLocation || 'Manual Entry',
+            county: 'Manual Entry'
           }),
-          deliveryLocation: dto.deliveryLocation,
+          deliveryLocation: dto.deliveryLocation || 'Manual Entry',
           paymentMethod: 'CASH_ON_DELIVERY',
           status: 'PENDING',
           source: 'WHATSAPP'
@@ -59,7 +63,7 @@ export class WhatsAppService {
       await this.prisma.orderNote.create({
         data: {
           orderId: order.id,
-          note: `WhatsApp Order Details: ${dto.orderDetails}${dto.notes ? `\nAdditional Notes: ${dto.notes}` : ''}`,
+          note: `📱 WhatsApp Order Details:\n${dto.orderDetails}\n\n💳 Payment: ${dto.paymentMode}\n🚚 Type: ${dto.deliveryType}\n🚛 Delivery Cost: KSh ${dto.deliveryCost}${dto.deliveryLocation ? `\n📍 Location: ${dto.deliveryLocation}` : ''}${dto.notes ? `\n\n📝 Additional Notes:\n${dto.notes}` : ''}`,
           isInternal: false,
           createdBy: this.WHATSAPP_SYSTEM_USER
         }

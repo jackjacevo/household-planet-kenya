@@ -17,6 +17,7 @@ export default function CartPage() {
   const [appliedPromo, setAppliedPromo] = useState<{code: string, discount: number} | null>(null);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [deliveryCost, setDeliveryCost] = useState(0);
+  const [manualDeliveryCost, setManualDeliveryCost] = useState('');
   const [promoError, setPromoError] = useState('');
 
   const applyPromoCode = async () => {
@@ -60,6 +61,14 @@ export default function CartPage() {
     } else {
       setDeliveryCost(0);
     }
+    setManualDeliveryCost(''); // Clear manual cost when location is selected
+  };
+
+  const handleManualDeliveryCostChange = (value: string) => {
+    setManualDeliveryCost(value);
+    const cost = parseFloat(value) || 0;
+    setDeliveryCost(cost);
+    setSelectedLocation(''); // Clear location when manual cost is entered
   };
 
   const getDiscountAmount = () => {
@@ -258,21 +267,40 @@ export default function CartPage() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <MapPin className="h-5 w-5 mr-2" />
-              Delivery Location
+              Delivery Cost
             </h3>
             
-            <select
-              value={selectedLocation}
-              onChange={(e) => handleLocationChange(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Select delivery location</option>
-              {deliveryLocations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name} - {formatPrice(location.price)}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Select Location</label>
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => handleLocationChange(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Select delivery location</option>
+                  {deliveryLocations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name} - {formatPrice(location.price)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="text-center text-sm text-gray-500">OR</div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Manual Delivery Cost (KSh) *</label>
+                <Input
+                  type="number"
+                  placeholder="Enter delivery cost"
+                  value={manualDeliveryCost}
+                  onChange={(e) => handleManualDeliveryCostChange(e.target.value)}
+                  min="0"
+                  step="1"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Order Summary */}
@@ -295,7 +323,7 @@ export default function CartPage() {
                 
                 <div className="flex justify-between">
                   <span>Delivery</span>
-                  <span>{deliveryCost > 0 ? formatPrice(deliveryCost) : 'Select location'}</span>
+                  <span>{deliveryCost > 0 ? formatPrice(deliveryCost) : 'Required'}</span>
                 </div>
               </div>
               
@@ -307,8 +335,12 @@ export default function CartPage() {
               </div>
               
               <Link href="/checkout">
-                <Button size="lg" className="w-full mb-3">
-                  Proceed to Checkout
+                <Button 
+                  size="lg" 
+                  className="w-full mb-3"
+                  disabled={deliveryCost === 0 && !manualDeliveryCost}
+                >
+                  {deliveryCost === 0 && !manualDeliveryCost ? 'Add Delivery Cost' : 'Proceed to Checkout'}
                 </Button>
               </Link>
               

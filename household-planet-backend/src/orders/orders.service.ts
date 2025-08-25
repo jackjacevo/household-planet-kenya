@@ -220,13 +220,28 @@ export class OrdersService {
 
     const subtotal = dto.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    // Get delivery price from delivery service
+    // Calculate delivery cost - prioritize manual delivery price
     let shippingCost = 0;
-    if (dto.deliveryLocation) {
-      const deliveryInfo = this.deliveryService.getDeliveryPrice(dto.deliveryLocation);
-      shippingCost = deliveryInfo.price;
+    
+    if (dto.deliveryPrice !== undefined && dto.deliveryPrice >= 0) {
+      // Use manual delivery price if provided
+      shippingCost = dto.deliveryPrice;
+    } else if (dto.deliveryLocationId) {
+      // Get the specific delivery location and use its price
+      const deliveryLocation = this.deliveryService.getAllLocations().find(loc => loc.id === dto.deliveryLocationId);
+      
+      if (deliveryLocation) {
+        shippingCost = deliveryLocation.price;
+        
+        // Apply free shipping ONLY if order value is above threshold
+        if (subtotal >= this.FREE_SHIPPING_THRESHOLD) {
+          shippingCost = 0;
+        }
+      } else {
+        throw new BadRequestException('Invalid delivery location selected');
+      }
     } else {
-      shippingCost = dto.deliveryPrice || (subtotal > this.FREE_SHIPPING_THRESHOLD ? 0 : this.DEFAULT_SHIPPING_COST);
+      shippingCost = subtotal >= this.FREE_SHIPPING_THRESHOLD ? 0 : this.DEFAULT_SHIPPING_COST;
     }
     
     const total = subtotal + shippingCost;
@@ -235,14 +250,20 @@ export class OrdersService {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
-          userId,
+          user: { connect: { id: userId } },
           orderNumber: `HP-${Date.now()}`,
           subtotal,
           shippingCost,
           total,
-          shippingAddress: dto.shippingAddress,
-          deliveryLocation: dto.deliveryLocation,
-          deliveryPrice: dto.deliveryPrice,
+          shippingAddress: JSON.stringify({
+            fullName: 'Customer',
+            phone: '',
+            street: dto.deliveryLocation || '',
+            town: dto.deliveryLocation || '',
+            county: 'Kenya'
+          }),
+          deliveryLocation: dto.deliveryLocation || dto.deliveryLocationId,
+          deliveryPrice: shippingCost,
           paymentMethod: dto.paymentMethod,
           items: {
             create: dto.items.map(item => ({

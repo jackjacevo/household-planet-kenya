@@ -13,6 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/Textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle } from 'lucide-react';
+
+const WhatsAppIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.465 3.516"/>
+  </svg>
+);
 import Link from 'next/link';
 
 interface Order {
@@ -89,6 +95,7 @@ export default function AdminOrdersPage() {
   });
   const [returns, setReturns] = useState([]);
   const [showReturns, setShowReturns] = useState(false);
+  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     if (user?.role === 'ADMIN' || user?.role === 'STAFF') {
@@ -216,7 +223,7 @@ export default function AdminOrdersPage() {
 
   const processReturn = async (returnId: string, status: string, notes?: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns/process`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns/process`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -224,16 +231,25 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({ returnId, status, notes }),
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       fetchReturns();
       alert(`Return ${status.toLowerCase()} successfully`);
     } catch (error) {
       console.error('Error processing return:', error);
+      alert('Failed to process return. Please try again.');
     }
   };
 
   const updateOrderStatus = async (orderId: number, status: string, notes?: string) => {
+    const loadingKey = `status-${orderId}`;
+    setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
+    
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -241,9 +257,22 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({ status, notes }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      // Show success message
+      const orderNumber = orders.find(o => o.id === orderId)?.orderNumber || orderId;
+      alert(`Order ${orderNumber} status updated to ${status} successfully!`);
+      
       fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
+      alert(`Failed to update order status: ${error.message}`);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -251,7 +280,7 @@ export default function AdminOrdersPage() {
     if (!bulkAction || selectedOrders.length === 0) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -263,6 +292,11 @@ export default function AdminOrdersPage() {
           notes: bulkNotes
         }),
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       setSelectedOrders([]);
       setBulkAction('');
       setBulkNotes('');
@@ -270,10 +304,14 @@ export default function AdminOrdersPage() {
       fetchOrders();
     } catch (error) {
       console.error('Error performing bulk action:', error);
+      alert('Failed to perform bulk action. Please try again.');
     }
   };
 
   const generateShippingLabel = async (orderId: number) => {
+    const loadingKey = `shipping-${orderId}`;
+    setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
+    
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/shipping-label`, {
         method: 'POST',
@@ -281,17 +319,26 @@ export default function AdminOrdersPage() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       alert(`Shipping label generated. Tracking: ${data.trackingNumber}`);
       fetchOrders();
     } catch (error) {
       console.error('Error generating shipping label:', error);
+      alert(`Failed to generate shipping label: ${error.message}`);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
   const sendCustomerEmail = async (orderId: number, template: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/email`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -299,9 +346,15 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({ template }),
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       alert('Email sent successfully!');
     } catch (error) {
       console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
     }
   };
 
@@ -605,16 +658,31 @@ export default function AdminOrdersPage() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{order.orderNumber}</div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">{order.orderNumber}</span>
+                            {order.source === 'WHATSAPP' && (
+                              <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
+                                <WhatsAppIcon />
+                                WA
+                              </Badge>
+                            )}
+                          </div>
                           {order.trackingNumber && (
                             <div className="text-sm text-gray-500">Track: {order.trackingNumber}</div>
                           )}
+                          {order.deliveryLocation && (
+                            <div className="text-sm text-gray-500">Delivery: {order.deliveryLocation}</div>
+                          )}
+                          <div className="text-xs text-gray-400">
+                            {order.paymentMethod === 'MPESA' ? 'M-Pesa' :
+                             order.paymentMethod === 'CASH_ON_DELIVERY' ? 'COD' :
+                             order.paymentMethod}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
                           <div className="font-medium">{order.user.name}</div>
-                          <div className="text-sm text-gray-500">{order.user.email}</div>
                           {order.user.phone && (
                             <div className="text-sm text-gray-500">{order.user.phone}</div>
                           )}
@@ -632,13 +700,42 @@ export default function AdminOrdersPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{order.items.length} items</TableCell>
-                      <TableCell>KSh {order.total.toLocaleString()}</TableCell>
-                      <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <div>
+                          <span className="font-medium">{order.items?.length || 0} items</span>
+                          <div className="text-sm text-gray-500">
+                            Subtotal: KSh {order.subtotal?.toLocaleString() || order.total.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            Delivery: {order.shippingCost === 0 ? 'FREE' : `KSh ${order.shippingCost.toLocaleString()}`}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <span className="font-bold">KSh {order.total.toLocaleString()}</span>
+                          {order.deliveryPrice && order.deliveryPrice !== order.shippingCost && (
+                            <div className="text-xs text-gray-500">
+                              +KSh {order.deliveryPrice.toLocaleString()} delivery
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
+                          <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                          {order.updatedAt !== order.createdAt && (
+                            <div className="text-xs text-gray-400">
+                              Updated: {new Date(order.updatedAt).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex space-x-1">
                           <Link href={`/admin/orders/${order.id}`}>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" title="View Order Details">
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
@@ -646,18 +743,27 @@ export default function AdminOrdersPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => generateShippingLabel(order.id)}
-                            disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED'}
+                            disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED' || actionLoading[`shipping-${order.id}`]}
+                            title="Generate Shipping Label"
                           >
-                            <Truck className="h-4 w-4" />
+                            {actionLoading[`shipping-${order.id}`] ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                            ) : (
+                              <Truck className="h-4 w-4" />
+                            )}
                           </Button>
                           <Select
                             value={order.status}
-                            onValueChange={(status) => updateOrderStatus(order.id, status)}
+                            onValueChange={(status) => {
+                              if (confirm(`Are you sure you want to change order ${order.orderNumber} status to ${status}?`)) {
+                                updateOrderStatus(order.id, status);
+                              }
+                            }}
                           >
                             <SelectTrigger className="w-32">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-50">
                               <SelectItem value="PENDING">Pending</SelectItem>
                               <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                               <SelectItem value="PROCESSING">Processing</SelectItem>

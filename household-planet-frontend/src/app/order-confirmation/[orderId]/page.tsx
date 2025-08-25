@@ -143,6 +143,18 @@ export default function OrderConfirmationPage() {
                 <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
+                <p className="text-sm text-gray-600">Order Status</p>
+                <p className={`font-semibold ${
+                  order.status === 'DELIVERED' ? 'text-green-600' :
+                  order.status === 'SHIPPED' ? 'text-blue-600' :
+                  order.status === 'PROCESSING' ? 'text-purple-600' :
+                  order.status === 'CONFIRMED' ? 'text-blue-600' :
+                  'text-yellow-600'
+                }`}>
+                  {order.status}
+                </p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-600">Payment Method</p>
                 <p className="font-semibold">
                   {order.paymentMethod === 'MPESA' && 'M-Pesa'}
@@ -150,6 +162,34 @@ export default function OrderConfirmationPage() {
                   {order.paymentMethod === 'CASH_ON_DELIVERY' && 'Cash on Delivery'}
                 </p>
               </div>
+              <div>
+                <p className="text-sm text-gray-600">Payment Status</p>
+                <p className={`font-semibold ${
+                  order.paymentStatus === 'PAID' ? 'text-green-600' :
+                  order.paymentStatus === 'PENDING' ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {order.paymentStatus || 'PENDING'}
+                </p>
+              </div>
+              {order.deliveryLocation && (
+                <div>
+                  <p className="text-sm text-gray-600">Delivery Location</p>
+                  <p className="font-semibold">{order.deliveryLocation}</p>
+                </div>
+              )}
+              {order.priority && order.priority !== 'NORMAL' && (
+                <div>
+                  <p className="text-sm text-gray-600">Priority</p>
+                  <p className={`font-semibold ${
+                    order.priority === 'HIGH' ? 'text-orange-600' :
+                    order.priority === 'URGENT' ? 'text-red-600' :
+                    'text-gray-600'
+                  }`}>
+                    {order.priority}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -159,7 +199,7 @@ export default function OrderConfirmationPage() {
                   <div key={item.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-16 h-16 relative">
                       <Image
-                        src={item.product.images[0] || '/placeholder.jpg'}
+                        src={item.product.images?.[0] || '/placeholder.jpg'}
                         alt={item.product.name}
                         fill
                         className="object-cover rounded-md"
@@ -168,14 +208,22 @@ export default function OrderConfirmationPage() {
                     <div className="flex-1">
                       <p className="font-medium">{item.product.name}</p>
                       <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                      <p className="text-sm text-gray-600">Unit Price: {formatPrice(item.price)}</p>
                       {item.variant && (
                         <p className="text-sm text-gray-500">
                           {item.variant.size && `Size: ${item.variant.size}`}
                           {item.variant.color && ` • Color: ${item.variant.color}`}
+                          {item.variant.name && ` • ${item.variant.name}`}
                         </p>
                       )}
+                      {item.product.sku && (
+                        <p className="text-xs text-gray-400">SKU: {item.product.sku}</p>
+                      )}
                     </div>
-                    <p className="font-semibold">{formatPrice(item.total)}</p>
+                    <div className="text-right">
+                      <p className="font-semibold">{formatPrice(item.total)}</p>
+                      <p className="text-xs text-gray-500">{item.quantity} × {formatPrice(item.price)}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -189,18 +237,24 @@ export default function OrderConfirmationPage() {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-medium mb-2 flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Shipping Address
-                </h3>
-                <div className="text-sm text-gray-600">
-                  <p>{order.shippingAddress.fullName}</p>
-                  <p>{order.shippingAddress.street}</p>
-                  <p>{order.shippingAddress.town}, {order.shippingAddress.county}</p>
-                  <p>{order.shippingAddress.phone}</p>
+              {order.deliveryLocation && (
+                <div>
+                  <h3 className="font-medium mb-2 flex items-center">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Delivery Location
+                  </h3>
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                    <p className="font-medium">{order.deliveryLocation}</p>
+                    <p className="text-gray-600 mt-1">
+                      Delivery Cost: {order.shippingCost === 0 ? (
+                        <span className="text-green-600 font-medium">FREE</span>
+                      ) : (
+                        formatPrice(order.shippingCost)
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div>
                 <h3 className="font-medium mb-2 flex items-center">
@@ -309,16 +363,40 @@ export default function OrderConfirmationPage() {
             
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>Subtotal ({order.items?.length || 0} items)</span>
                 <span>{formatPrice(order.subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>{formatPrice(order.shippingCost)}</span>
+                <span>Delivery Cost</span>
+                <span>
+                  {order.shippingCost === 0 ? (
+                    <span className="text-green-600 font-medium">FREE</span>
+                  ) : (
+                    formatPrice(order.shippingCost)
+                  )}
+                </span>
               </div>
+              {order.deliveryPrice && order.deliveryPrice !== order.shippingCost && (
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Additional Delivery Cost</span>
+                  <span>{formatPrice(order.deliveryPrice)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                <span>Total</span>
+                <span>Total Amount</span>
                 <span>{formatPrice(order.total)}</span>
+              </div>
+              
+              {/* Payment Status */}
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-sm">Payment Status:</span>
+                <span className={`text-sm font-medium px-2 py-1 rounded ${
+                  order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' :
+                  order.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {order.paymentStatus || 'PENDING'}
+                </span>
               </div>
             </div>
 

@@ -169,11 +169,17 @@ async function syncCartUpdates() {
         const response = await fetch(request.clone());
         if (response.ok) {
           await cache.delete(request);
-          // Notify clients of successful sync
+          // Notify clients of successful sync with error handling
           self.clients.matchAll().then(clients => {
             clients.forEach(client => {
-              client.postMessage({ type: 'CART_SYNCED', success: true });
+              try {
+                client.postMessage({ type: 'CART_SYNCED', success: true });
+              } catch (error) {
+                console.error('Failed to notify client:', error);
+              }
             });
+          }).catch(error => {
+            console.error('Failed to get clients:', error);
           });
         }
       } catch (error) {
@@ -317,22 +323,30 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// Enhanced message handling
+// Enhanced message handling with error handling
 self.addEventListener('message', event => {
-  const { type, data } = event.data || {};
-  
-  switch (type) {
-    case 'SKIP_WAITING':
-      self.skipWaiting();
-      break;
-    case 'CACHE_CART_UPDATE':
-      cacheCartUpdate(data);
-      break;
-    case 'GET_CACHED_PRODUCTS':
-      getCachedProducts().then(products => {
-        event.ports[0]?.postMessage({ products });
-      });
-      break;
+  try {
+    const { type, data } = event.data || {};
+    
+    switch (type) {
+      case 'SKIP_WAITING':
+        self.skipWaiting();
+        break;
+      case 'CACHE_CART_UPDATE':
+        cacheCartUpdate(data);
+        break;
+      case 'GET_CACHED_PRODUCTS':
+        getCachedProducts().then(products => {
+          if (event.ports && event.ports[0]) {
+            event.ports[0].postMessage({ products });
+          }
+        }).catch(error => {
+          console.error('Error getting cached products:', error);
+        });
+        break;
+    }
+  } catch (error) {
+    console.error('Service worker message handling error:', error);
   }
 });
 

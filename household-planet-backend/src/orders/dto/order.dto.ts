@@ -23,12 +23,15 @@ export class CreateOrderDto {
   @Type(() => CreateOrderItemDto)
   items: CreateOrderItemDto[];
 
-  @IsString()
-  shippingAddress: string;
+
 
   @IsOptional()
   @IsString()
   deliveryLocation?: string;
+
+  @IsOptional()
+  @IsString()
+  deliveryLocationId?: string;
 
   @IsOptional()
   @IsDecimal()
@@ -190,17 +193,24 @@ export class CreateWhatsAppOrderDto {
   @IsNotEmpty()
   orderDetails: string;
 
-  @IsString()
-  @IsNotEmpty()
-  shippingAddress: string;
-
   @IsOptional()
   @IsString()
   deliveryLocation?: string;
 
+  @IsNumber()
+  deliveryCost: number;
+
   @IsOptional()
   @IsNumber()
   estimatedTotal?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  paymentMode: string;
+
+  @IsString()
+  @IsNotEmpty()
+  deliveryType: string;
 
   @IsOptional()
   @IsString()

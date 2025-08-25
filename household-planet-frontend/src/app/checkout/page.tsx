@@ -15,7 +15,7 @@ import { Address } from '@/types';
 import axios from 'axios';
 import Image from 'next/image';
 
-type CheckoutStep = 'account' | 'shipping' | 'delivery' | 'payment' | 'review' | 'processing';
+type CheckoutStep = 'account' | 'delivery' | 'payment' | 'review' | 'processing';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -29,7 +29,9 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedDeliveryLocation, setSelectedDeliveryLocation] = useState('');
+  const [deliveryType, setDeliveryType] = useState('');
   const [deliveryCost, setDeliveryCost] = useState(0);
+  const [manualDeliveryCost, setManualDeliveryCost] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
@@ -45,8 +47,7 @@ export default function CheckoutPage() {
 
   const steps = [
     { id: 'account', title: 'Account', icon: User },
-    { id: 'shipping', title: 'Shipping', icon: MapPin },
-    { id: 'delivery', title: 'Delivery', icon: MapPin },
+    { id: 'delivery', title: 'Delivery Location', icon: MapPin },
     { id: 'payment', title: 'Payment', icon: Phone },
     { id: 'review', title: 'Review', icon: Check },
   ];
@@ -106,20 +107,25 @@ export default function CheckoutPage() {
         street: formData.street,
       };
       
+      const orderData = {
+        items: items.map(item => ({
+          productId: item.product.id,
+          variantId: item.variantId,
+          quantity: item.quantity,
+          price: item.product.price
+        })),
+        deliveryLocationId: selectedDeliveryLocation,
+        deliveryPrice: deliveryCost,
+        paymentMethod: selectedPaymentMethod,
+        notes: formData.notes,
+      };
+      
+      console.log('Creating order with data:', orderData);
+      console.log('Selected delivery location:', deliveryLocations.find(loc => loc.id === selectedDeliveryLocation));
+      
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
-        {
-          items: items.map(item => ({
-            productId: item.product.id,
-            variantId: item.variantId,
-            quantity: item.quantity,
-          })),
-          shippingAddress: selectedAddress,
-          deliveryLocationId: selectedDeliveryLocation,
-          notes: formData.notes,
-          isGuest,
-          guestEmail: isGuest ? formData.email : undefined,
-        },
+        orderData,
         {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         }
@@ -135,7 +141,7 @@ export default function CheckoutPage() {
     if (isGuest && formData.createAccount) {
       // Create account logic here
     }
-    setStep('shipping');
+    setStep('delivery');
   };
 
   const handleShippingSubmit = (e: React.FormEvent) => {
@@ -151,9 +157,27 @@ export default function CheckoutPage() {
   };
 
   const handleDeliverySubmit = async () => {
-    if (selectedDeliveryLocation) {
-      const cost = await calculateDeliveryCost(selectedDeliveryLocation, getTotalPrice());
-      setDeliveryCost(cost);
+    if (deliveryType === 'PICKUP') {
+      setDeliveryCost(0);
+      setStep('payment');
+    } else if (deliveryType === 'DELIVERY') {
+      if (selectedDeliveryLocation) {
+        // Get the selected location and use its exact price
+        const selectedLocation = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
+        if (selectedLocation) {
+          let cost = selectedLocation.price;
+          // Apply free shipping if order value is above threshold
+          if (getTotalPrice() >= 5000) {
+            cost = 0;
+          }
+          setDeliveryCost(cost);
+        }
+      } else if (deliveryCost > 0) {
+        // Manual delivery cost already set
+      } else {
+        alert('Please select a delivery location or enter delivery cost');
+        return;
+      }
       setStep('payment');
     }
   };
@@ -167,7 +191,7 @@ export default function CheckoutPage() {
       const newOrderId = await createOrder();
       setOrderId(newOrderId);
       
-      if (selectedPaymentMethod === 'CASH_ON_DELIVERY') {
+      if (selectedPaymentMethod === 'CASH' || selectedPaymentMethod === 'BANK') {
         clearCart();
         router.push(`/order-confirmation/${newOrderId}`);
       } else {
@@ -380,62 +404,23 @@ export default function CheckoutPage() {
                 )}
                 
                 <Button onClick={handleAccountStep} className="w-full min-h-44" size="lg">
-                  Continue to Shipping
+                  Continue to Delivery Location
                 </Button>
               </div>
             </div>
           )}
           
-          {/* Shipping Step */}
-          {step === 'shipping' && (
+
+          
+          {/* Delivery Step */}
+          {step === 'delivery' && (
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
+              <h2 className="text-xl font-semibold mb-4">Customer Information & Delivery</h2>
               
-              {/* Saved Addresses */}
-              {!isGuest && savedAddresses.length > 0 && !showAddressForm && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Saved Addresses</h3>
-                  <div className="space-y-3">
-                    {savedAddresses.map((address) => (
-                      <div
-                        key={address.id}
-                        className={`p-4 border rounded-lg cursor-pointer ${
-                          selectedAddressId === address.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
-                        }`}
-                        onClick={() => selectAddress(address)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{address.fullName}</p>
-                            <p className="text-sm text-gray-600">
-                              {address.street}, {address.town}, {address.county}
-                            </p>
-                            <p className="text-sm text-gray-600">{address.phone}</p>
-                          </div>
-                          <input
-                            type="radio"
-                            checked={selectedAddressId === address.id}
-                            onChange={() => selectAddress(address)}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddressForm(true)}
-                    className="mt-4"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Address
-                  </Button>
-                </div>
-              )}
-              
-              {/* Address Form */}
-              {(showAddressForm || isGuest || savedAddresses.length === 0) && (
-                <form onSubmit={handleShippingSubmit} className="space-y-4">
+              {/* Customer Information */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-3">Customer Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Full Name</label>
                     <Input
@@ -459,91 +444,119 @@ export default function CheckoutPage() {
                       placeholder="+254700000000"
                     />
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2">County</label>
-                    <Input
-                      type="text"
-                      name="county"
-                      value={formData.county}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Nairobi"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Town</label>
-                      <Input
-                        type="text"
-                        name="town"
-                        value={formData.town}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="Westlands"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Street Address</label>
-                      <Input
-                        type="text"
-                        name="street"
-                        value={formData.street}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="123 Moi Avenue"
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full min-h-44" size="lg">
-                    Continue to Delivery
-                  </Button>
-                </form>
-              )}
+                </div>
+              </div>
               
-              {!showAddressForm && selectedAddressId && (
-                <Button onClick={() => setStep('delivery')} className="w-full min-h-44" size="lg">
-                  Continue to Delivery
-                </Button>
-              )}
-            </div>
-          )}
-          
-          {/* Delivery Step */}
-          {step === 'delivery' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Delivery Options</h2>
-              
-              <div className="space-y-4">
-                {deliveryLocations.map((location) => (
+              {/* Delivery Type Selection */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-3">Delivery Type</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div
-                    key={location.id}
                     className={`p-4 border rounded-lg cursor-pointer ${
-                      selectedDeliveryLocation === location.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                      deliveryType === 'DELIVERY' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                     }`}
-                    onClick={() => setSelectedDeliveryLocation(location.id)}
+                    onClick={() => setDeliveryType('DELIVERY')}
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{location.name}</p>
-                        <p className="text-sm text-gray-600">{location.county}</p>
-                        <p className="text-sm text-gray-600">{location.estimatedDays} days delivery</p>
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">🚚</span>
+                        <span className="font-medium">Delivery</span>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{formatPrice(location.price)}</p>
-                        <input
-                          type="radio"
-                          checked={selectedDeliveryLocation === location.id}
-                          onChange={() => setSelectedDeliveryLocation(location.id)}
-                        />
-                      </div>
+                      <input
+                        type="radio"
+                        checked={deliveryType === 'DELIVERY'}
+                        onChange={() => setDeliveryType('DELIVERY')}
+                      />
                     </div>
                   </div>
-                ))}
+                  <div
+                    className={`p-4 border rounded-lg cursor-pointer ${
+                      deliveryType === 'PICKUP' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                    }`}
+                    onClick={() => setDeliveryType('PICKUP')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">🏪</span>
+                        <span className="font-medium">Pickup from Store</span>
+                      </div>
+                      <input
+                        type="radio"
+                        checked={deliveryType === 'PICKUP'}
+                        onChange={() => setDeliveryType('PICKUP')}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
+              
+              {/* Delivery Locations - only show if delivery is selected */}
+              {deliveryType === 'DELIVERY' && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-3">Delivery Cost</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Select Location</label>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {deliveryLocations.map((location) => (
+                          <div
+                            key={location.id}
+                            className={`p-3 border rounded-lg cursor-pointer ${
+                              selectedDeliveryLocation === location.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                            }`}
+                            onClick={() => {
+                              setSelectedDeliveryLocation(location.id);
+                              setDeliveryCost(location.price);
+                              setManualDeliveryCost('');
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-sm">{location.name}</p>
+                                {location.description && (
+                                  <p className="text-xs text-gray-600">{location.description}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-sm">{formatPrice(location.price)}</p>
+                                <input
+                                  type="radio"
+                                  checked={selectedDeliveryLocation === location.id}
+                                  onChange={() => {
+                                    setSelectedDeliveryLocation(location.id);
+                                    setDeliveryCost(location.price);
+                                    setManualDeliveryCost('');
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="text-center text-sm text-gray-500">OR</div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Manual Delivery Cost (KSh) *</label>
+                      <Input
+                        type="number"
+                        placeholder="Enter delivery cost"
+                        value={manualDeliveryCost}
+                        onChange={(e) => {
+                          setManualDeliveryCost(e.target.value);
+                          const cost = parseFloat(e.target.value) || 0;
+                          setDeliveryCost(cost);
+                          setSelectedDeliveryLocation('');
+                        }}
+                        min="0"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="mt-4">
                 <label className="block text-sm font-medium mb-2">Delivery Notes (Optional)</label>
@@ -559,7 +572,7 @@ export default function CheckoutPage() {
               
               <Button
                 onClick={handleDeliverySubmit}
-                disabled={!selectedDeliveryLocation}
+                disabled={!deliveryType || (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && deliveryCost === 0)}
                 className="w-full mt-4 min-h-44"
                 size="lg"
               >
@@ -575,9 +588,11 @@ export default function CheckoutPage() {
               
               <div className="space-y-4">
                 {[
+                  { id: 'CASH', name: 'Cash on Delivery', icon: '💵' },
+                  { id: 'PAYBILL', name: 'Paybill', icon: '📱' },
+                  { id: 'BANK', name: 'Bank on Delivery', icon: '🏦' },
                   { id: 'MPESA', name: 'M-Pesa', icon: '📱' },
-                  { id: 'CARD', name: 'Credit/Debit Card', icon: '💳' },
-                  { id: 'CASH_ON_DELIVERY', name: 'Cash on Delivery', icon: '💵' }
+                  { id: 'CARD', name: 'Credit/Debit Card', icon: '💳' }
                 ].map((method) => (
                   <div
                     key={method.id}
@@ -641,25 +656,31 @@ export default function CheckoutPage() {
                 </div>
               </div>
               
-              {/* Shipping Address */}
+              {/* Customer Information */}
               <div className="mb-6">
-                <h3 className="font-medium mb-2">Shipping Address</h3>
+                <h3 className="font-medium mb-2">Customer Information</h3>
                 <div className="text-sm text-gray-600">
                   <p>{formData.fullName}</p>
-                  <p>{formData.street}</p>
-                  <p>{formData.town}, {formData.county}</p>
                   <p>{formData.phone}</p>
                 </div>
               </div>
               
-              {/* Payment Method */}
+              {/* Delivery & Payment Info */}
               <div className="mb-6">
-                <h3 className="font-medium mb-2">Payment Method</h3>
-                <p className="text-sm text-gray-600">
-                  {selectedPaymentMethod === 'MPESA' && 'M-Pesa'}
-                  {selectedPaymentMethod === 'CARD' && 'Credit/Debit Card'}
-                  {selectedPaymentMethod === 'CASH_ON_DELIVERY' && 'Cash on Delivery'}
-                </p>
+                <h3 className="font-medium mb-2">Delivery & Payment</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p><strong>Type:</strong> {deliveryType === 'PICKUP' ? 'Pickup from Store' : 'Delivery'}</p>
+                  {deliveryType === 'DELIVERY' && selectedDeliveryLocation && (
+                    <p><strong>Location:</strong> {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name}</p>
+                  )}
+                  <p><strong>Payment:</strong> 
+                    {selectedPaymentMethod === 'CASH' && 'Cash on Delivery'}
+                    {selectedPaymentMethod === 'PAYBILL' && 'Paybill'}
+                    {selectedPaymentMethod === 'BANK' && 'Bank on Delivery'}
+                    {selectedPaymentMethod === 'MPESA' && 'M-Pesa'}
+                    {selectedPaymentMethod === 'CARD' && 'Credit/Debit Card'}
+                  </p>
+                </div>
               </div>
               
               <Button
@@ -693,8 +714,16 @@ export default function CheckoutPage() {
                 <span>{formatPrice(getSubtotal())}</span>
               </div>
               <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>{deliveryCost > 0 ? formatPrice(deliveryCost) : 'TBD'}</span>
+                <span>Delivery Cost</span>
+                <span>
+                  {deliveryCost === 0 && deliveryType === 'DELIVERY' ? (
+                    <span className="text-green-600 font-medium">FREE</span>
+                  ) : deliveryCost > 0 ? (
+                    formatPrice(deliveryCost)
+                  ) : (
+                    'TBD'
+                  )}
+                </span>
               </div>
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
                 <span>Total</span>

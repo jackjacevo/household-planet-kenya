@@ -8,20 +8,12 @@ export function ServiceWorkerRegistration() {
       const registerServiceWorker = async () => {
         const isDevelopment = process.env.NODE_ENV === 'development'
         
-        // In development, use the dev service worker
+        // In development, skip service worker to avoid connection issues
         if (isDevelopment) {
-          try {
-            const registration = await navigator.serviceWorker.register('/sw-dev.js', { scope: '/' })
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Development SW registered:', registration);
-            }
-            return
-          } catch (error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Development SW registration failed:', error);
-            }
-            return
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Skipping service worker in development to avoid connection issues');
           }
+          return
         }
 
         // In production, try the full SW first
