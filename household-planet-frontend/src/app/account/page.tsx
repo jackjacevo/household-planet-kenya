@@ -54,7 +54,8 @@ export default function AccountDashboard() {
 
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
-        setRecentOrders(ordersData.slice(0, 3) || []);
+        const orders = Array.isArray(ordersData) ? ordersData : [];
+        setRecentOrders(orders.slice(0, 3));
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
