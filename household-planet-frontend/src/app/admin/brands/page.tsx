@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import axios from 'axios';
 
@@ -18,6 +18,10 @@ export default function AdminBrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Brand | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -31,35 +35,94 @@ export default function AdminBrandsPage() {
 
   const fetchBrands = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBrands(response.data);
-    } catch (error) {
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to fetch brands');
       console.error('Error fetching brands:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const generateSlug = (name: string) => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      name,
+      slug: prev.slug === generateSlug(prev.name) || !prev.slug ? generateSlug(name) : prev.slug
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      setError('Brand name is required');
+      return;
+    }
+
     try {
+      setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
+      const data = {
+        ...formData,
+        name: formData.name.trim(),
+        slug: formData.slug.trim() || generateSlug(formData.name),
+        logo: formData.logo.trim() || null
+      };
 
       if (editingBrand) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${editingBrand.id}`, formData, {
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${editingBrand.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        setSuccess('Brand updated successfully');
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, formData, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        setSuccess('Brand created successfully');
       }
 
-      fetchBrands();
+      await fetchBrands();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to save brand');
       console.error('Error saving brand:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (brand: Brand) => {
+    if (brand._count.products > 0) {
+      setError(`Cannot delete brand "${brand.name}" because it has ${brand._count.products} products. Please move or delete the products first.`);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${brand.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess(`Brand "${brand.name}" deleted successfully`);
+      await fetchBrands();
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to delete brand');
+      console.error('Error deleting brand:', error);
+    } finally {
+      setLoading(false);
+      setDeleteConfirm(null);
     }
   };
 
@@ -67,6 +130,7 @@ export default function AdminBrandsPage() {
     setFormData({ name: '', slug: '', logo: '', isActive: true });
     setEditingBrand(null);
     setShowForm(false);
+    setError(null);
   };
 
   const handleEdit = (brand: Brand) => {
@@ -78,6 +142,12 @@ export default function AdminBrandsPage() {
     });
     setEditingBrand(brand);
     setShowForm(true);
+    setError(null);
+  };
+
+  const clearMessages = () => {
+    setError(null);
+    setSuccess(null);
   };
 
   return (
@@ -87,11 +157,39 @@ export default function AdminBrandsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Brand Management</h1>
           <p className="mt-2 text-sm text-gray-700">Manage product brands</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={() => { setShowForm(true); clearMessages(); }} disabled={loading}>
           <Plus className="h-4 w-4 mr-2" />
           Add Brand
         </Button>
       </div>
+
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+            <button onClick={clearMessages} className="ml-auto text-red-400 hover:text-red-600">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-green-800">{success}</p>
+            </div>
+            <button onClick={clearMessages} className="ml-auto text-green-400 hover:text-green-600">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white p-6 rounded-lg shadow mb-6">
@@ -100,23 +198,25 @@ export default function AdminBrandsPage() {
           </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                onChange={(e) => handleNameChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                disabled={loading}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
               <input
                 type="text"
                 value={formData.slug}
                 onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                disabled={loading}
               />
             </div>
             <div>
@@ -125,7 +225,8 @@ export default function AdminBrandsPage() {
                 type="url"
                 value={formData.logo}
                 onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
               />
             </div>
             <div className="flex items-center">
@@ -134,18 +235,43 @@ export default function AdminBrandsPage() {
                 checked={formData.isActive}
                 onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
                 className="mr-2"
+                disabled={loading}
               />
               <label className="text-sm font-medium text-gray-700">Active</label>
             </div>
             <div className="md:col-span-2 flex gap-2">
-              <Button type="submit">
-                {editingBrand ? 'Update' : 'Create'} Brand
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : editingBrand ? 'Update Brand' : 'Create Brand'}
               </Button>
-              <Button type="button" variant="outline" onClick={resetForm}>
+              <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
                 Cancel
               </Button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete the brand "{deleteConfirm.name}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={loading}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={loading}
+              >
+                {loading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -187,8 +313,22 @@ export default function AdminBrandsPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(brand)}>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => handleEdit(brand)}
+                    disabled={loading}
+                  >
                     <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setDeleteConfirm(brand)}
+                    disabled={loading || brand._count.products > 0}
+                    className={brand._count.products > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </td>
               </tr>

@@ -18,7 +18,9 @@ import {
   MessageCircle,
   Menu,
   X,
-  Activity
+  Activity,
+  FolderTree,
+  Tag
 } from 'lucide-react';
 
 const navigation = [
@@ -26,6 +28,8 @@ const navigation = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'WhatsApp', href: '/admin/whatsapp', icon: MessageCircle },
   { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Categories', href: '/admin/categories', icon: FolderTree },
+  { name: 'Brands', href: '/admin/brands', icon: Tag },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard },

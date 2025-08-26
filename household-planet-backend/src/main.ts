@@ -23,7 +23,9 @@ async function bootstrap() {
   });
   
   // Serve static files from uploads directory
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  const uploadsPath = join(__dirname, '..', 'uploads');
+  console.log('Serving static files from:', uploadsPath);
+  app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
   });
   
@@ -92,13 +94,15 @@ async function bootstrap() {
   const { corsConfig } = await import('./common/config/cors.config');
   app.enableCors(corsConfig);
   
+  // Enable CORS for static files
+  app.use('/uploads', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  });
+  
   // Set global API prefix
   app.setGlobalPrefix('api');
-  
-  // Serve uploads without API prefix
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
   
   // Trust proxy for production
   if (process.env.NODE_ENV === 'production') {

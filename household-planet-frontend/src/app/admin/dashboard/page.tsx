@@ -20,6 +20,8 @@ interface DashboardStats {
     totalRevenue: number;
     totalCustomers: number;
     totalProducts: number;
+    activeProducts: number;
+    outOfStockProducts: number;
     todayOrders: number;
     todayRevenue: number;
     pendingOrders: number;
@@ -128,7 +130,7 @@ export default function AdminDashboard() {
       bgColor: 'bg-purple-100',
     },
     {
-      name: 'Products',
+      name: 'Total Products',
       value: stats.overview.totalProducts.toLocaleString(),
       change: '+2.1%',
       changeType: 'increase',
@@ -158,6 +160,33 @@ export default function AdminDashboard() {
       name: 'Low Stock Alerts',
       value: stats.overview.lowStockProducts,
       icon: AlertTriangle,
+    },
+  ];
+
+  const productStats = [
+    {
+      name: 'Total Products',
+      value: stats.overview.totalProducts,
+      icon: Package,
+      color: 'text-blue-600'
+    },
+    {
+      name: 'Active Products',
+      value: stats.overview.activeProducts,
+      icon: Eye,
+      color: 'text-green-600'
+    },
+    {
+      name: 'Low Stock',
+      value: stats.overview.lowStockProducts,
+      icon: AlertTriangle,
+      color: 'text-yellow-600'
+    },
+    {
+      name: 'Out of Stock',
+      value: stats.overview.outOfStockProducts,
+      icon: AlertTriangle,
+      color: 'text-red-600'
     },
   ];
 
@@ -207,6 +236,26 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Product Stats */}
+      <div className="bg-white shadow rounded-lg mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Product Overview</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {productStats.map((stat, index) => (
+            <div key={stat.name} className={`px-6 py-4 ${index < productStats.length - 1 ? 'border-r border-gray-200' : ''}`}>
+              <div className="flex items-center">
+                <stat.icon className={`h-5 w-5 mr-3 ${stat.color}`} />
+                <div>
+                  <p className="text-sm text-gray-600">{stat.name}</p>
+                  <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Today's Stats */}

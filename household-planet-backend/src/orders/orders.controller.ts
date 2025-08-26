@@ -119,8 +119,22 @@ export class OrdersController {
   @Put(':id/status')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
-  updateStatus(@Param('id') id: string, @Body() updateStatusDto: UpdateOrderStatusDto, @Request() req) {
-    return this.ordersService.updateStatus(+id, updateStatusDto, req.user.email);
+  async updateStatus(@Param('id') id: string, @Body() updateStatusDto: UpdateOrderStatusDto, @Request() req) {
+    try {
+      console.log('Update status request:', { id, updateStatusDto, user: req.user?.email });
+      
+      const orderId = parseInt(id, 10);
+      if (isNaN(orderId)) {
+        throw new BadRequestException('Invalid order ID');
+      }
+      
+      const result = await this.ordersService.updateStatus(orderId, updateStatusDto, req.user?.email || req.user?.id?.toString());
+      console.log('Update status success:', result.id);
+      return result;
+    } catch (error) {
+      console.error('Update status error:', error.message, error.stack);
+      throw error;
+    }
   }
 
   @Post('returns')
@@ -254,6 +268,13 @@ export class OrdersController {
   @Roles(Role.ADMIN, Role.STAFF)
   getPendingWhatsAppMessages() {
     return this.whatsAppService.getPendingWhatsAppMessages();
+  }
+
+  @Get('whatsapp/orders')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getWhatsAppOrders() {
+    return this.whatsAppService.getWhatsAppOrders();
   }
 
   @Patch('whatsapp/:messageId/processed')

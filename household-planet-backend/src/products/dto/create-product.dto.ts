@@ -35,18 +35,17 @@ export class CreateProductDto {
   @Transform(({ value }) => value?.toUpperCase().trim())
   sku: string;
 
-  @Transform(({ value }) => parseFloat(value))
-  @IsPositiveNumber()
+  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
   @Min(0.01, { message: 'Price must be greater than 0' })
   price: number;
 
   @IsOptional()
-  @Transform(({ value }) => value ? parseFloat(value) : null)
-  @IsPositiveNumber()
+  @Transform(({ value }) => value ? (typeof value === 'string' ? parseFloat(value) : value) : null)
+  @Min(0)
   comparePrice?: number;
 
   @IsOptional()
-  @Transform(({ value }) => value ? parseFloat(value) : null)
+  @Transform(({ value }) => value ? (typeof value === 'string' ? parseFloat(value) : value) : null)
   @Min(0)
   weight?: number;
 
@@ -66,15 +65,15 @@ export class CreateProductDto {
   @MaxLength(100, { each: true })
   imageAltTexts?: string[];
 
+  @Transform(({ value }) => typeof value === 'string' ? parseInt(value) : value)
   @IsInt({ message: 'Category ID must be a valid integer' })
   @Min(1, { message: 'Category ID must be greater than 0' })
-  @Type(() => Number)
   categoryId: number;
 
   @IsOptional()
+  @Transform(({ value }) => value ? (typeof value === 'string' ? parseInt(value) : value) : null)
   @IsInt()
   @Min(1)
-  @Type(() => Number)
   brandId?: number;
 
   @IsOptional()

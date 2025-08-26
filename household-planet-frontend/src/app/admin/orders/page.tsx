@@ -20,6 +20,7 @@ const WhatsAppIcon = () => (
   </svg>
 );
 import Link from 'next/link';
+import { useToast } from '@/hooks/useToast';
 
 interface Order {
   id: number;
@@ -75,6 +76,7 @@ const priorityColors = {
 
 export default function AdminOrdersPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -237,10 +239,18 @@ export default function AdminOrdersPage() {
       }
       
       fetchReturns();
-      alert(`Return ${status.toLowerCase()} successfully`);
+      toast({
+        title: 'Success!',
+        description: `Return ${status.toLowerCase()} successfully`,
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error processing return:', error);
-      alert('Failed to process return. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to process return. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -265,12 +275,20 @@ export default function AdminOrdersPage() {
       
       // Show success message
       const orderNumber = orders.find(o => o.id === orderId)?.orderNumber || orderId;
-      alert(`Order ${orderNumber} status updated to ${status} successfully!`);
+      toast({
+        title: 'Success!',
+        description: `Order ${orderNumber} status updated to ${status} successfully!`,
+        variant: 'success'
+      });
       
       fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert(`Failed to update order status: ${error.message}`);
+      toast({
+        title: 'Error',
+        description: `Failed to update order status: ${error.message}`,
+        variant: 'destructive'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -302,9 +320,18 @@ export default function AdminOrdersPage() {
       setBulkNotes('');
       setShowBulkDialog(false);
       fetchOrders();
+      toast({
+        title: 'Success!',
+        description: `Bulk action completed for ${selectedOrders.length} orders`,
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error performing bulk action:', error);
-      alert('Failed to perform bulk action. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to perform bulk action. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -326,11 +353,19 @@ export default function AdminOrdersPage() {
       }
       
       const data = await response.json();
-      alert(`Shipping label generated. Tracking: ${data.trackingNumber}`);
+      toast({
+        title: 'Success!',
+        description: `Shipping label generated. Tracking: ${data.trackingNumber}`,
+        variant: 'success'
+      });
       fetchOrders();
     } catch (error) {
       console.error('Error generating shipping label:', error);
-      alert(`Failed to generate shipping label: ${error.message}`);
+      toast({
+        title: 'Error',
+        description: `Failed to generate shipping label: ${error.message}`,
+        variant: 'destructive'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -351,10 +386,18 @@ export default function AdminOrdersPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      alert('Email sent successfully!');
+      toast({
+        title: 'Success!',
+        description: 'Email sent successfully!',
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to send email. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -755,9 +798,7 @@ export default function AdminOrdersPage() {
                           <Select
                             value={order.status}
                             onValueChange={(status) => {
-                              if (confirm(`Are you sure you want to change order ${order.orderNumber} status to ${status}?`)) {
-                                updateOrderStatus(order.id, status);
-                              }
+                              updateOrderStatus(order.id, status);
                             }}
                           >
                             <SelectTrigger className="w-32">

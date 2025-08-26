@@ -26,7 +26,7 @@ export default function AccountDashboard() {
     loyaltyPoints: 0,
     wishlistItems: 0
   });
-  const [recentOrders, setRecentOrders] = useState([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

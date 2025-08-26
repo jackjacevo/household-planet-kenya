@@ -27,7 +27,7 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
         <StructuredData data={globalStructuredData} />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <AuthProvider>
           <ClientLayout>
             {children}

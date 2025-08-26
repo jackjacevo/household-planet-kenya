@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp Tracking Test</title>
+</head>
+<body>
+    <h1>WhatsApp Tracking Test</h1>
+    <button onclick="testWhatsAppTracking()">Test WhatsApp Button Click</button>
+    <div id="result"></div>
+
+    <script>
+        async function testWhatsAppTracking() {
+            const mockProduct = {
+                id: 'test-1',
+                name: 'Test Product',
+                price: 1000,
+                sku: 'TEST-001'
+            };
+
+            const inquiryData = {
+                productId: mockProduct.id,
+                productName: mockProduct.name,
+                productPrice: mockProduct.price,
+                sku: mockProduct.sku,
+                timestamp: new Date().toISOString(),
+                sessionId: 'test-session-' + Date.now()
+            };
+
+            try {
+                const response = await fetch('http://localhost:3001/api/analytics/whatsapp-inquiry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inquiryData)
+                });
+
+                const result = await response.json();
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: green;">✅ Tracking successful: ' + JSON.stringify(result) + '</p>';
+                
+                // Also open WhatsApp
+                const message = `Hello! I'm interested in ${mockProduct.name} (${mockProduct.sku}) - KSh ${mockProduct.price}`;
+                const whatsappUrl = `https://wa.me/254790227760?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">❌ Tracking failed: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -154,6 +154,10 @@ export class OrderFilterDto {
   @Type(() => Boolean)
   @IsBoolean()
   returnable?: boolean;
+
+  @IsOptional()
+  @IsString()
+  source?: string;
 }
 
 export class AddOrderNoteDto {

@@ -95,17 +95,24 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${product?.id || 'temp'}/images`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+      // For new products, we'll handle images differently
+      if (product?.id) {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${product.id}/images`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
           }
-        }
-      );
-      setImages(prev => [...prev, ...response.data.images]);
+        );
+        setImages(prev => [...prev, ...response.data.images]);
+      } else {
+        // For new products, create temporary URLs
+        const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+        setImages(prev => [...prev, ...newImages]);
+      }
     } catch (error) {
       console.error('Error uploading images:', error);
     } finally {
@@ -130,7 +137,19 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   };
 
   const handleFormSubmit = (data: ProductFormData) => {
-    onSubmit({ ...data, images });
+    // Convert string values to numbers where needed
+    const processedData = {
+      ...data,
+      price: Number(data.price),
+      comparePrice: data.comparePrice ? Number(data.comparePrice) : undefined,
+      weight: data.weight ? Number(data.weight) : undefined,
+      categoryId: Number(data.categoryId),
+      brandId: data.brandId ? Number(data.brandId) : undefined,
+      images
+    };
+    
+    console.log('Submitting product data:', processedData);
+    onSubmit(processedData);
   };
 
   return (

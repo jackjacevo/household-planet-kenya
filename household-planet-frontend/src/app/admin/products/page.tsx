@@ -7,6 +7,7 @@ import ProductForm from '@/components/admin/ProductForm';
 import BulkActions from '@/components/admin/BulkActions';
 import ProductAnalytics from '@/components/admin/ProductAnalytics';
 import axios from 'axios';
+import { useToast } from '@/hooks/useToast';
 
 interface Product {
   id: number;
@@ -23,6 +24,7 @@ interface Product {
 }
 
 export default function AdminProductsPage() {
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -37,28 +39,71 @@ export default function AdminProductsPage() {
     page: 1,
     limit: 10
   });
+  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, totalPages: 0 });
 
   useEffect(() => {
     fetchProducts();
+    fetchFilterOptions();
   }, [filters]);
+
+  const fetchFilterOptions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const [categoriesRes, brandsRes] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setCategories(categoriesRes.data || []);
+      setBrands(brandsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value) params.append(key, value.toString());
       });
 
+      console.log('Fetching products with params:', params.toString());
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setProducts(response.data.data);
-      setMeta(response.data.meta);
+      
+      console.log('Products response:', response.data);
+      setProducts(response.data.data || []);
+      setMeta(response.data.meta || { total: 0, totalPages: 0 });
     } catch (error) {
       console.error('Error fetching products:', error);
+      if (error.response?.status === 401) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load products. Please refresh the page.',
+          variant: 'destructive'
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -66,16 +111,45 @@ export default function AdminProductsPage() {
 
   const handleCreateProduct = async (productData: any) => {
     try {
+      console.log('Creating product with data:', productData);
       const token = localStorage.getItem('token');
-      await axios.post(
+      
+      if (!token) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
         productData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
-      fetchProducts();
+      
+      console.log('Product creation response:', response.data);
+      await fetchProducts();
       setShowForm(false);
+      toast({
+        title: 'Success!',
+        description: 'Product created successfully',
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error creating product:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create product';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
     }
   };
 
@@ -91,13 +165,22 @@ export default function AdminProductsPage() {
       fetchProducts();
       setEditingProduct(null);
       setShowForm(false);
+      toast({
+        title: 'Success!',
+        description: 'Product updated successfully',
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error updating product:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update product. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
   const handleDeleteProduct = async (productId: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
@@ -105,8 +188,18 @@ export default function AdminProductsPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchProducts();
+      toast({
+        title: 'Success!',
+        description: 'Product deleted successfully',
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error deleting product:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete product. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -233,7 +326,7 @@ export default function AdminProductsPage() {
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
@@ -244,6 +337,26 @@ export default function AdminProductsPage() {
               className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <select
+            value={filters.categoryId}
+            onChange={(e) => setFilters(prev => ({ ...prev, categoryId: e.target.value, page: 1 }))}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Categories</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.id}>{category.name}</option>
+            ))}
+          </select>
+          <select
+            value={filters.brandId}
+            onChange={(e) => setFilters(prev => ({ ...prev, brandId: e.target.value, page: 1 }))}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Brands</option>
+            {brands.map(brand => (
+              <option key={brand.id} value={brand.id}>{brand.name}</option>
+            ))}
+          </select>
           <select
             value={filters.isActive}
             onChange={(e) => setFilters(prev => ({ ...prev, isActive: e.target.value, page: 1 }))}

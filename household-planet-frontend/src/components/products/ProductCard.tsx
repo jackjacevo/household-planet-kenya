@@ -213,6 +213,9 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             {product.name}
           </h3>
         </Link>
+        {product.brand && (
+          <p className="text-xs text-gray-500 mt-1">{product.brand.name}</p>
+        )}
 
         <div className="flex items-center mt-2">
           <div className="flex text-yellow-400 text-sm">

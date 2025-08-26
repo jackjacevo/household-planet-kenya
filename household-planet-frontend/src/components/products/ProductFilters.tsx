@@ -14,17 +14,20 @@ interface ProductFiltersProps {
 export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   const [filters, setFilters] = useState({
     category: undefined as number | undefined,
+    brand: undefined as number | undefined,
     search: '',
     featured: false,
   });
 
   const [expandedSections, setExpandedSections] = useState({
     category: true,
+    brand: true,
     search: true,
     special: true,
   });
 
   const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
 
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
@@ -38,11 +41,21 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
         const parentCategories = apiCategories.filter((cat: any) => !cat.parentId);
         setCategories([{ id: '', name: 'All Categories' }, ...parentCategories]);
         
+        // Fetch brands
+        const token = localStorage.getItem('token');
+        const brandsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (brandsRes.ok) {
+          const brandsData = await brandsRes.json();
+          setBrands([{ id: '', name: 'All Brands' }, ...brandsData.filter((brand: any) => brand.isActive)]);
+        }
 
       } catch (error) {
         console.error('Error fetching filter options:', error);
         // Set fallback categories if API fails
         setCategories([{ id: '', name: 'All Categories' }]);
+        setBrands([{ id: '', name: 'All Brands' }]);
       }
     };
 
@@ -56,6 +69,9 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
     const backendFilters: any = {};
     if (newFilters.category) {
       backendFilters.category = newFilters.category;
+    }
+    if (newFilters.brand) {
+      backendFilters.brand = newFilters.brand;
     }
     if (newFilters.search) {
       backendFilters.search = newFilters.search;
@@ -79,6 +95,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   const updateActiveFiltersCount = (currentFilters: any) => {
     let count = 0;
     if (currentFilters.category) count++;
+    if (currentFilters.brand) count++;
     if (currentFilters.search) count++;
     if (currentFilters.featured) count++;
     setActiveFiltersCount(count);
@@ -87,6 +104,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   const resetFilters = () => {
     const defaultFilters = {
       category: undefined as number | undefined,
+      brand: undefined as number | undefined,
       search: '',
       featured: false,
     };
@@ -161,6 +179,24 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
             {categories.map((category) => (
               <option key={category.id || 'all'} value={category.id || ''}>
                 {category.name}
+              </option>
+            ))}
+          </select>
+        </FilterSection>
+
+        <FilterSection
+          title="Brand"
+          isExpanded={expandedSections.brand}
+          onToggle={() => toggleSection('brand')}
+        >
+          <select
+            value={filters.brand || ''}
+            onChange={(e) => handleFilterChange('brand', e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          >
+            {brands.map((brand) => (
+              <option key={brand.id || 'all'} value={brand.id || ''}>
+                {brand.name}
               </option>
             ))}
           </select>

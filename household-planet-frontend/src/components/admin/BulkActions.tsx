@@ -137,9 +137,11 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
             id="file-import"
           />
           <label htmlFor="file-import">
-            <Button as="span" variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Import File
+            <Button asChild variant="outline" size="sm">
+              <span>
+                <Upload className="h-4 w-4 mr-2" />
+                Import File
+              </span>
             </Button>
           </label>
         </div>

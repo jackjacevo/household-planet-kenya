@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { AdminService } from './admin.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -78,6 +80,7 @@ export class AdminController {
 
   @Post('products')
   createProduct(@Body() createProductDto: CreateProductDto) {
+    console.log('Received product creation request:', createProductDto);
     return this.adminService.createProduct(createProductDto);
   }
 
@@ -102,7 +105,17 @@ export class AdminController {
   }
 
   @Post('products/import/csv')
-  @UseInterceptors(FilesInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('file', 1, {
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.includes('csv') && !file.mimetype.includes('text')) {
+        return cb(new Error('Only CSV files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+  }))
   importProductsCsv(@UploadedFiles() files: Express.Multer.File[]) {
     return this.adminService.importProductsCsv(files[0]);
   }
@@ -113,14 +126,43 @@ export class AdminController {
   }
 
   @Post('products/:id/images')
-  @UseInterceptors(FilesInterceptor('images', 10))
-  uploadProductImages(@Param('id', ParseIntPipe) id: number, @UploadedFiles() files: Express.Multer.File[]) {
-    return this.adminService.uploadProductImages(id, files);
+  @UseInterceptors(FilesInterceptor('images', 10, {
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        return cb(new Error('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  }))
+  uploadProductImages(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new Error('No files uploaded');
+    }
+    
+    // Handle both numeric IDs and 'temp' for new products
+    if (id === 'temp') {
+      return this.adminService.uploadTempImages(files);
+    }
+    
+    const productId = parseInt(id);
+    if (isNaN(productId)) {
+      throw new Error('Invalid product ID');
+    }
+    
+    return this.adminService.uploadProductImages(productId, files);
   }
 
   @Post('products/images/crop')
   cropProductImage(@Body() cropDto: ImageCropDto) {
     return this.adminService.cropProductImage(cropDto);
+  }
+
+  @Post('products/:id/images/optimize')
+  optimizeProductImages(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.optimizeProductImages(id);
   }
 
   @Delete('products/:id/images/:imageIndex')
@@ -153,7 +195,17 @@ export class AdminController {
   }
 
   @Post('products/import/excel')
-  @UseInterceptors(FilesInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('file', 1, {
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.includes('excel') && !file.mimetype.includes('spreadsheet')) {
+        return cb(new Error('Only Excel files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+  }))
   importProductsExcel(@UploadedFiles() files: Express.Multer.File[]) {
     return this.adminService.importProductsExcel(files[0]);
   }
@@ -203,6 +255,44 @@ export class AdminController {
   @Put('categories/:id')
   updateCategory(@Param('id', ParseIntPipe) id: number, @Body() categoryData: any) {
     return this.adminService.updateCategory(id, categoryData);
+  }
+
+  @Delete('categories/:id')
+  deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteCategory(id);
+  }
+
+  @Post('categories/upload-image')
+  @UseInterceptors(FilesInterceptor('image', 1, {
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        return cb(new Error('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  }))
+  uploadCategoryImage(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new Error('No file uploaded');
+    }
+    return this.adminService.uploadCategoryImage(files[0]);
+  }
+
+  @Get('categories/image/:filename')
+  getCategoryImage(@Param('filename') filename: string, @Res() res: any) {
+    const path = require('path');
+    const fs = require('fs');
+    const imagePath = path.join(process.cwd(), 'uploads', 'categories', filename);
+    
+    if (fs.existsSync(imagePath)) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(imagePath);
+    } else {
+      res.status(404).send('Image not found');
+    }
   }
 
   @Put('categories/reorder')

@@ -42,7 +42,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId || 'temp'}/images`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId || 'temp'}/images`,
         formData,
         {
           headers: {
@@ -52,10 +52,13 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
         }
       );
       
-      const newImages = [...images, ...response.data.images];
+      // Handle the response format from the backend
+      const uploadedImages = response.data.images || [];
+      const newImages = [...images, ...uploadedImages];
       onImagesChange(newImages);
     } catch (error) {
       console.error('Error uploading images:', error);
+      alert('Failed to upload images. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -72,7 +75,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/images/${index}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/images/${index}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -89,7 +92,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/images/crop`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/images/crop`,
         {
           imageUrl: images[selectedImageIndex],
           cropData
@@ -113,7 +116,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/images/optimize`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/images/optimize`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

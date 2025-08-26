@@ -22,17 +22,23 @@ export default function ProductAnalytics({ productId, categoryId }: ProductAnaly
   const fetchAnalytics = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setAnalytics({ views: [], sales: [], revenue: [] });
+        return;
+      }
+
       const params = new URLSearchParams({ period });
       if (productId) params.append('productId', productId.toString());
       if (categoryId) params.append('categoryId', categoryId.toString());
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/products/analytics?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/analytics?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setAnalytics(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      setAnalytics({ views: [], sales: [], revenue: [] });
     } finally {
       setLoading(false);
     }

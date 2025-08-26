@@ -84,11 +84,14 @@ export class WhatsAppService {
       
       const message = dto.body.toLowerCase();
       
-      // Simple order detection patterns
-      const orderKeywords = ['order', 'buy', 'purchase', 'want', 'need'];
+      // Enhanced order detection patterns
+      const orderKeywords = ['order', 'buy', 'purchase', 'want', 'need', 'interested', 'availability', 'delivery'];
       const isOrderMessage = orderKeywords.some(keyword => message.includes(keyword));
 
-      if (isOrderMessage) {
+      // Check if this message relates to a recent product inquiry
+      const recentInquiry = await this.findRecentProductInquiry(dto.body);
+
+      if (isOrderMessage || recentInquiry) {
         // Log the potential order for manual review
         await this.prisma.whatsAppMessage.create({
           data: {
@@ -103,7 +106,8 @@ export class WhatsAppService {
 
         return { 
           isOrder: true, 
-          message: 'Order message detected and logged for processing' 
+          message: 'Order message detected and logged for processing',
+          relatedProduct: recentInquiry
         };
       }
 
@@ -117,6 +121,33 @@ export class WhatsAppService {
     }
   }
 
+  private async findRecentProductInquiry(message: string) {
+    // Look for product names or SKUs in the message
+    const recentInquiries = await this.prisma.analyticsEvent.findMany({
+      where: {
+        event: 'whatsapp_product_inquiry',
+        timestamp: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+        }
+      },
+      orderBy: { timestamp: 'desc' },
+      take: 50
+    });
+
+    for (const inquiry of recentInquiries) {
+      const properties = JSON.parse(inquiry.properties);
+      const productName = properties.productName?.toLowerCase();
+      const sku = properties.sku?.toLowerCase();
+      
+      if ((productName && message.includes(productName)) || 
+          (sku && message.includes(sku))) {
+        return properties;
+      }
+    }
+
+    return null;
+  }
+
   async getPendingWhatsAppMessages() {
     return this.prisma.whatsAppMessage.findMany({
       where: {
@@ -124,6 +155,28 @@ export class WhatsAppService {
         processed: false
       },
       orderBy: { timestamp: 'desc' }
+    });
+  }
+
+  async getWhatsAppOrders() {
+    return this.prisma.order.findMany({
+      where: {
+        source: 'WHATSAPP'
+      },
+      include: {
+        user: { select: { name: true, email: true, phone: true } },
+        items: {
+          include: {
+            product: { select: { name: true, images: true } },
+            variant: { select: { name: true, sku: true } },
+          },
+        },
+        notes: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      },
+      orderBy: { createdAt: 'desc' }
     });
   }
 

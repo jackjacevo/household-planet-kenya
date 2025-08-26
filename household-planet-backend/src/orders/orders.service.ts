@@ -65,6 +65,10 @@ export class OrdersService {
         where.status = 'DELIVERED';
         where.createdAt = { gte: thirtyDaysAgo };
       }
+      // Add source filter for WhatsApp orders
+      if (filters?.source) {
+        where.source = filters.source;
+      }
 
       const page = Math.max(1, filters?.page || 1);
       const limit = Math.min(100, Math.max(1, filters?.limit || 20));
@@ -305,16 +309,23 @@ export class OrdersService {
   }
 
   async updateStatus(id: number, dto: UpdateOrderStatusDto, userId?: string) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
-    if (!order) throw new NotFoundException('Order not found');
+    try {
+      this.logger.debug(`Updating order ${id} status to ${dto.status} by ${userId}`);
+      
+      const order = await this.prisma.order.findUnique({ where: { id } });
+      if (!order) {
+        this.logger.error(`Order ${id} not found`);
+        throw new NotFoundException('Order not found');
+      }
 
-    return this.prisma.$transaction(async (tx) => {
-      // Update order status
-      const updatedOrder = await tx.order.update({
+      this.logger.debug(`Found order ${id}, current status: ${order.status}`);
+
+      // Update order status first
+      const updatedOrder = await this.prisma.order.update({
         where: { id },
         data: { 
           status: dto.status,
-          trackingNumber: dto.trackingNumber
+          ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber })
         },
         include: {
           user: { select: { name: true, email: true } },
@@ -327,30 +338,47 @@ export class OrdersService {
         }
       });
 
-      // Add status history
-      await tx.orderStatusHistory.create({
-        data: {
-          orderId: id,
-          status: dto.status,
-          notes: dto.notes,
-          changedBy: userId
-        }
-      });
+      this.logger.debug(`Order ${id} status updated successfully`);
 
-      // If order is delivered, update customer stats and award loyalty points
+      // Add status history (separate operation)
+      try {
+        await this.prisma.orderStatusHistory.create({
+          data: {
+            orderId: id,
+            status: dto.status,
+            notes: dto.notes || '',
+            changedBy: userId || 'system'
+          }
+        });
+        this.logger.debug(`Status history created for order ${id}`);
+      } catch (historyError) {
+        this.logger.error(`Error creating status history for order ${id}:`, historyError.message);
+      }
+
+      // Handle delivered status updates asynchronously
       if (dto.status === 'DELIVERED') {
-        try {
-          await Promise.all([
-            this.customersService.updateCustomerStats(updatedOrder.userId),
-            this.loyaltyService.earnPoints(updatedOrder.userId, updatedOrder.id, Number(updatedOrder.total))
-          ]);
-        } catch (error) {
-          this.logger.error('Error updating customer stats or loyalty points', error.stack, 'OrdersService');
-        }
+        // Run these in background without blocking the response
+        setImmediate(async () => {
+          try {
+            await Promise.all([
+              this.customersService.updateCustomerStats(updatedOrder.userId),
+              this.loyaltyService.earnPoints(updatedOrder.userId, updatedOrder.id, Number(updatedOrder.total))
+            ]);
+            this.logger.debug(`Customer stats and loyalty points updated for order ${id}`);
+          } catch (error) {
+            this.logger.error('Error updating customer stats or loyalty points', error.stack, 'OrdersService');
+          }
+        });
       }
 
       return updatedOrder;
-    });
+    } catch (error) {
+      this.logger.error(`Error updating order status for order ${id}:`, error.message, error.stack);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to update order status: ${error.message}`);
+    }
   }
 
   async createReturn(userId: number, dto: CreateReturnDto) {
