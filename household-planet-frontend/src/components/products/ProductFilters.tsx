@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
+import CategoryDropdown from '@/components/admin/CategoryDropdown';
 import { api } from '@/lib/api';
 
 interface ProductFiltersProps {
@@ -37,9 +38,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
       try {
         const categoriesRes = await api.getCategoryHierarchy();
         const apiCategories = Array.isArray(categoriesRes) ? categoriesRes : (categoriesRes?.data || []);
-        // Filter to only show parent categories (main categories)
-        const parentCategories = apiCategories.filter((cat: any) => !cat.parentId);
-        setCategories([{ id: '', name: 'All Categories' }, ...parentCategories]);
+        setCategories(apiCategories);
         
         // Fetch brands
         const token = localStorage.getItem('token');
@@ -171,17 +170,12 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
           isExpanded={expandedSections.category}
           onToggle={() => toggleSection('category')}
         >
-          <select
+          <CategoryDropdown
+            categories={categories}
             value={filters.category || ''}
-            onChange={(e) => handleFilterChange('category', e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          >
-            {categories.map((category) => (
-              <option key={category.id || 'all'} value={category.id || ''}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+            onChange={(categoryId) => handleFilterChange('category', categoryId)}
+            placeholder="All Categories"
+          />
         </FilterSection>
 
         <FilterSection

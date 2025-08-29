@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res, ValidationPipe, UsePipes } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -12,12 +12,12 @@ import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 
 @Controller('admin')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN)
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
   @Get('dashboard')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
   getDashboardStats() {
     return this.adminService.getDashboardStats();
   }
@@ -79,8 +79,11 @@ export class AdminController {
   }
 
   @Post('products')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: false, forbidNonWhitelisted: false }))
   createProduct(@Body() createProductDto: CreateProductDto) {
-    console.log('Received product creation request:', createProductDto);
+    console.log('Received product creation request:', JSON.stringify(createProductDto, null, 2));
     return this.adminService.createProduct(createProductDto);
   }
 
@@ -287,8 +290,46 @@ export class AdminController {
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'categories', filename);
     
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    
     if (fs.existsSync(imagePath)) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(imagePath);
+    } else {
+      res.status(404).send('Image not found');
+    }
+  }
+
+  @Get('products/image/:filename')
+  getProductImage(@Param('filename') filename: string, @Res() res: any) {
+    const path = require('path');
+    const fs = require('fs');
+    const imagePath = path.join(process.cwd(), 'uploads', 'products', filename);
+    
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    
+    if (fs.existsSync(imagePath)) {
+      res.sendFile(imagePath);
+    } else {
+      res.status(404).send('Image not found');
+    }
+  }
+
+  @Get('temp/image/:filename')
+  getTempImage(@Param('filename') filename: string, @Res() res: any) {
+    const path = require('path');
+    const fs = require('fs');
+    const imagePath = path.join(process.cwd(), 'uploads', 'temp', filename);
+    
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    if (fs.existsSync(imagePath)) {
       res.sendFile(imagePath);
     } else {
       res.status(404).send('Image not found');

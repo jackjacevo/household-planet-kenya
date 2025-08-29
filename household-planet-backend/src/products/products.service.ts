@@ -335,19 +335,32 @@ export class ProductsService {
   // Admin methods (simplified)
   async create(createProductDto: any, files?: any[]) {
     try {
-      const { categoryId, ...data } = createProductDto;
+      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, ...data } = createProductDto;
+      
       const validatedCategoryId = parseInt(String(categoryId));
       if (isNaN(validatedCategoryId)) {
         throw new Error('Invalid category ID');
       }
       
+      const productData: any = {
+        ...data,
+        categoryId: validatedCategoryId,
+        stock: stock !== undefined ? parseInt(String(stock)) : 0,
+        lowStockThreshold: lowStockThreshold !== undefined ? parseInt(String(lowStockThreshold)) : 5,
+        trackStock: trackStock !== undefined ? Boolean(trackStock) : true,
+        images: images ? JSON.stringify(images) : JSON.stringify([]),
+      };
+      
+      if (brandId) {
+        const validatedBrandId = parseInt(String(brandId));
+        if (!isNaN(validatedBrandId)) {
+          productData.brandId = validatedBrandId;
+        }
+      }
+      
       return await this.prisma.product.create({
-        data: {
-          ...data,
-          categoryId: validatedCategoryId,
-          images: files ? JSON.stringify(files.map(f => f.filename)) : null,
-        },
-        include: { category: true },
+        data: productData,
+        include: { category: true, brand: true },
       });
     } catch (error) {
       throw new Error(`Failed to create product: ${error.message}`);
@@ -356,7 +369,7 @@ export class ProductsService {
 
   async update(id: number, updateProductDto: any, files?: any[]) {
     try {
-      const { categoryId, ...data } = updateProductDto;
+      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, ...data } = updateProductDto;
       const updateData: any = { ...data };
       
       if (categoryId) {
@@ -365,14 +378,34 @@ export class ProductsService {
           updateData.categoryId = validatedCategoryId;
         }
       }
-      if (files && files.length > 0) {
-        updateData.images = JSON.stringify(files.map(f => f.filename));
+      
+      if (brandId) {
+        const validatedBrandId = parseInt(String(brandId));
+        if (!isNaN(validatedBrandId)) {
+          updateData.brandId = validatedBrandId;
+        }
+      }
+      
+      if (stock !== undefined) {
+        updateData.stock = parseInt(String(stock));
+      }
+      
+      if (lowStockThreshold !== undefined) {
+        updateData.lowStockThreshold = parseInt(String(lowStockThreshold));
+      }
+      
+      if (trackStock !== undefined) {
+        updateData.trackStock = Boolean(trackStock);
+      }
+      
+      if (images) {
+        updateData.images = JSON.stringify(images);
       }
 
       return await this.prisma.product.update({
         where: { id },
         data: updateData,
-        include: { category: true },
+        include: { category: true, brand: true },
       });
     } catch (error) {
       throw new Error(`Failed to update product: ${error.message}`);

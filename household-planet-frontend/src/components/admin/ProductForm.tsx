@@ -5,7 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
-import { Upload, X, Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
+import ImageUpload from './ImageUpload';
+import CategoryDropdown from './CategoryDropdown';
 import axios from 'axios';
 
 const productSchema = z.object({
@@ -20,6 +22,9 @@ const productSchema = z.object({
   dimensions: z.string().optional(),
   categoryId: z.number().min(1, 'Category is required'),
   brandId: z.number().optional(),
+  stock: z.number().min(0, 'Stock must be 0 or greater').default(0),
+  lowStockThreshold: z.number().min(0, 'Low stock threshold must be 0 or greater').default(5),
+  trackStock: z.boolean().default(true),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   seoTitle: z.string().optional(),
@@ -39,17 +44,24 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [images, setImages] = useState<string[]>(product?.images || []);
-  const [uploading, setUploading] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: product || {
+      sku: generateSKU(),
+      stock: 0,
+      lowStockThreshold: 5,
+      trackStock: true,
       isActive: true,
       isFeatured: false,
       tags: []
     }
   });
+
+  function generateSKU() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
 
   const watchedTags = watch('tags') || [];
 
@@ -86,43 +98,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     }
   };
 
-  const handleImageUpload = async (files: FileList) => {
-    if (!files.length) return;
-    
-    setUploading(true);
-    const formData = new FormData();
-    Array.from(files).forEach(file => formData.append('images', file));
 
-    try {
-      const token = localStorage.getItem('token');
-      // For new products, we'll handle images differently
-      if (product?.id) {
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${product.id}/images`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-        setImages(prev => [...prev, ...response.data.images]);
-      } else {
-        // For new products, create temporary URLs
-        const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-        setImages(prev => [...prev, ...newImages]);
-      }
-    } catch (error) {
-      console.error('Error uploading images:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
 
   const addTag = () => {
     if (tagInput.trim() && !watchedTags.includes(tagInput.trim())) {
@@ -143,6 +119,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       price: Number(data.price),
       comparePrice: data.comparePrice ? Number(data.comparePrice) : undefined,
       weight: data.weight ? Number(data.weight) : undefined,
+      stock: Number(data.stock),
+      lowStockThreshold: Number(data.lowStockThreshold),
       categoryId: Number(data.categoryId),
       brandId: data.brandId ? Number(data.brandId) : undefined,
       images
@@ -178,10 +156,22 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
-            <input
-              {...register('sku')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex gap-2">
+              <input
+                {...register('sku')}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                readOnly={!product}
+              />
+              {!product && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setValue('sku', generateSKU())}
+                >
+                  Generate
+                </Button>
+              )}
+            </div>
             {errors.sku && <p className="text-red-500 text-sm mt-1">{errors.sku.message}</p>}
           </div>
 
@@ -208,15 +198,12 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <select
-              {...register('categoryId', { valueAsNumber: true })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Category</option>
-              {categories.map((category: any) => (
-                <option key={category.id} value={category.id}>{category.name}</option>
-              ))}
-            </select>
+            <CategoryDropdown
+              categories={categories}
+              value={watch('categoryId') || ''}
+              onChange={(categoryId) => setValue('categoryId', categoryId)}
+              placeholder="Select Category"
+            />
             {errors.categoryId && <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>}
           </div>
 
@@ -244,6 +231,83 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           </div>
         </div>
 
+        {/* Stock Management Section */}
+        <div className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Stock Management</h3>
+            <div className="flex items-center">
+              <input 
+                type="checkbox" 
+                {...register('trackStock')} 
+                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
+              />
+              <span className="text-sm font-medium text-gray-700">Enable Stock Tracking</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Current Stock Quantity
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  {...register('stock', { valueAsNumber: true })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+                  placeholder="0"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <span className="text-gray-500 text-sm">units</span>
+                </div>
+              </div>
+              {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>}
+              <p className="text-xs text-gray-500 mt-1">Total available quantity for sale</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Low Stock Alert Threshold
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  {...register('lowStockThreshold', { valueAsNumber: true })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+                  placeholder="5"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <span className="text-gray-500 text-sm">units</span>
+                </div>
+              </div>
+              {errors.lowStockThreshold && <p className="text-red-500 text-sm mt-1">{errors.lowStockThreshold.message}</p>}
+              <p className="text-xs text-gray-500 mt-1">Get notified when stock falls below this level</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-blue-50 rounded-md">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h4 className="text-sm font-medium text-blue-800">Stock Management Tips</h4>
+                <div className="mt-1 text-sm text-blue-700">
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Enable stock tracking to monitor inventory levels</li>
+                    <li>Set appropriate low stock thresholds to avoid stockouts</li>
+                    <li>Regular stock audits help maintain accuracy</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
           <textarea
@@ -263,40 +327,11 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         </div>
 
         {/* Images */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Images</label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
-              className="hidden"
-              id="image-upload"
-            />
-            <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center">
-              <Upload className="h-12 w-12 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-600">Click to upload images</span>
-            </label>
-          </div>
-          
-          {images.length > 0 && (
-            <div className="grid grid-cols-4 gap-4 mt-4">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <img src={image} alt={`Product ${index + 1}`} className="w-full h-24 object-cover rounded" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ImageUpload
+          images={images}
+          onImagesChange={setImages}
+          maxImages={4}
+        />
 
         {/* Tags */}
         <div>
@@ -318,8 +353,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
             {watchedTags.map((tag) => (
               <span key={tag} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center">
                 {tag}
-                <button type="button" onClick={() => removeTag(tag)} className="ml-1">
-                  <X className="h-3 w-3" />
+                <button type="button" onClick={() => removeTag(tag)} className="ml-1 text-blue-600 hover:text-blue-800">
+                  ×
                 </button>
               </span>
             ))}
@@ -346,22 +381,32 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         </div>
 
         {/* Status */}
-        <div className="flex gap-6">
-          <label className="flex items-center">
-            <input type="checkbox" {...register('isActive')} className="mr-2" />
-            Active
-          </label>
-          <label className="flex items-center">
-            <input type="checkbox" {...register('isFeatured')} className="mr-2" />
-            Featured
-          </label>
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Product Status</h3>
+          <div className="flex gap-6">
+            <label className="flex items-center">
+              <input type="checkbox" {...register('isActive')} className="mr-2" />
+              <span className="text-sm font-medium text-gray-700">Active</span>
+            </label>
+            <label className="flex items-center">
+              <input type="checkbox" {...register('isFeatured')} className="mr-2" />
+              <span className="text-sm font-medium text-gray-700">Featured</span>
+            </label>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" disabled={uploading}>
-            {uploading ? 'Uploading...' : product ? 'Update Product' : 'Create Product'}
-          </Button>
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            {product ? 'Updating existing product' : 'Creating new product'}
+          </div>
+          <div className="flex gap-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {product ? 'Update Product' : 'Create Product'}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

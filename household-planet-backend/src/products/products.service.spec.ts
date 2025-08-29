@@ -61,6 +61,8 @@ describe('ProductsService', () => {
         minPrice: null,
         maxPrice: null,
         stock: 10,
+        lowStockThreshold: 5,
+        trackStock: true,
         createdAt: new Date(),
         updatedAt: new Date()
       }];
@@ -103,6 +105,8 @@ describe('ProductsService', () => {
         minPrice: null,
         maxPrice: null,
         stock: 10,
+        lowStockThreshold: 5,
+        trackStock: true,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -153,6 +157,8 @@ describe('ProductsService', () => {
         minPrice: null,
         maxPrice: null,
         stock: 10,
+        lowStockThreshold: 5,
+        trackStock: true,
         createdAt: new Date(),
         updatedAt: new Date()
       };

@@ -5,14 +5,15 @@ import {
   Delete, 
   UseGuards, 
   UseInterceptors, 
-  UploadedFile, 
+  UploadedFile,
+  UploadedFiles, 
   Request, 
   Param, 
   Res,
   NotFoundException,
   BadRequestException 
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 
@@ -44,6 +45,32 @@ export class UploadController {
       return await this.secureUpload.uploadFile(file, 'user-uploads');
     } catch (error) {
       this.logger.error(`File upload failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Post('images')
+  @RateLimit(5, 60000)
+  @UseGuards(FileUploadGuard)
+  @UseInterceptors(FilesInterceptor('images', 10))
+  async uploadImages(@UploadedFiles() files: Express.Multer.File[], @Request() req) {
+    try {
+      if (!files || files.length === 0) {
+        throw new BadRequestException('No images uploaded');
+      }
+      
+      this.logger.log(`Multiple image upload attempt by user ${req.user?.userId}, ${files.length} files`);
+      
+      const uploadPromises = files.map(file => 
+        this.secureUpload.uploadFile(file, 'products')
+      );
+      
+      const results = await Promise.all(uploadPromises);
+      const images = results.map(result => typeof result === 'string' ? result : (result as any).url);
+      
+      return { images };
+    } catch (error) {
+      this.logger.error(`Multiple image upload failed: ${error.message}`, error.stack);
       throw error;
     }
   }

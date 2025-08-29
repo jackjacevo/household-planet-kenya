@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SmartImage } from '@/components/ui/SmartImage';
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage';
+import { useImageOptimization } from '@/hooks/useImageOptimization';
 
 interface ImageGalleryProps {
   images: string[];
@@ -14,6 +16,15 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const { preloadImages } = useImageOptimization();
+
+  // Preload next/previous images for better UX
+  useState(() => {
+    if (images.length > 1) {
+      const imagesToPreload = images.slice(0, 3).map(src => ({ src }));
+      preloadImages(imagesToPreload);
+    }
+  });
 
   const nextImage = () => {
     setSelectedImage((prev) => (prev + 1) % images.length);
@@ -28,11 +39,13 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
       <div>
         {/* Main Image */}
         <div className="relative aspect-square mb-4 group cursor-zoom-in" onClick={() => setIsLightboxOpen(true)}>
-          <Image
-            src={images[selectedImage] || '/images/products/placeholder.svg'}
+          <ProgressiveImage
+            src={images[selectedImage]}
             alt={productName}
             fill
-            className="object-cover rounded-lg transition-transform group-hover:scale-105"
+            priority={selectedImage === 0}
+            className="rounded-lg transition-transform group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center">
             <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -49,11 +62,12 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                 selectedImage === index ? 'ring-2 ring-orange-500' : ''
               }`}
             >
-              <Image
+              <SmartImage
                 src={image}
                 alt={`${productName} ${index + 1}`}
                 fill
-                className="object-cover"
+                quality={60}
+                sizes="80px"
               />
             </button>
           ))}
@@ -81,14 +95,17 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                 className={`relative ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
                 onClick={() => setIsZoomed(!isZoomed)}
               >
-                <Image
+                <SmartImage
                   src={images[selectedImage]}
                   alt={productName}
                   width={800}
                   height={800}
-                  className={`object-contain transition-transform duration-300 ${
+                  priority
+                  quality={90}
+                  className={`transition-transform duration-300 ${
                     isZoomed ? 'scale-150' : 'scale-100'
                   }`}
+                  sizes="(max-width: 768px) 100vw, 800px"
                 />
               </div>
               

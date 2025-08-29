@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import ProductForm from '@/components/admin/ProductForm';
 import BulkActions from '@/components/admin/BulkActions';
 import ProductAnalytics from '@/components/admin/ProductAnalytics';
+import StockStatus from '@/components/admin/StockStatus';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getImageUrl } from '@/lib/imageUtils';
 import axios from 'axios';
 import { useToast } from '@/hooks/useToast';
 
@@ -13,7 +16,9 @@ interface Product {
   id: number;
   name: string;
   price: number;
-  totalStock: number;
+  stock: number;
+  lowStockThreshold: number;
+  trackStock: boolean;
   isActive: boolean;
   images: string[];
   category: { name: string };
@@ -30,6 +35,7 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [filters, setFilters] = useState({
     search: '',
@@ -144,24 +150,36 @@ export default function AdminProductsPage() {
       });
     } catch (error) {
       console.error('Error creating product:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create product';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive'
-      });
+      if (error.response?.status === 401) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to create product';
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      }
     }
   };
 
   const handleUpdateProduct = async (productData: any) => {
     if (!editingProduct) return;
     try {
+      console.log('Updating product with data:', productData);
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Product update response:', response.data);
       fetchProducts();
       setEditingProduct(null);
       setShowForm(false);
@@ -302,7 +320,7 @@ export default function AdminProductsPage() {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Low Stock</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {products.filter(p => p.totalStock < 10).length}
+                  {products.filter(p => p.trackStock && p.stock <= p.lowStockThreshold && p.stock > 0).length}
                 </p>
               </div>
             </div>
@@ -316,7 +334,7 @@ export default function AdminProductsPage() {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Out of Stock</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {products.filter(p => p.totalStock === 0).length}
+                  {products.filter(p => p.stock === 0).length}
                 </p>
               </div>
             </div>
@@ -450,7 +468,7 @@ export default function AdminProductsPage() {
                       <div className="h-10 w-10 flex-shrink-0">
                         <img
                           className="h-10 w-10 rounded object-cover"
-                          src={product.images[0] || '/images/products/placeholder.svg'}
+                          src={getImageUrl(product.images[0])}
                           alt={product.name}
                         />
                       </div>
@@ -471,13 +489,11 @@ export default function AdminProductsPage() {
                     KSh {product.price.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${
-                      product.totalStock === 0 ? 'text-red-600' :
-                      product.totalStock < 10 ? 'text-yellow-600' :
-                      'text-green-600'
-                    }`}>
-                      {product.totalStock}
-                    </span>
+                    <StockStatus
+                      stock={product.stock}
+                      lowStockThreshold={product.lowStockThreshold}
+                      trackStock={product.trackStock}
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -495,6 +511,9 @@ export default function AdminProductsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => setViewingProduct(product)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => {
                       setEditingProduct(product);
                       setShowForm(true);
@@ -536,6 +555,87 @@ export default function AdminProductsPage() {
           </div>
         </div>
       </div>
+
+      {/* Product Details Dialog */}
+      <Dialog open={!!viewingProduct} onOpenChange={() => setViewingProduct(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white">
+          {viewingProduct && (
+            <>
+              <DialogHeader>
+                <div className="flex justify-between items-start">
+                  <DialogTitle className="text-xl font-bold">{viewingProduct.name}</DialogTitle>
+                  <Button size="sm" variant="outline" onClick={() => setViewingProduct(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Product Image */}
+                <div className="flex justify-center">
+                  <img
+                    src={getImageUrl(viewingProduct.images[0])}
+                    alt={viewingProduct.name}
+                    className="w-48 h-48 object-cover rounded-lg"
+                  />
+                </div>
+
+                {/* Product Details Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-700">Price</h3>
+                    <p className="text-lg font-bold text-green-600">KSh {viewingProduct.price.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-700">Category</h3>
+                    <p>{viewingProduct.category.name}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-700">Brand</h3>
+                    <p>{viewingProduct.brand?.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-700">Status</h3>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      viewingProduct.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {viewingProduct.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-700">Stock</h3>
+                    <div className="flex items-center gap-2">
+                      <StockStatus
+                        stock={viewingProduct.stock}
+                        lowStockThreshold={viewingProduct.lowStockThreshold}
+                        trackStock={viewingProduct.trackStock}
+                      />
+                      <span className="text-sm text-gray-600">({viewingProduct.stock} units)</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-700">Performance</h3>
+                    <div className="text-sm">
+                      <p>Reviews: {viewingProduct.reviewCount}</p>
+                      <p>Sales: {viewingProduct.salesCount}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Created Date */}
+                <div>
+                  <h3 className="font-semibold text-gray-700">Created</h3>
+                  <p className="text-sm text-gray-600">
+                    {new Date(viewingProduct.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

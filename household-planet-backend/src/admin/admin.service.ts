@@ -525,12 +525,15 @@ export class AdminService {
     try {
       console.log('AdminService: Creating product with data:', createProductDto);
       
-      const { images, tags, imageAltTexts, categoryId, brandId, ...productData } = createProductDto;
+      const { images, tags, imageAltTexts, categoryId, brandId, stock, lowStockThreshold, trackStock, ...productData } = createProductDto;
       
       const data = {
         ...productData,
-        categoryId,
-        brandId: brandId || null,
+        categoryId: Number(categoryId),
+        brandId: brandId ? Number(brandId) : null,
+        stock: Number(stock || 0),
+        lowStockThreshold: Number(lowStockThreshold || 5),
+        trackStock: Boolean(trackStock !== false),
         images: JSON.stringify(Array.isArray(images) ? images : []),
         tags: JSON.stringify(Array.isArray(tags) ? tags : []),
         imageAltTexts: imageAltTexts ? JSON.stringify(imageAltTexts) : null
@@ -547,28 +550,41 @@ export class AdminService {
       return result;
     } catch (error) {
       console.error('AdminService: Error creating product:', error);
-      throw error;
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        meta: error.meta,
+        stack: error.stack
+      });
+      throw new BadRequestException(`Failed to create product: ${error.message}`);
     }
   }
 
   async updateProduct(id: number, updateProductDto: UpdateProductDto) {
+    console.log('AdminService: Updating product', id, 'with data:', updateProductDto);
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
 
     const { categoryId, brandId, images, tags, imageAltTexts, ...productData } = updateProductDto;
     const data: any = { ...productData };
     
-    if (images) data.images = JSON.stringify(images);
+    if (images) {
+      console.log('AdminService: Updating images:', images);
+      data.images = JSON.stringify(images);
+    }
     if (tags) data.tags = JSON.stringify(tags);
     if (imageAltTexts) data.imageAltTexts = JSON.stringify(imageAltTexts);
     if (categoryId) data.categoryId = categoryId;
     if (brandId) data.brandId = brandId;
 
-    return this.prisma.product.update({
+    console.log('AdminService: Final update data:', data);
+    const result = await this.prisma.product.update({
       where: { id },
       data,
       include: { category: true, brand: true, variants: true }
     });
+    console.log('AdminService: Product updated successfully');
+    return result;
   }
 
   async deleteProduct(id: number) {
@@ -697,6 +713,10 @@ export class AdminService {
 
   async uploadTempImages(files: Express.Multer.File[]) {
     try {
+      if (!files || files.length === 0) {
+        throw new BadRequestException('No files provided');
+      }
+      
       const uploadDir = path.join(process.cwd(), 'uploads', 'temp');
       
       try {
@@ -706,23 +726,16 @@ export class AdminService {
       }
 
       const imagePromises = files.map(async (file) => {
-        const filename = `temp-${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
+        const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+        const filename = `temp-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
         const filepath = path.resolve(uploadDir, filename);
         
         if (!filepath.startsWith(path.resolve(uploadDir))) {
           throw new BadRequestException('Invalid file path');
         }
         
-        try {
-          await sharp(file.buffer)
-            .resize(BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_WIDTH, BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_QUALITY })
-            .toFile(filepath);
-          
-          return `/uploads/temp/${path.basename(filename)}`;
-        } catch (error) {
-          throw new BadRequestException(`Image processing failed: ${error.message}`);
-        }
+        await fs.promises.writeFile(filepath, file.buffer);
+        return `/uploads/temp/${filename}`;
       });
 
       const imageUrls = await Promise.all(imagePromises);

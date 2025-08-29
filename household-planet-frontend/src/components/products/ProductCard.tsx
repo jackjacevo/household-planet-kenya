@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { openWhatsAppForProduct } from '@/lib/whatsapp';
+import { getImageUrl } from '@/lib/imageUtils';
 import { Product } from '@/types';
 
 interface ProductCardProps {
@@ -55,7 +56,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         <Link href={`/products/${product.slug}`}>
           <div className="w-full h-32 sm:h-36 bg-gray-100 flex items-center justify-center overflow-hidden relative">
             <Image
-              src={product.images && product.images.length > 0 ? product.images[0] : '/images/products/placeholder.svg'}
+              src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -94,7 +95,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
           <Link href={`/products/${product.slug}`}>
             <Image
-              src={product.images && product.images.length > 0 ? product.images[0] : '/images/products/placeholder.svg'}
+              src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -175,7 +176,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         <Link href={`/products/${product.slug}`}>
           <div className="w-full h-48 sm:h-56 bg-gray-100 flex items-center justify-center overflow-hidden relative">
             <Image
-              src={product.images && product.images.length > 0 ? product.images[0] : '/images/products/placeholder.svg'}
+              src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"

@@ -5,6 +5,7 @@ import { Heart, ShoppingCart, Star, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { openWhatsAppForProduct } from '@/lib/whatsapp';
+import { getImageUrl } from '@/lib/imageUtils';
 
 interface Product {
   id: string;
@@ -12,7 +13,7 @@ interface Product {
   slug: string;
   price: number;
   comparePrice?: number;
-  images?: string;
+  images?: string[];
   averageRating?: number;
   totalReviews?: number;
 }
@@ -46,7 +47,10 @@ export function BestSellers() {
   }, []);
 
   const getProductImage = (product: Product) => {
-    return '/images/products/placeholder.svg';
+    if (product.images && product.images.length > 0) {
+      return getImageUrl(product.images[0]);
+    }
+    return getImageUrl(null);
   };
 
   return (

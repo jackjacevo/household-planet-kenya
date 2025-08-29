@@ -56,7 +56,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsArray()
-  @IsUrl({}, { each: true, message: 'Each image must be a valid URL' })
+  @IsString({ each: true })
   images?: string[];
 
   @IsOptional()
@@ -85,6 +85,23 @@ export class CreateProductDto {
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
   isFeatured?: boolean = false;
+
+  @IsOptional()
+  @Transform(({ value }) => value ? (typeof value === 'string' ? parseInt(value) : value) : 0)
+  @IsInt()
+  @Min(0)
+  stock?: number = 0;
+
+  @IsOptional()
+  @Transform(({ value }) => value ? (typeof value === 'string' ? parseInt(value) : value) : 5)
+  @IsInt()
+  @Min(0)
+  lowStockThreshold?: number = 5;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  trackStock?: boolean = true;
 
   @IsOptional()
   @IsString()
