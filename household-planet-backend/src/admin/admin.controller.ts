@@ -131,8 +131,8 @@ export class AdminController {
   @Post('products/:id/images')
   @UseInterceptors(FilesInterceptor('images', 10, {
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-        return cb(new Error('Only image files are allowed!'), false);
+      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+        return cb(new Error('Only JPG and PNG image files are allowed!'), false);
       }
       cb(null, true);
     },
@@ -268,8 +268,8 @@ export class AdminController {
   @Post('categories/upload-image')
   @UseInterceptors(FilesInterceptor('image', 1, {
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-        return cb(new Error('Only image files are allowed!'), false);
+      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+        return cb(new Error('Only JPG and PNG image files are allowed!'), false);
       }
       cb(null, true);
     },
@@ -290,11 +290,22 @@ export class AdminController {
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'categories', filename);
     
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Access-Control-Allow-Headers', '*');
+    // Enhanced CORS headers
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
     
     if (fs.existsSync(imagePath)) {
+      // Set appropriate content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      if (ext === '.png') {
+        res.setHeader('Content-Type', 'image/png');
+      } else if (ext === '.jpg' || ext === '.jpeg') {
+        res.setHeader('Content-Type', 'image/jpeg');
+      }
       res.sendFile(imagePath);
     } else {
       res.status(404).send('Image not found');
@@ -307,11 +318,22 @@ export class AdminController {
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'products', filename);
     
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Access-Control-Allow-Headers', '*');
+    // Enhanced CORS headers
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
     
     if (fs.existsSync(imagePath)) {
+      // Set appropriate content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      if (ext === '.png') {
+        res.setHeader('Content-Type', 'image/png');
+      } else if (ext === '.jpg' || ext === '.jpeg') {
+        res.setHeader('Content-Type', 'image/jpeg');
+      }
       res.sendFile(imagePath);
     } else {
       res.status(404).send('Image not found');

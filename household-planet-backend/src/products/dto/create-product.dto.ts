@@ -11,11 +11,12 @@ export class CreateProductDto {
   @Transform(({ value }) => value?.trim())
   name: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(200)
   @IsValidSlug()
   @Transform(({ value }) => value?.toLowerCase().trim())
-  slug: string;
+  slug?: string;
 
   @IsOptional()
   @IsString()

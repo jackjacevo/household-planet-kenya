@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppLogger } from '../common/services/logger.service';
+import { SlugUtil } from '../common/utils/slug.util';
 
 @Injectable()
 export class ProductsService {
@@ -335,15 +336,38 @@ export class ProductsService {
   // Admin methods (simplified)
   async create(createProductDto: any, files?: any[]) {
     try {
-      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, ...data } = createProductDto;
+      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, slug, ...data } = createProductDto;
       
       const validatedCategoryId = parseInt(String(categoryId));
       if (isNaN(validatedCategoryId)) {
         throw new Error('Invalid category ID');
       }
       
+      // Generate slug if not provided
+      let finalSlug = slug;
+      if (!finalSlug && data.name) {
+        finalSlug = await SlugUtil.generateUniqueSlug(
+          data.name,
+          async (candidateSlug: string) => {
+            const existing = await this.prisma.product.findUnique({
+              where: { slug: candidateSlug }
+            });
+            return !!existing;
+          }
+        );
+      } else if (finalSlug) {
+        // Validate provided slug is unique
+        const existing = await this.prisma.product.findUnique({
+          where: { slug: finalSlug }
+        });
+        if (existing) {
+          throw new Error(`Slug '${finalSlug}' is already in use`);
+        }
+      }
+      
       const productData: any = {
         ...data,
+        slug: finalSlug,
         categoryId: validatedCategoryId,
         stock: stock !== undefined ? parseInt(String(stock)) : 0,
         lowStockThreshold: lowStockThreshold !== undefined ? parseInt(String(lowStockThreshold)) : 5,
@@ -369,8 +393,57 @@ export class ProductsService {
 
   async update(id: number, updateProductDto: any, files?: any[]) {
     try {
-      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, ...data } = updateProductDto;
+      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, slug, name, ...data } = updateProductDto;
       const updateData: any = { ...data };
+      
+      // Handle slug update
+      if (slug !== undefined) {
+        if (slug) {
+          // Validate provided slug is unique (excluding current product)
+          const existing = await this.prisma.product.findFirst({
+            where: { 
+              slug: slug,
+              id: { not: id }
+            }
+          });
+          if (existing) {
+            throw new Error(`Slug '${slug}' is already in use`);
+          }
+          updateData.slug = slug;
+        } else if (name) {
+          // Generate new slug from updated name
+          updateData.slug = await SlugUtil.generateUniqueSlug(
+            name,
+            async (candidateSlug: string) => {
+              const existing = await this.prisma.product.findFirst({
+                where: { 
+                  slug: candidateSlug,
+                  id: { not: id }
+                }
+              });
+              return !!existing;
+            }
+          );
+        }
+      } else if (name && !slug) {
+        // If name is updated but no slug provided, regenerate slug
+        updateData.slug = await SlugUtil.generateUniqueSlug(
+          name,
+          async (candidateSlug: string) => {
+            const existing = await this.prisma.product.findFirst({
+              where: { 
+                slug: candidateSlug,
+                id: { not: id }
+              }
+            });
+            return !!existing;
+          }
+        );
+      }
+      
+      if (name) {
+        updateData.name = name;
+      }
       
       if (categoryId) {
         const validatedCategoryId = parseInt(String(categoryId));

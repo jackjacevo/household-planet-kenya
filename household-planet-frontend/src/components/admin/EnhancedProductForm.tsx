@@ -11,10 +11,11 @@ import ImageManager from './ImageManager';
 import VariantManager from './VariantManager';
 import { Save, Eye, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
+import { generateSlug } from '@/lib/slug';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  slug: z.string().min(1, 'Slug is required'),
+  slug: z.string().optional(),
   description: z.string().optional(),
   shortDescription: z.string().optional(),
   sku: z.string().min(1, 'SKU is required'),
@@ -77,9 +78,9 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
   }, [product, reset]);
 
   useEffect(() => {
-    // Auto-generate slug from name
+    // Auto-generate slug from name when creating new product
     if (watchedName && !product) {
-      const slug = watchedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const slug = generateSlug(watchedName);
       setValue('slug', slug);
     }
   }, [watchedName, setValue, product]);
@@ -246,12 +247,13 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
                   <input
                     {...register('slug')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="product-slug"
+                    placeholder="Auto-generated from product name"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from product name</p>
                   {errors.slug && <p className="text-red-500 text-sm mt-1">{errors.slug.message}</p>}
                 </div>
 

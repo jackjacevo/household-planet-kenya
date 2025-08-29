@@ -5,6 +5,7 @@ import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { BulkUpdateDto, ProductAnalyticsDto, ImageCropDto, VariantDto, SEOUpdateDto } from './dto/bulk-product.dto';
 import { InputValidationUtil } from '../common/utils/input-validation.util';
+import { SlugUtil } from '../common/utils/slug.util';
 import { BUSINESS_CONSTANTS } from '../common/constants/business.constants';
 import { ActivityQuery, BulkOperationResult } from '../common/interfaces/query.interface';
 import { AppLogger } from '../common/services/logger.service';
@@ -525,10 +526,33 @@ export class AdminService {
     try {
       console.log('AdminService: Creating product with data:', createProductDto);
       
-      const { images, tags, imageAltTexts, categoryId, brandId, stock, lowStockThreshold, trackStock, ...productData } = createProductDto;
+      const { images, tags, imageAltTexts, categoryId, brandId, stock, lowStockThreshold, trackStock, slug, ...productData } = createProductDto;
+      
+      // Generate slug if not provided
+      let finalSlug = slug;
+      if (!finalSlug) {
+        finalSlug = await SlugUtil.generateUniqueSlug(
+          createProductDto.name,
+          async (candidateSlug: string) => {
+            const existing = await this.prisma.product.findUnique({
+              where: { slug: candidateSlug }
+            });
+            return !!existing;
+          }
+        );
+      } else {
+        // Validate provided slug is unique
+        const existing = await this.prisma.product.findUnique({
+          where: { slug: finalSlug }
+        });
+        if (existing) {
+          throw new BadRequestException(`Slug '${finalSlug}' is already in use`);
+        }
+      }
       
       const data = {
         ...productData,
+        slug: finalSlug,
         categoryId: Number(categoryId),
         brandId: brandId ? Number(brandId) : null,
         stock: Number(stock || 0),
@@ -565,9 +589,53 @@ export class AdminService {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
 
-    const { categoryId, brandId, images, tags, imageAltTexts, ...productData } = updateProductDto;
+    const { categoryId, brandId, images, tags, imageAltTexts, slug, ...productData } = updateProductDto;
     const data: any = { ...productData };
     
+    // Handle slug update
+    if (slug !== undefined) {
+      if (slug) {
+        // Validate provided slug is unique (excluding current product)
+        const existing = await this.prisma.product.findFirst({
+          where: { 
+            slug: slug,
+            id: { not: id }
+          }
+        });
+        if (existing) {
+          throw new BadRequestException(`Slug '${slug}' is already in use`);
+        }
+        data.slug = slug;
+      } else if (updateProductDto.name) {
+        // Generate new slug from updated name
+        data.slug = await SlugUtil.generateUniqueSlug(
+          updateProductDto.name,
+          async (candidateSlug: string) => {
+            const existing = await this.prisma.product.findFirst({
+              where: { 
+                slug: candidateSlug,
+                id: { not: id }
+              }
+            });
+            return !!existing;
+          }
+        );
+      }
+    } else if (updateProductDto.name && updateProductDto.name !== product.name) {
+      // If name is updated but no slug provided, regenerate slug
+      data.slug = await SlugUtil.generateUniqueSlug(
+        updateProductDto.name,
+        async (candidateSlug: string) => {
+          const existing = await this.prisma.product.findFirst({
+            where: { 
+              slug: candidateSlug,
+              id: { not: id }
+            }
+          });
+          return !!existing;
+        }
+      );
+    }
     if (images) {
       console.log('AdminService: Updating images:', images);
       data.images = JSON.stringify(images);
@@ -650,7 +718,7 @@ export class AdminService {
           if (products.length < BUSINESS_CONSTANTS.FILE_UPLOAD.MAX_CSV_PRODUCTS) {
             products.push({
               name: row.name,
-              slug: row.slug || row.name.toLowerCase().replace(/\s+/g, '-'),
+              slug: row.slug, // Let createProduct handle slug generation if not provided
               description: row.description,
               sku: row.sku,
               price: parseFloat(row.price) || 0,
@@ -726,7 +794,10 @@ export class AdminService {
       }
 
       const imagePromises = files.map(async (file) => {
-        const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+        // Keep original format (PNG/JPG)
+        const originalExt = path.extname(file.originalname).toLowerCase();
+        const allowedExts = ['.png', '.jpg', '.jpeg'];
+        const ext = allowedExts.includes(originalExt) ? originalExt : '.jpg';
         const filename = `temp-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
         const filepath = path.resolve(uploadDir, filename);
         
@@ -734,7 +805,19 @@ export class AdminService {
           throw new BadRequestException('Invalid file path');
         }
         
-        await fs.promises.writeFile(filepath, file.buffer);
+        // Process image but keep original format
+        if (ext === '.png') {
+          await sharp(file.buffer)
+            .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+            .png({ quality: 90 })
+            .toFile(filepath);
+        } else {
+          await sharp(file.buffer)
+            .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 90 })
+            .toFile(filepath);
+        }
+        
         return `/uploads/temp/${filename}`;
       });
 
@@ -761,7 +844,6 @@ export class AdminService {
         throw new BadRequestException('Invalid product ID');
       }
 
-      // amazonq-ignore-next-line
       const uploadDir = path.join(process.cwd(), 'uploads', 'products');
       
       try {
@@ -771,7 +853,11 @@ export class AdminService {
       }
 
       const imagePromises = files.map(async (file) => {
-        const filename = `${productId}-${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
+        // Keep original format (PNG/JPG)
+        const originalExt = path.extname(file.originalname).toLowerCase();
+        const allowedExts = ['.png', '.jpg', '.jpeg'];
+        const ext = allowedExts.includes(originalExt) ? originalExt : '.jpg';
+        const filename = `${productId}-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
         const filepath = path.resolve(uploadDir, filename);
         
         if (!filepath.startsWith(path.resolve(uploadDir))) {
@@ -779,10 +865,18 @@ export class AdminService {
         }
         
         try {
-          await sharp(file.buffer)
-            .resize(BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_WIDTH, BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_QUALITY })
-            .toFile(filepath);
+          // Process image but keep original format
+          if (ext === '.png') {
+            await sharp(file.buffer)
+              .resize(BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_WIDTH, BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
+              .png({ quality: BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_QUALITY })
+              .toFile(filepath);
+          } else {
+            await sharp(file.buffer)
+              .resize(BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_WIDTH, BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: BUSINESS_CONSTANTS.FILE_UPLOAD.IMAGE_QUALITY })
+              .toFile(filepath);
+          }
           
           return `/uploads/products/${path.basename(filename)}`;
         } catch (error) {
@@ -993,17 +1087,29 @@ export class AdminService {
         await fs.promises.mkdir(uploadDir, { recursive: true });
       }
 
-      const filename = `category-${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
+      // Keep original format (PNG/JPG)
+      const originalExt = path.extname(file.originalname).toLowerCase();
+      const allowedExts = ['.png', '.jpg', '.jpeg'];
+      const ext = allowedExts.includes(originalExt) ? originalExt : '.jpg';
+      const filename = `category-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
       const filepath = path.resolve(uploadDir, filename);
       
       if (!filepath.startsWith(path.resolve(uploadDir))) {
         throw new BadRequestException('Invalid file path');
       }
       
-      await sharp(file.buffer)
-        .resize(400, 400, { fit: 'cover' })
-        .webp({ quality: 80 })
-        .toFile(filepath);
+      // Process image but keep original format
+      if (ext === '.png') {
+        await sharp(file.buffer)
+          .resize(400, 400, { fit: 'cover' })
+          .png({ quality: 90 })
+          .toFile(filepath);
+      } else {
+        await sharp(file.buffer)
+          .resize(400, 400, { fit: 'cover' })
+          .jpeg({ quality: 90 })
+          .toFile(filepath);
+      }
       
       const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
       const imageUrl = `${baseUrl}/api/admin/categories/image/${filename}`;
@@ -1533,7 +1639,7 @@ export class AdminService {
         if (values.length >= headers.length) {
           const product = {
             name: values[0]?.trim(),
-            slug: values[1]?.trim() || values[0]?.toLowerCase().replace(/\s+/g, '-'),
+            slug: values[1]?.trim() || undefined, // Let createProduct handle slug generation
             description: values[2]?.trim(),
             sku: values[3]?.trim(),
             price: parseFloat(values[4]) || 0,

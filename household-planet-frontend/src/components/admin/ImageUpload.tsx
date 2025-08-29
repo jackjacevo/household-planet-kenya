@@ -110,7 +110,7 @@ export default function ImageUpload({
       
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
           dragOver 
             ? 'border-blue-400 bg-blue-50' 
             : 'border-gray-300 hover:border-gray-400'
@@ -118,6 +118,7 @@ export default function ImageUpload({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current?.click()}
       >
         <input
           ref={fileInputRef}

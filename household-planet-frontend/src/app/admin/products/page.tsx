@@ -558,78 +558,109 @@ export default function AdminProductsPage() {
 
       {/* Product Details Dialog */}
       <Dialog open={!!viewingProduct} onOpenChange={() => setViewingProduct(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
           {viewingProduct && (
             <>
               <DialogHeader>
                 <div className="flex justify-between items-start">
-                  <DialogTitle className="text-xl font-bold">{viewingProduct.name}</DialogTitle>
+                  <DialogTitle className="text-2xl font-bold">{viewingProduct.name}</DialogTitle>
                   <Button size="sm" variant="outline" onClick={() => setViewingProduct(null)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </DialogHeader>
               
-              <div className="space-y-6">
-                {/* Product Image */}
-                <div className="flex justify-center">
-                  <img
-                    src={getImageUrl(viewingProduct.images[0])}
-                    alt={viewingProduct.name}
-                    className="w-48 h-48 object-cover rounded-lg"
-                  />
+              <div className="space-y-8">
+                {/* Product Images */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {viewingProduct.images?.map((image: string, index: number) => (
+                    <img
+                      key={index}
+                      src={getImageUrl(image)}
+                      alt={`${viewingProduct.name} ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border"
+                    />
+                  ))}
                 </div>
 
-                {/* Product Details Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Price</h3>
-                    <p className="text-lg font-bold text-green-600">KSh {viewingProduct.price.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Category</h3>
-                    <p>{viewingProduct.category.name}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Brand</h3>
-                    <p>{viewingProduct.brand?.name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Status</h3>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      viewingProduct.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {viewingProduct.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Stock</h3>
-                    <div className="flex items-center gap-2">
-                      <StockStatus
-                        stock={viewingProduct.stock}
-                        lowStockThreshold={viewingProduct.lowStockThreshold}
-                        trackStock={viewingProduct.trackStock}
-                      />
-                      <span className="text-sm text-gray-600">({viewingProduct.stock} units)</span>
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-2">Pricing</h3>
+                    <div className="space-y-2">
+                      <div className="text-2xl font-bold text-green-600">KSh {viewingProduct.price?.toLocaleString()}</div>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Performance</h3>
-                    <div className="text-sm">
-                      <p>Reviews: {viewingProduct.reviewCount}</p>
-                      <p>Sales: {viewingProduct.salesCount}</p>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-2">Category & Brand</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Category:</span> {viewingProduct.category?.name}</div>
+                      <div><span className="font-medium">Brand:</span> {viewingProduct.brand?.name || 'N/A'}</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Created Date */}
-                <div>
-                  <h3 className="font-semibold text-gray-700">Created</h3>
-                  <p className="text-sm text-gray-600">
-                    {new Date(viewingProduct.createdAt).toLocaleDateString()}
-                  </p>
+                {/* Stock Management */}
+                <div className="bg-blue-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Management</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Current Stock</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <StockStatus
+                          stock={viewingProduct.stock}
+                          lowStockThreshold={viewingProduct.lowStockThreshold}
+                          trackStock={viewingProduct.trackStock}
+                        />
+                        <span className="font-semibold">{viewingProduct.stock} units</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Low Stock Threshold</div>
+                      <div className="text-lg font-semibold mt-1">{viewingProduct.lowStockThreshold} units</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Stock Tracking</div>
+                      <div className="mt-1">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          viewingProduct.trackStock 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {viewingProduct.trackStock ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status and Performance */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-3">Product Status</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Active:</span>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          viewingProduct.isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {viewingProduct.isActive ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-3">Performance</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Reviews:</span> {viewingProduct.reviewCount || 0}</div>
+                      <div><span className="font-medium">Sales:</span> {viewingProduct.salesCount || 0}</div>
+                      <div><span className="font-medium">Created:</span> {new Date(viewingProduct.createdAt).toLocaleDateString()}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>

@@ -1,102 +1,152 @@
-# Image Upload System Fix Summary
+# Image Upload Fix Summary
 
 ## Problem
-The add product page was not uploading images correctly to the backend. Images were only showing as local blob URLs and not being stored on the server. The homepage and shop pages were showing placeholder images instead of actual product images.
+Images were being stored as WebP format and there were CORS issues when serving images, causing errors like:
+```
+GET http://localhost:3001/api/admin/categories/image/category-1756505489555-444436535.webp net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin 200 (OK)
+```
 
-## Root Causes
-1. **Frontend ImageUpload component** was creating local blob URLs instead of uploading to backend
-2. **Product display components** were hardcoded to show placeholder images
-3. **Missing proper image URL handling** in product display components
+## Solution Implemented
 
-## Changes Made
+### 1. Changed Image Storage Format
+- **Before**: Images were converted to WebP format using Sharp
+- **After**: Images are now stored in their original PNG/JPG format
+- **Benefits**: Better compatibility, no format conversion issues
 
-### 1. Frontend ImageUpload Component (`src/components/admin/ImageUpload.tsx`)
-- **Updated `handleFileSelect` function** to actually upload images to backend via `/api/admin/products/temp/images`
-- **Added proper error handling** with user-friendly error messages
-- **Added upload progress indicators** and loading states
-- **Added comprehensive logging** for debugging
+### 2. Enhanced CORS Configuration
+- Updated image serving endpoints with proper CORS headers
+- Added `Cross-Origin-Resource-Policy: cross-origin` header
+- Set appropriate `Content-Type` headers based on file extension
+- Added cache control headers for better performance
 
-### 2. Product Display Components
-Updated all product display components to use actual product images:
-
-#### BestSellers Component (`src/components/home/BestSellers.tsx`)
-- Added `getImageUrl` import
-- Fixed `images` type from `string` to `string[]`
-- Updated `getProductImage` function to use actual product images with fallback
-
-#### NewArrivals Component (`src/components/home/NewArrivals.tsx`)
-- Added `getImageUrl` import
-- Fixed `images` type from `string` to `string[]`
-- Updated `getProductImage` function to use actual product images with fallback
-
-#### PopularItems Component (`src/components/home/PopularItems.tsx`)
-- Added `getImageUrl` import
-- Fixed `images` type from `string` to `string[]`
-- Updated `getProductImage` function to use actual product images with fallback
-
-### 3. ProductForm Component (`src/components/admin/ProductForm.tsx`)
-- **Removed redundant uploading state** (now handled in ImageUpload component)
-- **Simplified form submission** since images are uploaded separately
-
-### 4. Backend AdminService (`src/admin/admin.service.ts`)
-- **Enhanced `uploadTempImages` method** with comprehensive logging
-- **Added better error handling** and validation
-- **Added file processing status logging** for debugging
-
-### 5. Image Utilities (`src/lib/imageUtils.ts`)
-Already properly configured to handle:
-- Backend uploaded images (`/uploads/...`)
-- External URLs (`http://...`)
-- Fallback to placeholder for missing images
-
-## How It Works Now
-
-### Image Upload Flow
-1. **User selects images** in the add product form
-2. **Images are immediately uploaded** to `/api/admin/products/temp/images`
-3. **Backend processes images** (resize, convert to WebP, save to `/uploads/temp/`)
-4. **Frontend receives image URLs** and displays them as previews
-5. **When product is created**, image URLs are stored in the database
-6. **Images are moved** from temp to products directory (handled by backend)
-
-### Image Display Flow
-1. **Product data includes image URLs** from database
-2. **`getImageUrl` utility function** handles URL formatting
-3. **Components display actual images** with automatic fallback to placeholder
-4. **Images are served** from `/uploads/` directory via backend static file serving
-
-## Backend Configuration
-- **Static file serving** configured in `main.ts` for `/uploads/` directory
-- **CORS headers** properly set for image access
-- **Multer configuration** in AdminModule for file uploads
-- **Sharp image processing** for optimization and format conversion
-
-## Testing
-1. **Login to admin panel** at `/admin/products`
-2. **Click "Add Product"** button
-3. **Upload images** using drag-and-drop or file picker
-4. **Fill in product details** and submit
-5. **Check homepage and shop page** to verify images display correctly
+### 3. Updated File Filters
+- Removed WebP and GIF support from file upload filters
+- Now only accepts PNG and JPG formats
+- Ensures consistent image format handling
 
 ## Files Modified
-- `src/components/admin/ImageUpload.tsx`
-- `src/components/admin/ProductForm.tsx`
-- `src/components/home/BestSellers.tsx`
-- `src/components/home/NewArrivals.tsx`
-- `src/components/home/PopularItems.tsx`
-- `src/admin/admin.service.ts`
 
-## Files Already Correct
-- `src/lib/imageUtils.ts` - Proper URL handling
-- `src/components/products/ProductCard.tsx` - Using getImageUrl correctly
-- `src/main.ts` - Static file serving configured
-- `src/admin/admin.controller.ts` - Upload endpoints configured
-- `src/admin/admin.module.ts` - Multer configuration
+### Backend Changes
 
-## Next Steps
-1. **Test the complete flow** by creating a product with images
-2. **Verify images appear** on homepage, shop page, and product details
-3. **Check browser console** for any remaining errors
-4. **Monitor backend logs** during image upload process
+1. **`src/admin/admin.service.ts`**
+   - `uploadCategoryImage()`: Now preserves PNG/JPG format
+   - `uploadProductImages()`: Now preserves PNG/JPG format  
+   - `uploadTempImages()`: Now preserves PNG/JPG format
 
-The image upload system should now work correctly, with images being properly uploaded to the backend, stored in the database, and displayed throughout the application.
+2. **`src/admin/admin.controller.ts`**
+   - `getCategoryImage()`: Enhanced CORS headers and content-type handling
+   - `getProductImage()`: Enhanced CORS headers and content-type handling
+   - Updated file filters to only allow PNG/JPG
+
+3. **`src/main.ts`**
+   - Enhanced static file serving with proper CORS headers
+   - Added preflight request handling
+   - Improved cache control
+
+## Testing Tools Created
+
+1. **`test-image-upload.js`**
+   - Tests backend connectivity
+   - Verifies CORS configuration
+   - Checks upload directory structure
+   - Tests image serving functionality
+
+2. **`convert-webp-images.js`**
+   - Converts existing WebP images to JPG
+   - Provides database update instructions
+   - Cleans up old WebP files
+
+## How to Apply the Fix
+
+### Step 1: Restart Backend
+```bash
+cd household-planet-backend
+npm run start:dev
+```
+
+### Step 2: Test the Fix
+```bash
+node test-image-upload.js
+```
+
+### Step 3: Convert Existing WebP Images (if any)
+```bash
+node convert-webp-images.js
+```
+
+### Step 4: Update Database (if WebP images were converted)
+Run these SQL commands if you had existing WebP images:
+
+```sql
+-- Update category images
+UPDATE categories SET image = REPLACE(image, '.webp', '.jpg') WHERE image LIKE '%.webp';
+
+-- Update product images  
+UPDATE products SET images = REPLACE(images, '.webp', '.jpg') WHERE images LIKE '%.webp%';
+```
+
+## Expected Results
+
+After applying this fix:
+- ✅ Images upload and store as PNG/JPG format
+- ✅ No more CORS errors when loading images
+- ✅ Images display properly in frontend
+- ✅ Better browser compatibility
+- ✅ Proper caching for better performance
+
+## Technical Details
+
+### Image Processing Changes
+```javascript
+// Before (WebP conversion)
+await sharp(file.buffer)
+  .resize(400, 400, { fit: 'cover' })
+  .webp({ quality: 80 })
+  .toFile(filepath);
+
+// After (Format preservation)
+if (ext === '.png') {
+  await sharp(file.buffer)
+    .resize(400, 400, { fit: 'cover' })
+    .png({ quality: 90 })
+    .toFile(filepath);
+} else {
+  await sharp(file.buffer)
+    .resize(400, 400, { fit: 'cover' })
+    .jpeg({ quality: 90 })
+    .toFile(filepath);
+}
+```
+
+### CORS Headers Added
+```javascript
+res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+res.setHeader('Access-Control-Allow-Credentials', 'true');
+res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+res.setHeader('Cache-Control', 'public, max-age=31536000');
+```
+
+## Verification Checklist
+
+- [ ] Backend starts without errors
+- [ ] Image upload works in admin panel
+- [ ] Images display without CORS errors
+- [ ] Both PNG and JPG formats are supported
+- [ ] Images are properly cached
+- [ ] No WebP files are being created
+
+## Troubleshooting
+
+If you still see CORS errors:
+1. Check that `CORS_ORIGIN` environment variable is set correctly
+2. Verify the frontend URL matches the CORS origin
+3. Clear browser cache and try again
+4. Check browser developer tools for specific error messages
+
+If images don't upload:
+1. Verify upload directories exist and have write permissions
+2. Check file size limits (5MB max)
+3. Ensure only PNG/JPG files are being uploaded
+4. Check server logs for detailed error messages

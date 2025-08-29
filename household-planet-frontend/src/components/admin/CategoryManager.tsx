@@ -249,7 +249,7 @@ export default function CategoryManager({ onCategoryChange }: CategoryManagerPro
                 </p>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                   category.isActive 
                     ? 'bg-green-100 text-green-800' 
@@ -261,7 +261,10 @@ export default function CategoryManager({ onCategoryChange }: CategoryManagerPro
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Edit button clicked for category:', category.name);
                     setEditingCategory(category);
                     setShowForm(true);
                   }}
@@ -272,7 +275,11 @@ export default function CategoryManager({ onCategoryChange }: CategoryManagerPro
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleDelete(category)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete(category);
+                  }}
                   disabled={category._count?.products && category._count.products > 0}
                 >
                   <Trash2 className="h-4 w-4" />
