@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, GripVertical, AlertTriangle, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import Image from 'next/image';
+import OptimizedThumbnail from '@/components/admin/OptimizedThumbnail';
+import CategoryTableSkeleton from '@/components/admin/CategoryTableSkeleton';
+import { preloadCategoryImages } from '@/lib/imageOptimization';
 import axios from 'axios';
 
 interface Category {
@@ -40,6 +44,13 @@ export default function AdminCategoriesPage() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Preload images when categories change
+  useEffect(() => {
+    if (categories.length > 0) {
+      preloadCategoryImages(categories);
+    }
+  }, [categories]);
 
   const fetchCategories = async () => {
     try {
@@ -327,11 +338,16 @@ export default function AdminCategoriesPage() {
                     </label>
                   </div>
                   {formData.image && (
-                    <div className="relative">
-                      <img
+                    <div className="relative w-32 h-32">
+                      <Image
                         src={formData.image}
                         alt="Category preview"
-                        className="w-32 h-32 object-cover rounded-md border"
+                        fill
+                        sizes="128px"
+                        className="object-cover rounded-md border"
+                        loading="eager"
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                         onLoad={() => console.log('Image loaded successfully:', formData.image)}
                         onError={(e) => console.error('Image failed to load:', formData.image, e)}
                       />
@@ -409,17 +425,16 @@ export default function AdminCategoriesPage() {
       )}
 
       {/* Categories Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        {loading && categories.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-500">Loading categories...</p>
-          </div>
-        ) : categories.length === 0 ? (
+      {loading && categories.length === 0 ? (
+        <CategoryTableSkeleton />
+      ) : categories.length === 0 ? (
+        <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="p-8 text-center">
             <p className="text-gray-500">No categories found. Create your first category to get started.</p>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div className="bg-white shadow rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -441,13 +456,12 @@ export default function AdminCategoriesPage() {
                       <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {parentCategory.image ? (
-                        <img src={parentCategory.image} alt={parentCategory.name} className="h-10 w-10 object-cover rounded" />
-                      ) : (
-                        <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                          <span className="text-xs text-gray-500">{parentCategory.name.charAt(0)}</span>
-                        </div>
-                      )}
+                      <OptimizedThumbnail
+                        src={parentCategory.image}
+                        alt={parentCategory.name}
+                        size="md"
+                        fallbackText={parentCategory.name.charAt(0)}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-blue-900">{parentCategory.name}</div>
@@ -500,13 +514,12 @@ export default function AdminCategoriesPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="ml-4">
-                            {subCategory.image ? (
-                              <img src={subCategory.image} alt={subCategory.name} className="h-8 w-8 object-cover rounded" />
-                            ) : (
-                              <div className="h-8 w-8 bg-gray-200 rounded flex items-center justify-center">
-                                <span className="text-xs text-gray-500">{subCategory.name.charAt(0)}</span>
-                              </div>
-                            )}
+                            <OptimizedThumbnail
+                              src={subCategory.image}
+                              alt={subCategory.name}
+                              size="sm"
+                              fallbackText={subCategory.name.charAt(0)}
+                            />
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -555,8 +568,8 @@ export default function AdminCategoriesPage() {
                 ]).flat()}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

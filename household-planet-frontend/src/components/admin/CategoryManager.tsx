@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, GripVertical, ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import Image from 'next/image';
 import axios from 'axios';
 
 interface Category {
