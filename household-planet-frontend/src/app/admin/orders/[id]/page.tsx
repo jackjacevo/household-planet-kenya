@@ -701,6 +701,9 @@ export default function OrderDetailsPage() {
             <CardContent className="space-y-3">
               <div>
                 <p className="font-medium">{order.user.name}</p>
+                <p className="text-sm font-medium text-blue-600">
+                  {order.user.email.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user.email}
+                </p>
                 {order.user.phone && (
                   <p className="text-sm text-gray-600">{order.user.phone}</p>
                 )}

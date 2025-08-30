@@ -200,6 +200,7 @@ export class MpesaService {
           amount,
           status: 'PENDING',
           provider: 'MPESA',
+          paymentType: 'STK_PUSH',
         },
       });
 
@@ -399,8 +400,10 @@ export class MpesaService {
           phoneNumber: MSISDN,
           amount: TransAmount,
           status: 'COMPLETED',
-          provider: 'MPESA_C2B',
+          provider: 'MPESA',
+          paymentType: 'PAYBILL',
           mpesaReceiptNumber: TransID,
+          paybillReference: BillRefNumber || 'HouseholdPlanet',
           transactionDate: new Date(TransTime),
           resultCode: '0',
           resultDescription: `C2B Payment - ${TransactionType}`,

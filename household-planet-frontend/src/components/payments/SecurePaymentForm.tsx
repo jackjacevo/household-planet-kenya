@@ -17,7 +17,7 @@ const paymentSchema = z.object({
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
 interface SecurePaymentFormProps {
-  amount: number;
+  amount: number | string; // Support both numeric amounts and payment IDs
   onPaymentSuccess: (result: any) => void;
   onPaymentError: (error: string) => void;
 }
@@ -28,6 +28,28 @@ export default function SecurePaymentForm({
   onPaymentError 
 }: SecurePaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Helper functions to handle payment IDs
+  const isPaymentId = (value: any): boolean => {
+    return typeof value === 'string' && /^[A-Z]{2}-\d{13}-\d{4}$/.test(value);
+  };
+
+  const extractAmount = (amountOrId: number | string): number => {
+    if (typeof amountOrId === 'number') {
+      return amountOrId;
+    }
+    
+    const match = amountOrId.match(/^[A-Z]{2}-(\d{13})-(\d{4})$/);
+    if (match) {
+      const amountInCents = parseInt(match[2], 10);
+      return amountInCents / 100;
+    }
+    
+    return 0; // Fallback
+  };
+
+  const displayAmount = extractAmount(amount);
+  const showPaymentId = isPaymentId(amount);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
@@ -167,12 +189,23 @@ export default function SecurePaymentForm({
           )}
         </div>
 
+        {showPaymentId && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>Payment ID:</strong> {amount}
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              Amount extracted: KES {displayAmount.toLocaleString()}
+            </p>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={isProcessing}
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
         >
-          {isProcessing ? 'Processing...' : `Pay KES ${amount.toLocaleString()}`}
+          {isProcessing ? 'Processing...' : `Pay KES ${displayAmount.toLocaleString()}`}
         </button>
       </form>
 

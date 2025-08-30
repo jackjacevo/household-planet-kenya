@@ -3,6 +3,9 @@ export interface PaymentResponse {
   message: string;
   checkoutRequestId?: string;
   merchantRequestId?: string;
+  amount?: number;
+  originalAmount?: number | string;
+  isPaymentId?: boolean;
 }
 
 export interface PaymentStatusResponse {
@@ -10,8 +13,10 @@ export interface PaymentStatusResponse {
   mpesaReceiptNumber?: string;
   transactionDate?: Date;
   amount?: number;
+  originalAmount?: number | string;
   phoneNumber?: string;
   resultDescription?: string;
+  isPaymentId?: boolean;
 }
 
 export interface PaymentStatsResponse {

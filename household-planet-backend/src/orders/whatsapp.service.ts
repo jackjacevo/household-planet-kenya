@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { OrderIdService } from './order-id.service';
 import { CreateWhatsAppOrderDto, WhatsAppWebhookDto } from './dto/order.dto';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
@@ -10,13 +11,26 @@ export class WhatsAppService {
   private readonly WHATSAPP_USER_PASSWORD = process.env.WHATSAPP_USER_PASSWORD || 'whatsapp-default';
   private readonly WHATSAPP_SYSTEM_USER = process.env.WHATSAPP_SYSTEM_USER || 'whatsapp-system';
   
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private orderIdService: OrderIdService
+  ) {}
 
   async createWhatsAppOrder(dto: CreateWhatsAppOrderDto) {
     try {
-      // Find or create customer by phone
+      // Determine email to use
+      const customerEmail = dto.customerEmail && dto.customerEmail.trim() 
+        ? dto.customerEmail.trim() 
+        : `${dto.customerPhone}@whatsapp.temp`;
+
+      // Find or create customer by phone or email
       let user = await this.prisma.user.findFirst({
-        where: { phone: dto.customerPhone }
+        where: {
+          OR: [
+            { phone: dto.customerPhone },
+            { email: customerEmail }
+          ]
+        }
       });
 
       if (!user) {
@@ -25,15 +39,36 @@ export class WhatsAppService {
           data: {
             name: dto.customerName,
             phone: dto.customerPhone,
-            email: `${dto.customerPhone}@whatsapp.temp`,
+            email: customerEmail,
             password: hashedPassword,
             role: 'CUSTOMER'
           }
         });
+      } else if (user.email !== customerEmail) {
+        // Update user with current email and name
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            email: customerEmail,
+            name: dto.customerName
+          }
+        });
       }
 
+      // Ensure customer profile exists
+      await this.prisma.customerProfile.upsert({
+        where: { userId: user.id },
+        update: {},
+        create: {
+          userId: user.id,
+          totalSpent: 0,
+          totalOrders: 0,
+          averageOrderValue: 0
+        }
+      });
+
       // Create order with WhatsApp source
-      const orderNumber = `WA-${Date.now()}-${randomBytes(2).toString('hex').toUpperCase()}`;
+      const orderNumber = await this.orderIdService.generateOrderId('WHATSAPP');
       const subtotal = dto.estimatedTotal || 0;
       const shippingCost = dto.deliveryCost;
       const total = subtotal + shippingCost;
@@ -60,10 +95,12 @@ export class WhatsAppService {
       });
 
       // Add order note with WhatsApp details
+      const emailNote = `\n📧 Customer Email: ${customerEmail}`;
+      
       await this.prisma.orderNote.create({
         data: {
           orderId: order.id,
-          note: `📱 WhatsApp Order Details:\n${dto.orderDetails}\n\n💳 Payment: ${dto.paymentMode}\n🚚 Type: ${dto.deliveryType}\n🚛 Delivery Cost: KSh ${dto.deliveryCost}${dto.deliveryLocation ? `\n📍 Location: ${dto.deliveryLocation}` : ''}${dto.notes ? `\n\n📝 Additional Notes:\n${dto.notes}` : ''}`,
+          note: `📱 WhatsApp Order Details:\n${dto.orderDetails}${emailNote}\n\n💳 Payment: ${dto.paymentMode}\n🚚 Type: ${dto.deliveryType}\n🚛 Delivery Cost: KSh ${dto.deliveryCost}${dto.deliveryLocation ? `\n📍 Location: ${dto.deliveryLocation}` : ''}${dto.notes ? `\n\n📝 Additional Notes:\n${dto.notes}` : ''}`,
           isInternal: false,
           createdBy: this.WHATSAPP_SYSTEM_USER
         }

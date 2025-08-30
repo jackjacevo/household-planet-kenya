@@ -103,4 +103,25 @@ export class PaymentsController {
   async generateInvoice(@Param('orderId') orderId: string) {
     return this.paymentsService.generateInvoice(parseInt(orderId));
   }
+
+  @Post('admin/cash-payment')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async recordCashPayment(@Body() body: { orderId: number | string; amount: number; receivedBy: string; notes?: string }) {
+    return this.paymentsService.recordCashPayment(body.orderId, body.amount, body.receivedBy, body.notes);
+  }
+
+  @Post('admin/paybill-payment')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async recordPaybillPayment(@Body() body: { phoneNumber: string; amount: number; mpesaCode: string; reference?: string; notes?: string; orderId?: number | string }) {
+    return this.paymentsService.recordPaybillPayment(body.phoneNumber, body.amount, body.mpesaCode, body.reference, body.notes, body.orderId);
+  }
+
+  @Post('admin/pending-payment')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async createPendingPayment(@Body() body: { orderId: number | string; amount: number; phoneNumber: string; notes?: string }) {
+    return this.paymentsService.createPendingPayment(body.orderId, body.amount, body.phoneNumber, body.notes);
+  }
 }

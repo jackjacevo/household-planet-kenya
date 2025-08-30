@@ -194,13 +194,13 @@ export default function CustomerManagement() {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{customer.name}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Mail className="w-4 h-4 mr-1" />
+                      <div className="flex items-center space-x-4 text-sm">
+                        <div className="flex items-center text-blue-600 font-medium">
+                          <Mail className="w-4 h-4 mr-1 text-blue-500" />
                           {customer.email}
                         </div>
                         {customer.phone && (
-                          <div className="flex items-center">
+                          <div className="flex items-center text-gray-500">
                             <Phone className="w-4 h-4 mr-1" />
                             {customer.phone}
                           </div>

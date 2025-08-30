@@ -67,6 +67,13 @@ export class CustomersController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
+  @Get('real-users')
+  async getRealCustomers(@Query('q') query: string, @Query('page') page = '1', @Query('limit') limit = '20') {
+    return this.customersService.searchRealCustomers(query, +page, +limit);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
   @Get('segment')
   async getCustomersBySegment(@Query('tags') tags: string, @Query('page') page = '1', @Query('limit') limit = '50') {
     if (!tags || typeof tags !== 'string') {
@@ -173,5 +180,19 @@ export class CustomersController {
   @Get(':id/lifetime-value')
   async getCustomerLifetimeValue(@Param('id') userId: string) {
     return this.customersService.getCustomerLifetimeValue(+userId);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Delete(':id')
+  async deleteCustomer(@Param('id') userId: string) {
+    return this.customersService.deleteCustomer(+userId);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Delete('bulk')
+  async bulkDeleteCustomers(@Body() data: { customerIds: number[] }) {
+    return this.customersService.bulkDeleteCustomers(data.customerIds);
   }
 }

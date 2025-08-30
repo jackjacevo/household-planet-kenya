@@ -193,6 +193,10 @@ export class CreateWhatsAppOrderDto {
   @IsNotEmpty()
   customerName: string;
 
+  @IsOptional()
+  @IsString()
+  customerEmail?: string;
+
   @IsString()
   @IsNotEmpty()
   orderDetails: string;

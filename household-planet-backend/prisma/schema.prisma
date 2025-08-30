@@ -345,24 +345,30 @@ model Review {
 
 model PaymentTransaction {
   id                 Int       @id @default(autoincrement())
-  orderId            Int
+  orderId            Int?
   merchantRequestId  String?
   checkoutRequestId  String    @unique
   phoneNumber        String
   amount             Float
   status             String    @default("PENDING")
   provider           String    @default("MPESA")
+  paymentType        String    @default("STK_PUSH") // STK_PUSH, PAYBILL, CASH
   mpesaReceiptNumber String?
   transactionDate    DateTime?
   resultCode         String?
   resultDescription  String?
+  cashReceivedBy     String?   // For cash payments
+  paybillReference   String?   // For paybill payments
+  notes              String?   // Additional notes
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order              Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([checkoutRequestId])
   @@index([status])
+  @@index([provider])
+  @@index([paymentType])
   @@map("payment_transactions")
 }
 

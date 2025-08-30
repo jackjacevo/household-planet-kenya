@@ -95,6 +95,27 @@ export class OrdersController {
     return this.ordersService.getSalesReport(start, end);
   }
 
+  @Get('returns')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  getReturnRequests(
+    @Query('status') status?: string,
+    @Query('orderId') orderId?: string
+  ) {
+    const orderIdNum = orderId ? parseInt(orderId, 10) : undefined;
+    if (orderId && isNaN(orderIdNum!)) {
+      throw new BadRequestException('Invalid order ID');
+    }
+    return this.ordersService.getReturnRequests({ status, orderId: orderIdNum });
+  }
+
+  @Put('returns/process')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  processReturn(@Body() dto: ProcessReturnDto, @Request() req) {
+    return this.ordersService.processReturn(dto, req.user.email);
+  }
+
   @Get('track/:orderNumber')
   trackOrder(@Param('orderNumber') orderNumber: string) {
     return this.ordersService.getOrderTracking(orderNumber);
@@ -287,26 +308,7 @@ export class OrdersController {
     return this.whatsAppService.markMessageProcessed(messageId, body.orderId);
   }
 
-  @Get('returns')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
-  getReturnRequests(
-    @Query('status') status?: string,
-    @Query('orderId') orderId?: string
-  ) {
-    const orderIdNum = orderId ? parseInt(orderId, 10) : undefined;
-    if (orderId && isNaN(orderIdNum!)) {
-      throw new BadRequestException('Invalid order ID');
-    }
-    return this.ordersService.getReturnRequests({ status, orderId: orderIdNum });
-  }
 
-  @Put('returns/process')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
-  processReturn(@Body() dto: ProcessReturnDto, @Request() req) {
-    return this.ordersService.processReturn(dto, req.user.email);
-  }
 
   @Get('track/:trackingNumber')
   getTrackingByNumber(@Param('trackingNumber') trackingNumber: string) {

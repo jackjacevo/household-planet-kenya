@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -21,6 +22,7 @@ const WhatsAppIcon = () => (
 );
 import Link from 'next/link';
 import { useToast } from '@/hooks/useToast';
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 
 interface Order {
   id: number;
@@ -77,8 +79,9 @@ const priorityColors = {
 export default function AdminOrdersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { refreshAll } = useRealtimeOrders();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
@@ -86,7 +89,13 @@ export default function AdminOrdersPage() {
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkNotes, setBulkNotes] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 0 });
-  const [stats, setStats] = useState({
+  const [returns, setReturns] = useState([]);
+  const [showReturns, setShowReturns] = useState(false);
+  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
+
+
+
+  const { data: stats = {
     totalOrders: 0,
     totalRevenue: 0,
     pendingOrders: 0,
@@ -94,28 +103,34 @@ export default function AdminOrdersPage() {
     processingOrders: 0,
     shippedOrders: 0,
     urgentOrders: []
-  });
-  const [returns, setReturns] = useState([]);
-  const [showReturns, setShowReturns] = useState(false);
-  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
-
-  useEffect(() => {
-    if (user?.role === 'ADMIN' || user?.role === 'STAFF') {
-      fetchOrders();
-      fetchStats();
-      if (showReturns) {
-        fetchReturns();
-      }
-    }
-  }, [user, pagination.page, statusFilter, searchTerm, showReturns]);
-
-  const fetchOrders = async () => {
-    try {
+  }, refetch: refetchStats } = useQuery({
+    queryKey: ['orderStats'],
+    queryFn: () => {
       const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
+      if (!token) throw new Error('No token found');
+      
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/admin/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      }).then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+    },
+    refetchInterval: 30000,
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
+  });
+
+  const { data: ordersData, refetch: refetchOrders, isLoading } = useQuery({
+    queryKey: ['orders', pagination.page, statusFilter, searchTerm],
+    queryFn: () => {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
       
       const params = new URLSearchParams({
         page: pagination.page.toString(),
@@ -124,79 +139,49 @@ export default function AdminOrdersPage() {
         ...(searchTerm && { customerEmail: searchTerm })
       });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-          return;
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      }).then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const errorText = await response.text();
-        console.error('Orders API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-          url: `${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`
-        });
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Response is not JSON');
-      }
-      
-      const data = await response.json();
-      setOrders(data.orders || data || []);
-      setPagination(prev => ({ ...prev, ...(data.pagination || data.meta || {}) }));
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/admin/stats`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        return response.json();
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Stats API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        });
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Response is not JSON');
-      }
-      
-      const data = await response.json();
-      setStats(data);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+    },
+    refetchInterval: 60000,
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
+  });
+
+  useEffect(() => {
+    if (ordersData) {
+      setOrders(ordersData.orders || []);
+      setPagination(prev => ({ ...prev, ...(ordersData.pagination || {}) }));
     }
-  };
+  }, [ordersData]);
+
+  useEffect(() => {
+    if (showReturns && (user?.role === 'ADMIN' || user?.role === 'STAFF')) {
+      fetchReturns();
+    }
+  }, [showReturns, user]);
+
+
 
   const fetchReturns = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       
@@ -281,7 +266,8 @@ export default function AdminOrdersPage() {
         variant: 'success'
       });
       
-      fetchOrders();
+      refetchOrders();
+      refetchStats();
     } catch (error) {
       console.error('Error updating order status:', error);
       toast({
@@ -319,7 +305,8 @@ export default function AdminOrdersPage() {
       setBulkAction('');
       setBulkNotes('');
       setShowBulkDialog(false);
-      fetchOrders();
+      refetchOrders();
+      refetchStats();
       toast({
         title: 'Success!',
         description: `Bulk action completed for ${selectedOrders.length} orders`,
@@ -358,7 +345,8 @@ export default function AdminOrdersPage() {
         description: `Shipping label generated. Tracking: ${data.trackingNumber}`,
         variant: 'success'
       });
-      fetchOrders();
+      refetchOrders();
+      refetchStats();
     } catch (error) {
       console.error('Error generating shipping label:', error);
       toast({
@@ -431,7 +419,13 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
+          <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span>Live updates: Stats 30s, Orders 60s</span>
+          </div>
+        </div>
         <div className="flex space-x-2">
           {selectedOrders.length > 0 && (
             <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
@@ -496,7 +490,12 @@ export default function AdminOrdersPage() {
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">KSh {stats.totalRevenue.toLocaleString()}</div>
+            <div className="text-xl font-bold">KSh {(stats.totalRevenue || 0).toLocaleString()}</div>
+            {stats.deliveredRevenue !== undefined && (
+              <div className="text-xs text-gray-500 mt-1">
+                Delivered: KSh {(stats.deliveredRevenue || 0).toLocaleString()}
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -609,7 +608,7 @@ export default function AdminOrdersPage() {
       {/* Orders/Returns Table */}
       <Card>
         <CardContent>
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
@@ -726,6 +725,9 @@ export default function AdminOrdersPage() {
                       <TableCell>
                         <div>
                           <div className="font-medium">{order.user.name}</div>
+                          <div className="text-sm text-blue-600 font-medium">
+                            {order.user.email.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user.email}
+                          </div>
                           {order.user.phone && (
                             <div className="text-sm text-gray-500">{order.user.phone}</div>
                           )}

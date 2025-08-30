@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 const whatsappOrderSchema = z.object({
   customerPhone: z.string().min(10, 'Phone number is required'),
   customerName: z.string().min(2, 'Customer name is required'),
+  customerEmail: z.string().email('Valid email is required').optional().or(z.literal('')),
   orderDetails: z.string().min(5, 'Order details are required'),
   deliveryLocation: z.string().optional(),
   deliveryCost: z.number().min(0, 'Delivery cost is required'),
@@ -88,6 +89,11 @@ export default function WhatsAppOrderEntry() {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold mb-6">Create WhatsApp Order</h2>
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+        <p className="text-sm text-blue-800">
+          <strong>Note:</strong> If you provide a customer email, it will be used for the order. Otherwise, a temporary WhatsApp email will be created.
+        </p>
+      </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -112,6 +118,21 @@ export default function WhatsAppOrderEntry() {
               error={errors.customerName?.message}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Customer Email (Optional)
+          </label>
+          <Input
+            {...register('customerEmail')}
+            type="email"
+            placeholder="customer@gmail.com"
+            error={errors.customerEmail?.message}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            If provided, this email will be used instead of the temporary WhatsApp email
+          </p>
         </div>
 
         <div>

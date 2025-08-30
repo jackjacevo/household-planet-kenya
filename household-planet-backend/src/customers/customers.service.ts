@@ -159,20 +159,52 @@ export class CustomersService {
     });
   }
 
-  async searchCustomers(query: string, page = 1, limit = 20) {
-    if (!query || typeof query !== 'string') {
-      throw new Error('Invalid search query');
-    }
-    const sanitizedQuery = query.trim();
+  async searchRealCustomers(query: string, page = 1, limit = 20) {
+    const sanitizedQuery = query ? query.trim() : '';
     const skip = (page - 1) * limit;
     
     return this.prisma.user.findMany({
       where: {
-        OR: [
-          { name: { contains: sanitizedQuery } },
-          { email: { contains: sanitizedQuery } },
-          { phone: { contains: sanitizedQuery } },
-        ],
+        ...(sanitizedQuery && {
+          OR: [
+            { name: { contains: sanitizedQuery } },
+            { email: { contains: sanitizedQuery } },
+            { phone: { contains: sanitizedQuery } },
+          ],
+        }),
+        role: 'CUSTOMER',
+        email: { not: { endsWith: '@whatsapp.temp' } },
+      },
+      include: {
+        customerProfile: {
+          include: {
+            tags: true,
+          },
+        },
+        orders: {
+          select: { id: true, total: true, status: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+      },
+      skip,
+      take: limit,
+    });
+  }
+
+  async searchCustomers(query: string, page = 1, limit = 20) {
+    const sanitizedQuery = query ? query.trim() : '';
+    const skip = (page - 1) * limit;
+    
+    return this.prisma.user.findMany({
+      where: {
+        ...(sanitizedQuery && {
+          OR: [
+            { name: { contains: sanitizedQuery } },
+            { email: { contains: sanitizedQuery } },
+            { phone: { contains: sanitizedQuery } },
+          ],
+        }),
         role: 'CUSTOMER',
       },
       include: {
@@ -193,7 +225,10 @@ export class CustomersService {
   }
 
   async getCustomerDetails(userId: number) {
-    return this.prisma.user.findUnique({
+    // Update customer stats to ensure accuracy for detailed view
+    await this.updateCustomerStats(userId);
+    
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         customerProfile: {
@@ -228,6 +263,8 @@ export class CustomersService {
         },
       },
     });
+
+    return user;
   }
 
   async getCustomerAnalytics() {
@@ -309,5 +346,31 @@ export class CustomersService {
       averageOrderFrequency,
       estimatedLifetimeValue: Number(profile.averageOrderValue) * averageOrderFrequency * 12, // yearly estimate
     };
+  }
+
+  async deleteCustomer(userId: number) {
+    return this.prisma.$transaction(async (prisma) => {
+      // Delete related data first
+      await prisma.customerTag.deleteMany({ where: { profile: { userId } } });
+      await prisma.customerCommunication.deleteMany({ where: { profile: { userId } } });
+      await prisma.loyaltyTransaction.deleteMany({ where: { profile: { userId } } });
+      await prisma.customerProfile.deleteMany({ where: { userId } });
+      
+      // Delete user
+      return prisma.user.delete({ where: { id: userId } });
+    });
+  }
+
+  async bulkDeleteCustomers(customerIds: number[]) {
+    return this.prisma.$transaction(async (prisma) => {
+      // Delete related data first
+      await prisma.customerTag.deleteMany({ where: { profile: { userId: { in: customerIds } } } });
+      await prisma.customerCommunication.deleteMany({ where: { profile: { userId: { in: customerIds } } } });
+      await prisma.loyaltyTransaction.deleteMany({ where: { profile: { userId: { in: customerIds } } } });
+      await prisma.customerProfile.deleteMany({ where: { userId: { in: customerIds } } });
+      
+      // Delete users
+      return prisma.user.deleteMany({ where: { id: { in: customerIds } } });
+    });
   }
 }

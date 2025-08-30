@@ -30,16 +30,26 @@ export class AdminService {
     const startTime = Date.now();
     try {
       this.logger.log('Fetching dashboard statistics');
+      
+      // Get today's date range
+      const today = new Date();
+      const todayStart = new Date(today.setHours(0, 0, 0, 0));
+      const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+      
       const [
         totalOrders,
         totalRevenue,
+        deliveredRevenue,
         totalCustomers,
         totalProducts,
         activeProducts,
         outOfStockProducts,
         todayOrders,
-        todayRevenue,
+        todayOrdersValue,
         pendingOrders,
+        processingOrders,
+        shippedOrders,
+        deliveredOrders,
         lowStockProducts,
         recentOrders,
         topProducts,
@@ -47,6 +57,12 @@ export class AdminService {
         salesByCounty
       ] = await Promise.all([
         this.prisma.order.count().catch(() => 0),
+        // Total revenue from all non-cancelled orders (consistent with orders service)
+        this.prisma.order.aggregate({
+          _sum: { total: true },
+          where: { status: { not: 'CANCELLED' } }
+        }).catch(() => ({ _sum: { total: 0 } })),
+        // Delivered revenue for comparison
         this.prisma.order.aggregate({
           _sum: { total: true },
           where: { status: 'DELIVERED' }
@@ -55,23 +71,30 @@ export class AdminService {
         this.prisma.product.count().catch(() => 0),
         this.prisma.product.count({ where: { isActive: true } }).catch(() => 0),
         this.prisma.productVariant.count({ where: { stock: 0 } }).catch(() => 0),
+        // Today's orders count
         this.prisma.order.count({
           where: {
             createdAt: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0))
+              gte: todayStart,
+              lte: todayEnd
             }
           }
         }).catch(() => 0),
+        // Today's orders value (all orders placed today, not just delivered)
         this.prisma.order.aggregate({
           _sum: { total: true },
           where: {
             createdAt: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0))
+              gte: todayStart,
+              lte: todayEnd
             },
-            status: 'DELIVERED'
+            status: { not: 'CANCELLED' }
           }
         }).catch(() => ({ _sum: { total: 0 } })),
         this.prisma.order.count({ where: { status: 'PENDING' } }).catch(() => 0),
+        this.prisma.order.count({ where: { status: 'PROCESSING' } }).catch(() => 0),
+        this.prisma.order.count({ where: { status: 'SHIPPED' } }).catch(() => 0),
+        this.prisma.order.count({ where: { status: 'DELIVERED' } }).catch(() => 0),
         this.prisma.productVariant.count({ where: { stock: { lt: 10 } } }).catch(() => 0),
         this.prisma.order.findMany({
           take: 10,
@@ -86,6 +109,9 @@ export class AdminService {
         this.prisma.orderItem.groupBy({
           by: ['productId'],
           _sum: { quantity: true },
+          where: {
+            order: { status: 'DELIVERED' }
+          },
           orderBy: { _sum: { quantity: 'desc' } },
           take: 5
         }).catch(() => []),
@@ -96,14 +122,18 @@ export class AdminService {
       return {
         overview: {
           totalOrders,
-          totalRevenue: totalRevenue._sum.total || 0,
+          totalRevenue: Number(totalRevenue._sum.total) || 0,
+          deliveredRevenue: Number(deliveredRevenue._sum.total) || 0,
           totalCustomers,
           totalProducts,
           activeProducts,
           outOfStockProducts,
           todayOrders,
-          todayRevenue: todayRevenue._sum.total || 0,
+          todayRevenue: Number(todayOrdersValue._sum.total) || 0,
           pendingOrders,
+          processingOrders,
+          shippedOrders,
+          deliveredOrders,
           lowStockProducts
         },
         recentOrders,
@@ -118,6 +148,7 @@ export class AdminService {
         overview: {
           totalOrders: 0,
           totalRevenue: 0,
+          deliveredRevenue: 0,
           totalCustomers: 0,
           totalProducts: 0,
           activeProducts: 0,
@@ -125,6 +156,9 @@ export class AdminService {
           todayOrders: 0,
           todayRevenue: 0,
           pendingOrders: 0,
+          processingOrders: 0,
+          shippedOrders: 0,
+          deliveredOrders: 0,
           lowStockProducts: 0
         },
         recentOrders: [],

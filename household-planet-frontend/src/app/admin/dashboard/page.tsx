@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   ShoppingCart, 
   DollarSign, 
@@ -13,6 +14,7 @@ import {
   Calendar
 } from 'lucide-react';
 import axios from 'axios';
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 
 interface DashboardStats {
   overview: {
@@ -55,35 +57,32 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
+  const { refreshAll } = useRealtimeOrders();
+  
   const fetchDashboardStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
-      setStats(response.data);
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      if (error.response?.status === 401) {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token found');
+    
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    return response.data;
+  };
+
+  const { data: stats, isLoading: loading } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: fetchDashboardStats,
+    refetchInterval: 30000,
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 401) {
         localStorage.removeItem('token');
         window.location.href = '/login';
+        return false;
       }
-    } finally {
-      setLoading(false);
+      return failureCount < 3;
     }
-  };
+  });
 
   if (loading) {
     return (
@@ -104,7 +103,7 @@ export default function AdminDashboard() {
   const statCards = [
     {
       name: 'Total Revenue',
-      value: `KSh ${stats.overview.totalRevenue.toLocaleString()}`,
+      value: `KSh ${(stats.overview.totalRevenue || 0).toLocaleString()}`,
       change: '+12.5%',
       changeType: 'increase',
       icon: DollarSign,
@@ -113,7 +112,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Orders',
-      value: stats.overview.totalOrders.toLocaleString(),
+      value: (stats.overview.totalOrders || 0).toLocaleString(),
       change: '+8.2%',
       changeType: 'increase',
       icon: ShoppingCart,
@@ -122,7 +121,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Customers',
-      value: stats.overview.totalCustomers.toLocaleString(),
+      value: (stats.overview.totalCustomers || 0).toLocaleString(),
       change: '+15.3%',
       changeType: 'increase',
       icon: Users,
@@ -131,7 +130,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Products',
-      value: stats.overview.totalProducts.toLocaleString(),
+      value: (stats.overview.totalProducts || 0).toLocaleString(),
       change: '+2.1%',
       changeType: 'increase',
       icon: Package,
@@ -148,7 +147,7 @@ export default function AdminDashboard() {
     },
     {
       name: "Today's Revenue",
-      value: `KSh ${stats.overview.todayRevenue.toLocaleString()}`,
+      value: `KSh ${(stats.overview.todayRevenue || 0).toLocaleString()}`,
       icon: DollarSign,
     },
     {
@@ -193,10 +192,18 @@ export default function AdminDashboard() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="mt-2 text-sm text-gray-700">
-          Welcome to your admin dashboard. Here's what's happening with your store today.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p className="mt-2 text-sm text-gray-700">
+              Welcome to your admin dashboard. Here's what's happening with your store today.
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span>Live updates every 30s</span>
+          </div>
+        </div>
       </div>
 
       {/* Main Stats */}

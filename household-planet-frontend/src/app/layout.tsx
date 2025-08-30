@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import '../styles/mobile-optimizations.css'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { QueryProvider } from '@/components/providers/QueryProvider'
 import { StructuredData } from '@/components/seo/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
@@ -28,11 +29,13 @@ export default function RootLayout({
         <StructuredData data={globalStructuredData} />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <AuthProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

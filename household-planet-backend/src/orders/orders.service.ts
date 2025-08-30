@@ -4,6 +4,7 @@ import { DeliveryService } from '../delivery/delivery.service';
 import { CustomersService } from '../customers/customers.service';
 import { LoyaltyService } from '../customers/loyalty.service';
 import { ShippingService } from './shipping.service';
+import { OrderIdService } from './order-id.service';
 import { CreateOrderDto, UpdateOrderStatusDto, CreateReturnDto, BulkOrderUpdateDto, OrderFilterDto, AddOrderNoteDto, SendCustomerEmailDto, ProcessReturnDto } from './dto/order.dto';
 import { OrderStatus } from '../common/enums';
 import { Prisma } from '@prisma/client';
@@ -39,7 +40,8 @@ export class OrdersService {
     private deliveryService: DeliveryService,
     private customersService: CustomersService,
     private loyaltyService: LoyaltyService,
-    private shippingService: ShippingService
+    private shippingService: ShippingService,
+    private orderIdService: OrderIdService
   ) {}
 
   async findAll(filters?: OrderFilterDto) {
@@ -80,7 +82,14 @@ export class OrdersService {
         this.prisma.order.findMany({
           where,
           include: {
-            user: { select: { name: true, email: true, phone: true } },
+            user: { 
+              select: { 
+                name: true, 
+                email: true, 
+                phone: true,
+                createdAt: true
+              } 
+            },
             items: {
               include: {
                 product: { select: { name: true, images: true } },
@@ -252,10 +261,12 @@ export class OrdersService {
 
     // Create order in transaction to ensure inventory is updated
     return this.prisma.$transaction(async (tx) => {
+      const orderNumber = await this.orderIdService.generateOrderId('WEB');
+      
       const order = await tx.order.create({
         data: {
           user: { connect: { id: userId } },
-          orderNumber: `HP-${Date.now()}`,
+          orderNumber,
           subtotal,
           shippingCost,
           total,
@@ -461,54 +472,78 @@ export class OrdersService {
   }
 
   async getOrderStats() {
-    const [totalOrders, totalRevenue, statusCounts] = await Promise.all([
-      this.prisma.order.count(),
-      this.prisma.order.aggregate({
-        _sum: { total: true },
-        where: { status: { not: 'CANCELLED' } }
-      }),
-      this.prisma.order.groupBy({
-        by: ['status'],
-        _count: { id: true }
-      })
-    ]);
-    
-    const statusMap = new Map(statusCounts.map(s => [s.status, s._count.id]));
-    const pendingOrders = statusMap.get('PENDING') || 0;
-    const deliveredOrders = statusMap.get('DELIVERED') || 0;
-    const processingOrders = statusMap.get('PROCESSING') || 0;
-    const shippedOrders = statusMap.get('SHIPPED') || 0;
+    try {
+      const [totalOrders, totalRevenue, deliveredRevenue, statusCounts] = await Promise.all([
+        this.prisma.order.count(),
+        this.prisma.order.aggregate({
+          _sum: { total: true },
+          where: { status: { not: 'CANCELLED' } }
+        }),
+        this.prisma.order.aggregate({
+          _sum: { total: true },
+          where: { status: 'DELIVERED' }
+        }),
+        this.prisma.order.groupBy({
+          by: ['status'],
+          _count: { id: true }
+        })
+      ]);
+      
+      const statusMap = new Map(statusCounts.map(s => [s.status, s._count.id]));
+      const pendingOrders = statusMap.get('PENDING') || 0;
+      const deliveredOrders = statusMap.get('DELIVERED') || 0;
+      const processingOrders = statusMap.get('PROCESSING') || 0;
+      const shippedOrders = statusMap.get('SHIPPED') || 0;
+      const confirmedOrders = statusMap.get('CONFIRMED') || 0;
 
-    const recentOrders = await this.prisma.order.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { name: true, email: true } }
-      }
-    });
+      const [recentOrders, urgentOrders] = await Promise.all([
+        this.prisma.order.findMany({
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { name: true, email: true } }
+          }
+        }),
+        this.prisma.order.findMany({
+          where: {
+            status: { in: ['PENDING', 'CONFIRMED'] },
+            createdAt: { lt: new Date(Date.now() - this.URGENT_ORDER_HOURS) }
+          },
+          include: {
+            user: { select: { name: true, email: true } }
+          },
+          orderBy: { createdAt: 'asc' },
+          take: 5
+        })
+      ]);
 
-    const urgentOrders = await this.prisma.order.findMany({
-      where: {
-        status: { in: ['PENDING', 'CONFIRMED'] },
-        createdAt: { lt: new Date(Date.now() - this.URGENT_ORDER_HOURS) }
-      },
-      include: {
-        user: { select: { name: true, email: true } }
-      },
-      orderBy: { createdAt: 'asc' },
-      take: 5
-    });
-
-    return {
-      totalOrders,
-      totalRevenue: totalRevenue._sum.total || 0,
-      pendingOrders,
-      deliveredOrders,
-      processingOrders,
-      shippedOrders,
-      recentOrders,
-      urgentOrders
-    };
+      return {
+        totalOrders,
+        totalRevenue: Number(totalRevenue._sum.total) || 0,
+        deliveredRevenue: Number(deliveredRevenue._sum.total) || 0,
+        pendingOrders,
+        confirmedOrders,
+        deliveredOrders,
+        processingOrders,
+        shippedOrders,
+        recentOrders,
+        urgentOrders
+      };
+    } catch (error) {
+      this.logger.error('Error fetching order stats:', error.message, error.stack);
+      return {
+        totalOrders: 0,
+        totalRevenue: 0,
+        deliveredRevenue: 0,
+        pendingOrders: 0,
+        confirmedOrders: 0,
+        deliveredOrders: 0,
+        processingOrders: 0,
+        shippedOrders: 0,
+        recentOrders: [],
+        urgentOrders: []
+      };
+    }
   }
 
   async getInventoryReport() {
