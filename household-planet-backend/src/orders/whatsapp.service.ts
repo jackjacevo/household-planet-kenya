@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderIdService } from './order-id.service';
+import { ActivityService } from '../activity/activity.service';
 import { CreateWhatsAppOrderDto, WhatsAppWebhookDto } from './dto/order.dto';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
@@ -13,10 +14,11 @@ export class WhatsAppService {
   
   constructor(
     private prisma: PrismaService,
-    private orderIdService: OrderIdService
+    private orderIdService: OrderIdService,
+    private activityService: ActivityService
   ) {}
 
-  async createWhatsAppOrder(dto: CreateWhatsAppOrderDto) {
+  async createWhatsAppOrder(dto: CreateWhatsAppOrderDto, adminUserId?: number) {
     try {
       // Determine email to use
       const customerEmail = dto.customerEmail && dto.customerEmail.trim() 
@@ -69,6 +71,8 @@ export class WhatsAppService {
 
       // Create order with WhatsApp source
       const orderNumber = await this.orderIdService.generateOrderId('WHATSAPP');
+      // Generate tracking number for WhatsApp orders
+      const trackingNumber = `TRK-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`;
       const subtotal = dto.estimatedTotal || 0;
       const shippingCost = dto.deliveryCost;
       const total = subtotal + shippingCost;
@@ -77,6 +81,7 @@ export class WhatsAppService {
         data: {
           userId: user.id,
           orderNumber,
+          trackingNumber,
           subtotal,
           shippingCost,
           total,
@@ -105,6 +110,27 @@ export class WhatsAppService {
           createdBy: this.WHATSAPP_SYSTEM_USER
         }
       });
+
+      // Log admin activity
+      if (adminUserId) {
+        try {
+          await this.activityService.logActivity(
+            adminUserId,
+            'CREATE_WHATSAPP_ORDER',
+            {
+              orderNumber: order.orderNumber,
+              customerName: dto.customerName,
+              customerPhone: dto.customerPhone,
+              total: total,
+              deliveryLocation: dto.deliveryLocation
+            },
+            'ORDER',
+            order.id
+          );
+        } catch (activityError) {
+          this.logger.error('Failed to log WhatsApp order creation activity:', activityError);
+        }
+      }
 
       return order;
     } catch (error) {

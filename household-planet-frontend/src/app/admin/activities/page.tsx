@@ -33,13 +33,7 @@ export default function AdminActivitiesPage() {
   const [activities, setActivities] = useState<AdminActivity[]>([]);
   const [stats, setStats] = useState<ActivityStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    userId: '',
-    action: '',
-    entityType: '',
-    startDate: '',
-    endDate: ''
-  });
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -49,16 +43,24 @@ export default function AdminActivitiesPage() {
 
   useEffect(() => {
     fetchActivities();
+  }, [pagination.page]);
+
+  useEffect(() => {
     fetchStats();
-  }, [pagination.page, filters]);
+  }, []);
 
   const fetchActivities = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No auth token found');
+        setLoading(false);
+        return;
+      }
+
       const params = new URLSearchParams({
         page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v))
+        limit: pagination.limit.toString()
       });
 
       const response = await axios.get(
@@ -66,10 +68,11 @@ export default function AdminActivitiesPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      setActivities(response.data.data);
-      setPagination(prev => ({ ...prev, ...response.data.meta }));
+      setActivities(response.data.data || []);
+      setPagination(prev => ({ ...prev, ...(response.data.meta || {}) }));
     } catch (error) {
       console.error('Error fetching activities:', error);
+      setActivities([]);
     } finally {
       setLoading(false);
     }
@@ -78,6 +81,8 @@ export default function AdminActivitiesPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
+
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/activities/stats`,
         { headers: { 'Authorization': `Bearer ${token}` } }
@@ -85,6 +90,14 @@ export default function AdminActivitiesPage() {
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching activity stats:', error);
+      setStats({
+        totalActivities: 0,
+        activitiesLast24h: 0,
+        activitiesLast7d: 0,
+        activitiesLast30d: 0,
+        topActions: [],
+        activeUsers: []
+      });
     }
   };
 
@@ -110,7 +123,7 @@ export default function AdminActivitiesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Admin Activity Log</h1>
       </div>
@@ -150,58 +163,14 @@ export default function AdminActivitiesPage() {
               <User className="h-8 w-8 text-orange-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeUsers.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeUsers?.length || 0}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center mb-4">
-          <Filter className="h-5 w-5 text-gray-600 mr-2" />
-          <h2 className="text-lg font-medium text-gray-900">Filters</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <input
-            type="text"
-            placeholder="Search action..."
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.action}
-            onChange={(e) => setFilters(prev => ({ ...prev, action: e.target.value }))}
-          />
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.entityType}
-            onChange={(e) => setFilters(prev => ({ ...prev, entityType: e.target.value }))}
-          >
-            <option value="">All Entity Types</option>
-            <option value="Product">Product</option>
-            <option value="Order">Order</option>
-            <option value="User">User</option>
-            <option value="Category">Category</option>
-          </select>
-          <input
-            type="date"
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.startDate}
-            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-          />
-          <input
-            type="date"
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.endDate}
-            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-          />
-          <button
-            onClick={() => setFilters({ userId: '', action: '', entityType: '', startDate: '', endDate: '' })}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-          >
-            Clear Filters
-          </button>
-        </div>
-      </div>
+
 
       {/* Activities Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -217,45 +186,59 @@ export default function AdminActivitiesPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {activities.map((activity) => (
-              <tr key={activity.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                      <User className="h-4 w-4 text-gray-600" />
+            {activities.length > 0 ? (
+              activities.map((activity) => (
+                <tr key={activity.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                        <User className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">{activity.user?.name || 'Unknown User'}</p>
+                        <p className="text-sm text-gray-500">{activity.user?.role || 'N/A'}</p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">{activity.user.name}</p>
-                      <p className="text-sm text-gray-500">{activity.user.role}</p>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(activity.action)}`}>
+                      {activity.action}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {activity.entityType ? (
+                      <div>
+                        <p>{activity.entityType}</p>
+                        {activity.entityId && <p className="text-gray-400">ID: {activity.entityId}</p>}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                    <div className="truncate" title={formatDetails(activity.details)}>
+                      {formatDetails(activity.details)}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {activity.ipAddress || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(activity.createdAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center">
+                    <Activity className="h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Activities Found</h3>
+                    <p className="text-gray-500">Admin activities will appear here once actions are performed.</p>
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(activity.action)}`}>
-                    {activity.action}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {activity.entityType && (
-                    <div>
-                      <p>{activity.entityType}</p>
-                      {activity.entityId && <p className="text-gray-400">ID: {activity.entityId}</p>}
-                    </div>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
-                  <div className="truncate" title={formatDetails(activity.details)}>
-                    {formatDetails(activity.details)}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {activity.ipAddress || 'N/A'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(activity.createdAt).toLocaleString()}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
 
@@ -308,7 +291,7 @@ export default function AdminActivitiesPage() {
       </div>
 
       {/* Top Actions */}
-      {stats && stats.topActions.length > 0 && (
+      {stats && stats.topActions && stats.topActions.length > 0 && (
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Most Common Actions</h2>
           <div className="space-y-3">
@@ -320,7 +303,7 @@ export default function AdminActivitiesPage() {
                     <div
                       className="bg-blue-600 h-2 rounded-full"
                       style={{
-                        width: `${(actionStat.count / stats.topActions[0].count) * 100}%`
+                        width: `${stats.topActions[0]?.count ? (actionStat.count / stats.topActions[0].count) * 100 : 0}%`
                       }}
                     />
                   </div>

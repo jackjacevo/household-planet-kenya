@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res, ValidationPipe, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res, ValidationPipe, UsePipes, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -48,6 +48,8 @@ export class AdminController {
   }
 
   @Get('inventory/alerts')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
   getInventoryAlerts() {
     return this.adminService.getInventoryAlerts();
   }
@@ -82,29 +84,37 @@ export class AdminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: false, forbidNonWhitelisted: false }))
-  createProduct(@Body() createProductDto: CreateProductDto) {
+  createProduct(@Body() createProductDto: CreateProductDto, @Req() req) {
     console.log('Received product creation request:', JSON.stringify(createProductDto, null, 2));
-    return this.adminService.createProduct(createProductDto);
+    return this.adminService.createProduct(createProductDto, req.user?.id);
   }
 
   @Put('products/:id')
-  updateProduct(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto) {
-    return this.adminService.updateProduct(id, updateProductDto);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  updateProduct(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto, @Req() req) {
+    return this.adminService.updateProduct(id, updateProductDto, req.user?.id);
   }
 
   @Delete('products/:id')
-  deleteProduct(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.deleteProduct(id);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  deleteProduct(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.adminService.deleteProduct(id, req.user?.id);
   }
 
   @Post('products/bulk')
-  bulkCreateProducts(@Body() bulkProductDto: BulkProductDto) {
-    return this.adminService.bulkCreateProducts(bulkProductDto.products);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  bulkCreateProducts(@Body() bulkProductDto: BulkProductDto, @Req() req) {
+    return this.adminService.bulkCreateProducts(bulkProductDto.products, req.user?.id);
   }
 
   @Put('products/bulk')
-  bulkUpdateProducts(@Body() bulkUpdateDto: BulkUpdateDto) {
-    return this.adminService.bulkUpdateProducts(bulkUpdateDto);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  bulkUpdateProducts(@Body() bulkUpdateDto: BulkUpdateDto, @Req() req) {
+    return this.adminService.bulkUpdateProducts(bulkUpdateDto, req.user?.id);
   }
 
   @Post('products/import/csv')
@@ -129,6 +139,8 @@ export class AdminController {
   }
 
   @Post('products/:id/images')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
   @UseInterceptors(FilesInterceptor('images', 10, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
@@ -140,7 +152,7 @@ export class AdminController {
       fileSize: 5 * 1024 * 1024, // 5MB limit
     },
   }))
-  uploadProductImages(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[]) {
+  uploadProductImages(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[], @Req() req) {
     if (!files || files.length === 0) {
       throw new Error('No files uploaded');
     }
@@ -155,7 +167,7 @@ export class AdminController {
       throw new Error('Invalid product ID');
     }
     
-    return this.adminService.uploadProductImages(productId, files);
+    return this.adminService.uploadProductImages(productId, files, req.user?.id);
   }
 
   @Post('products/images/crop')
@@ -251,18 +263,24 @@ export class AdminController {
   }
 
   @Post('categories')
-  createCategory(@Body() categoryData: any) {
-    return this.adminService.createCategory(categoryData);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  createCategory(@Body() categoryData: any, @Req() req) {
+    return this.adminService.createCategory(categoryData, req.user?.id);
   }
 
   @Put('categories/:id')
-  updateCategory(@Param('id', ParseIntPipe) id: number, @Body() categoryData: any) {
-    return this.adminService.updateCategory(id, categoryData);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  updateCategory(@Param('id', ParseIntPipe) id: number, @Body() categoryData: any, @Req() req) {
+    return this.adminService.updateCategory(id, categoryData, req.user?.id);
   }
 
   @Delete('categories/:id')
-  deleteCategory(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.deleteCategory(id);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  deleteCategory(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.adminService.deleteCategory(id, req.user?.id);
   }
 
   @Post('categories/upload-image')

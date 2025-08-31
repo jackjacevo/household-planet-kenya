@@ -7,7 +7,7 @@ import WhatsAppMessages from '@/components/admin/WhatsAppMessages';
 
 export default function WhatsAppPage() {
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">WhatsApp Management</h1>
         <p className="text-gray-600">Manage WhatsApp messages and orders</p>

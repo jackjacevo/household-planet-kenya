@@ -14,6 +14,7 @@ interface User {
   avatar?: string
   emailVerified: boolean
   phoneVerified: boolean
+  permissions?: string[]
 }
 
 interface AuthContextType {
@@ -25,6 +26,8 @@ interface AuthContextType {
   updateProfile: (data: any) => Promise<void>
   updateUser: (userData: User) => void
   isAdmin: () => boolean
+  isStaff: () => boolean
+  hasPermission: (permission: string) => boolean
   fetchUserProfile: () => Promise<void>
 }
 
@@ -63,7 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUserProfile = async () => {
     try {
       const response = await api.getUserProfile() as any
-      setUser(response.user)
+      // Handle both direct user object and wrapped response
+      const userData = response.user || response
+      setUser(userData)
     } catch (error) {
       console.error('Failed to fetch user profile:', error)
       localStorage.removeItem('token')
@@ -74,11 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
+    setLoading(true)
     try {
       const response = await api.login(email, password) as any
       localStorage.setItem('token', response.accessToken)
       setUser(response.user)
+      setLoading(false)
+      return response
     } catch (error) {
+      setLoading(false)
       throw error
     }
   }
@@ -126,8 +135,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user?.role === 'ADMIN' || user?.role === 'admin'
   }
 
+  const isStaff = () => {
+    return user?.role === 'STAFF' || user?.role === 'staff'
+  }
+
+  const hasPermission = (permission: string) => {
+    if (isAdmin()) return true
+    return user?.permissions?.includes(permission) || false
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, updateProfile, updateUser, isAdmin, fetchUserProfile }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateProfile, updateUser, isAdmin, isStaff, hasPermission, fetchUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

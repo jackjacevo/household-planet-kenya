@@ -86,6 +86,7 @@ export class AuthService {
         emailVerified: user.emailVerified,
         phoneVerified: user.phoneVerified,
         twoFactorEnabled: user.twoFactorEnabled,
+        permissions: user.permissions ? JSON.parse(user.permissions) : [],
       },
     };
   }
@@ -399,12 +400,14 @@ export class AuthService {
   }
 
   private async generateTokens(user: any) {
+    const permissions = user.permissions ? JSON.parse(user.permissions) : [];
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
       emailVerified: user.emailVerified,
-      phoneVerified: user.phoneVerified
+      phoneVerified: user.phoneVerified,
+      permissions
     };
 
     const accessToken = this.jwtService.sign(payload, {

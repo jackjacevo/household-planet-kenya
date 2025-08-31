@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
-import { Package, Eye, RotateCcw, Download, Search } from 'lucide-react';
+import { Package, Eye, RotateCcw, Download, Search, Truck, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -14,20 +14,39 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
+    
+    // Check if user just created an order and refresh the list
+    const orderCreated = localStorage.getItem('orderCreated');
+    if (orderCreated) {
+      localStorage.removeItem('orderCreated');
+      // Small delay to ensure order is processed
+      setTimeout(() => {
+        fetchOrders();
+      }, 1000);
+    }
   }, []);
 
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Orders fetched:', data);
         setOrders(data.orders || []);
       } else {
         console.error('Failed to fetch orders:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -54,19 +73,33 @@ export default function OrdersPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Order History</h1>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLoading(true);
+                fetchOrders();
+              }}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
           </div>
         </div>
 
@@ -250,12 +283,19 @@ export default function OrdersPage() {
                     </>
                   )}
                   
-                  {order.trackingNumber && (
-                    <Link href={`/track/${order.trackingNumber}`}>
-                      <Button variant="outline" size="sm">
-                        Track Order
-                      </Button>
-                    </Link>
+                  {(order.trackingNumber || ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status)) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                      onClick={() => {
+                        const trackingId = order.trackingNumber || order.orderNumber;
+                        window.location.href = `/track/${trackingId}`;
+                      }}
+                    >
+                      <Truck className="h-4 w-4 mr-1" />
+                      Track Delivery
+                    </Button>
                   )}
                 </div>
               </div>

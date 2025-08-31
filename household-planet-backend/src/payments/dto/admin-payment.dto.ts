@@ -29,6 +29,10 @@ export class PaymentFilterDto {
   provider?: string;
 
   @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)

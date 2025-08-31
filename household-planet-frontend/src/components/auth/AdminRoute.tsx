@@ -9,7 +9,7 @@ interface AdminRouteProps {
 }
 
 export function AdminRoute({ children }: AdminRouteProps) {
-  const { user, loading, isAdmin } = useAuth()
+  const { user, loading, isAdmin, isStaff } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -19,12 +19,12 @@ export function AdminRoute({ children }: AdminRouteProps) {
         return
       }
       
-      if (!isAdmin()) {
+      if (!isAdmin() && !isStaff()) {
         router.push('/dashboard')
         return
       }
     }
-  }, [user, loading, isAdmin, router])
+  }, [user, loading, isAdmin, isStaff, router])
 
   if (loading) {
     return (
@@ -34,7 +34,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
     )
   }
 
-  if (!user || !isAdmin()) {
+  if (!user || (!isAdmin() && !isStaff())) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

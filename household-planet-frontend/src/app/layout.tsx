@@ -7,7 +7,11 @@ import { StructuredData } from '@/components/seo/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  fallback: ['system-ui', 'arial']
+})
 
 export default function RootLayout({
   children,

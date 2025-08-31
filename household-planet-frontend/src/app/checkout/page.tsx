@@ -193,6 +193,8 @@ export default function CheckoutPage() {
       
       if (selectedPaymentMethod === 'CASH' || selectedPaymentMethod === 'BANK') {
         clearCart();
+        // Add a flag to indicate successful order creation
+        localStorage.setItem('orderCreated', 'true');
         router.push(`/order-confirmation/${newOrderId}`);
       } else {
         await initiatePayment({
@@ -210,7 +212,9 @@ export default function CheckoutPage() {
 
   const handlePaymentComplete = () => {
     clearCart();
-    router.push('/orders');
+    // Add a flag to indicate successful order creation
+    localStorage.setItem('orderCreated', 'true');
+    router.push('/account/orders');
   };
 
   const handlePaymentRetry = async () => {

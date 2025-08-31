@@ -1,14 +1,23 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/activities/page": "app/admin/activities/page.js",
   "/admin/analytics/page": "app/admin/analytics/page.js",
+  "/admin/brands/page": "app/admin/brands/page.js",
   "/admin/categories/page": "app/admin/categories/page.js",
   "/admin/customers/page": "app/admin/customers/page.js",
   "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/delivery/page": "app/admin/delivery/page.js",
+  "/admin/inventory/page": "app/admin/inventory/page.js",
   "/admin/orders/[id]/page": "app/admin/orders/[id]/page.js",
   "/admin/orders/page": "app/admin/orders/page.js",
   "/admin/payments/page": "app/admin/payments/page.js",
   "/admin/products/page": "app/admin/products/page.js",
+  "/admin/settings/page": "app/admin/settings/page.js",
+  "/admin/staff/page": "app/admin/staff/page.js",
   "/admin/whatsapp/page": "app/admin/whatsapp/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/login/page": "app/login/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/register/page": "app/register/page.js"
 }

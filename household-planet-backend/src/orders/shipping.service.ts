@@ -36,12 +36,30 @@ export class ShippingService {
               product: true,
               variant: true
             }
-          }
+          },
+          delivery: true
         }
       });
 
       if (!order) {
         throw new Error('Order not found');
+      }
+
+      // Check if shipping label already exists
+      if (order.trackingNumber && order.delivery) {
+        this.logger.log(`Shipping label already exists for order ${orderId}, returning existing label`);
+        
+        const carrier = this.selectCarrier(Number(order.total), order.deliveryLocation);
+        const deliveryDays = this.calculateDeliveryDays(order.deliveryLocation);
+        const estimatedDelivery = order.delivery.scheduledDate || new Date();
+        
+        return {
+          trackingNumber: order.trackingNumber,
+          labelUrl: `${process.env.API_URL || 'http://localhost:3001'}/shipping/labels/${order.trackingNumber}.pdf`,
+          carrier,
+          estimatedDelivery,
+          cost: this.BASE_SHIPPING_COST
+        };
       }
 
       // Generate unique tracking number
@@ -61,9 +79,15 @@ export class ShippingService {
         data: { trackingNumber }
       });
 
-      // Create delivery record
-      await this.prisma.delivery.create({
-        data: {
+      // Create or update delivery record
+      await this.prisma.delivery.upsert({
+        where: { orderId },
+        update: {
+          trackingNumber,
+          status: 'LABEL_CREATED',
+          scheduledDate: estimatedDelivery
+        },
+        create: {
           orderId,
           trackingNumber,
           status: 'LABEL_CREATED',
@@ -81,7 +105,7 @@ export class ShippingService {
 
       return {
         trackingNumber,
-        labelUrl: `${process.env.API_URL}/shipping/labels/${trackingNumber}.pdf`,
+        labelUrl: `${process.env.API_URL || 'http://localhost:3001'}/shipping/labels/${trackingNumber}.pdf`,
         carrier,
         estimatedDelivery,
         cost: this.BASE_SHIPPING_COST
@@ -162,19 +186,25 @@ export class ShippingService {
   }
 
   private async addTrackingUpdate(trackingNumber: string, update: TrackingUpdate): Promise<void> {
-    const delivery = await this.prisma.delivery.findUnique({
-      where: { trackingNumber }
-    });
-
-    if (delivery) {
-      await this.prisma.deliveryStatusHistory.create({
-        data: {
-          deliveryId: delivery.id,
-          status: update.status,
-          notes: `${update.location}: ${update.description}`,
-          timestamp: update.timestamp
-        }
+    try {
+      const delivery = await this.prisma.delivery.findUnique({
+        where: { trackingNumber }
       });
+
+      if (delivery) {
+        await this.prisma.deliveryStatusHistory.create({
+          data: {
+            deliveryId: delivery.id,
+            status: update.status,
+            notes: `${update.location}: ${update.description}`,
+            timestamp: update.timestamp
+          }
+        });
+      } else {
+        this.logger.warn(`Delivery record not found for tracking number: ${trackingNumber}`);
+      }
+    } catch (error) {
+      this.logger.error('Error adding tracking update', error.stack);
     }
   }
 

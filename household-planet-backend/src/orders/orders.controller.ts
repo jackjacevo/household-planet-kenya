@@ -270,8 +270,8 @@ export class OrdersController {
   @Post('whatsapp')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
-  createWhatsAppOrder(@Body() dto: CreateWhatsAppOrderDto) {
-    return this.whatsAppService.createWhatsAppOrder(dto);
+  createWhatsAppOrder(@Body() dto: CreateWhatsAppOrderDto, @Request() req) {
+    return this.whatsAppService.createWhatsAppOrder(dto, req.user?.id);
   }
 
   @Post('webhooks/whatsapp')

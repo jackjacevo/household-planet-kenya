@@ -409,6 +409,13 @@ export default function OrderConfirmationPage() {
               </Button>
               <Button 
                 variant="outline"
+                onClick={() => router.push('/account/orders')}
+                className="w-full"
+              >
+                View All Orders
+              </Button>
+              <Button 
+                variant="outline"
                 onClick={() => router.push('/products')}
                 className="w-full"
               >

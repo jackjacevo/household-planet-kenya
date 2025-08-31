@@ -10,6 +10,7 @@ import { BUSINESS_CONSTANTS } from '../common/constants/business.constants';
 import { ActivityQuery, BulkOperationResult } from '../common/interfaces/query.interface';
 import { AppLogger } from '../common/services/logger.service';
 import { SecureUploadService } from '../common/services/secure-upload.service';
+import { ActivityService } from '../activity/activity.service';
 import * as csvParser from 'csv-parser';
 import * as fs from 'fs';
 import { Readable } from 'stream';
@@ -23,7 +24,8 @@ export class AdminService {
   
   constructor(
     private prisma: PrismaService,
-    private secureUpload: SecureUploadService
+    private secureUpload: SecureUploadService,
+    private activityService: ActivityService
   ) {}
 
   async getDashboardStats() {
@@ -237,25 +239,24 @@ export class AdminService {
   }
 
   async getInventoryAlerts() {
-    const allLowStock = await this.prisma.productVariant.findMany({
-      where: { stock: { lt: BUSINESS_CONSTANTS.INVENTORY.LOW_STOCK_THRESHOLD } },
+    // Get products with low stock (using product.stock field)
+    const allLowStock = await this.prisma.product.findMany({
+      where: { 
+        stock: { lt: BUSINESS_CONSTANTS.INVENTORY.LOW_STOCK_THRESHOLD },
+        isActive: true
+      },
       select: {
         id: true,
         name: true,
         stock: true,
         price: true,
-        product: {
-          select: {
-            name: true,
-            category: { select: { name: true } }
-          }
-        }
+        category: { select: { name: true } }
       },
       orderBy: { stock: 'asc' }
     });
 
     return {
-      lowStock: allLowStock,
+      lowStock: allLowStock.filter(item => item.stock > 0),
       outOfStock: allLowStock.filter(item => item.stock === 0)
     };
   }
@@ -556,7 +557,7 @@ export class AdminService {
     };
   }
 
-  async createProduct(createProductDto: CreateProductDto) {
+  async createProduct(createProductDto: CreateProductDto, userId?: number) {
     try {
       console.log('AdminService: Creating product with data:', createProductDto);
       
@@ -604,6 +605,17 @@ export class AdminService {
         include: { category: true, brand: true, variants: true }
       });
       
+      // Log activity
+      if (userId) {
+        await this.activityService.logActivity(
+          userId,
+          'CREATE_PRODUCT',
+          { productName: result.name, sku: result.sku, productId: result.id },
+          'Product',
+          result.id
+        ).catch(console.error);
+      }
+      
       console.log('AdminService: Product created successfully:', result.id);
       return result;
     } catch (error) {
@@ -618,7 +630,7 @@ export class AdminService {
     }
   }
 
-  async updateProduct(id: number, updateProductDto: UpdateProductDto) {
+  async updateProduct(id: number, updateProductDto: UpdateProductDto, userId?: number) {
     console.log('AdminService: Updating product', id, 'with data:', updateProductDto);
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
@@ -685,28 +697,64 @@ export class AdminService {
       data,
       include: { category: true, brand: true, variants: true }
     });
+    
+    // Log activity
+    if (userId) {
+      const changes = Object.keys(updateProductDto).join(', ');
+      await this.activityService.logActivity(
+        userId,
+        'UPDATE_PRODUCT',
+        { productName: result.name, changes, productId: result.id },
+        'Product',
+        result.id
+      ).catch(console.error);
+    }
+    
     console.log('AdminService: Product updated successfully');
     return result;
   }
 
-  async deleteProduct(id: number) {
+  async deleteProduct(id: number, userId?: number) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
 
-    return this.prisma.product.delete({ where: { id } });
+    const result = await this.prisma.product.delete({ where: { id } });
+    
+    // Log activity
+    if (userId) {
+      await this.activityService.logActivity(
+        userId,
+        'DELETE_PRODUCT',
+        { productName: product.name, sku: product.sku, productId: product.id },
+        'Product',
+        product.id
+      ).catch(console.error);
+    }
+    
+    return result;
   }
 
-  async bulkCreateProducts(products: CreateProductDto[]): Promise<BulkOperationResult> {
+  async bulkCreateProducts(products: CreateProductDto[], userId?: number): Promise<BulkOperationResult> {
     const results = [];
     const errors = [];
     
     for (const product of products) {
       try {
-        const created = await this.createProduct(product);
+        const created = await this.createProduct(product, userId);
         results.push(created);
       } catch (error) {
         errors.push({ item: product.name || 'Unknown', error: error.message });
       }
+    }
+    
+    if (userId && results.length > 0) {
+      await this.activityService.logActivity(
+        userId,
+        'BULK_CREATE_PRODUCTS',
+        { count: results.length, productNames: results.map(p => p.name).slice(0, 5) },
+        'Product',
+        null
+      ).catch(console.error);
     }
     
     return { 
@@ -716,7 +764,7 @@ export class AdminService {
     };
   }
 
-  async bulkUpdateProducts(bulkUpdateDto: BulkUpdateDto) {
+  async bulkUpdateProducts(bulkUpdateDto: BulkUpdateDto, userId?: number) {
     const { productIds, ...updateData } = bulkUpdateDto;
     
     const data: any = {};
@@ -733,6 +781,16 @@ export class AdminService {
       where: { id: { in: productIds } },
       data
     });
+
+    if (userId && result.count > 0) {
+      await this.activityService.logActivity(
+        userId,
+        'BULK_UPDATE_PRODUCTS',
+        { count: result.count, productIds: productIds.slice(0, 10), changes: Object.keys(updateData).join(', ') },
+        'Product',
+        null
+      ).catch(console.error);
+    }
 
     return { updated: result.count };
   }
@@ -869,7 +927,7 @@ export class AdminService {
     }
   }
 
-  async uploadProductImages(productId: number, files: Express.Multer.File[]) {
+  async uploadProductImages(productId: number, files: Express.Multer.File[], userId?: number) {
     try {
       const product = await this.prisma.product.findUnique({ where: { id: productId } });
       if (!product) throw new NotFoundException('Product not found');
@@ -927,6 +985,16 @@ export class AdminService {
         data: { images: JSON.stringify(updatedImages) },
         include: { category: true, brand: true }
       });
+
+      if (userId) {
+        await this.activityService.logActivity(
+          userId,
+          'UPLOAD_PRODUCT_IMAGES',
+          { productName: updatedProduct.name, productId, imageCount: imageUrls.length },
+          'Product',
+          productId
+        ).catch(console.error);
+      }
 
       return {
         success: true,
@@ -1068,22 +1136,46 @@ export class AdminService {
     }));
   }
 
-  async createCategory(categoryData: any) {
-    return this.prisma.category.create({
+  async createCategory(categoryData: any, userId?: number) {
+    const result = await this.prisma.category.create({
       data: categoryData,
       include: { parent: true, children: true }
     });
+    
+    if (userId) {
+      await this.activityService.logActivity(
+        userId,
+        'CREATE_CATEGORY',
+        { categoryName: result.name, categoryId: result.id },
+        'Category',
+        result.id
+      ).catch(console.error);
+    }
+    
+    return result;
   }
 
-  async updateCategory(id: number, categoryData: any) {
-    return this.prisma.category.update({
+  async updateCategory(id: number, categoryData: any, userId?: number) {
+    const result = await this.prisma.category.update({
       where: { id },
       data: categoryData,
       include: { parent: true, children: true }
     });
+    
+    if (userId) {
+      await this.activityService.logActivity(
+        userId,
+        'UPDATE_CATEGORY',
+        { categoryName: result.name, categoryId: result.id, changes: Object.keys(categoryData).join(', ') },
+        'Category',
+        result.id
+      ).catch(console.error);
+    }
+    
+    return result;
   }
 
-  async deleteCategory(id: number) {
+  async deleteCategory(id: number, userId?: number) {
     const category = await this.prisma.category.findUnique({
       where: { id },
       include: {
@@ -1104,7 +1196,19 @@ export class AdminService {
       throw new BadRequestException('Cannot delete category because it has subcategories');
     }
 
-    return this.prisma.category.delete({ where: { id } });
+    const result = await this.prisma.category.delete({ where: { id } });
+    
+    if (userId) {
+      await this.activityService.logActivity(
+        userId,
+        'DELETE_CATEGORY',
+        { categoryName: category.name, categoryId: category.id },
+        'Category',
+        category.id
+      ).catch(console.error);
+    }
+    
+    return result;
   }
 
   async uploadCategoryImage(file: Express.Multer.File) {
@@ -1702,19 +1806,42 @@ export class AdminService {
   // Activities methods
   async getActivities(query: ActivityQuery) {
     try {
-      const { page = 1, limit = 50, userId, action, entityType, startDate, endDate } = query;
+      const { page = 1, limit = 50, userId, search, entityType, startDate, endDate } = query;
       
       // Validate and sanitize inputs
       const { page: validatedPage, limit: validatedLimit } = InputValidationUtil.validatePagination(page, limit);
       const skip = (validatedPage - 1) * validatedLimit;
-      const sanitizedAction = action ? InputValidationUtil.sanitizeString(action, 50) : undefined;
+      const sanitizedSearch = search ? InputValidationUtil.sanitizeString(search, 50) : undefined;
       const sanitizedEntityType = entityType ? InputValidationUtil.sanitizeString(entityType, 50) : undefined;
       const validatedUserId = userId ? InputValidationUtil.safeParseInt(userId) : undefined;
 
       const where: any = {};
-      if (validatedUserId && validatedUserId > 0) where.userId = validatedUserId;
-      if (sanitizedAction) where.action = { contains: sanitizedAction, mode: 'insensitive' };
-      if (sanitizedEntityType) where.entityType = sanitizedEntityType;
+      
+      // Build AND conditions
+      const andConditions = [];
+      
+      if (validatedUserId && validatedUserId > 0) {
+        andConditions.push({ userId: validatedUserId });
+      }
+      
+      if (sanitizedEntityType) {
+        andConditions.push({ entityType: sanitizedEntityType });
+      }
+      
+      if (sanitizedSearch) {
+        andConditions.push({
+          OR: [
+            { action: { contains: sanitizedSearch, mode: 'insensitive' } },
+            { details: { contains: sanitizedSearch, mode: 'insensitive' } },
+            { user: { name: { contains: sanitizedSearch, mode: 'insensitive' } } },
+            { user: { email: { contains: sanitizedSearch, mode: 'insensitive' } } }
+          ]
+        });
+      }
+      
+      if (andConditions.length > 0) {
+        where.AND = andConditions;
+      }
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) {

@@ -1,99 +1,38 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 const nextConfig = {
-  // Performance optimizations
+  // Simplified configuration to fix webpack issues
   experimental: {
-    optimizeCss: false,
-    optimizePackageImports: ['lucide-react', '@heroicons/react', 'framer-motion', 'recharts'],
-    // Enable modern bundling
-    esmExternals: true,
+    optimizePackageImports: ['lucide-react', '@heroicons/react'],
   },
   
-  // Turbopack configuration (moved from experimental)
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
-  
-  // Server external packages (moved from experimental)
+  // Server external packages
   serverExternalPackages: ['sharp'],
   
-  // Enhanced Image optimization
+  // Image optimization
   images: {
     domains: ['images.unsplash.com', 'localhost', 'res.cloudinary.com', 'householdplanet.co.ke'],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 31536000, // 1 year
-    deviceSizes: [320, 420, 640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 512],
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Enhanced optimization settings
-    unoptimized: false,
-    loader: 'default',
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3001',
+        pathname: '/uploads/**',
+      },
+    ],
   },
   
-  // Compression
-  compress: true,
-  
-  // Bundle optimization
+  // Webpack configuration
   webpack: (config, { dev, isServer }) => {
-    // Advanced bundle splitting
-    config.optimization.splitChunks = {
-      chunks: 'all',
-      minSize: 20000,
-      maxSize: 244000,
-      cacheGroups: {
-        default: {
-          minChunks: 2,
-          priority: -20,
-          reuseExistingChunk: true,
-        },
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          priority: -10,
-          chunks: 'all',
-        },
-        react: {
-          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-          name: 'react',
-          priority: 10,
-          chunks: 'all',
-        },
-        ui: {
-          test: /[\\/]node_modules[\\/](@headlessui|@heroicons|lucide-react)[\\/]/,
-          name: 'ui',
-          priority: 5,
-          chunks: 'all',
-        },
-        animations: {
-          test: /[\\/]node_modules[\\/](framer-motion)[\\/]/,
-          name: 'animations',
-          priority: 5,
-          chunks: 'all',
-        },
-      },
+    // Fix module resolution issues
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
     };
     
-    // Optimize production builds
-    if (!dev) {
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-      config.optimization.minimize = true;
-      
-      // Tree shaking optimization
-      config.optimization.providedExports = true;
-      config.optimization.innerGraph = true;
-      
-      // Module concatenation
-      config.optimization.concatenateModules = true;
-    }
-    
-    // Resolve optimizations
+    // Ensure proper alias resolution
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, 'src'),

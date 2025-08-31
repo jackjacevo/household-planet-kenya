@@ -247,27 +247,7 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const generateShippingLabel = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${params.id}/shipping-label`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      alert(`Shipping label generated. Tracking: ${data.trackingNumber}`);
-      fetchOrderDetails();
-    } catch (error) {
-      console.error('Error generating shipping label:', error);
-      alert('Failed to generate shipping label. Please try again.');
-    }
-  };
+
 
   if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
     return (
@@ -400,10 +380,7 @@ export default function OrderDetailsPage() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button onClick={generateShippingLabel} disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED'}>
-            <Truck className="h-4 w-4 mr-2" />
-            Generate Label
-          </Button>
+
         </div>
       </div>
 

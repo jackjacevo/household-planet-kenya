@@ -30,9 +30,12 @@ export default function OrderTracking({ trackingNumber }: { trackingNumber: stri
   useEffect(() => {
     const fetchTracking = async () => {
       try {
+        console.log('Fetching tracking for:', trackingNumber);
         const response = await api.get(`/delivery/track/${trackingNumber}`);
+        console.log('Tracking response:', response.data);
         setTracking(response.data.data);
       } catch (err) {
+        console.error('Tracking error:', err);
         setError('Tracking information not found');
       } finally {
         setLoading(false);

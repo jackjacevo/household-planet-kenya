@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Package, XCircle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Package, XCircle, RefreshCw, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface Product {
   id: number;
@@ -21,6 +22,9 @@ interface InventoryAlerts {
 export default function InventoryPage() {
   const [alerts, setAlerts] = useState<InventoryAlerts | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchInventoryAlerts();
@@ -28,17 +32,40 @@ export default function InventoryPage() {
 
   const fetchInventoryAlerts = async () => {
     try {
+      setError(null);
       const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required. Please log in.');
+        return;
+      }
+      
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inventory/alerts`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setAlerts(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching inventory alerts:', error);
+      if (error.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 403) {
+        setError('Access denied. Admin privileges required.');
+      } else {
+        setError('Failed to load inventory data. Please try again.');
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchInventoryAlerts();
+  };
+
+  const handleRestockProduct = (productId: number) => {
+    router.push(`/admin/products?edit=${productId}`);
   };
 
   if (loading) {
@@ -56,7 +83,29 @@ export default function InventoryPage() {
     );
   }
 
-  if (!alerts) return <div>Error loading inventory alerts</div>;
+  if (error) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <XCircle className="h-6 w-6 text-red-600 mr-3" />
+            <div>
+              <h3 className="text-lg font-medium text-red-800">Error Loading Inventory</h3>
+              <p className="text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button onClick={handleRefresh} variant="outline" loading={refreshing}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!alerts) return null;
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
@@ -67,7 +116,7 @@ export default function InventoryPage() {
             Monitor stock levels and manage inventory alerts.
           </p>
         </div>
-        <Button onClick={fetchInventoryAlerts} className="flex items-center">
+        <Button onClick={handleRefresh} className="flex items-center" loading={refreshing}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
@@ -188,8 +237,13 @@ export default function InventoryPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button size="sm" variant="outline">
-                        Restock
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleRestockProduct(product.id)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit Stock
                       </Button>
                     </td>
                   </tr>
@@ -268,8 +322,13 @@ export default function InventoryPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button size="sm" variant="outline">
-                        Restock
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleRestockProduct(product.id)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit Stock
                       </Button>
                     </td>
                   </tr>

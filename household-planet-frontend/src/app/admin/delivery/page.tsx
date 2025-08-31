@@ -1,6 +1,6 @@
 'use client';
 
-// Fixed API endpoint to use /api/orders instead of /api/delivery/admin/orders
+// Updated to use proper delivery admin endpoint
 import { useState, useEffect } from 'react';
 import { Truck, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +14,7 @@ interface DeliveryOrder {
   shippingAddress: string;
   status: string;
   estimatedDelivery: string;
-  trackingNumber: string;
+  trackingNumber: string | null;
   total: number;
 }
 
@@ -30,41 +30,53 @@ export default function AdminDeliveryPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/delivery/admin/orders`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      // Map orders data to delivery format
-      const orders = response.data.orders || response.data;
-      const mappedDeliveries = orders.map((order: any) => ({
-        id: order.id,
-        orderNumber: order.orderNumber,
-        customerName: order.user?.name || order.customerName || 'Unknown',
-        customerPhone: order.user?.phone || order.customerPhone || 'N/A',
-        shippingAddress: typeof order.shippingAddress === 'string' 
-          ? order.shippingAddress 
-          : JSON.stringify(order.shippingAddress) || 'N/A',
-        status: order.status,
-        estimatedDelivery: order.estimatedDelivery || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        trackingNumber: order.trackingNumber || `TRK-${order.id}`,
-        total: order.total || 0
-      }));
-      setDeliveries(mappedDeliveries);
+      
+      const deliveries = response.data.data || response.data;
+      setDeliveries(deliveries);
     } catch (error) {
       console.error('Error fetching deliveries:', error);
-      // Mock data for demo
-      setDeliveries([
-        {
-          id: 1,
-          orderNumber: 'ORD-001',
-          customerName: 'John Doe',
-          customerPhone: '+254712345678',
-          shippingAddress: 'Nairobi, Kenya',
-          status: 'IN_TRANSIT',
-          estimatedDelivery: '2024-01-20',
-          trackingNumber: 'TRK-001',
-          total: 5000
-        }
-      ]);
+      // Fallback to orders endpoint if delivery endpoint fails
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        const orders = response.data.orders || response.data;
+        const mappedDeliveries = orders.map((order: any) => {
+          let address = order.deliveryLocation || 'N/A';
+          if (!address || address === 'N/A') {
+            if (order.shippingAddress) {
+              try {
+                const parsed = JSON.parse(order.shippingAddress);
+                const parts = [parsed.street, parsed.town, parsed.county].filter(Boolean);
+                address = parts.length > 0 ? parts.join(', ') : order.shippingAddress;
+              } catch {
+                address = order.shippingAddress;
+              }
+            }
+          }
+          
+          return {
+            id: order.id,
+            orderNumber: order.orderNumber,
+            customerName: order.user?.name || order.customerName || 'Unknown',
+            customerPhone: order.user?.phone || order.customerPhone || 'N/A',
+            shippingAddress: address,
+            status: order.status,
+            estimatedDelivery: order.estimatedDelivery || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            trackingNumber: order.trackingNumber || order.delivery?.trackingNumber || null,
+            total: order.total || 0
+          };
+        });
+        setDeliveries(mappedDeliveries);
+      } catch (fallbackError) {
+        console.error('Error fetching from fallback endpoint:', fallbackError);
+        setDeliveries([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -173,96 +185,98 @@ export default function AdminDeliveryPage() {
           <h2 className="text-lg font-medium text-gray-900">Active Deliveries</h2>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Delivery Address
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tracking
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ETA
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {deliveries.map((delivery) => (
-                <tr key={delivery.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      #{delivery.orderNumber}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      KSh {delivery.total.toLocaleString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {delivery.customerName}
-                      </div>
-                      <div className="text-sm text-gray-500">{delivery.customerPhone}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                      {delivery.shippingAddress}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                    {delivery.trackingNumber}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
-                      {getStatusIcon(delivery.status)}
-                      <span className="ml-1">{delivery.status.replace('_', ' ')}</span>
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(delivery.estimatedDelivery).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    {delivery.status === 'PENDING' && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateDeliveryStatus(delivery.id, 'IN_TRANSIT')}
-                      >
-                        Start Delivery
-                      </Button>
-                    )}
-                    {delivery.status === 'IN_TRANSIT' && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateDeliveryStatus(delivery.id, 'DELIVERED')}
-                      >
-                        Mark Delivered
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline">
-                      Track
-                    </Button>
-                  </td>
+        {loading ? (
+          <div className="px-6 py-12 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-500">Loading deliveries...</p>
+          </div>
+        ) : deliveries.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <Truck className="h-12 w-12 text-gray-400 mx-auto" />
+            <p className="mt-2 text-sm text-gray-500">No deliveries found</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Delivery Address
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tracking
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ETA
+                  </th>
+
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {deliveries.map((delivery) => (
+                  <tr key={delivery.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {delivery.orderNumber}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        KSh {delivery.total.toLocaleString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {delivery.customerName}
+                        </div>
+                        <div className="text-sm text-gray-500">{delivery.customerPhone}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-start text-sm text-gray-900 max-w-xs">
+                        <MapPin className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate" title={delivery.shippingAddress}>
+                            {delivery.shippingAddress}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                      {delivery.trackingNumber ? (
+                        <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                          {delivery.trackingNumber}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-xs">
+                          {delivery.status === 'PENDING' ? 'Not assigned' : 'Generating...'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
+                        {getStatusIcon(delivery.status)}
+                        <span className="ml-1">{delivery.status.replace('_', ' ')}</span>
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(delivery.estimatedDelivery).toLocaleDateString()}
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

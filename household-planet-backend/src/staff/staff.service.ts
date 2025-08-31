@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStaffDto, UpdateStaffDto } from './dto/staff.dto';
 import * as bcrypt from 'bcryptjs';
@@ -30,19 +30,34 @@ export class StaffService {
 
     return staff.map(member => ({
       ...member,
-      permissions: member.permissions ? JSON.parse(member.permissions) : []
+      permissions: member.permissions ? JSON.parse(member.permissions) : [],
+      _count: {
+        orders: member._count?.orders || 0
+      }
     }));
   }
 
   async createStaff(createStaffDto: CreateStaffDto) {
-    const hashedPassword = await bcrypt.hash(createStaffDto.password, 10);
+    // Check if user with email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createStaffDto.email }
+    });
+    
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(createStaffDto.password, 12);
     
     return this.prisma.user.create({
       data: {
-        ...createStaffDto,
+        name: createStaffDto.name,
+        email: createStaffDto.email,
         password: hashedPassword,
         role: createStaffDto.role || 'STAFF',
-        permissions: createStaffDto.permissions ? JSON.stringify(createStaffDto.permissions) : null
+        permissions: createStaffDto.permissions ? JSON.stringify(createStaffDto.permissions) : null,
+        isActive: createStaffDto.isActive !== undefined ? createStaffDto.isActive : true,
+        emailVerified: true // Staff accounts are pre-verified
       },
       select: {
         id: true,
@@ -61,7 +76,10 @@ export class StaffService {
 
     const updateData: any = { ...updateStaffDto };
     if (updateStaffDto.password) {
-      updateData.password = await bcrypt.hash(updateStaffDto.password, 10);
+      updateData.password = await bcrypt.hash(updateStaffDto.password, 12);
+    }
+    if (updateStaffDto.permissions) {
+      updateData.permissions = JSON.stringify(updateStaffDto.permissions);
     }
 
     return this.prisma.user.update({
@@ -73,6 +91,7 @@ export class StaffService {
         email: true,
         role: true,
         isActive: true,
+        permissions: true,
         updatedAt: true
       }
     });

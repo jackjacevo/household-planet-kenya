@@ -7,9 +7,10 @@ import { OrdersController } from './orders.controller';
 import { DeliveryModule } from '../delivery/delivery.module';
 import { CustomersModule } from '../customers/customers.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [PrismaModule, DeliveryModule, CustomersModule],
+  imports: [PrismaModule, DeliveryModule, CustomersModule, ActivityModule],
   providers: [OrdersService, WhatsAppService, ShippingService, OrderIdService],
   controllers: [OrdersController],
   exports: [OrderIdService]

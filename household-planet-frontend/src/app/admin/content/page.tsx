@@ -30,7 +30,7 @@ export default function ContentManagementPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Content Management</h1>
         <Button variant="outline" className="flex items-center gap-2">

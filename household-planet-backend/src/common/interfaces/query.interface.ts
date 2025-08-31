@@ -18,6 +18,7 @@ export interface ProductQuery extends SearchQuery {
 export interface ActivityQuery extends PaginationQuery {
   userId?: number;
   action?: string;
+  search?: string;
   entityType?: string;
   startDate?: string;
   endDate?: string;

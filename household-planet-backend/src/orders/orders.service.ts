@@ -262,11 +262,14 @@ export class OrdersService {
     // Create order in transaction to ensure inventory is updated
     return this.prisma.$transaction(async (tx) => {
       const orderNumber = await this.orderIdService.generateOrderId('WEB');
+      // Generate tracking number at order creation
+      const trackingNumber = `TRK-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`;
       
       const order = await tx.order.create({
         data: {
           user: { connect: { id: userId } },
           orderNumber,
+          trackingNumber,
           subtotal,
           shippingCost,
           total,
@@ -331,12 +334,19 @@ export class OrdersService {
 
       this.logger.debug(`Found order ${id}, current status: ${order.status}`);
 
+      // Generate tracking number if moving to SHIPPED and no tracking number exists
+      let trackingNumber = dto.trackingNumber;
+      if (dto.status === OrderStatus.SHIPPED && !order.trackingNumber && !trackingNumber) {
+        trackingNumber = `TRK-${Date.now()}-${order.id}`;
+        this.logger.debug(`Generated tracking number ${trackingNumber} for order ${id}`);
+      }
+
       // Update order status first
       const updatedOrder = await this.prisma.order.update({
         where: { id },
         data: { 
           status: dto.status,
-          ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber })
+          ...(trackingNumber && { trackingNumber })
         },
         include: {
           user: { select: { name: true, email: true } },

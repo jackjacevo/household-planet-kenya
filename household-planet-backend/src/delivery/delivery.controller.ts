@@ -1,8 +1,12 @@
-import { Controller, Get, Query, Post, Body, Param, Put } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Param, Put, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { DeliveryService } from './delivery.service';
 import { DeliveryTrackingService } from './delivery-tracking.service';
 import { SmsService } from './sms.service';
 import { ScheduleDeliveryDto, UpdateDeliveryStatusDto, DeliveryFeedbackDto } from './dto/delivery.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums';
 
 @Controller('delivery')
 export class DeliveryController {
@@ -112,5 +116,13 @@ export class DeliveryController {
   async getAnalytics() {
     const analytics = await this.trackingService.getDeliveryAnalytics();
     return { success: true, data: analytics };
+  }
+
+  @Get('admin/orders')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  async getAdminDeliveries() {
+    const deliveries = await this.trackingService.getAdminDeliveries();
+    return { success: true, data: deliveries };
   }
 }

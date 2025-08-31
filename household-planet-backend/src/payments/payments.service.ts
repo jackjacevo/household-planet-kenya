@@ -207,16 +207,15 @@ export class PaymentsService {
     const where: any = {};
     if (status) where.status = status;
     if (provider) where.provider = provider;
-    // Temporarily disable search to prevent SQLite errors
-    // if (search && search.trim()) {
-    //   where.OR = [
-    //     { phoneNumber: { contains: search } },
-    //     { order: { orderNumber: { contains: search } } },
-    //     { order: { user: { name: { contains: search } } } },
-    //     { order: { user: { email: { contains: search } } } },
-    //     { order: { user: { phone: { contains: search } } } }
-    //   ];
-    // }
+    if (search && search.trim()) {
+      where.OR = [
+        { phoneNumber: { contains: search } },
+        { order: { orderNumber: { contains: search } } },
+        { order: { user: { name: { contains: search } } } },
+        { order: { user: { email: { contains: search } } } },
+        { order: { user: { phone: { contains: search } } } }
+      ];
+    }
     if (startDate || endDate) {
       where.createdAt = {};
       if (startDate) where.createdAt.gte = new Date(startDate);
