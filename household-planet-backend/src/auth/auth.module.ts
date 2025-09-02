@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer } from '@nestjs/common';
+import { Module, MiddlewareConsumer, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -14,10 +14,12 @@ import { RolesGuard } from './guards/roles.guard';
 import { EmailVerifiedGuard } from './guards/email-verified.guard';
 import { PhoneVerifiedGuard } from './guards/phone-verified.guard';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
   imports: [
     PrismaModule,
+    forwardRef(() => ActivityModule),
     PassportModule,
     ThrottlerModule.forRoot([{
       ttl: 60000,

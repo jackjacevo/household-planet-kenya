@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { ActivityService } from '../activity/activity.service';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { RegisterDto } from './dto/register.dto';
@@ -20,6 +21,8 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(forwardRef(() => ActivityService))
+    private activityService: ActivityService,
   ) {}
 
   async validateUser(email: string, password: string, ipAddress: string, userAgent: string): Promise<any> {
@@ -73,6 +76,30 @@ export class AuthService {
       where: { id: user.id },
       data: { lastLogin: new Date() }
     });
+
+    // Log admin activity for admin/staff users
+    if (user.role === 'ADMIN' || user.role === 'STAFF' || user.role === 'SUPER_ADMIN') {
+      try {
+        await this.activityService.logActivity(
+          user.id,
+          'USER_LOGIN',
+          {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            ipAddress,
+            userAgent,
+            loginTime: new Date().toISOString(),
+            platform: this.extractPlatform(userAgent),
+            browser: this.extractBrowser(userAgent)
+          },
+          'USER',
+          user.id
+        );
+      } catch (error) {
+        console.error('Failed to log admin login activity:', error);
+      }
+    }
 
     return {
       ...tokens,
@@ -307,6 +334,12 @@ export class AuthService {
   }
 
   async logout(userId: number, token: string) {
+    // Get user info for logging
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, role: true }
+    });
+
     await this.prisma.userSession.updateMany({
       where: {
         userId,
@@ -315,6 +348,26 @@ export class AuthService {
       },
       data: { isActive: false }
     });
+
+    // Log admin activity for admin/staff users
+    if (user && (user.role === 'ADMIN' || user.role === 'STAFF' || user.role === 'SUPER_ADMIN')) {
+      try {
+        await this.activityService.logActivity(
+          user.id,
+          'USER_LOGOUT',
+          {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            logoutTime: new Date().toISOString()
+          },
+          'USER',
+          user.id
+        );
+      } catch (error) {
+        console.error('Failed to log admin logout activity:', error);
+      }
+    }
 
     return { message: 'Logged out successfully' };
   }

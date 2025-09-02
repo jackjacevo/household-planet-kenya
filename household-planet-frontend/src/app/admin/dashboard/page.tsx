@@ -11,10 +11,17 @@ import {
   TrendingDown,
   AlertTriangle,
   Eye,
-  Calendar
+  Calendar,
+  BarChart3,
+  PieChart,
+  Activity,
+  Clock,
+  Star,
+  Boxes
 } from 'lucide-react';
 import axios from 'axios';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { SimpleLineChart, SimplePieChart, SimpleBarChart } from '@/components/admin/SimpleChart';
 
 interface DashboardStats {
   overview: {
@@ -245,19 +252,63 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 shadow-lg rounded-xl border border-blue-200">
+          <div className="px-6 py-4 border-b border-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
+            <h2 className="text-lg font-semibold text-white flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2" />
+              Sales Trend
+            </h2>
+          </div>
+          <div className="p-4" style={{height: '300px'}}>
+            <SimpleLineChart />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-pink-100 shadow-lg rounded-xl border border-purple-200">
+          <div className="px-6 py-4 border-b border-purple-200 bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-xl">
+            <h2 className="text-lg font-semibold text-white flex items-center">
+              <PieChart className="h-5 w-5 mr-2" />
+              Popular Categories
+            </h2>
+          </div>
+          <div className="p-4" style={{height: '300px'}}>
+            <SimplePieChart />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-emerald-100 shadow-lg rounded-xl border border-green-200">
+          <div className="px-6 py-4 border-b border-green-200 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-xl">
+            <h2 className="text-lg font-semibold text-white flex items-center">
+              <Activity className="h-5 w-5 mr-2" />
+              Monthly Orders
+            </h2>
+          </div>
+          <div className="p-4" style={{height: '300px'}}>
+            <SimpleBarChart />
+          </div>
+        </div>
+      </div>
+
       {/* Product Stats */}
-      <div className="bg-white shadow rounded-lg mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Product Overview</h2>
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 shadow-lg rounded-xl border border-orange-200 mb-8">
+        <div className="px-6 py-4 border-b border-orange-200 bg-gradient-to-r from-orange-600 to-red-600 rounded-t-xl">
+          <h2 className="text-lg font-semibold text-white flex items-center">
+            <Boxes className="h-5 w-5 mr-2" />
+            Product Overview
+          </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {productStats.map((stat, index) => (
-            <div key={stat.name} className={`px-6 py-4 ${index < productStats.length - 1 ? 'border-r border-gray-200' : ''}`}>
+            <div key={stat.name} className={`px-6 py-4 ${index < productStats.length - 1 ? 'border-r border-orange-200' : ''}`}>
               <div className="flex items-center">
-                <stat.icon className={`h-5 w-5 mr-3 ${stat.color}`} />
-                <div>
-                  <p className="text-sm text-gray-600">{stat.name}</p>
-                  <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
+                <div className="p-2 rounded-lg bg-white shadow-sm">
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-orange-700 font-medium">{stat.name}</p>
+                  <p className="text-xl font-bold text-orange-900">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -266,18 +317,23 @@ export default function AdminDashboard() {
       </div>
 
       {/* Today's Stats */}
-      <div className="bg-white shadow rounded-lg mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Today's Performance</h2>
+      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 shadow-lg rounded-xl border border-cyan-200 mb-8">
+        <div className="px-6 py-4 border-b border-cyan-200 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-t-xl">
+          <h2 className="text-lg font-semibold text-white flex items-center">
+            <Clock className="h-5 w-5 mr-2" />
+            Today's Performance
+          </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {todayStats.map((stat, index) => (
-            <div key={stat.name} className={`px-6 py-4 ${index < todayStats.length - 1 ? 'border-r border-gray-200' : ''}`}>
+            <div key={stat.name} className={`px-6 py-4 ${index < todayStats.length - 1 ? 'border-r border-cyan-200' : ''}`}>
               <div className="flex items-center">
-                <stat.icon className="h-5 w-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600">{stat.name}</p>
-                  <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
+                <div className="p-2 rounded-lg bg-white shadow-sm">
+                  <stat.icon className="h-5 w-5 text-cyan-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-cyan-700 font-medium">{stat.name}</p>
+                  <p className="text-xl font-bold text-cyan-900">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -287,9 +343,12 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Orders */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 shadow-lg rounded-xl border border-yellow-200">
+          <div className="px-6 py-4 border-b border-yellow-200 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-t-xl">
+            <h2 className="text-lg font-semibold text-white flex items-center">
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              Recent Orders
+            </h2>
           </div>
           <div className="divide-y divide-gray-200">
             {stats.recentOrders.slice(0, 5).map((order) => (
@@ -323,9 +382,12 @@ export default function AdminDashboard() {
         </div>
 
         {/* Top Products */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Top Selling Products</h2>
+        <div className="bg-gradient-to-br from-pink-50 to-rose-50 shadow-lg rounded-xl border border-pink-200">
+          <div className="px-6 py-4 border-b border-pink-200 bg-gradient-to-r from-pink-600 to-rose-600 rounded-t-xl">
+            <h2 className="text-lg font-semibold text-white flex items-center">
+              <Star className="h-5 w-5 mr-2" />
+              Top Selling Products
+            </h2>
           </div>
           <div className="divide-y divide-gray-200">
             {stats.topProducts.map((product) => (
@@ -354,25 +416,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Sales by County */}
-      <div className="mt-8 bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Sales by County</h2>
-        </div>
-        <div className="px-6 py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stats.salesByCounty.map((county) => (
-              <div key={county.county} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-900">{county.county}</h3>
-                <p className="text-2xl font-bold text-gray-900">
-                  KSh {county.revenue.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">{county.orders} orders</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }

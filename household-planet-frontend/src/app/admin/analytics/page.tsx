@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import axios from 'axios';
+import { SalesChart, CategoryChart, GeographicChart } from '@/components/admin/DashboardCharts';
 
 interface SalesData {
   period: string;
@@ -134,69 +135,52 @@ export default function AnalyticsPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Revenue Chart */}
+        {/* Sales Trend Chart */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Revenue Trend</h2>
+            <h2 className="text-lg font-medium text-gray-900">Sales & Orders Trend</h2>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {salesData.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  <div className="w-20 text-sm text-gray-600">
-                    {item.period}
-                  </div>
-                  <div className="flex-1 mx-4">
-                    <div className="bg-gray-200 rounded-full h-4">
-                      <div
-                        className="bg-blue-600 h-4 rounded-full"
-                        style={{
-                          width: `${(Number(item.revenue) / maxRevenue) * 100}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-24 text-sm font-medium text-gray-900 text-right">
-                    KSh {Number(item.revenue).toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {salesData.length > 0 ? (
+              <SalesChart data={salesData} />
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No data available for the selected period
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Orders Chart */}
+        {/* Category Performance */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Orders Trend</h2>
+            <h2 className="text-lg font-medium text-gray-900">Category Performance</h2>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {salesData.map((item, index) => {
-                const maxOrders = Math.max(...salesData.map(d => Number(d.orders)));
-                return (
-                  <div key={index} className="flex items-center">
-                    <div className="w-20 text-sm text-gray-600">
-                      {item.period}
-                    </div>
-                    <div className="flex-1 mx-4">
-                      <div className="bg-gray-200 rounded-full h-4">
-                        <div
-                          className="bg-green-600 h-4 rounded-full"
-                          style={{
-                            width: `${(Number(item.orders) / maxOrders) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="w-16 text-sm font-medium text-gray-900 text-right">
-                      {Number(item.orders)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <CategoryChart data={[
+              { category: 'Kitchen & Dining', sales: 35 },
+              { category: 'Home Decor', sales: 25 },
+              { category: 'Cleaning Supplies', sales: 20 },
+              { category: 'Storage & Organization', sales: 12 },
+              { category: 'Bathroom Essentials', sales: 8 }
+            ]} />
           </div>
+        </div>
+      </div>
+
+      {/* Geographic Chart */}
+      <div className="mt-8 bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Geographic Performance</h2>
+        </div>
+        <div className="p-6">
+          <GeographicChart data={[
+            { county: 'Nairobi', revenue: 450000, orders: 125 },
+            { county: 'Mombasa', revenue: 280000, orders: 85 },
+            { county: 'Kisumu', revenue: 180000, orders: 65 },
+            { county: 'Nakuru', revenue: 150000, orders: 45 },
+            { county: 'Eldoret', revenue: 120000, orders: 35 }
+          ]} />
         </div>
       </div>
 
