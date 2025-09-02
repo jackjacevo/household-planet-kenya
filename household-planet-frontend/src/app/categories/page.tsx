@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Search, Grid3X3, List, Package, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { Search, Grid, List, ArrowRight, ShoppingBag } from 'lucide-react';
 
 interface Category {
   id: string;
   name: string;
   slug: string;
-  description?: string;
   image?: string;
+  description?: string;
   productCount?: number;
 }
 
@@ -21,12 +20,8 @@ const fallbackImages = [
   'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
   'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
   'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
 ];
-
-
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,7 +40,8 @@ const itemVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6
+      duration: 0.6,
+      ease: "easeOut"
     }
   }
 };
@@ -59,47 +55,28 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/categories/hierarchy`;
-        console.log('🔍 Categories page - Fetching categories from:', apiUrl);
-        
-        const response = await fetch(apiUrl);
-        console.log('🔍 Categories page - Response status:', response.status);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/admin/categories`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('🔍 Categories page - Raw data:', data);
-        console.log('🔍 Categories page - Data type:', typeof data, 'Is array:', Array.isArray(data), 'Length:', data?.length);
         
         if (data && Array.isArray(data) && data.length > 0) {
-          // The API already returns parent categories only (parentId: null), so no need to filter
-          console.log('🔍 Categories page - All categories from API are parent categories:', data.length);
-          
-          const mappedCategories = data.map((cat: any, index: number) => {
-            const categoryImage = cat.image || fallbackImages[index % fallbackImages.length];
-            console.log(`🔍 Category ${cat.name}: image = ${categoryImage}, children = ${cat.children?.length || 0}`);
-            return {
-              id: cat.id.toString(),
-              name: cat.name,
-              slug: cat.slug,
-              description: cat.description || 'Explore our quality products in this category',
-              image: categoryImage,
-              productCount: cat.children?.length || 0
-            };
-          });
-          console.log('🔍 Categories page - Mapped categories with images:', mappedCategories);
+          const parentCategories = data.filter((cat: any) => !cat.parentId && cat.isActive);
+          const mappedCategories = parentCategories.map((cat: any) => ({
+            id: cat.id.toString(),
+            name: cat.name,
+            slug: cat.slug,
+            image: cat.image,
+            description: cat.description || `Explore our ${cat.name.toLowerCase()} collection`,
+            productCount: cat._count?.products || 0
+          }));
           setCategories(mappedCategories);
-        } else {
-          console.log('❌ Categories page - No categories data received or invalid format');
-          console.log('❌ Categories page - Data received:', data);
-          setCategories([]);
         }
       } catch (error) {
-        console.error('❌ Categories page - Failed to fetch categories:', error);
-        console.error('❌ Categories page - Error details:', error instanceof Error ? error.message : 'Unknown error');
-        setCategories([]);
+        console.error('Failed to fetch categories:', error);
       } finally {
         setLoading(false);
       }
@@ -109,259 +86,209 @@ export default function CategoriesPage() {
   }, []);
 
   const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-8"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="h-48 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4">
-        <div className="absolute inset-0">
-          <div className="absolute top-20 right-20 w-40 h-40 bg-green-200/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-20 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl" />
-        </div>
-        
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.h1 
-              className="text-4xl md:text-6xl font-bold text-gray-900 mb-4"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              All <span className="text-green-600">Categories</span>
-            </motion.h1>
-            <motion.p 
-              className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              Explore our complete range of home and lifestyle categories
-            </motion.p>
-
-            {/* Search Bar */}
-            <motion.div
-              className="max-w-md mx-auto relative"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search categories..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all duration-300 shadow-lg"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Controls */}
-      <section className="px-4 pb-8">
-        <div className="container mx-auto max-w-7xl">
-          <motion.div 
-            className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100"
+      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <div className="container mx-auto px-4 py-16">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
           >
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <Package className="h-5 w-5 text-gray-600" />
-                <span className="text-gray-600 font-medium">
-                  {loading ? 'Loading...' : `${filteredCategories.length} categories`}
-                </span>
-              </div>
-
-              <div className="flex items-center bg-gray-100 rounded-xl p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all duration-300 ${
-                    viewMode === 'grid'
-                      ? 'bg-white shadow-md text-green-600'
-                      : 'text-gray-600 hover:text-green-600'
-                  }`}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all duration-300 ${
-                    viewMode === 'list'
-                      ? 'bg-white shadow-md text-green-600'
-                      : 'text-gray-600 hover:text-green-600'
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
-              </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              All Categories
+            </h1>
+            <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+              Discover everything you need for your home in our carefully curated categories
+            </p>
+            
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+              />
             </div>
           </motion.div>
         </div>
-      </section>
+      </div>
 
-      {/* Categories Grid/List */}
-      <section className="px-4 pb-16">
-        <div className="container mx-auto max-w-7xl">
-          {loading ? (
-            <motion.div 
-              className="flex flex-col justify-center items-center h-64 bg-white rounded-3xl shadow-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-full p-4 mb-4">
-                <Loader2 className="h-8 w-8 animate-spin text-white" />
-              </div>
-              <p className="text-gray-600 font-medium">Loading categories...</p>
-            </motion.div>
-          ) : filteredCategories.length === 0 ? (
-            <motion.div 
-              className="text-center py-16 bg-white rounded-3xl shadow-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="bg-gradient-to-r from-gray-400 to-gray-600 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                <Search className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {searchTerm ? 'No Categories Found' : 'No Categories Available'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {searchTerm ? 'Try adjusting your search criteria' : 'Check console for API connection issues'}
-              </p>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
-                >
-                  Clear Search
-                </button>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className={`grid gap-6 ${
-                viewMode === 'grid'
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                  : 'grid-cols-1 max-w-4xl mx-auto'
+      {/* Controls */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-600 font-medium">
+              {filteredCategories.length} {filteredCategories.length === 1 ? 'Category' : 'Categories'}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'grid' 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {filteredCategories.map((category, index) => (
-                <motion.div key={category.slug} variants={itemVariants}>
-                  {viewMode === 'grid' ? (
-                    <Link 
-                      href={`/products?category=${category.slug}`} 
-                      className="group block relative overflow-hidden rounded-2xl h-80 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-                    >
-                      {/* Image */}
-                      <div className="absolute inset-0">
-                        <img 
-                          src={category.image} 
-                          alt={category.name} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          loading={index < 4 ? "eager" : "lazy"}
-                          onError={(e) => {
-                            console.log(`Image failed to load for ${category.name}, using fallback`);
-                            const target = e.target as HTMLImageElement;
-                            target.src = fallbackImages[index % fallbackImages.length];
-                          }}
-                          onLoad={() => {
-                            console.log(`Image loaded successfully for ${category.name}`);
-                          }}
-                        />
-                        
-                        {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-green-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="absolute inset-0 flex flex-col justify-end p-6">
-                        <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-white text-xl font-bold group-hover:text-green-100 transition-colors">
-                              {category.name}
-                            </h3>
-                            <span className="bg-white/20 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-full">
-                              {category.productCount} subcategories
-                            </span>
-                          </div>
-                          <p className="text-gray-200 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                            {category.description}
-                          </p>
-                        </div>
-                        
-                        {/* Arrow Icon */}
-                        <div className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-                          <ArrowRight className="w-4 h-4 text-white" />
-                        </div>
-                      </div>
-                      
-                      {/* Border Effect */}
-                      <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-white/30 transition-colors duration-300" />
-                    </Link>
-                  ) : (
-                    <Link 
-                      href={`/products?category=${category.slug}`}
-                      className="group flex items-center bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                    >
-                      <div className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden mr-6">
-                        <img 
-                          src={category.image} 
-                          alt={category.name} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          loading="lazy"
-                          onError={(e) => {
-                            console.log(`List view image failed to load for ${category.name}, using fallback`);
-                            const target = e.target as HTMLImageElement;
-                            target.src = fallbackImages[index % fallbackImages.length];
-                          }}
-                          onLoad={() => {
-                            console.log(`List view image loaded successfully for ${category.name}`);
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                            {category.name}
-                          </h3>
-                          <span className="bg-green-100 text-green-600 text-sm px-3 py-1 rounded-full font-medium">
-                            {category.productCount} subcategories
-                          </span>
-                        </div>
-                        <p className="text-gray-600 mb-3">{category.description}</p>
-                        <div className="flex items-center text-green-600 font-medium">
-                          <span>Shop Now</span>
-                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
+              <Grid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </section>
+
+        {/* Categories Grid/List */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className={viewMode === 'grid' 
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            : "space-y-4"
+          }
+        >
+          {filteredCategories.map((category, index) => (
+            <motion.div key={category.slug} variants={itemVariants}>
+              <Link href={`/products?category=${category.slug}`}>
+                {viewMode === 'grid' ? (
+                  <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:border-green-200 transition-all duration-300 card-hover">
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={category.image || fallbackImages[index % fallbackImages.length]} 
+                        alt={category.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = fallbackImages[index % fallbackImages.length];
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <ArrowRight className="w-4 h-4 text-green-600" />
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {category.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <ShoppingBag className="w-4 h-4 mr-1" />
+                          {category.productCount} items
+                        </span>
+                        <span className="text-green-600 font-medium text-sm group-hover:underline">
+                          Explore →
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="group bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:border-green-200 transition-all duration-300">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img 
+                          src={category.image || fallbackImages[index % fallbackImages.length]} 
+                          alt={category.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = fallbackImages[index % fallbackImages.length];
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-green-600 transition-colors">
+                          {category.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-2">
+                          {category.description}
+                        </p>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <ShoppingBag className="w-4 h-4 mr-1" />
+                          {category.productCount} items
+                        </span>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" />
+                    </div>
+                  </div>
+                )}
+              </Link>
+            </motion.div>
+          ))}
+        </motion.div>
+        
+        {filteredCategories.length === 0 && !loading && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+              <Search className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No categories found
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm ? `No categories match "${searchTerm}"` : 'No categories available at the moment.'}
+            </p>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full transition-colors"
+              >
+                Clear Search
+              </button>
+            )}
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 }

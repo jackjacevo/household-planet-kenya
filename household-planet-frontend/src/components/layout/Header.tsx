@@ -86,7 +86,17 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center mr-4 md:mr-8">
-            <div className="h-8 w-8 md:h-10 md:w-10 bg-green-600 rounded-full flex items-center justify-center mr-2">
+            <img 
+              src="/images/logo/hp_logo.jpeg" 
+              alt="Household Planet Kenya" 
+              className="h-8 w-8 md:h-12 md:w-12 rounded-full object-cover mr-2"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="h-8 w-8 md:h-10 md:w-10 bg-green-600 rounded-full flex items-center justify-center mr-2 hidden">
               <span className="text-white font-bold text-sm md:text-lg">H</span>
             </div>
             <div className="hidden xs:block">

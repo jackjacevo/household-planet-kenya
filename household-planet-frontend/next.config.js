@@ -11,13 +11,30 @@ const nextConfig = {
   
   // Image optimization
   images: {
-    domains: ['images.unsplash.com', 'localhost', 'res.cloudinary.com', 'householdplanet.co.ke'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'householdplanet.co.ke',
+      },
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '3001',
         pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3001',
+        pathname: '/api/**',
       },
     ],
   },

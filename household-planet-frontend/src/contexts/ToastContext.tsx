@@ -1,53 +1,44 @@
-'use client'
+'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-
-interface Toast {
-  id: string
-  title?: string
-  description?: string
-  variant?: 'default' | 'destructive' | 'success'
-}
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { ToastContainer, ToastProps } from '@/components/ui/Toast';
 
 interface ToastContextType {
-  toasts: Toast[]
-  toast: (toast: Omit<Toast, 'id'>) => void
-  dismiss: (id?: string) => void
+  showToast: (toast: Omit<ToastProps, 'id' | 'onClose'>) => void;
+  removeToast: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined)
-
-let toastCount = 0
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<ToastProps[]>([]);
 
-  const toast = useCallback((newToast: Omit<Toast, 'id'>) => {
-    const id = (++toastCount).toString()
-    const toast: Toast = { id, ...newToast }
-    
-    setToasts(prev => [...prev, toast])
-    
-    return { id }
-  }, [])
+  const showToast = (toast: Omit<ToastProps, 'id' | 'onClose'>) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const newToast: ToastProps = {
+      ...toast,
+      id,
+      onClose: removeToast,
+    };
+    setToasts((prev) => [...prev, newToast]);
+  };
 
-  const dismiss = useCallback((toastId?: string) => {
-    setToasts(prev => 
-      toastId ? prev.filter(t => t.id !== toastId) : []
-    )
-  }, [])
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismiss }}>
+    <ToastContext.Provider value={{ showToast, removeToast }}>
       {children}
+      <ToastContainer toasts={toasts} />
     </ToastContext.Provider>
-  )
+  );
 }
 
 export function useToast() {
-  const context = useContext(ToastContext)
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider')
+  const context = useContext(ToastContext);
+  if (context === undefined) {
+    throw new Error('useToast must be used within a ToastProvider');
   }
-  return context
+  return context;
 }

@@ -1127,8 +1127,32 @@ export class AdminService {
       orderBy: { sortOrder: 'asc' }
     });
 
+    // Calculate total product count including subcategories
+    const categoriesWithTotalCount = await Promise.all(
+      categories.map(async (category) => {
+        if (!category.parentId) {
+          // For parent categories, count products in category and all subcategories
+          const subcategoryIds = category.children.map(child => child.id);
+          const allCategoryIds = [category.id, ...subcategoryIds];
+          
+          const totalProducts = await this.prisma.product.count({
+            where: {
+              categoryId: { in: allCategoryIds },
+              isActive: true
+            }
+          });
+          
+          return {
+            ...category,
+            _count: { products: totalProducts }
+          };
+        }
+        return category;
+      })
+    );
+
     const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
-    return categories.map(category => ({
+    return categoriesWithTotalCount.map(category => ({
       ...category,
       image: category.image && !category.image.startsWith('http') 
         ? `${baseUrl}${category.image}`

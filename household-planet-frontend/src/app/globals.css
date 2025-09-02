@@ -540,13 +540,28 @@ section {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+.product-card:hover .product-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.product-actions {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+}
+
 /* Category card hover effects */
 .category-card {
   transition: all 0.3s ease;
 }
 
-.category-card:hover .category-overlay {
-  opacity: 1;
+.category-card:hover img {
+  transform: scale(1.05);
+}
+
+.category-card img {
+  transition: transform 0.3s ease;
 }
 
 .category-overlay {

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Load Test</title>
+</head>
+<body>
+    <h1>Testing Image Load</h1>
+    
+    <h2>Direct Backend URL:</h2>
+    <img src="http://localhost:3001/api/admin/categories/image/category-1756841594419-62422924.jpeg" 
+         alt="Test Image" 
+         style="max-width: 300px;"
+         onload="console.log('Image loaded successfully')"
+         onerror="console.error('Image failed to load')">
+    
+    <h2>Test with fetch:</h2>
+    <div id="fetch-result"></div>
+    
+    <script>
+        // Test with fetch
+        fetch('http://localhost:3001/api/admin/categories/image/category-1756841594419-62422924.jpeg')
+            .then(response => {
+                console.log('Fetch response:', response.status, response.statusText);
+                document.getElementById('fetch-result').innerHTML = 
+                    `Fetch Status: ${response.status} ${response.statusText}`;
+                return response.blob();
+            })
+            .then(blob => {
+                console.log('Blob received:', blob.size, 'bytes');
+                const url = URL.createObjectURL(blob);
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '300px';
+                document.getElementById('fetch-result').appendChild(img);
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                document.getElementById('fetch-result').innerHTML = 
+                    `Fetch Error: ${error.message}`;
+            });
+    </script>
+</body>
+</html>

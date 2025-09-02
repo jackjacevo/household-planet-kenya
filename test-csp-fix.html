@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSP Fix Test</title>
+</head>
+<body>
+    <h1>Testing CSP Fix for Image Loading</h1>
+    
+    <h2>Image from Backend:</h2>
+    <img src="http://localhost:3001/api/admin/categories/image/category-1756841594419-62422924.jpeg" 
+         alt="Test Image" 
+         style="max-width: 300px; border: 2px solid green;"
+         onload="console.log('✅ Image loaded successfully'); document.getElementById('status').innerHTML = '✅ Image loaded successfully'"
+         onerror="console.error('❌ Image failed to load'); document.getElementById('status').innerHTML = '❌ Image failed to load'">
+    
+    <div id="status" style="margin-top: 10px; font-weight: bold;"></div>
+    
+    <h2>Test with JavaScript fetch:</h2>
+    <div id="fetch-test"></div>
+    
+    <script>
+        // Test with fetch to verify CORS
+        fetch('http://localhost:3001/api/admin/categories/image/category-1756841594419-62422924.jpeg')
+            .then(response => {
+                console.log('Fetch response:', response.status, response.statusText);
+                if (response.ok) {
+                    document.getElementById('fetch-test').innerHTML = '✅ Fetch successful: ' + response.status;
+                    return response.blob();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            })
+            .then(blob => {
+                console.log('Blob received:', blob.size, 'bytes');
+                const url = URL.createObjectURL(blob);
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '300px';
+                img.style.border = '2px solid blue';
+                document.getElementById('fetch-test').appendChild(img);
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                document.getElementById('fetch-test').innerHTML = '❌ Fetch failed: ' + error.message;
+            });
+    </script>
+</body>
+</html>

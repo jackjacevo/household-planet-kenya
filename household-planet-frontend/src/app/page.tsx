@@ -5,9 +5,8 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedCategories } from '@/components/home/FeaturedCategories'
 import { BestSellers } from '@/components/home/BestSellers'
 import { NewArrivals } from '@/components/home/NewArrivals'
-import { PopularItems } from '@/components/home/PopularItems'
+
 import { Testimonials } from '@/components/home/Testimonials'
-import { NewsletterSignup } from '@/components/home/NewsletterSignup'
 import { InstagramFeed } from '@/components/home/InstagramFeed'
 import { StoreLocation } from '@/components/home/StoreLocation'
 import { TrustBadges } from '@/components/home/TrustBadges'
@@ -87,6 +86,37 @@ export default function HomePage() {
         {/* Dynamic Hero Banner */}
         <HeroSection />
         
+        {/* Shop by Category - Right after banner */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={sectionVariants}
+          className="px-4 sm:px-0"
+        >
+          <FeaturedCategories />
+        </motion.div>
+        
+        {/* Featured Products */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={sectionVariants}
+        >
+          <BestSellers />
+        </motion.div>
+      
+        {/* New Arrivals */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={sectionVariants}
+        >
+          <NewArrivals />
+        </motion.div>
+        
         {/* Value Propositions - Why Choose Us */}
         <motion.div
           initial="hidden"
@@ -98,47 +128,9 @@ export default function HomePage() {
           <ValuePropositions />
         </motion.div>
       
-      {/* Featured Categories with enhanced hover effects */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-        className="px-4 sm:px-0"
-      >
-        <FeaturedCategories />
-      </motion.div>
+
       
 
-      {/* Best Sellers */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <BestSellers />
-      </motion.div>
-      
-      {/* New Arrivals */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <NewArrivals />
-      </motion.div>
-      
-      {/* Popular Items */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <PopularItems />
-      </motion.div>
       
       {/* Recently Viewed */}
       <motion.div
@@ -170,15 +162,7 @@ export default function HomePage() {
         <Testimonials />
       </motion.div>
       
-      {/* Newsletter Signup with discount incentives */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <NewsletterSignup />
-      </motion.div>
+
 
       {/* Instagram Feed */}
       <motion.div
