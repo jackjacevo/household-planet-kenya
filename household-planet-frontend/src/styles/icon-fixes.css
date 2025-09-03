@@ -1,0 +1,70 @@
+/* Icon stability and preloading fixes */
+
+/* Ensure icons are always rendered properly */
+.lucide {
+  display: inline-block !important;
+  width: 1em;
+  height: 1em;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Prevent icon disappearing on refresh */
+svg.lucide {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+/* Button icon container */
+button .lucide,
+.btn .lucide {
+  margin-right: 0.25rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Ensure proper icon spacing */
+.icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Animation stability */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Prevent layout shift during icon loading */
+.loading-icon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+}
+
+/* Force hardware acceleration for smooth animations */
+.lucide {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Ensure icons are visible during hydration */
+.hydrating .lucide {
+  opacity: 1 !important;
+  display: inline-block !important;
+}

@@ -1,4 +1,5 @@
 import { Product } from '@/types';
+import { getImageUrl } from './imageUtils';
 
 // WhatsApp business number for Household Planet Kenya
 export const WHATSAPP_NUMBER = '+254790227760';
@@ -7,15 +8,25 @@ export const WHATSAPP_NUMBER = '+254790227760';
  * Generate WhatsApp message for product inquiry/order
  */
 export function generateProductWhatsAppMessage(product: Product): string {
+  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.com'}/products/${product.slug}`;
+  const imageUrl = getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null);
+  
   const message = `Hello! I'm interested in ordering this product from Household Planet Kenya:
 
-🛍️ *${product.name}*
-💰 Price: Ksh ${product.price.toLocaleString()}
-📝 SKU: ${product.sku}
+• *${product.name}*
+• Price: Ksh ${product.price.toLocaleString()}${product.comparePrice ? ` (Was Ksh ${product.comparePrice.toLocaleString()})` : ''}
+• SKU: ${product.sku || 'N/A'}
+${product.brand ? `• Brand: ${product.brand.name}
+` : ''}${product.category ? `• Category: ${product.category.name}
+` : ''}• Description: ${product.shortDescription || product.description || 'No description available'}
 
-${product.shortDescription}
+• Image: ${imageUrl}
+• Link: ${productUrl}
 
-Please let me know about availability and delivery options.
+Please let me know about:
+• Availability and stock status
+• Delivery options and timeline
+• Payment methods
 
 Thank you!`;
 

@@ -13,7 +13,6 @@ import {
   Mail, 
   Share2, 
   Facebook, 
-
   MessageCircle,
   Download,
   Calendar,
@@ -22,6 +21,7 @@ import {
 import Image from 'next/image';
 import axios from 'axios';
 import { Order } from '@/types';
+import STKPushButton from '@/components/payment/STKPushButton';
 
 export default function OrderConfirmationPage() {
   const params = useParams();
@@ -81,6 +81,8 @@ export default function OrderConfirmationPage() {
   const downloadReceipt = () => {
     window.print();
   };
+
+
 
   if (loading) {
     return (
@@ -407,6 +409,9 @@ export default function OrderConfirmationPage() {
               >
                 Track Your Order
               </Button>
+              
+
+              
               <Button 
                 variant="outline"
                 onClick={() => router.push('/account/orders')}

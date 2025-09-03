@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/Textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle } from 'lucide-react';
+import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle, Smartphone } from 'lucide-react';
 
 const WhatsAppIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -28,7 +28,15 @@ interface Order {
   id: number;
   orderNumber: string;
   status: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
   total: number;
+  subtotal?: number;
+  shippingCost?: number;
+  deliveryPrice?: number;
+  deliveryLocation?: string;
+  source?: string;
+  updatedAt?: string;
   createdAt: string;
   trackingNumber?: string;
   priority: string;
@@ -78,7 +86,7 @@ const priorityColors = {
 
 export default function AdminOrdersPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const { refreshAll } = useRealtimeOrders();
   const [orders, setOrders] = useState<Order[]>([]);
 
@@ -92,6 +100,8 @@ export default function AdminOrdersPage() {
   const [returns, setReturns] = useState([]);
   const [showReturns, setShowReturns] = useState(false);
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
+  const [stkPushDialog, setStkPushDialog] = useState<{ open: boolean; orderId: number | null; phone: string }>({ open: false, orderId: null, phone: '' });
+  const [phoneInput, setPhoneInput] = useState('');
 
 
 
@@ -224,14 +234,14 @@ export default function AdminOrdersPage() {
       }
       
       fetchReturns();
-      toast({
+      showToast({
         title: 'Success!',
         description: `Return ${status.toLowerCase()} successfully`,
         variant: 'success'
       });
     } catch (error) {
       console.error('Error processing return:', error);
-      toast({
+      showToast({
         title: 'Error',
         description: 'Failed to process return. Please try again.',
         variant: 'destructive'
@@ -260,7 +270,7 @@ export default function AdminOrdersPage() {
       
       // Show success message
       const orderNumber = orders.find(o => o.id === orderId)?.orderNumber || orderId;
-      toast({
+      showToast({
         title: 'Success!',
         description: `Order ${orderNumber} status updated to ${status} successfully!`,
         variant: 'success'
@@ -270,7 +280,7 @@ export default function AdminOrdersPage() {
       refetchStats();
     } catch (error) {
       console.error('Error updating order status:', error);
-      toast({
+      showToast({
         title: 'Error',
         description: `Failed to update order status: ${error.message}`,
         variant: 'destructive'
@@ -307,14 +317,14 @@ export default function AdminOrdersPage() {
       setShowBulkDialog(false);
       refetchOrders();
       refetchStats();
-      toast({
+      showToast({
         title: 'Success!',
         description: `Bulk action completed for ${selectedOrders.length} orders`,
         variant: 'success'
       });
     } catch (error) {
       console.error('Error performing bulk action:', error);
-      toast({
+      showToast({
         title: 'Error',
         description: 'Failed to perform bulk action. Please try again.',
         variant: 'destructive'
@@ -340,7 +350,7 @@ export default function AdminOrdersPage() {
       }
       
       const data = await response.json();
-      toast({
+      showToast({
         title: 'Success!',
         description: `Shipping label generated. Tracking: ${data.trackingNumber}`,
         variant: 'success'
@@ -349,7 +359,7 @@ export default function AdminOrdersPage() {
       refetchStats();
     } catch (error) {
       console.error('Error generating shipping label:', error);
-      toast({
+      showToast({
         title: 'Error',
         description: `Failed to generate shipping label: ${error.message}`,
         variant: 'destructive'
@@ -374,18 +384,454 @@ export default function AdminOrdersPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      toast({
+      showToast({
         title: 'Success!',
         description: 'Email sent successfully!',
         variant: 'success'
       });
     } catch (error) {
       console.error('Error sending email:', error);
-      toast({
+      showToast({
         title: 'Error',
         description: 'Failed to send email. Please try again.',
         variant: 'destructive'
       });
+    }
+  };
+
+  const checkPaymentAndViewReceipt = async (orderId: number) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/status/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (response.ok) {
+        const paymentStatus = await response.json();
+        if (paymentStatus?.status === 'COMPLETED') {
+          await viewReceipt(orderId);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    }
+  };
+
+  const viewReceipt = async (orderId: number) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (!response.ok) throw new Error('Failed to generate receipt');
+      
+      const receiptData = await response.json();
+      const receiptHTML = generateReceiptHTML(receiptData);
+      
+      const receiptWindow = window.open('', '_blank', 'width=500,height=700,scrollbars=yes');
+      if (receiptWindow) {
+        receiptWindow.document.write(receiptHTML);
+        receiptWindow.document.close();
+      }
+    } catch (error) {
+      console.error('Error viewing receipt:', error);
+      showToast({
+        title: 'Error',
+        description: 'Failed to load receipt. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const generateReceiptHTML = (receipt: any) => {
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${receipt.receiptNumber}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8fafc;
+            padding: 20px;
+            color: #1e293b;
+          }
+          .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          }
+          .header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+          }
+          .company-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+          .receipt-title {
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          .content {
+            padding: 24px 20px;
+          }
+          .receipt-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          .meta-item {
+            text-align: center;
+          }
+          .meta-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+          }
+          .meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+          }
+          .customer-section {
+            margin-bottom: 24px;
+          }
+          .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+          }
+          .customer-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+          }
+          .customer-phone {
+            font-size: 14px;
+            color: #64748b;
+          }
+          .items-section {
+            margin-bottom: 24px;
+          }
+          .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+          }
+          .item:last-child {
+            border-bottom: none;
+          }
+          .item-details {
+            flex: 1;
+          }
+          .item-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 2px;
+          }
+          .item-qty {
+            font-size: 12px;
+            color: #64748b;
+          }
+          .item-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+          }
+          .totals-section {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          }
+          .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 16px;
+          }
+          .total-label {
+            color: #64748b;
+            font-size: 14px;
+          }
+          .total-value {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+          }
+          .payment-section {
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+          }
+          .payment-method {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+          }
+          .mpesa-logo {
+            width: 24px;
+            height: 24px;
+            background: #16a34a;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 8px;
+          }
+          .payment-details {
+            text-align: center;
+          }
+          .transaction-id {
+            font-family: 'Courier New', monospace;
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #475569;
+            margin-top: 8px;
+          }
+          .footer {
+            text-align: center;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+          }
+          .thank-you {
+            font-size: 14px;
+            color: #16a34a;
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+          .footer-note {
+            font-size: 11px;
+            color: #94a3b8;
+          }
+          @media print {
+            body { background: white !important; padding: 0 !important; }
+            .receipt-container { 
+              box-shadow: none !important; 
+              max-width: none !important;
+              margin: 0 !important;
+            }
+            .header {
+              background: #16a34a !important;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .totals-section {
+              background: #f8fafc !important;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .payment-section {
+              background: #ecfdf5 !important;
+              border: 1px solid #bbf7d0 !important;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .mpesa-logo {
+              background: #16a34a !important;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .footer {
+              background: #f8fafc !important;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            button { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          <div class="header">
+            <div class="company-name">Household Planet Kenya</div>
+            <div class="receipt-title">Payment Receipt</div>
+          </div>
+          
+          <div style="padding: 16px 20px; background: white; border-bottom: 1px solid #e2e8f0; text-align: center; display: flex; gap: 12px; justify-content: center;">
+            <button onclick="window.print()" style="background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500;">🖨️ Print</button>
+            <button onclick="downloadReceipt()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500;">📄 Download</button>
+          </div>
+          
+          <div class="content">
+            <div class="receipt-meta">
+              <div class="meta-item">
+                <div class="meta-label">Receipt</div>
+                <div class="meta-value">#${receipt.receiptNumber}</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Order</div>
+                <div class="meta-value">#${receipt.orderNumber}</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Date</div>
+                <div class="meta-value">${new Date(receipt.paymentDate).toLocaleDateString('en-GB')}</div>
+              </div>
+            </div>
+            
+            <div class="customer-section">
+              <div class="section-title">Customer</div>
+              <div class="customer-name">${receipt.customer.name}</div>
+              <div class="customer-phone">${receipt.customer.phone}</div>
+            </div>
+            
+            <div class="items-section">
+              <div class="section-title">Items</div>
+              ${receipt.items.map((item: any) => `
+                <div class="item">
+                  <div class="item-details">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-qty">Qty: ${item.quantity}</div>
+                  </div>
+                  <div class="item-price">KSh ${item.total.toLocaleString()}</div>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="totals-section">
+              <div class="total-row">
+                <span class="total-label">Subtotal</span>
+                <span class="total-value">KSh ${receipt.totals.subtotal.toLocaleString()}</span>
+              </div>
+              ${receipt.totals.shipping > 0 ? `
+                <div class="total-row">
+                  <span class="total-label">Delivery</span>
+                  <span class="total-value">KSh ${receipt.totals.shipping.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              <div class="total-row">
+                <span class="total-label">Total Paid</span>
+                <span class="total-value">KSh ${receipt.totals.total.toLocaleString()}</span>
+              </div>
+            </div>
+            
+            <div class="payment-section">
+              <div class="payment-method">
+                <div class="mpesa-logo">M</div>
+                <span style="font-weight: 600; color: #16a34a;">M-Pesa Payment</span>
+              </div>
+              <div class="payment-details">
+                <div style="font-size: 14px; color: #475569; margin-bottom: 4px;">${receipt.payment.phoneNumber}</div>
+                ${receipt.payment.mpesaCode ? `<div style="font-weight: 600; color: #16a34a; font-size: 16px; margin-bottom: 8px;">${receipt.payment.mpesaCode}</div>` : ''}
+                <div class="transaction-id">ID: ${receipt.payment.transactionId}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <div class="thank-you">Thank you for your purchase!</div>
+            <div class="footer-note">Keep this receipt for your records</div>
+          </div>
+        </div>
+        
+        <script>
+          function downloadReceipt() {
+            const receiptContent = document.querySelector('.receipt-container').outerHTML;
+            const styles = document.querySelector('style').innerHTML;
+            const printHTML = '<!DOCTYPE html><html><head><title>Receipt - ${receipt.receiptNumber}</title><meta charset="UTF-8"><style>' + styles + '.receipt-container { margin: 20px auto; } button { display: none !important; }</style></head><body>' + receiptContent + '</body></html>';
+            
+            const blob = new Blob([printHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'receipt-${receipt.receiptNumber}.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+    
+    return receiptHTML;
+  };
+
+  const triggerSTKPush = async (orderId: number, phoneNumber: string) => {
+    if (!phoneNumber.trim()) {
+      showToast({
+        title: 'Phone Number Required',
+        description: 'Please enter a valid phone number to send M-Pesa payment prompt.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const loadingKey = `stk-${orderId}`;
+    setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/stk-push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ orderId, phoneNumber }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      showToast({
+        title: '✅ STK Push Sent Successfully!',
+        description: `Payment prompt sent to ${phoneNumber}. Customer will receive M-Pesa prompt on their phone.`,
+        variant: 'success'
+      });
+      
+      // Check payment status and view receipt if successful
+      setTimeout(() => checkPaymentAndViewReceipt(orderId), 10000); // Check after 10 seconds
+      
+      setStkPushDialog({ open: false, orderId: null, phone: '' });
+      setPhoneInput('');
+    } catch (error) {
+      console.error('Error sending STK push:', error);
+      showToast({
+        title: '❌ STK Push Failed',
+        description: `Failed to send payment prompt: ${error.message}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -784,19 +1230,34 @@ export default function AdminOrdersPage() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generateShippingLabel(order.id)}
-                            disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED' || actionLoading[`shipping-${order.id}`]}
-                            title="Generate Shipping Label"
-                          >
-                            {actionLoading[`shipping-${order.id}`] ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                            ) : (
-                              <Truck className="h-4 w-4" />
-                            )}
-                          </Button>
+
+                          {order.status === 'CONFIRMED' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: order.user.phone || '' })}
+                              disabled={actionLoading[`stk-${order.id}`]}
+                              title="Send M-Pesa STK Push"
+                              className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                            >
+                              {actionLoading[`stk-${order.id}`] ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                              ) : (
+                                <Smartphone className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          {order.status === 'DELIVERED' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => viewReceipt(order.id)}
+                              title="View Receipt"
+                              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Select
                             value={order.status}
                             onValueChange={(status) => {
@@ -850,6 +1311,87 @@ export default function AdminOrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* STK Push Dialog */}
+      <Dialog open={stkPushDialog.open} onOpenChange={(open) => {
+        if (!open) {
+          setStkPushDialog({ open: false, orderId: null, phone: '' });
+          setPhoneInput('');
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send M-Pesa STK Push</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-3">
+                Send M-Pesa payment prompt to customer's phone
+              </p>
+              
+              {stkPushDialog.phone ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Smartphone className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-green-800">{stkPushDialog.phone}</span>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    ✅ Phone number available - ready to send payment prompt
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-4 w-4 text-orange-600" />
+                    <span className="font-medium text-orange-800">No phone number on file</span>
+                  </div>
+                  <p className="text-xs text-orange-600 mt-1">
+                    Please enter customer's phone number below
+                  </p>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Phone Number</label>
+                <Input
+                  type="tel"
+                  placeholder="254700000000 or 0700000000"
+                  value={phoneInput || stkPushDialog.phone}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {stkPushDialog.phone ? 'Edit number above or use existing number' : 'Enter Kenyan mobile number (Safaricom, Airtel, Telkom)'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setStkPushDialog({ open: false, orderId: null, phone: '' });
+                  setPhoneInput('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  const phoneToUse = phoneInput || stkPushDialog.phone;
+                  if (stkPushDialog.orderId) {
+                    triggerSTKPush(stkPushDialog.orderId, phoneToUse);
+                  }
+                }}
+                disabled={actionLoading[`stk-${stkPushDialog.orderId}`]}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {actionLoading[`stk-${stkPushDialog.orderId}`] ? 'Sending...' : 'Send STK Push'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

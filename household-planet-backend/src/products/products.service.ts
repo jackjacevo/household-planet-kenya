@@ -12,23 +12,80 @@ export class ProductsService {
   async findAll(params: any) {
     try {
       const startTime = Date.now();
-      const { page = 1, limit = 20, category, search, featured, active = true, sortBy = 'newest', sortOrder = 'desc' } = params;
+      const { 
+        page = 1, 
+        limit = 20, 
+        category, 
+        brand,
+        search, 
+        featured, 
+        minPrice,
+        maxPrice,
+        minRating,
+        inStock,
+        onSale,
+        active = true, 
+        sortBy = 'newest', 
+        sortOrder = 'desc' 
+      } = params;
       
       const where: any = { isActive: active };
       
       if (category) {
-        where.categoryId = category;
+        const categoryId = parseInt(category);
+        if (!isNaN(categoryId)) {
+          where.categoryId = categoryId;
+        }
+      }
+      
+      if (brand) {
+        const brandId = parseInt(brand);
+        if (!isNaN(brandId)) {
+          where.brandId = brandId;
+        }
       }
       
       if (search) {
         where.OR = [
           { name: { contains: search } },
-          { description: { contains: search } }
+          { description: { contains: search } },
+          { shortDescription: { contains: search } }
         ];
       }
       
       if (featured !== undefined) {
         where.isFeatured = featured;
+      }
+      
+      if (minPrice !== undefined || maxPrice !== undefined) {
+        where.price = {};
+        if (minPrice !== undefined) {
+          const min = parseFloat(minPrice);
+          if (!isNaN(min)) {
+            where.price.gte = min;
+          }
+        }
+        if (maxPrice !== undefined) {
+          const max = parseFloat(maxPrice);
+          if (!isNaN(max)) {
+            where.price.lte = max;
+          }
+        }
+      }
+      
+      if (minRating !== undefined && minRating > 0) {
+        const rating = parseFloat(minRating);
+        if (!isNaN(rating)) {
+          where.averageRating = { gte: rating };
+        }
+      }
+      
+      if (inStock === true || inStock === 'true') {
+        where.stock = { gt: 0 };
+      }
+      
+      if (onSale === true || onSale === 'true') {
+        where.comparePrice = { not: null };
       }
 
     // Map frontend sort values to database fields
@@ -66,7 +123,10 @@ export class ProductsService {
       const [products, total] = await Promise.all([
         this.prisma.product.findMany({
           where,
-          include: { category: true },
+          include: { 
+            category: true,
+            brand: true
+          },
           orderBy,
           skip: (page - 1) * limit,
           take: limit,

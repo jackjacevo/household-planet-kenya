@@ -9,6 +9,7 @@ import { Trash2, Plus, Minus, Heart, ShoppingCart, Tag, MapPin } from 'lucide-re
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/imageUtils';
 
 export default function CartPage() {
   const { items, savedForLater, updateQuantity, removeFromCart, saveForLater, moveToCart, getTotalPrice } = useCart();
@@ -109,10 +110,11 @@ export default function CartPage() {
                 <div key={item.id} className="flex items-center p-4 border-b last:border-b-0">
                   <div className="w-24 h-24 relative">
                     <Image
-                      src={item.product.images[0] || '/placeholder.jpg'}
+                      src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? JSON.parse(item.product.images)[0] : null))}
                       alt={item.product.name}
                       fill
                       className="object-cover rounded-md"
+                      style={{ height: 'auto' }}
                     />
                   </div>
                   
@@ -186,10 +188,11 @@ export default function CartPage() {
                 <div key={item.id} className="flex items-center p-4 border-b last:border-b-0">
                   <div className="w-20 h-20 relative">
                     <Image
-                      src={item.product.images[0] || '/placeholder.jpg'}
+                      src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? JSON.parse(item.product.images)[0] : null))}
                       alt={item.product.name}
                       fill
                       className="object-cover rounded-md"
+                      style={{ height: 'auto' }}
                     />
                   </div>
                   

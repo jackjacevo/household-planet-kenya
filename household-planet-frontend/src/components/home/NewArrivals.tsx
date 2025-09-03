@@ -5,6 +5,7 @@ import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { getImageUrl } from '@/lib/imageUtils';
+import { useToast } from '@/hooks/useToast';
 
 interface Product {
   id: string;
@@ -20,6 +21,7 @@ interface Product {
 export function NewArrivals() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -34,6 +36,11 @@ export function NewArrivals() {
         }
       } catch (error) {
         console.error('Failed to fetch new arrivals:', error);
+        showToast({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to load new arrivals'
+        });
         setProducts([]);
       } finally {
         setLoading(false);
@@ -41,7 +48,7 @@ export function NewArrivals() {
     };
 
     fetchProducts();
-  }, []);
+  }, [showToast]);
 
   const getProductImage = (product: Product) => {
     if (product.images && product.images.length > 0) {

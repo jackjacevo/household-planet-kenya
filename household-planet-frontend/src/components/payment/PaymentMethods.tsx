@@ -55,20 +55,7 @@ export function PaymentMethods({ total, onPaymentSelect, loading }: PaymentMetho
           </div>
         </label>
 
-        <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 opacity-50">
-          <input
-            type="radio"
-            name="payment"
-            value="CARD"
-            disabled
-            className="mr-3"
-          />
-          <CreditCard className="h-5 w-5 mr-3 text-blue-600" />
-          <div>
-            <div className="font-medium">Credit/Debit Card</div>
-            <div className="text-sm text-gray-600">Coming soon</div>
-          </div>
-        </label>
+
 
         <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
           <input

@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, Min, Max, IsString, MaxLength, IsIn } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsString, MaxLength, IsIn, IsNumber } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class PaginationDto {
@@ -42,8 +42,38 @@ export class ProductQueryDto extends SearchDto {
   category?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  brand?: number;
+
+  @IsOptional()
   @Transform(({ value }) => value === 'true')
   featured?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @Min(0)
+  minPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @Min(0)
+  maxPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @Min(0)
+  @Max(5)
+  minRating?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true')
+  inStock?: boolean;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true')
+  onSale?: boolean;
 
   @IsOptional()
   @Transform(({ value }) => value !== 'false')

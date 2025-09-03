@@ -29,8 +29,17 @@ export default function CategoryDropdown({
   const [hoveredParent, setHoveredParent] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Flatten all categories for easier searching
+  const allCategories = categories.reduce((acc: Category[], cat) => {
+    acc.push(cat);
+    if (cat.children) {
+      acc.push(...cat.children);
+    }
+    return acc;
+  }, []);
+  
   const parentCategories = categories.filter(cat => !cat.parentId);
-  const selectedCategory = categories.find(cat => cat.id === Number(value));
+  const selectedCategory = allCategories.find(cat => cat.id === Number(value));
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,17 +54,21 @@ export default function CategoryDropdown({
   }, []);
 
   const handleCategorySelect = (categoryId: number) => {
-    onChange(categoryId);
+    if (categoryId === 0) {
+      onChange(undefined as any); // Clear category filter
+    } else {
+      onChange(categoryId);
+    }
     setIsOpen(false);
     setHoveredParent(null);
   };
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative ${className}`} ref={dropdownRef} style={{ zIndex: 10000 }}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-left flex items-center justify-between"
+        className="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-left flex items-center justify-between"
       >
         <span className={selectedCategory ? 'text-gray-900' : 'text-gray-500'}>
           {selectedCategory ? selectedCategory.name : placeholder}
@@ -64,8 +77,15 @@ export default function CategoryDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg" style={{ zIndex: 9998 }}>
+        <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg" style={{ zIndex: 10001 }}>
           <div className="py-1 max-h-60 overflow-visible">
+            <button
+              type="button"
+              onClick={() => handleCategorySelect(0)}
+              className="w-full px-3 py-2 text-left hover:bg-gray-50 text-gray-700 border-b border-gray-100"
+            >
+              All Categories
+            </button>
             {parentCategories.map((parent) => (
               <div
                 key={parent.id}
@@ -76,17 +96,17 @@ export default function CategoryDropdown({
                 <button
                   type="button"
                   onClick={() => handleCategorySelect(parent.id)}
-                  className="w-full px-3 py-2 text-left bg-blue-50 hover:bg-blue-100 flex items-center justify-between group"
+                  className="w-full px-3 py-2 text-left bg-orange-50 hover:bg-orange-100 flex items-center justify-between group"
                 >
-                  <span className="text-blue-900 font-medium">{parent.name}</span>
-                  {parent.children.length > 0 && (
+                  <span className="text-orange-900 font-medium">{parent.name}</span>
+                  {parent.children && parent.children.length > 0 && (
                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
                   )}
                 </button>
 
                 {/* Subcategories dropdown */}
-                {hoveredParent === parent.id && parent.children.length > 0 && (
-                  <div className="absolute left-full top-0 ml-1 w-full bg-white border border-gray-300 rounded-md shadow-lg" style={{ zIndex: 9999 }}>
+                {hoveredParent === parent.id && parent.children && parent.children.length > 0 && (
+                  <div className="absolute left-full top-0 ml-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg z-[10000]">
                     <div className="py-1">
                       {parent.children.map((child) => (
                         <button

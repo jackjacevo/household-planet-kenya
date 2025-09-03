@@ -1,43 +1,83 @@
-// Test script to verify categories page functionality
-const fs = require('fs');
-const path = require('path');
+const API_URL = 'http://localhost:3001';
 
-console.log('=== Testing Categories Frontend ===\n');
-
-// Read the categories page file
-const categoriesPagePath = path.join(__dirname, 'household-planet-frontend/src/app/categories/page.tsx');
-const categoriesPageContent = fs.readFileSync(categoriesPagePath, 'utf8');
-
-// Check if the debugging logs are present
-const hasDebugLogs = categoriesPageContent.includes('🔍 Categories page - Fetching categories from');
-const hasErrorHandling = categoriesPageContent.includes('❌ Categories page - No categories data received');
-const hasApiUrlCheck = categoriesPageContent.includes('/api/categories/hierarchy');
-
-console.log('✅ Frontend Debug Checks:');
-console.log('- Debug logging present:', hasDebugLogs);
-console.log('- Error handling present:', hasErrorHandling);
-console.log('- API URL check present:', hasApiUrlCheck);
-
-// Check if the filtering logic was corrected
-const hasCorrectFiltering = categoriesPageContent.includes('The API already returns parent categories only (parentId: null), so no need to filter');
-console.log('- Corrected filtering logic:', hasCorrectFiltering);
-
-// Check if the data mapping is correct
-const hasDataMapping = categoriesPageContent.includes('mappedCategories = data.map');
-console.log('- Data mapping present:', hasDataMapping);
-
-console.log('\n📋 Summary:');
-if (hasDebugLogs && hasErrorHandling && hasApiUrlCheck && hasCorrectFiltering && hasDataMapping) {
-  console.log('✅ All frontend improvements are in place!');
-  console.log('✅ The categories page should now work correctly with better debugging info.');
-} else {
-  console.log('❌ Some frontend improvements are missing.');
-  console.log('❌ Please check the categories page implementation.');
+async function testCategoriesAPI() {
+  try {
+    console.log('Testing categories API...');
+    
+    // Test categories hierarchy endpoint
+    const response = await fetch(`${API_URL}/api/categories/hierarchy`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const categories = await response.json();
+    console.log('Categories response:', JSON.stringify(categories, null, 2));
+    
+    if (Array.isArray(categories) && categories.length > 0) {
+      console.log('✅ Categories loaded successfully');
+      console.log(`Found ${categories.length} parent categories`);
+      
+      categories.forEach(cat => {
+        console.log(`- ${cat.name} (ID: ${cat.id})`);
+        if (cat.children && cat.children.length > 0) {
+          cat.children.forEach(child => {
+            console.log(`  - ${child.name} (ID: ${child.id})`);
+          });
+        }
+      });
+    } else {
+      console.log('⚠️ No categories found or invalid response format');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error testing categories API:', error.message);
+  }
 }
 
-console.log('\n🔧 Next Steps:');
-console.log('1. Start the frontend development server: cd household-planet-frontend && npm run dev');
-console.log('2. Open the categories page in your browser');
-console.log('3. Check the browser console for debugging information');
-console.log('4. Verify that categories are displaying correctly');
-console.log('5. Test the hover effects and links');
+// Test products API with filters
+async function testProductsAPI() {
+  try {
+    console.log('\nTesting products API with filters...');
+    
+    const response = await fetch(`${API_URL}/api/products?limit=5`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('Products response structure:', {
+      hasData: !!result.data,
+      dataLength: result.data?.length || 0,
+      hasPagination: !!result.pagination,
+      sampleProduct: result.data?.[0] ? {
+        id: result.data[0].id,
+        name: result.data[0].name,
+        category: result.data[0].category,
+        brand: result.data[0].brand
+      } : null
+    });
+    
+    if (result.data && result.data.length > 0) {
+      console.log('✅ Products loaded successfully');
+      
+      // Check for brands
+      const brandsFound = new Set();
+      result.data.forEach(product => {
+        if (product.brand?.name) {
+          brandsFound.add(product.brand.name);
+        }
+      });
+      
+      console.log(`Found brands: ${Array.from(brandsFound).join(', ')}`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error testing products API:', error.message);
+  }
+}
+
+// Run tests
+testCategoriesAPI();
+testProductsAPI();

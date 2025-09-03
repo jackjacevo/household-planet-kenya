@@ -140,6 +140,7 @@ export default function OrderDetailsPage() {
   const [emailTemplate, setEmailTemplate] = useState('');
   const [customSubject, setCustomSubject] = useState('');
   const [customMessage, setCustomMessage] = useState('');
+  const [shippingLoading, setShippingLoading] = useState(false);
 
   useEffect(() => {
     if (params.id && (user?.role === 'ADMIN' || user?.role === 'STAFF')) {
@@ -247,6 +248,32 @@ export default function OrderDetailsPage() {
     }
   };
 
+  const generateShippingLabel = async () => {
+    setShippingLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${params.id}/shipping-label`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      alert(`Shipping label generated successfully! Tracking: ${data.trackingNumber}`);
+      fetchOrderDetails();
+    } catch (error) {
+      console.error('Error generating shipping label:', error);
+      alert(`Failed to generate shipping label: ${error.message}`);
+    } finally {
+      setShippingLoading(false);
+    }
+  };
+
 
 
   if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
@@ -278,7 +305,7 @@ export default function OrderDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -337,6 +364,18 @@ export default function OrderDetailsPage() {
                 Email Customer
               </Button>
             </DialogTrigger>
+            <Button
+              variant="outline"
+              onClick={generateShippingLabel}
+              disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED' || shippingLoading}
+            >
+              {shippingLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+              ) : (
+                <Truck className="h-4 w-4 mr-2" />
+              )}
+              {shippingLoading ? 'Generating...' : 'Generate Shipping Label'}
+            </Button>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Send Email to Customer</DialogTitle>

@@ -124,4 +124,20 @@ export class PaymentsController {
   async createPendingPayment(@Body() body: { orderId: number | string; amount: number; phoneNumber: string; notes?: string }) {
     return this.paymentsService.createPendingPayment(body.orderId, body.amount, body.phoneNumber, body.notes);
   }
+
+  @Post('admin/stk-push')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async adminSTKPush(@Body() body: { orderId: number; phoneNumber: string; amount?: number }) {
+    const order = await this.paymentsService.getOrder(body.orderId);
+    const amount = body.amount || parseFloat(order.total.toString());
+    return this.mpesaService.initiateSTKPush(body.phoneNumber, amount, body.orderId);
+  }
+
+  @Get('receipt/:orderId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async generateReceipt(@Param('orderId') orderId: string) {
+    return this.paymentsService.generateReceipt(parseInt(orderId));
+  }
 }

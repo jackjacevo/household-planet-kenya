@@ -595,4 +595,65 @@ export class PaymentsService {
 
     return invoice;
   }
+
+  async generateReceipt(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: true,
+        items: { 
+          include: { 
+            product: { select: { name: true, images: true } },
+            variant: { select: { name: true } }
+          } 
+        },
+        paymentTransactions: { 
+          where: { status: 'COMPLETED' },
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+
+    if (!order) throw new Error('Order not found');
+    if (!order.paymentTransactions.length) throw new Error('No completed payments found');
+
+    const latestPayment = order.paymentTransactions[0];
+    
+    return {
+      receiptNumber: `RCP-${order.orderNumber}-${Date.now()}`,
+      orderNumber: order.orderNumber,
+      date: new Date().toISOString(),
+      paymentDate: latestPayment.transactionDate || latestPayment.createdAt,
+      customer: {
+        name: order.user.name,
+        email: order.user.email,
+        phone: order.user.phone || latestPayment.phoneNumber
+      },
+      items: order.items.map(item => ({
+        name: item.product.name,
+        variant: item.variant?.name,
+        quantity: item.quantity,
+        unitPrice: Number(item.price),
+        total: Number(item.price) * item.quantity,
+        image: item.product.images
+      })),
+      payment: {
+        method: latestPayment.provider === 'MPESA' ? 'M-Pesa' : latestPayment.provider,
+        phoneNumber: latestPayment.phoneNumber,
+        amount: Number(latestPayment.amount),
+        mpesaCode: latestPayment.mpesaReceiptNumber,
+        transactionId: latestPayment.checkoutRequestId
+      },
+      totals: {
+        subtotal: Number(order.subtotal || order.total),
+        shipping: Number(order.shippingCost || 0),
+        total: Number(order.total)
+      },
+      company: {
+        name: 'Household Planet Kenya',
+        phone: '+254790227760',
+        email: 'householdplanet819@gmail.com'
+      }
+    };
+  }
 }

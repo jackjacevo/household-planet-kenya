@@ -5,6 +5,7 @@ import { X, ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useCart } from '@/hooks/useCart';
+import { getImageUrl } from '@/lib/imageUtils';
 import Image from 'next/image';
 
 interface CartDrawerProps {
@@ -86,19 +87,17 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     >
                       {/* Product Image */}
                       <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
-                        {item.product.images && item.product.images[0] ? (
-                          <Image
-                            src={item.product.images[0]}
-                            alt={item.product.name}
-                            width={64}
-                            height={64}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                            <ShoppingBag className="h-6 w-6 text-gray-400" />
-                          </div>
-                        )}
+                        <Image
+                          src={getImageUrl(item.product.images && item.product.images.length > 0 ? item.product.images[0] : null)}
+                          alt={item.product.name}
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/images/products/placeholder.svg';
+                          }}
+                        />
                       </div>
 
                       {/* Product Info */}
@@ -163,22 +162,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
-                    <span>
-                      {shipping === 0 ? (
-                        <span className="text-green-600 font-medium">Free</span>
-                      ) : (
-                        `Ksh ${shipping.toLocaleString()}`
-                      )}
-                    </span>
+                    <span className="text-gray-500">Calculated at checkout</span>
                   </div>
-                  {shipping > 0 && (
-                    <p className="text-xs text-gray-500">
-                      Free delivery on orders over Ksh 5,000 across Kenya
-                    </p>
-                  )}
+
                   <div className="flex justify-between font-semibold text-lg pt-2 border-t border-gray-200">
-                    <span>Total</span>
-                    <span>Ksh {total.toLocaleString()}</span>
+                    <span>Subtotal</span>
+                    <span>Ksh {subtotal.toLocaleString()}</span>
                   </div>
                 </div>
 

@@ -32,7 +32,7 @@ export class ActivityService {
       const where: any = {};
       
       if (userId) where.userId = parseInt(userId);
-      if (action) where.action = { contains: action, mode: 'insensitive' };
+      if (action) where.action = { contains: action };
       if (search) {
         console.log('Search term:', search);
         where.OR = [

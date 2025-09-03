@@ -58,15 +58,17 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              width={200}
+              height={144}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              style={{ height: 'auto' }}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
         </Link>
         <div className="p-3">
           <Link href={`/products/${product.slug}`}>
-            <h3 className="text-sm font-medium text-gray-800 hover:text-orange-600 line-clamp-2 transition-colors">
+            <h3 className="text-sm font-medium text-gray-800 hover:text-orange-600 line-clamp-1 transition-colors">
               {product.name}
             </h3>
           </Link>
@@ -97,8 +99,10 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              width={192}
+              height={128}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              style={{ height: 'auto' }}
               sizes="(max-width: 768px) 100vw, 200px"
             />
           </Link>
@@ -170,23 +174,25 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
     <motion.div
       whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}
       whileTap={{ scale: 0.98 }}
-      className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300"
+      className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 h-full flex flex-col"
     >
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-48 sm:h-56 bg-gray-100 flex items-center justify-center overflow-hidden relative">
+          <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden relative">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              width={300}
+              height={192}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              style={{ height: 'auto' }}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
         </Link>
         
         {/* Stock indicator */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
           <span className="text-xs text-white">
             {product.stock && product.stock > 0 ? 'In Stock' : 'Out of Stock'}
           </span>
@@ -208,9 +214,9 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         </button>
       </div>
 
-      <div className="p-3 sm:p-4">
+      <div className="p-4 flex-1 flex flex-col">
         <Link href={`/products/${product.slug}`}>
-          <h3 className="text-sm sm:text-base font-medium text-gray-800 hover:text-green-600 line-clamp-2 transition-colors">
+          <h3 className="text-sm font-medium text-gray-800 hover:text-green-600 transition-colors line-clamp-1 min-h-[1.25rem]">
             {product.name}
           </h3>
         </Link>
@@ -232,12 +238,12 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
           </span>
         </div>
 
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mt-auto pt-3">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-green-600 font-bold">Ksh {product.price.toLocaleString()}</span>
+              <span className="text-green-600 font-bold text-sm">Ksh {product.price.toLocaleString()}</span>
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-xs text-gray-500 line-through ml-1">
+                <span className="text-xs text-gray-500 line-through ml-1 block">
                   Ksh {product.comparePrice.toLocaleString()}
                 </span>
               )}
@@ -250,7 +256,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               title="Order via WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="text-sm">WhatsApp</span>
+              <span className="text-xs">WhatsApp</span>
             </button>
             <button
               onClick={handleAddToCart}
@@ -262,8 +268,6 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
             </button>
           </div>
         </div>
-
-
       </div>
     </motion.div>
   );

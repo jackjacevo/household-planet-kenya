@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { PaymentMethods } from '@/components/payment/PaymentMethods';
 import { PaymentStatus } from '@/components/payment/PaymentStatus';
 import { formatPrice } from '@/lib/utils';
-import { MapPin, Phone, Mail, User, Check, ChevronRight, Plus, Edit2 } from 'lucide-react';
+import { MapPin, Phone, Mail, User, Check, ChevronRight, Plus, Edit2, Truck, Store } from 'lucide-react';
 import { Address } from '@/types';
 import axios from 'axios';
 import Image from 'next/image';
@@ -56,8 +56,27 @@ export default function CheckoutPage() {
     const token = localStorage.getItem('token');
     if (token) {
       loadSavedAddresses();
+      loadUserProfile();
     }
   }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      const user = response.data;
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.fullName || user.name || '',
+        phone: user.phone || ''
+      }));
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
 
   const loadSavedAddresses = async () => {
     try {
@@ -162,23 +181,15 @@ export default function CheckoutPage() {
       setStep('payment');
     } else if (deliveryType === 'DELIVERY') {
       if (selectedDeliveryLocation) {
-        // Get the selected location and use its exact price
-        const selectedLocation = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
-        if (selectedLocation) {
-          let cost = selectedLocation.price;
-          // Apply free shipping if order value is above threshold
-          if (getTotalPrice() >= 5000) {
-            cost = 0;
-          }
-          setDeliveryCost(cost);
-        }
-      } else if (deliveryCost > 0) {
-        // Manual delivery cost already set
+        // Location already selected and cost calculated in onChange
+        setStep('payment');
+      } else if (manualDeliveryCost && parseFloat(manualDeliveryCost) >= 0) {
+        // Manual delivery cost entered
+        setStep('payment');
       } else {
         alert('Please select a delivery location or enter delivery cost');
         return;
       }
-      setStep('payment');
     }
   };
 
@@ -253,7 +264,17 @@ export default function CheckoutPage() {
   };
 
   const getSubtotal = () => getTotalPrice();
-  const getTotal = () => getTotalPrice() + deliveryCost;
+  const getTotal = () => {
+    let deliveryFee = 0;
+    if (deliveryType === 'DELIVERY') {
+      if (selectedDeliveryLocation) {
+        deliveryFee = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.price || 0;
+      } else if (manualDeliveryCost) {
+        deliveryFee = parseFloat(manualDeliveryCost) || 0;
+      }
+    }
+    return getTotalPrice() + deliveryFee;
+  };
 
   if (items.length === 0) {
     return (
@@ -336,81 +357,74 @@ export default function CheckoutPage() {
         <div className="lg:col-span-2 order-2 lg:order-1">
           {/* Account Step */}
           {step === 'account' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Account Information</h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email Address</label>
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="john@example.com"
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <Button
-                    variant={!isGuest ? 'default' : 'outline'}
-                    onClick={() => setIsGuest(false)}
-                  >
-                    Create Account
-                  </Button>
-                  <Button
-                    variant={isGuest ? 'default' : 'outline'}
-                    onClick={() => setIsGuest(true)}
-                  >
-                    Guest Checkout
-                  </Button>
-                </div>
-                
-                {!isGuest && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Password</label>
-                    <Input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required={!isGuest}
-                      placeholder="Create a password"
-                    />
-                  </div>
-                )}
-                
-                {isGuest && (
-                  <div className="bg-blue-50 p-4 rounded-md">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="createAccount"
-                        checked={formData.createAccount}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
-                      <label className="text-sm">Create an account for faster checkout next time</label>
+            <div className="bg-gradient-to-br from-green-50 to-orange-50 rounded-lg shadow-sm p-6 border border-green-100">
+              {localStorage.getItem('token') ? (
+                <div className="text-center">
+                  <div className="mb-6">
+                    <div className="text-4xl mb-3">
+                      {new Date().getHours() < 12 ? '🌅' : new Date().getHours() < 17 ? '☀️' : '🌙'}
                     </div>
-                    {formData.createAccount && (
-                      <div className="mt-2">
-                        <Input
-                          type="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder="Create a password"
-                        />
-                      </div>
-                    )}
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                      {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}!
+                    </h2>
+                    <p className="text-lg text-gray-700 mb-4">
+                      Welcome back! Thank you for choosing Household Planet Kenya for your shopping needs.
+                    </p>
+                    <div className="bg-white/70 rounded-lg p-4 mb-6">
+                      <p className="text-sm text-gray-600 mb-2">🛍️ Ready to complete your order?</p>
+                      <p className="text-xs text-green-700">Your cart items are waiting for you!</p>
+                    </div>
                   </div>
-                )}
-                
-                <Button onClick={handleAccountStep} className="w-full min-h-44" size="lg">
-                  Continue to Delivery Location
-                </Button>
-              </div>
+                  <Button onClick={handleAccountStep} className="w-full bg-gradient-to-r from-green-600 to-orange-600 hover:from-green-700 hover:to-orange-700 text-white font-semibold py-4" size="lg">
+                    Continue to Delivery 🚀
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-4xl mb-4">🛒</div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-3">Almost There!</h2>
+                  <p className="text-gray-600 mb-6">Choose how you'd like to proceed with your order</p>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-white/70 rounded-lg p-4 border border-green-200">
+                      <h3 className="font-semibold text-gray-800 mb-2">Already have an account?</h3>
+                      <p className="text-sm text-gray-600 mb-3">Sign in for faster checkout and order tracking</p>
+                      <Button 
+                        onClick={() => router.push('/login?redirect=/checkout')}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Sign In 👋
+                      </Button>
+                    </div>
+                    
+                    <div className="text-sm text-gray-500">or</div>
+                    
+                    <div className="bg-white/70 rounded-lg p-4 border border-orange-200">
+                      <h3 className="font-semibold text-gray-800 mb-2">Continue as Guest</h3>
+                      <p className="text-sm text-gray-600 mb-3">Quick checkout without creating an account</p>
+                      <Button 
+                        onClick={() => { setIsGuest(true); handleAccountStep(); }}
+                        variant="outline"
+                        className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                      >
+                        Guest Checkout 🚀
+                      </Button>
+                    </div>
+                    
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <h3 className="font-semibold text-gray-800 mb-2">New to Household Planet?</h3>
+                      <p className="text-sm text-gray-600 mb-3">Create an account for exclusive offers and easy reordering</p>
+                      <Button 
+                        onClick={() => router.push('/register?redirect=/checkout')}
+                        variant="outline"
+                        className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                      >
+                        Create Account ✨
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
@@ -463,7 +477,7 @@ export default function CheckoutPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">🚚</span>
+                        <Truck className="h-6 w-6 mr-3 text-orange-600" />
                         <span className="font-medium">Delivery</span>
                       </div>
                       <input
@@ -481,7 +495,7 @@ export default function CheckoutPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">🏪</span>
+                        <Store className="h-6 w-6 mr-3 text-orange-600" />
                         <span className="font-medium">Pickup from Store</span>
                       </div>
                       <input
@@ -494,56 +508,73 @@ export default function CheckoutPage() {
                 </div>
               </div>
               
-              {/* Delivery Locations - only show if delivery is selected */}
+              {/* Delivery Location - only show if delivery is selected */}
               {deliveryType === 'DELIVERY' && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Delivery Cost</h3>
+                  <h3 className="text-lg font-medium mb-3">Delivery Location</h3>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Select Location</label>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                      <label className="block text-sm font-medium mb-2">Select Delivery Location</label>
+                      <select 
+                        value={selectedDeliveryLocation}
+                        onChange={(e) => {
+                          const locationId = e.target.value;
+                          setSelectedDeliveryLocation(locationId);
+                          if (locationId) {
+                            const location = deliveryLocations.find(loc => loc.id === locationId);
+                            if (location) {
+                              const originalPrice = location.price;
+                              let cost = originalPrice;
+                              // Apply free shipping if order value is above threshold
+                              if (getTotalPrice() >= 5000) {
+                                cost = 0;
+                              }
+                              setDeliveryCost(cost);
+                              setManualDeliveryCost(originalPrice.toString());
+                            }
+                          } else {
+                            setManualDeliveryCost('');
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                      >
+                        <option value="">Select delivery location</option>
                         {deliveryLocations.map((location) => (
-                          <div
-                            key={location.id}
-                            className={`p-3 border rounded-lg cursor-pointer ${
-                              selectedDeliveryLocation === location.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
-                            }`}
-                            onClick={() => {
-                              setSelectedDeliveryLocation(location.id);
-                              setDeliveryCost(location.price);
-                              setManualDeliveryCost('');
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-sm">{location.name}</p>
-                                {location.description && (
-                                  <p className="text-xs text-gray-600">{location.description}</p>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className="font-semibold text-sm">{formatPrice(location.price)}</p>
-                                <input
-                                  type="radio"
-                                  checked={selectedDeliveryLocation === location.id}
-                                  onChange={() => {
-                                    setSelectedDeliveryLocation(location.id);
-                                    setDeliveryCost(location.price);
-                                    setManualDeliveryCost('');
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
+                          <option key={location.id} value={location.id}>
+                            {location.name} - {formatPrice(location.price)}
+                            {location.description ? ` (${location.description})` : ''}
+                          </option>
                         ))}
-                      </div>
+                      </select>
                     </div>
+                    
+                    {selectedDeliveryLocation && (
+                      <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="text-center">
+                          <h4 className="font-semibold text-lg text-gray-800 mb-2">
+                            {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.description}
+                          </p>
+                          <p className="text-sm text-green-600 mb-3">
+                            Estimated delivery: {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.estimatedDays} day(s)
+                          </p>
+                          <div className="text-2xl font-bold">
+                            <span className="text-orange-600">
+                              {formatPrice(deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.price || 0)}
+                            </span>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="text-center text-sm text-gray-500">OR</div>
                     
                     <div>
-                      <label className="block text-sm font-medium mb-2">Manual Delivery Cost (KSh) *</label>
+                      <label className="block text-sm font-medium mb-2">Manual Delivery Cost (KSh)</label>
                       <Input
                         type="number"
                         placeholder="Enter delivery cost"
@@ -557,6 +588,9 @@ export default function CheckoutPage() {
                         min="0"
                         step="1"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use this if your location is not listed above
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -576,8 +610,8 @@ export default function CheckoutPage() {
               
               <Button
                 onClick={handleDeliverySubmit}
-                disabled={!deliveryType || (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && deliveryCost === 0)}
-                className="w-full mt-4 min-h-44"
+                disabled={!deliveryType || (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && !manualDeliveryCost)}
+                className="w-full mt-4"
                 size="lg"
               >
                 Continue to Payment
@@ -596,7 +630,7 @@ export default function CheckoutPage() {
                   { id: 'PAYBILL', name: 'Paybill', icon: '📱' },
                   { id: 'BANK', name: 'Bank on Delivery', icon: '🏦' },
                   { id: 'MPESA', name: 'M-Pesa', icon: '📱' },
-                  { id: 'CARD', name: 'Credit/Debit Card', icon: '💳' }
+
                 ].map((method) => (
                   <div
                     key={method.id}
@@ -674,15 +708,20 @@ export default function CheckoutPage() {
                 <h3 className="font-medium mb-2">Delivery & Payment</h3>
                 <div className="text-sm text-gray-600 space-y-1">
                   <p><strong>Type:</strong> {deliveryType === 'PICKUP' ? 'Pickup from Store' : 'Delivery'}</p>
-                  {deliveryType === 'DELIVERY' && selectedDeliveryLocation && (
-                    <p><strong>Location:</strong> {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name}</p>
+                  {deliveryType === 'DELIVERY' && (
+                    <p><strong>Location:</strong> 
+                      {selectedDeliveryLocation 
+                        ? deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name
+                        : manualDeliveryCost ? `Custom location (${formatPrice(parseFloat(manualDeliveryCost) || 0)})` : 'Not specified'
+                      }
+                    </p>
                   )}
                   <p><strong>Payment:</strong> 
                     {selectedPaymentMethod === 'CASH' && 'Cash on Delivery'}
                     {selectedPaymentMethod === 'PAYBILL' && 'Paybill'}
                     {selectedPaymentMethod === 'BANK' && 'Bank on Delivery'}
                     {selectedPaymentMethod === 'MPESA' && 'M-Pesa'}
-                    {selectedPaymentMethod === 'CARD' && 'Credit/Debit Card'}
+
                   </p>
                 </div>
               </div>
@@ -720,20 +759,44 @@ export default function CheckoutPage() {
               <div className="flex justify-between">
                 <span>Delivery Cost</span>
                 <span>
-                  {deliveryCost === 0 && deliveryType === 'DELIVERY' ? (
-                    <span className="text-green-600 font-medium">FREE</span>
-                  ) : deliveryCost > 0 ? (
-                    formatPrice(deliveryCost)
+                  {deliveryType === 'PICKUP' ? (
+                    formatPrice(0)
+                  ) : selectedDeliveryLocation ? (
+                    formatPrice(deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.price || 0)
+                  ) : manualDeliveryCost ? (
+                    formatPrice(parseFloat(manualDeliveryCost) || 0)
                   ) : (
                     'TBD'
                   )}
                 </span>
               </div>
+
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
                 <span>Total</span>
                 <span>{formatPrice(getTotal())}</span>
               </div>
             </div>
+            
+            {/* Free Shipping Progress */}
+            {deliveryType === 'DELIVERY' && getTotalPrice() < 5000 && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-blue-800">Free Shipping Progress</span>
+                  <span className="text-xs text-blue-600">
+                    {formatPrice(5000 - getTotalPrice())} to go!
+                  </span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((getTotalPrice() / 5000) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-blue-600 mt-1">
+                  🚚 Add {formatPrice(5000 - getTotalPrice())} more for free delivery!
+                </p>
+              </div>
+            )}
             
             <div className="mt-6 text-xs text-gray-600">
               <p className="flex items-center mb-1">

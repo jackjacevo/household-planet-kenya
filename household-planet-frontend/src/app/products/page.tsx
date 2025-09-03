@@ -44,7 +44,16 @@ export default function ProductsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [filters, setFilters] = useState({
     category: undefined as string | undefined,
+    brand: undefined as string | undefined,
+    search: undefined as string | undefined,
+    featured: undefined as boolean | undefined,
+    minPrice: undefined as number | undefined,
+    maxPrice: undefined as number | undefined,
+    minRating: undefined as number | undefined,
+    inStock: undefined as boolean | undefined,
+    onSale: undefined as boolean | undefined,
     sortBy: 'createdAt',
+    sortOrder: undefined as string | undefined,
   });
 
   useEffect(() => {
@@ -90,11 +99,29 @@ export default function ProductsPage() {
       if (filters.category) {
         queryParams.category = filters.category;
       }
+      if (filters.brand) {
+        queryParams.brand = filters.brand;
+      }
       if (filters.search) {
         queryParams.search = filters.search;
       }
       if (filters.featured) {
         queryParams.featured = filters.featured;
+      }
+      if (filters.minPrice !== undefined) {
+        queryParams.minPrice = filters.minPrice;
+      }
+      if (filters.maxPrice !== undefined) {
+        queryParams.maxPrice = filters.maxPrice;
+      }
+      if (filters.minRating !== undefined) {
+        queryParams.minRating = filters.minRating;
+      }
+      if (filters.inStock) {
+        queryParams.inStock = filters.inStock;
+      }
+      if (filters.onSale) {
+        queryParams.onSale = filters.onSale;
       }
       if (filters.sortOrder) {
         queryParams.sortOrder = filters.sortOrder;
@@ -135,7 +162,24 @@ export default function ProductsPage() {
   };
 
   const handleFilterChange = (newFilters: any) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    // If newFilters is empty object, reset all filters
+    if (Object.keys(newFilters).length === 0) {
+      setFilters({
+        category: undefined,
+        brand: undefined,
+        search: undefined,
+        featured: undefined,
+        minPrice: undefined,
+        maxPrice: undefined,
+        minRating: undefined,
+        inStock: undefined,
+        onSale: undefined,
+        sortBy: 'createdAt',
+        sortOrder: undefined,
+      });
+    } else {
+      setFilters(prev => ({ ...prev, ...newFilters }));
+    }
     setCurrentPage(1);
   };
 
@@ -227,9 +271,9 @@ export default function ProductsPage() {
         {/* Mobile Filters Overlay */}
         {showFilters && isMobile && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-br from-orange-50 to-amber-50 rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Filters</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
                 <button
                   onClick={() => setShowFilters(false)}
                   className="text-gray-400 hover:text-gray-600 p-1"
@@ -237,17 +281,11 @@ export default function ProductsPage() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <ProductFilters onFilterChange={handleFilterChange} />
-              <div className="mt-6 flex space-x-3">
+              <ProductFilters onFilterChange={handleFilterChange} initialFilters={filters} />
+              <div className="mt-6">
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="flex-1 bg-orange-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300"
                 >
                   Apply Filters
                 </button>
@@ -267,14 +305,8 @@ export default function ProductsPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 sticky top-4">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-2">
-                      <Filter className="h-5 w-5 text-white" />
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900">Filters</h2>
-                  </div>
-                  <ProductFilters onFilterChange={handleFilterChange} />
+                <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-3xl p-6 shadow-lg border border-orange-100 sticky top-4">
+                  <ProductFilters onFilterChange={handleFilterChange} initialFilters={filters} />
                 </div>
               </motion.aside>
 
@@ -408,10 +440,7 @@ export default function ProductsPage() {
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">No Products Found</h3>
                       <p className="text-gray-600 mb-6">Try adjusting your filters or search criteria</p>
                       <button
-                        onClick={() => handleFilterChange({
-                          category: undefined,
-                          sortBy: 'createdAt',
-                        })}
+                        onClick={() => handleFilterChange({})}
                         className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
                       >
                         Clear Filters

@@ -526,9 +526,9 @@ export class AdminService {
     const where: any = {};
     if (sanitizedSearch) {
       where.OR = [
-        { name: { contains: sanitizedSearch, mode: 'insensitive' } },
-        { description: { contains: sanitizedSearch, mode: 'insensitive' } },
-        { sku: { contains: sanitizedSearch, mode: 'insensitive' } }
+        { name: { contains: sanitizedSearch } },
+        { description: { contains: sanitizedSearch } },
+        { sku: { contains: sanitizedSearch } }
       ];
     }
     if (validatedCategoryId && !isNaN(validatedCategoryId)) where.categoryId = validatedCategoryId;
@@ -1855,10 +1855,10 @@ export class AdminService {
       if (sanitizedSearch) {
         andConditions.push({
           OR: [
-            { action: { contains: sanitizedSearch, mode: 'insensitive' } },
-            { details: { contains: sanitizedSearch, mode: 'insensitive' } },
-            { user: { name: { contains: sanitizedSearch, mode: 'insensitive' } } },
-            { user: { email: { contains: sanitizedSearch, mode: 'insensitive' } } }
+            { action: { contains: sanitizedSearch } },
+            { details: { contains: sanitizedSearch } },
+            { user: { name: { contains: sanitizedSearch } } },
+            { user: { email: { contains: sanitizedSearch } } }
           ]
         });
       }
