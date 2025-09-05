@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Star, Heart, ShoppingCart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { RatingDisplay } from '@/components/ui/RatingDisplay';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { openWhatsAppForProduct } from '@/lib/whatsapp';
@@ -38,9 +39,8 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
     openWhatsAppForProduct(product);
   };
 
-  const averageRating = product.reviews && product.reviews.length > 0
-    ? product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length
-    : 0;
+  const averageRating = product.averageRating || 0;
+  const reviewCount = product.reviewCount || 0;
 
   const discount = product.comparePrice && product.comparePrice > product.price
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
@@ -113,19 +113,12 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               </h3>
             </Link>
             <p className="text-sm text-gray-600 mt-1 line-clamp-2 hidden sm:block">{product.shortDescription}</p>
-            <div className="flex items-center mt-2">
-              <div className="flex text-yellow-400 text-sm">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${i < Math.floor(averageRating) ? 'fill-current' : 'text-gray-300'}`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-gray-500 ml-2">
-                ({product.reviews?.length || 0})
-              </span>
-            </div>
+            <RatingDisplay 
+              rating={averageRating} 
+              reviewCount={reviewCount} 
+              size="md" 
+              className="mt-2"
+            />
           </div>
           <div className="flex items-center justify-between mt-4">
             <div>
@@ -221,18 +214,12 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
           <p className="text-xs text-gray-500 mt-1">{product.brand.name}</p>
         )}
 
-        <div className="hidden sm:flex items-center mt-2">
-          <div className="flex text-yellow-400 text-sm">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-3 w-3 ${i < Math.floor(averageRating) ? 'fill-current' : 'text-gray-300'}`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-gray-500 ml-1">
-            ({product.reviews?.length || 0})
-          </span>
+        <div className="hidden sm:block mt-2">
+          <RatingDisplay 
+            rating={averageRating} 
+            reviewCount={reviewCount} 
+            size="sm"
+          />
         </div>
 
         <div className="mt-auto pt-3">

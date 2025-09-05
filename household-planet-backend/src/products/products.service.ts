@@ -143,7 +143,7 @@ export class ProductsService {
       tags: this.safeJsonParse(product.tags, []),
       dimensions: this.safeJsonParse(product.dimensions, null),
       averageRating: product.averageRating || 0,
-      reviewCount: 0
+      reviewCount: product.totalReviews || 0
     }));
 
       return { 
@@ -178,7 +178,7 @@ export class ProductsService {
         tags: this.safeJsonParse(product.tags, []),
         dimensions: this.safeJsonParse(product.dimensions, null),
         averageRating: product.averageRating || 0,
-        reviewCount: 0
+        reviewCount: product.totalReviews || 0
       };
     }
 
@@ -202,7 +202,7 @@ export class ProductsService {
         tags: this.safeJsonParse(product.tags, []),
         dimensions: this.safeJsonParse(product.dimensions, null),
         averageRating: product.averageRating || 0,
-        reviewCount: 0
+        reviewCount: product.totalReviews || 0
       };
     }
 
@@ -222,7 +222,7 @@ export class ProductsService {
       tags: this.safeJsonParse(product.tags, []),
       dimensions: this.safeJsonParse(product.dimensions, null),
       averageRating: product.averageRating || 0,
-      reviewCount: 0
+      reviewCount: product.totalReviews || 0
     }));
   }
 
@@ -253,7 +253,7 @@ export class ProductsService {
       tags: this.safeJsonParse(product.tags, []),
       dimensions: this.safeJsonParse(product.dimensions, null),
       averageRating: product.averageRating || 0,
-      reviewCount: 0
+      reviewCount: product.totalReviews || 0
     }));
   }
 
@@ -333,7 +333,7 @@ export class ProductsService {
       tags: this.safeJsonParse(product.tags, []),
       dimensions: this.safeJsonParse(product.dimensions, null),
       averageRating: product.averageRating || 0,
-      reviewCount: 0
+      reviewCount: product.totalReviews || 0
     }));
   }
 

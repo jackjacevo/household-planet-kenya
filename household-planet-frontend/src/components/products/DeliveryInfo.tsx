@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Truck, Clock, MapPin, Package, Info, Calculator } from 'lucide-react';
+import { Truck } from 'lucide-react';
+import { formatPrice } from '@/lib/utils';
 
 interface DeliveryInfoProps {
   productId: string;
@@ -16,249 +17,125 @@ interface DeliveryInfoProps {
   price: number;
 }
 
-interface DeliveryOption {
-  id: string;
-  name: string;
-  description: string;
-  estimatedDays: string;
-  cost: number;
-  icon: React.ReactNode;
-  available: boolean;
-}
+
 
 export function DeliveryInfo({ productId, weight, dimensions, category, price }: DeliveryInfoProps) {
-  const [selectedLocation, setSelectedLocation] = useState('nairobi');
-  const [showCalculator, setShowCalculator] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('nairobi-cbd');
 
-  // Calculate delivery options based on product characteristics
-  const getDeliveryOptions = (): DeliveryOption[] => {
-    const baseOptions: DeliveryOption[] = [
-      {
-        id: 'standard',
-        name: 'Standard Delivery',
-        description: 'Regular delivery to your doorstep',
-        estimatedDays: '3-5 business days',
-        cost: price >= 2000 ? 0 : 200,
-        icon: <Truck className="h-5 w-5" />,
-        available: true
-      },
-      {
-        id: 'express',
-        name: 'Express Delivery',
-        description: 'Faster delivery for urgent orders',
-        estimatedDays: '1-2 business days',
-        cost: 500,
-        icon: <Clock className="h-5 w-5" />,
-        available: selectedLocation === 'nairobi' || selectedLocation === 'mombasa'
-      },
-      {
-        id: 'same-day',
-        name: 'Same Day Delivery',
-        description: 'Order before 2 PM for same day delivery',
-        estimatedDays: 'Same day',
-        cost: 800,
-        icon: <Package className="h-5 w-5" />,
-        available: selectedLocation === 'nairobi' && price >= 1000
-      }
-    ];
-
-    // Adjust costs based on product characteristics
-    if (weight && weight > 5) {
-      baseOptions.forEach(option => {
-        if (option.id !== 'standard' || price < 2000) {
-          option.cost += Math.ceil((weight - 5) * 50);
-        }
-      });
-    }
-
-    return baseOptions;
+  const deliveryLocations = {
+    'nairobi-cbd': { name: 'Nairobi CBD', cost: 100, days: '1-2 days' },
+    'kajiado': { name: 'Kajiado (Naekana)', cost: 150, days: '2-3 days' },
+    'kitengela': { name: 'Kitengela (Via Shuttle)', cost: 150, days: '2-3 days' },
+    'thika': { name: 'Thika (Super Metrol)', cost: 150, days: '2-3 days' },
+    'juja': { name: 'Juja (Via Super Metrol)', cost: 200, days: '2-3 days' },
+    'kikuyu': { name: 'Kikuyu Town (Super Metrol)', cost: 200, days: '2-3 days' },
+    'pangani': { name: 'Pangani', cost: 250, days: '2-3 days' },
+    'upperhill': { name: 'Upperhill', cost: 250, days: '2-3 days' },
+    'bomet': { name: 'Bomet (Easycoach)', cost: 300, days: '3-4 days' },
+    'eastleigh': { name: 'Eastleigh', cost: 300, days: '2-3 days' },
+    'hurlingham': { name: 'Hurlingham (Ngong Rd)', cost: 300, days: '2-3 days' },
+    'industrial': { name: 'Industrial Area', cost: 300, days: '2-3 days' },
+    'kileleshwa': { name: 'Kileleshwa', cost: 300, days: '2-3 days' },
+    'kilimani': { name: 'Kilimani', cost: 300, days: '2-3 days' },
+    'machakos': { name: 'Machakos (Makos Sacco)', cost: 300, days: '3-4 days' },
+    'westlands': { name: 'Westlands', cost: 300, days: '2-3 days' },
+    'eldoret': { name: 'Eldoret (North-rift Shuttle)', cost: 350, days: '4-5 days' },
+    'kisumu': { name: 'Kisumu (Easy Coach)', cost: 350, days: '4-5 days' },
+    'mombasa': { name: 'Mombasa (Dreamline Bus)', cost: 350, days: '4-5 days' },
+    'lavington': { name: 'Lavington', cost: 350, days: '2-3 days' },
+    'buruburu': { name: 'Buruburu', cost: 400, days: '2-3 days' },
+    'kasarani': { name: 'Kasarani', cost: 400, days: '2-3 days' },
+    'roysambu': { name: 'Roysambu', cost: 400, days: '2-3 days' },
+    'kahawa-sukari': { name: 'Kahawa Sukari', cost: 550, days: '3-4 days' },
+    'karen': { name: 'Karen', cost: 650, days: '3-4 days' },
+    'kiambu': { name: 'Kiambu', cost: 650, days: '3-4 days' },
+    'jkia': { name: 'JKIA', cost: 700, days: '2-3 days' },
+    'ngong': { name: 'Ngong Town', cost: 1000, days: '4-5 days' }
   };
 
-  const deliveryOptions = getDeliveryOptions();
-
-  const locations = [
-    { value: 'nairobi', label: 'Nairobi' },
-    { value: 'mombasa', label: 'Mombasa' },
-    { value: 'kisumu', label: 'Kisumu' },
-    { value: 'nakuru', label: 'Nakuru' },
-    { value: 'eldoret', label: 'Eldoret' },
-    { value: 'other', label: 'Other Location' }
-  ];
-
-  const getSpecialHandling = () => {
-    const handling = [];
-    
-    if (category === 'electronics') {
-      handling.push('Fragile item handling');
-      handling.push('Anti-static packaging');
-    }
-    
-    if (category === 'kitchen-dining' && (weight || 0) > 3) {
-      handling.push('Heavy item surcharge may apply');
-    }
-    
-    if (dimensions && (dimensions.length > 100 || dimensions.width > 100 || dimensions.height > 100)) {
-      handling.push('Oversized item - special delivery required');
-    }
-
-    return handling;
-  };
-
-  const specialHandling = getSpecialHandling();
+  const selectedLocationData = deliveryLocations[selectedLocation as keyof typeof deliveryLocations];
+  const deliveryCost = selectedLocationData.cost;
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="bg-blue-600 rounded-xl p-2">
-          <Truck className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">Delivery Information</h3>
-          <p className="text-gray-600">Choose your delivery option</p>
-        </div>
+    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200 h-full flex flex-col">
+      <div className="flex items-center space-x-2 mb-4">
+        <Truck className="h-5 w-5 text-orange-600" />
+        <h3 className="font-semibold text-gray-900">Delivery Calculator</h3>
       </div>
 
-      {/* Location Selector */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          <MapPin className="h-4 w-4 inline mr-1" />
-          Delivery Location
-        </label>
+      <div className="mb-3">
         <select
           value={selectedLocation}
           onChange={(e) => setSelectedLocation(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-2 text-sm border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white"
         >
-          {locations.map((location) => (
-            <option key={location.value} value={location.value}>
-              {location.label}
-            </option>
-          ))}
+          <option value="nairobi-cbd">Nairobi CBD - KSh 100</option>
+          <option value="kajiado">Kajiado (Naekana) - KSh 150</option>
+          <option value="kitengela">Kitengela (Via Shuttle) - KSh 150</option>
+          <option value="thika">Thika (Super Metrol) - KSh 150</option>
+          <option value="juja">Juja (Via Super Metrol) - KSh 200</option>
+          <option value="kikuyu">Kikuyu Town (Super Metrol) - KSh 200</option>
+          <option value="pangani">Pangani - KSh 250</option>
+          <option value="upperhill">Upperhill - KSh 250</option>
+          <option value="bomet">Bomet (Easycoach) - KSh 300</option>
+          <option value="eastleigh">Eastleigh - KSh 300</option>
+          <option value="hurlingham">Hurlingham (Ngong Rd) - KSh 300</option>
+          <option value="industrial">Industrial Area - KSh 300</option>
+          <option value="kileleshwa">Kileleshwa - KSh 300</option>
+          <option value="kilimani">Kilimani - KSh 300</option>
+          <option value="machakos">Machakos (Makos Sacco) - KSh 300</option>
+          <option value="westlands">Westlands - KSh 300</option>
+          <option value="eldoret">Eldoret (North-rift Shuttle) - KSh 350</option>
+          <option value="kisumu">Kisumu (Easy Coach) - KSh 350</option>
+          <option value="mombasa">Mombasa (Dreamline Bus) - KSh 350</option>
+          <option value="lavington">Lavington - KSh 350</option>
+          <option value="buruburu">Buruburu - KSh 400</option>
+          <option value="kasarani">Kasarani - KSh 400</option>
+          <option value="roysambu">Roysambu - KSh 400</option>
+          <option value="kahawa-sukari">Kahawa Sukari - KSh 550</option>
+          <option value="karen">Karen - KSh 650</option>
+          <option value="kiambu">Kiambu - KSh 650</option>
+          <option value="jkia">JKIA - KSh 700</option>
+          <option value="ngong">Ngong Town - KSh 1,000</option>
         </select>
       </div>
 
-      {/* Delivery Options */}
-      <div className="space-y-3 mb-6">
-        {deliveryOptions.map((option) => (
-          <motion.div
-            key={option.id}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              option.available
-                ? 'border-gray-200 hover:border-blue-300 bg-white'
-                : 'border-gray-100 bg-gray-50 opacity-60'
-            }`}
-            whileHover={option.available ? { scale: 1.02 } : {}}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${
-                  option.available ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
-                }`}>
-                  {option.icon}
-                </div>
-                <div>
-                  <h4 className={`font-semibold ${
-                    option.available ? 'text-gray-900' : 'text-gray-500'
-                  }`}>
-                    {option.name}
-                  </h4>
-                  <p className={`text-sm ${
-                    option.available ? 'text-gray-600' : 'text-gray-400'
-                  }`}>
-                    {option.description}
-                  </p>
-                  <p className={`text-sm font-medium ${
-                    option.available ? 'text-blue-600' : 'text-gray-400'
-                  }`}>
-                    {option.estimatedDays}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className={`text-lg font-bold ${
-                  option.available ? 'text-gray-900' : 'text-gray-500'
-                }`}>
-                  {option.cost === 0 ? 'FREE' : `KSh ${option.cost.toLocaleString()}`}
-                </p>
-                {!option.available && (
-                  <p className="text-xs text-red-500">Not available</p>
-                )}
-              </div>
+      <div className="flex-1 space-y-3">
+        <div className="bg-white rounded-lg p-3 border border-orange-100">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex-1">
+              <p className="font-medium text-sm text-gray-900">{selectedLocationData.name}</p>
+              <p className="text-xs text-gray-600 mt-1">Delivery: {selectedLocationData.days}</p>
             </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Special Handling */}
-      {specialHandling.length > 0 && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <div className="flex items-center space-x-2 mb-2">
-            <Info className="h-4 w-4 text-amber-600" />
-            <h4 className="font-semibold text-amber-800">Special Handling</h4>
+            <div className="text-right">
+              <span className="text-lg font-bold text-orange-600">
+                KSh {deliveryCost.toLocaleString()}
+              </span>
+            </div>
           </div>
-          <ul className="space-y-1">
-            {specialHandling.map((item, index) => (
-              <li key={index} className="text-sm text-amber-700 flex items-start">
-                <span className="text-amber-600 mr-2">•</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Delivery Calculator */}
-      <div className="border-t border-gray-200 pt-4">
-        <button
-          onClick={() => setShowCalculator(!showCalculator)}
-          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
-        >
-          <Calculator className="h-4 w-4" />
-          <span>Calculate exact delivery cost</span>
-        </button>
-
-        {showCalculator && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-4 p-4 bg-white rounded-xl border border-gray-200"
-          >
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Product Weight:</span>
-                <span className="font-medium ml-2">{weight || 'N/A'} kg</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Dimensions:</span>
-                <span className="font-medium ml-2">
-                  {dimensions 
-                    ? `${dimensions.length}×${dimensions.width}×${dimensions.height}cm`
-                    : 'N/A'
-                  }
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Category:</span>
-                <span className="font-medium ml-2 capitalize">{category.replace('-', ' ')}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Free Shipping:</span>
-                <span className="font-medium ml-2">
-                  {price >= 2000 ? 'Eligible' : `Spend KSh ${(2000 - price).toLocaleString()} more`}
-                </span>
-              </div>
+          
+          <div className="text-xs text-gray-500 space-y-1 mb-3">
+            {selectedLocationData.cost <= 200 && <p>• Same day delivery (order before 2PM)</p>}
+          </div>
+          
+          <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm text-gray-600">Product Price:</span>
+              <span className="text-sm font-medium">KSh {price.toLocaleString()}</span>
             </div>
-          </motion.div>
-        )}
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-600">Delivery Fee:</span>
+              <span className="text-sm font-medium">KSh {deliveryCost.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center border-t border-orange-200 pt-2">
+              <span className="text-lg font-bold text-gray-900">Total:</span>
+              <span className="text-2xl font-bold text-orange-600">KSh {(price + deliveryCost).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Additional Info */}
-      <div className="mt-4 text-xs text-gray-500 space-y-1">
-        <p>• Delivery times are estimates and may vary based on location and weather conditions</p>
-        <p>• Free shipping applies to orders over KSh 2,000 within major cities</p>
-        <p>• Same day delivery available for orders placed before 2:00 PM</p>
-      </div>
+
     </div>
   );
 }

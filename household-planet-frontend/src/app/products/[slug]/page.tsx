@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { Star, ShoppingCart, Heart, MessageCircle, Truck, Shield, RotateCcw } from 'lucide-react';
+import { RatingDisplay } from '@/components/ui/RatingDisplay';
+import { Star, ShoppingCart, Heart, MessageCircle, Truck, Shield, RotateCcw, Package } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { openWhatsAppForProduct } from '@/lib/whatsapp';
@@ -14,6 +15,7 @@ import { getImageUrl, handleImageError } from '@/lib/image-utils';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewsList } from '@/components/reviews/ReviewsList';
 import { ProductRecommendations } from '@/components/products/ProductRecommendations';
+import { DeliveryInfo } from '@/components/products/DeliveryInfo';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -221,11 +223,23 @@ export default function ProductDetailPage() {
                 </button>
               ))}
               {/* Show placeholders for remaining slots */}
-              {productImages.length < 5 && [...Array(5 - productImages.length)].map((_, index) => (
-                <div key={`placeholder-${index}`} className="aspect-square bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <span className="text-gray-400 text-xs">+</span>
-                </div>
-              ))}
+              {productImages.length < 5 && [...Array(5 - productImages.length)].map((_, index) => {
+                const placeholderImages = [
+                  '/api/placeholder/400/400?text=360°+View',
+                  '/api/placeholder/400/400?text=Size+Guide', 
+                  '/api/placeholder/400/400?text=In+Use',
+                  '/api/placeholder/400/400?text=Details'
+                ];
+                
+                return (
+                  <div key={`placeholder-${index}`} className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center group hover:from-orange-50 hover:to-orange-100 hover:border-orange-300 transition-all cursor-pointer">
+                    <Package className="h-6 w-6 text-gray-400 group-hover:text-orange-500 mb-1" />
+                    <span className="text-gray-400 group-hover:text-orange-600 text-xs font-medium">
+                      {placeholderImages[index]?.split('text=')[1]?.replace('+', ' ') || 'More'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             
             {productImages.length > 1 && (
@@ -258,23 +272,11 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Rating */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 md:h-5 md:w-5 ${
-                      i < Math.floor(product.averageRating || 0)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-gray-600 text-sm">
-                {product.averageRating || 0} ({product.reviewCount || 0} reviews)
-              </span>
-            </div>
+            <RatingDisplay 
+              rating={product.averageRating || 0} 
+              reviewCount={product.reviewCount || 0} 
+              size="md"
+            />
 
             {/* Price */}
             <div className="flex items-baseline space-x-3">
@@ -400,6 +402,48 @@ export default function ProductDetailPage() {
                 <p className="text-xs text-gray-600">7-day policy</p>
               </div>
             </div>
+
+            {/* Delivery Information */}
+            <div className="mt-6">
+              <DeliveryInfo
+                productId={product.id.toString()}
+                weight={product.weight}
+                dimensions={product.dimensions}
+                category={product.category?.slug || 'general'}
+                price={currentPrice}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Trust Badges & Delivery Info */}
+        <div className="md:hidden mt-6">
+          <div className="bg-white rounded-xl shadow-lg p-4">
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center">
+                <Truck className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <p className="text-xs font-medium text-gray-900">Fast Delivery</p>
+                <p className="text-xs text-gray-600">Same day in Nairobi</p>
+              </div>
+              <div className="text-center">
+                <Shield className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <p className="text-xs font-medium text-gray-900">Secure Payment</p>
+                <p className="text-xs text-gray-600">M-Pesa & Card</p>
+              </div>
+              <div className="text-center">
+                <RotateCcw className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <p className="text-xs font-medium text-gray-900">Easy Returns</p>
+                <p className="text-xs text-gray-600">7-day policy</p>
+              </div>
+            </div>
+            
+            <DeliveryInfo
+              productId={product.id.toString()}
+              weight={product.weight}
+              dimensions={product.dimensions}
+              category={product.category?.slug || 'general'}
+              price={currentPrice}
+            />
           </div>
         </div>
 
