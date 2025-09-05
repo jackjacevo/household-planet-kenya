@@ -232,11 +232,7 @@ export default function ProductDetailPage() {
                 ];
                 
                 return (
-                  <div key={`placeholder-${index}`} className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center group hover:from-orange-50 hover:to-orange-100 hover:border-orange-300 transition-all cursor-pointer">
-                    <Package className="h-6 w-6 text-gray-400 group-hover:text-orange-500 mb-1" />
-                    <span className="text-gray-400 group-hover:text-orange-600 text-xs font-medium">
-                      {placeholderImages[index]?.split('text=')[1]?.replace('+', ' ') || 'More'}
-                    </span>
+                  <div key={`placeholder-${index}`} className="aspect-square bg-white rounded-lg">
                   </div>
                 );
               })}
@@ -271,12 +267,17 @@ export default function ProductDetailPage() {
               <p className="text-gray-600 text-sm md:text-base">{product.shortDescription || product.description}</p>
             </div>
 
-            {/* Rating */}
-            <RatingDisplay 
-              rating={product.averageRating || 0} 
-              reviewCount={product.reviewCount || 0} 
-              size="md"
-            />
+            {/* Rating and SKU */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <RatingDisplay 
+                rating={product.averageRating || 0} 
+                reviewCount={product.reviewCount || 0} 
+                size="md"
+              />
+              <div className="text-sm text-gray-500">
+                <span className="font-medium">SKU:</span> {product.sku}
+              </div>
+            </div>
 
             {/* Price */}
             <div className="flex items-baseline space-x-3">
@@ -403,8 +404,8 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Delivery Information */}
-            <div className="mt-6">
+            {/* Delivery Information - Desktop Only */}
+            <div className="mt-6 hidden md:block">
               <DeliveryInfo
                 productId={product.id.toString()}
                 weight={product.weight}

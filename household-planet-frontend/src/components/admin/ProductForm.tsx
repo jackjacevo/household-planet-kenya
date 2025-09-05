@@ -60,7 +60,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   });
 
   function generateSKU() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+    return 'HP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
   const watchedTags = watch('tags') || [];

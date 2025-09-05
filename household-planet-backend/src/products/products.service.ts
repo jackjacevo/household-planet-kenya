@@ -435,11 +435,25 @@ export class ProductsService {
   // Admin methods (simplified)
   async create(createProductDto: any, files?: any[]) {
     try {
-      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, slug, ...data } = createProductDto;
+      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, slug, sku, ...data } = createProductDto;
       
       const validatedCategoryId = parseInt(String(categoryId));
       if (isNaN(validatedCategoryId)) {
         throw new Error('Invalid category ID');
+      }
+      
+      // Generate SKU if not provided
+      let finalSku = sku;
+      if (!finalSku) {
+        finalSku = await this.generateUniqueSKU();
+      } else {
+        // Validate provided SKU is unique
+        const existing = await this.prisma.product.findUnique({
+          where: { sku: finalSku }
+        });
+        if (existing) {
+          throw new Error(`SKU '${finalSku}' is already in use`);
+        }
       }
       
       // Generate slug if not provided
@@ -466,6 +480,7 @@ export class ProductsService {
       
       const productData: any = {
         ...data,
+        sku: finalSku,
         slug: finalSlug,
         categoryId: validatedCategoryId,
         stock: stock !== undefined ? parseInt(String(stock)) : 0,
@@ -592,6 +607,26 @@ export class ProductsService {
     // This could be enhanced to use ML algorithms or external services
     // For now, it's a placeholder that could trigger recommendation cache updates
     return { message: 'Recommendations generated successfully' };
+  }
+
+  private async generateUniqueSKU(): Promise<string> {
+    let sku: string;
+    let isUnique = false;
+    
+    while (!isUnique) {
+      // Generate SKU with format: HP-XXXXXX (HP for Household Planet + 6 random chars)
+      sku = 'HP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const existing = await this.prisma.product.findUnique({
+        where: { sku }
+      });
+      
+      if (!existing) {
+        isUnique = true;
+      }
+    }
+    
+    return sku;
   }
 
   // Placeholder methods for compatibility
