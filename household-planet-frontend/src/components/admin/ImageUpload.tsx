@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { getImageUrl } from '@/lib/imageUtils';
 import axios from 'axios';
@@ -21,7 +21,25 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const validateFiles = (files: File[]) => {
+    const errors = [];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    for (const file of files) {
+      if (file.size > maxSize) {
+        errors.push(`${file.name} is too large (max 5MB)`);
+      }
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(`${file.name} is not a supported image format`);
+      }
+    }
+
+    return errors;
+  };
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || uploading) return;
@@ -30,9 +48,20 @@ export default function ImageUpload({
     const remainingSlots = maxImages - images.length;
     const filesToProcess = newFiles.slice(0, remainingSlots);
     
-    if (filesToProcess.length === 0) return;
+    if (filesToProcess.length === 0) {
+      setUploadStatus({ type: 'error', message: 'Maximum number of images reached' });
+      return;
+    }
+
+    // Validate files
+    const validationErrors = validateFiles(filesToProcess);
+    if (validationErrors.length > 0) {
+      setUploadStatus({ type: 'error', message: validationErrors.join(', ') });
+      return;
+    }
     
     setUploading(true);
+    setUploadStatus({ type: null, message: '' });
     
     try {
       const formData = new FormData();
@@ -41,6 +70,10 @@ export default function ImageUpload({
       });
       
       const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required. Please login again.');
+      }
+      
       console.log('Uploading images to:', `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/temp/images`);
       
       const response = await axios.post(
@@ -50,7 +83,8 @@ export default function ImageUpload({
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          timeout: 30000 // 30 second timeout
         }
       );
       
@@ -58,26 +92,62 @@ export default function ImageUpload({
       
       if (response.data.success && response.data.images) {
         onImagesChange([...images, ...response.data.images]);
+        setUploadStatus({ 
+          type: 'success', 
+          message: response.data.message || `Successfully uploaded ${response.data.images.length} image(s)` 
+        });
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setUploadStatus({ type: null, message: '' });
+        }, 3000);
       } else {
         throw new Error('Upload failed: Invalid response format');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading images:', error);
       console.error('Error details:', error.response?.data);
       
-      // Show user-friendly error message
-      alert(`Failed to upload images: ${error.response?.data?.message || error.message}`);
+      let errorMessage = 'Failed to upload images';
       
-      // Fallback to local preview URLs if upload fails
-      const newImageUrls = filesToProcess.map(file => URL.createObjectURL(file));
-      onImagesChange([...images, ...newImageUrls]);
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (error.response?.status === 413) {
+        errorMessage = 'Files are too large. Maximum size is 5MB per image.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setUploadStatus({ type: 'error', message: errorMessage });
     } finally {
       setUploading(false);
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
     const imageUrl = images[index];
+    
+    // If it's a temp image, try to delete it from server
+    if (imageUrl && imageUrl.startsWith('/uploads/temp/')) {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await axios.delete(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/temp/images`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              data: { imageUrl }
+            }
+          );
+        }
+      } catch (error) {
+        console.warn('Failed to delete temp image from server:', error);
+      }
+    }
+    
+    // Clean up blob URLs
     if (imageUrl && imageUrl.startsWith('blob:')) {
       URL.revokeObjectURL(imageUrl);
     }
@@ -105,52 +175,81 @@ export default function ImageUpload({
   return (
     <div className={className}>
       <label className="block text-sm font-medium text-gray-700 mb-2">
-        Product Images ({images.length}/{maxImages})
+        {images.length === 0 ? 'Main Product Image' : 
+         images.length === 1 ? 'Main Image + Additional Images' : 
+         `Main Image + Additional Images (${images.length}/${maxImages})`}
       </label>
       
-      {/* Upload Area */}
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
-          dragOver 
-            ? 'border-blue-400 bg-blue-50' 
-            : 'border-gray-300 hover:border-gray-400'
-        }`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={(e) => handleFileSelect(e.target.files)}
-          className="hidden"
-        />
-        
-        <div className="flex flex-col items-center">
-          <Upload className="h-12 w-12 text-gray-400 mb-2" />
-          <p className="text-sm text-gray-600 mb-2">
-            Drag and drop images here, or{' '}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              browse
-            </button>
-          </p>
-          <p className="text-xs text-gray-500">
-            PNG, JPG, JPEG up to 5MB each
-          </p>
-          {uploading && (
-            <p className="text-xs text-blue-600 mt-1">
-              Uploading images...
-            </p>
+      {/* Status Messages */}
+      {uploadStatus.type && (
+        <div className={`mb-4 p-3 rounded-md flex items-center gap-2 ${
+          uploadStatus.type === 'success' 
+            ? 'bg-green-50 text-green-700 border border-green-200' 
+            : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {uploadStatus.type === 'success' ? (
+            <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
           )}
+          <span className="text-sm">{uploadStatus.message}</span>
         </div>
-      </div>
+      )}
+      
+      {/* Upload Area */}
+      {images.length < maxImages && (
+        <div
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+            dragOver 
+              ? 'border-blue-400 bg-blue-50' 
+              : 'border-gray-300 hover:border-gray-400'
+          } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => !uploading && fileInputRef.current?.click()}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+            disabled={uploading}
+          />
+          
+          <div className="flex flex-col items-center">
+            <Upload className={`h-12 w-12 mb-2 ${uploading ? 'text-gray-300' : 'text-gray-400'}`} />
+            <p className="text-sm text-gray-600 mb-2">
+              {uploading ? 'Uploading...' : (
+                <>
+                  Drag and drop images here, or{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                    disabled={uploading}
+                  >
+                    browse
+                  </button>
+                </>
+              )}
+            </p>
+            <p className="text-xs text-gray-500">
+              PNG, JPG, JPEG, WebP up to 5MB each
+            </p>
+            {uploading && (
+              <div className="mt-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Image Previews */}
       {images.length > 0 && (
@@ -158,7 +257,7 @@ export default function ImageUpload({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {images.map((image, index) => (
               <div key={index} className="relative group">
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
                   <img
                     src={getImageUrl(image)}
                     alt={`Product image ${index + 1}`}
@@ -172,33 +271,21 @@ export default function ImageUpload({
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  title="Remove image"
                 >
                   <X className="h-4 w-4" />
                 </button>
-                <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                  {index === 0 ? 'Main' : `${index + 1}`}
+                <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">
+                  {index === 0 ? 'Main' : `Additional ${index}`}
                 </div>
               </div>
             ))}
           </div>
           
-          {images.length < maxImages && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-4 w-full"
-              disabled={uploading}
-            >
-              <ImageIcon className="h-4 w-4 mr-2" />
-              Add More Images
-            </Button>
-          )}
+
         </div>
       )}
-      
-
     </div>
   );
 }

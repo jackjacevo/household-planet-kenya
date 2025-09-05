@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { Clock } from 'lucide-react';
 import { ProductCard } from '@/components/products/ProductCard';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
 import { Product } from '@/types';
-
-
+import { getRecentlyViewedIds } from '@/lib/recentlyViewed';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -24,44 +24,56 @@ const staggerContainer = {
   }
 };
 
-export function BestSellers() {
+export function RecentlyViewed() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchRecentlyViewed = async () => {
       try {
-        const data = await api.getProducts({ limit: 6, featured: true }) as any;
-        if (data && Array.isArray(data) && data.length > 0) {
-          setProducts(data);
-        } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
-          setProducts(data.data);
-        } else {
-          setProducts([]);
+        // Use localStorage for recently viewed items
+        const recentlyViewedItems = getRecentlyViewedIds().slice(0, 6);
+        
+        if (recentlyViewedItems.length > 0) {
+          // Get featured products as recently viewed for now
+          try {
+            const response = await api.getProducts({ limit: 6, featured: true });
+            if (response && Array.isArray(response)) {
+              setProducts(response);
+            } else if (response?.data && Array.isArray(response.data)) {
+              setProducts(response.data);
+            }
+          } catch (error) {
+            console.debug('Could not fetch products');
+            setProducts([]);
+          }
         }
       } catch (error) {
-        console.error('Failed to fetch products:', error);
-        showToast({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to load featured products'
-        });
+        console.error('Failed to fetch recently viewed:', error);
         setProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchRecentlyViewed();
   }, [showToast]);
 
+  // Don't render if no products
+  if (!loading && products.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="py-8 bg-gray-50">
+    <section className="py-8 bg-white">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Featured Products</h2>
-          <Link href="/products" className="text-orange-600 hover:text-orange-700 font-medium">
+          <div className="flex items-center">
+            <Clock className="h-6 w-6 text-green-600 mr-3" />
+            <h2 className="text-2xl font-bold text-gray-800">Recently Viewed</h2>
+          </div>
+          <Link href="/products" className="text-green-600 hover:text-green-700 font-medium">
             View All
           </Link>
         </div>
@@ -79,19 +91,6 @@ export function BestSellers() {
               </div>
             ))}
           </div>
-        ) : products.length === 0 ? (
-          <motion.div 
-            className="text-center py-16 bg-white rounded-3xl shadow-lg"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="bg-gradient-to-r from-gray-400 to-gray-600 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-              <span className="text-white text-2xl">📦</span>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">No Featured Products Yet</h3>
-            <p className="text-gray-600">Products will appear here once added.</p>
-          </motion.div>
         ) : (
           <motion.div 
             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6"
@@ -106,7 +105,7 @@ export function BestSellers() {
                 variants={fadeInUp}
                 custom={index}
               >
-                <ProductCard product={product} viewMode="grid" priority={index < 3} />
+                <ProductCard product={product} viewMode="grid" />
               </motion.div>
             ))}
           </motion.div>

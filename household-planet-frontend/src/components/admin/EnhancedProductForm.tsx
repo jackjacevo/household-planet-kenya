@@ -22,7 +22,7 @@ const productSchema = z.object({
   price: z.number().min(0, 'Price must be positive'),
   comparePrice: z.number().optional(),
   weight: z.number().optional(),
-  dimensions: z.string().optional(),
+  dimensions: z.string().optional().nullable(),
   categoryId: z.number().min(1, 'Category is required'),
   brandId: z.number().optional(),
   isActive: z.boolean().default(true),
@@ -69,7 +69,11 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
     fetchCategories();
     fetchBrands();
     if (product) {
-      reset(product);
+      const formData = {
+        ...product,
+        brandId: product.brandId ? Number(product.brandId) : ''
+      };
+      reset(formData);
       setImages(product.images || []);
       setVariants(product.variants || []);
       setDescription(product.description || '');
@@ -305,7 +309,9 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                   <select
-                    {...register('brandId', { valueAsNumber: true })}
+                    {...register('brandId')}
+                    value={watch('brandId') || ''}
+                    onChange={(e) => setValue('brandId', e.target.value ? Number(e.target.value) : undefined)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Brand</option>

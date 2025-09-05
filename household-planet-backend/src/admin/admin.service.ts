@@ -585,6 +585,9 @@ export class AdminService {
         }
       }
       
+      // Process images - move temp images to permanent storage
+      const processedImages = await this.moveTempImagesToPermanent(images || [], finalSlug);
+      
       const data = {
         ...productData,
         slug: finalSlug,
@@ -593,7 +596,7 @@ export class AdminService {
         stock: Number(stock || 0),
         lowStockThreshold: Number(lowStockThreshold || 5),
         trackStock: Boolean(trackStock !== false),
-        images: JSON.stringify(Array.isArray(images) ? images : []),
+        images: JSON.stringify(processedImages),
         tags: JSON.stringify(Array.isArray(tags) ? tags : []),
         imageAltTexts: imageAltTexts ? JSON.stringify(imageAltTexts) : null
       };
@@ -610,7 +613,7 @@ export class AdminService {
         await this.activityService.logActivity(
           userId,
           'CREATE_PRODUCT',
-          { productName: result.name, sku: result.sku, productId: result.id },
+          { productName: result.name, sku: result.sku, productId: result.id, imageCount: processedImages.length },
           'Product',
           result.id
         ).catch(console.error);
@@ -628,6 +631,55 @@ export class AdminService {
       });
       throw new BadRequestException(`Failed to create product: ${error.message}`);
     }
+  }
+
+  private async moveTempImagesToPermanent(images: string[], productSlug: string): Promise<string[]> {
+    if (!images || images.length === 0) return [];
+    
+    const permanentImages = [];
+    const productDir = path.join(process.cwd(), 'uploads', 'products');
+    
+    try {
+      await fs.promises.access(productDir);
+    } catch {
+      await fs.promises.mkdir(productDir, { recursive: true });
+    }
+    
+    for (const imageUrl of images) {
+      try {
+        if (imageUrl.startsWith('/uploads/temp/')) {
+          // Move from temp to permanent
+          const tempFilename = path.basename(imageUrl);
+          const tempPath = path.join(process.cwd(), 'uploads', 'temp', tempFilename);
+          
+          // Generate new filename for permanent storage
+          const ext = path.extname(tempFilename);
+          const newFilename = `${productSlug}-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+          const permanentPath = path.join(productDir, newFilename);
+          
+          // Copy file to permanent location
+          await fs.promises.copyFile(tempPath, permanentPath);
+          
+          // Delete temp file
+          await fs.promises.unlink(tempPath).catch(() => {});
+          
+          permanentImages.push(`/uploads/products/${newFilename}`);
+          this.logger.log(`Moved temp image ${tempFilename} to permanent storage as ${newFilename}`);
+        } else if (imageUrl.startsWith('/uploads/products/')) {
+          // Already permanent, keep as is
+          permanentImages.push(imageUrl);
+        } else {
+          // External URL or other format, keep as is
+          permanentImages.push(imageUrl);
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to process image ${imageUrl}:`, error.message);
+        // Keep the original URL if processing fails
+        permanentImages.push(imageUrl);
+      }
+    }
+    
+    return permanentImages;
   }
 
   async updateProduct(id: number, updateProductDto: UpdateProductDto, userId?: number) {
@@ -682,9 +734,12 @@ export class AdminService {
         }
       );
     }
+    
     if (images) {
       console.log('AdminService: Updating images:', images);
-      data.images = JSON.stringify(images);
+      // Process images - move any temp images to permanent storage
+      const processedImages = await this.moveTempImagesToPermanent(images, data.slug || product.slug);
+      data.images = JSON.stringify(processedImages);
     }
     if (tags) data.tags = JSON.stringify(tags);
     if (imageAltTexts) data.imageAltTexts = JSON.stringify(imageAltTexts);
@@ -886,9 +941,14 @@ export class AdminService {
       }
 
       const imagePromises = files.map(async (file) => {
-        // Keep original format (PNG/JPG)
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+          throw new BadRequestException(`File ${file.originalname} is too large. Maximum size is 5MB.`);
+        }
+
+        // Keep original format (PNG/JPG/WebP)
         const originalExt = path.extname(file.originalname).toLowerCase();
-        const allowedExts = ['.png', '.jpg', '.jpeg'];
+        const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
         const ext = allowedExts.includes(originalExt) ? originalExt : '.jpg';
         const filename = `temp-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
         const filepath = path.resolve(uploadDir, filename);
@@ -897,29 +957,43 @@ export class AdminService {
           throw new BadRequestException('Invalid file path');
         }
         
-        // Process image but keep original format
-        if (ext === '.png') {
-          await sharp(file.buffer)
-            .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-            .png({ quality: 90 })
-            .toFile(filepath);
-        } else {
-          await sharp(file.buffer)
-            .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-            .jpeg({ quality: 90 })
-            .toFile(filepath);
+        try {
+          // Process image but keep original format
+          if (ext === '.png') {
+            await sharp(file.buffer)
+              .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+              .png({ quality: 90 })
+              .toFile(filepath);
+          } else if (ext === '.webp') {
+            await sharp(file.buffer)
+              .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+              .webp({ quality: 90 })
+              .toFile(filepath);
+          } else {
+            await sharp(file.buffer)
+              .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 90 })
+              .toFile(filepath);
+          }
+          
+          return `/uploads/temp/${filename}`;
+        } catch (imageError) {
+          this.logger.error(`Image processing failed for ${file.originalname}:`, imageError);
+          throw new BadRequestException(`Failed to process image ${file.originalname}: ${imageError.message}`);
         }
-        
-        return `/uploads/temp/${filename}`;
       });
 
       const imageUrls = await Promise.all(imagePromises);
+      
+      this.logger.log(`Successfully uploaded ${imageUrls.length} temp images`);
 
       return {
         success: true,
-        images: imageUrls
+        images: imageUrls,
+        message: `Successfully uploaded ${imageUrls.length} image(s)`
       };
     } catch (error) {
+      this.logger.error('Temp image upload failed:', error);
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -1722,19 +1796,102 @@ export class AdminService {
     return { success: true, message: 'Image cropping not implemented yet' };
   }
 
-  async deleteProductImage(productId: number, imageIndex: number) {
-    const product = await this.prisma.product.findUnique({ where: { id: productId } });
-    if (!product) throw new NotFoundException('Product not found');
+  async deleteProductImage(productId: number, imageIndex: number, userId?: number) {
+    try {
+      const product = await this.prisma.product.findUnique({ where: { id: productId } });
+      if (!product) throw new NotFoundException('Product not found');
 
-    const images = JSON.parse(product.images);
-    if (imageIndex >= 0 && imageIndex < images.length) {
+      const images = this.safeJsonParse(product.images, []);
+      if (imageIndex < 0 || imageIndex >= images.length) {
+        throw new BadRequestException('Invalid image index');
+      }
+
+      const imageToDelete = images[imageIndex];
+      
+      // Remove from array
       images.splice(imageIndex, 1);
-      return this.prisma.product.update({
+      
+      // Update database
+      const updatedProduct = await this.prisma.product.update({
         where: { id: productId },
-        data: { images: JSON.stringify(images) }
+        data: { images: JSON.stringify(images) },
+        include: { category: true, brand: true }
       });
+
+      // Delete physical file
+      if (imageToDelete && imageToDelete.startsWith('/uploads/products/')) {
+        const filename = path.basename(imageToDelete);
+        const filepath = path.join(process.cwd(), 'uploads', 'products', filename);
+        try {
+          await fs.promises.unlink(filepath);
+          this.logger.log(`Deleted image file: ${filename}`);
+        } catch (fileError) {
+          this.logger.warn(`Failed to delete image file ${filename}:`, fileError.message);
+        }
+      }
+
+      // Log activity
+      if (userId) {
+        await this.activityService.logActivity(
+          userId,
+          'DELETE_PRODUCT_IMAGE',
+          { productName: updatedProduct.name, productId, imageIndex },
+          'Product',
+          productId
+        ).catch(console.error);
+      }
+
+      return {
+        success: true,
+        product: updatedProduct,
+        message: 'Image deleted successfully'
+      };
+    } catch (error) {
+      this.logger.error(`Failed to delete product image:`, error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to delete image: ${error.message}`);
     }
-    throw new BadRequestException('Invalid image index');
+  }
+
+  async deleteTempImage(imageUrl: string) {
+    try {
+      if (!imageUrl || !imageUrl.startsWith('/uploads/temp/')) {
+        throw new BadRequestException('Invalid temp image URL');
+      }
+
+      const filename = path.basename(imageUrl);
+      const filepath = path.join(process.cwd(), 'uploads', 'temp', filename);
+      
+      // Security check
+      if (!filepath.startsWith(path.resolve(process.cwd(), 'uploads', 'temp'))) {
+        throw new BadRequestException('Invalid file path');
+      }
+
+      try {
+        await fs.promises.unlink(filepath);
+        this.logger.log(`Deleted temp image: ${filename}`);
+        return {
+          success: true,
+          message: 'Temp image deleted successfully'
+        };
+      } catch (fileError) {
+        if (fileError.code === 'ENOENT') {
+          return {
+            success: true,
+            message: 'Image already deleted or does not exist'
+          };
+        }
+        throw fileError;
+      }
+    } catch (error) {
+      this.logger.error('Failed to delete temp image:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to delete temp image: ${error.message}`);
+    }
   }
 
   async createProductVariant(productId: number, variantDto: VariantDto) {
@@ -2005,9 +2162,17 @@ export class AdminService {
       images: this.safeJsonParse(product.images, []),
       tags: this.safeJsonParse(product.tags, []),
       imageAltTexts: this.safeJsonParse(product.imageAltTexts, []),
-      totalStock: product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0,
+      totalStock: product.variants?.reduce((sum, v) => sum + v.stock, 0) || product.stock || 0,
       reviewCount: product._count?.reviews || 0,
-      salesCount: product._count?.orderItems || 0
+      salesCount: product._count?.orderItems || 0,
+      // Ensure numeric fields are properly typed
+      price: Number(product.price),
+      comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+      weight: product.weight ? Number(product.weight) : null,
+      stock: Number(product.stock || 0),
+      lowStockThreshold: Number(product.lowStockThreshold || 5),
+      categoryId: Number(product.categoryId),
+      brandId: product.brandId ? Number(product.brandId) : null
     };
   }
 

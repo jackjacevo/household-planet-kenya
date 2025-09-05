@@ -114,9 +114,7 @@ export function DeliveryInfo({ productId, weight, dimensions, category, price }:
             </div>
           </div>
           
-          <div className="text-xs text-gray-500 space-y-1 mb-3">
-            {selectedLocationData.cost <= 200 && <p>• Same day delivery (order before 2PM)</p>}
-          </div>
+
           
           <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
             <div className="flex justify-between items-center mb-1">

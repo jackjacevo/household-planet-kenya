@@ -10,13 +10,18 @@ import { Testimonials } from '@/components/home/Testimonials'
 import { InstagramFeed } from '@/components/home/InstagramFeed'
 import { StoreLocation } from '@/components/home/StoreLocation'
 import { TrustBadges } from '@/components/home/TrustBadges'
-import { ValuePropositions } from '@/components/home/ValuePropositions'
-import { RecentlyViewed } from '@/components/products/RecentlyViewed'
+
+import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { SEOHead } from '@/components/seo/SEOHead'
 import { InternalLinks } from '@/components/seo/InternalLinks'
 import { SocialMediaIcons } from '@/components/layout/SocialMediaIcons'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { getHomepageLinks } from '@/lib/internal-links'
+
+// Import test utility in development
+if (process.env.NODE_ENV === 'development') {
+  import('@/lib/addTestRecentlyViewed');
+}
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -117,16 +122,7 @@ export default function HomePage() {
           <NewArrivals />
         </motion.div>
         
-        {/* Value Propositions - Why Choose Us */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          variants={sectionVariants}
-          className="px-4 sm:px-0"
-        >
-          <ValuePropositions />
-        </motion.div>
+
       
 
       

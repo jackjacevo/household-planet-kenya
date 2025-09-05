@@ -19,7 +19,7 @@ const productSchema = z.object({
   price: z.number().min(0, 'Price must be positive'),
   comparePrice: z.number().optional(),
   weight: z.number().optional(),
-  dimensions: z.string().optional(),
+  dimensions: z.string().optional().nullable(),
   categoryId: z.number().min(1, 'Category is required'),
   brandId: z.number().optional(),
   stock: z.number().min(0, 'Stock must be 0 or greater').default(0),
@@ -46,16 +46,16 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [tagInput, setTagInput] = useState('');
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<ProductFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch, reset } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: product || {
-      sku: generateSKU(),
-      stock: 0,
-      lowStockThreshold: 5,
-      trackStock: true,
-      isActive: true,
-      isFeatured: false,
-      tags: []
+    defaultValues: {
+      sku: product?.sku || generateSKU(),
+      stock: product?.stock || 0,
+      lowStockThreshold: product?.lowStockThreshold || 5,
+      trackStock: product?.trackStock !== false,
+      isActive: product?.isActive !== false,
+      isFeatured: product?.isFeatured || false,
+      tags: product?.tags || []
     }
   });
 
@@ -69,8 +69,23 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     fetchCategories();
     fetchBrands();
     if (product) {
-      reset(product);
-      setImages(product.images || []);
+      // Properly populate form with product data
+      const formData = {
+        ...product,
+        categoryId: Number(product.categoryId),
+        brandId: product.brandId ? Number(product.brandId) : '',
+        price: Number(product.price),
+        comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
+        weight: product.weight ? Number(product.weight) : undefined,
+        stock: Number(product.stock || 0),
+        lowStockThreshold: Number(product.lowStockThreshold || 5),
+        trackStock: Boolean(product.trackStock !== false),
+        isActive: Boolean(product.isActive !== false),
+        isFeatured: Boolean(product.isFeatured),
+        tags: Array.isArray(product.tags) ? product.tags : []
+      };
+      reset(formData);
+      setImages(Array.isArray(product.images) ? product.images : []);
     }
   }, [product, reset]);
 
@@ -113,20 +128,44 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   };
 
   const handleFormSubmit = (data: ProductFormData) => {
-    // Convert string values to numbers where needed
-    const processedData = {
-      ...data,
+    // Clean and validate data before submission
+    const processedData: any = {
+      name: data.name?.trim(),
+      slug: data.slug?.trim(),
+      description: data.description?.trim() || undefined,
+      shortDescription: data.shortDescription?.trim() || undefined,
+      sku: data.sku?.trim(),
       price: Number(data.price),
-      comparePrice: data.comparePrice ? Number(data.comparePrice) : undefined,
-      weight: data.weight ? Number(data.weight) : undefined,
-      stock: Number(data.stock),
-      lowStockThreshold: Number(data.lowStockThreshold),
       categoryId: Number(data.categoryId),
-      brandId: data.brandId ? Number(data.brandId) : undefined,
-      images
+      stock: Number(data.stock || 0),
+      lowStockThreshold: Number(data.lowStockThreshold || 5),
+      trackStock: Boolean(data.trackStock),
+      isActive: Boolean(data.isActive),
+      isFeatured: Boolean(data.isFeatured),
+      images: images || [],
+      tags: data.tags || []
     };
     
-    console.log('Submitting product data:', processedData);
+    // Only include optional fields if they have values
+    if (data.comparePrice && Number(data.comparePrice) > 0) {
+      processedData.comparePrice = Number(data.comparePrice);
+    }
+    if (data.weight && Number(data.weight) > 0) {
+      processedData.weight = Number(data.weight);
+    }
+    if (data.brandId && Number(data.brandId) > 0) {
+      processedData.brandId = Number(data.brandId);
+    }
+    if (data.dimensions?.trim()) {
+      processedData.dimensions = data.dimensions.trim();
+    }
+    if (data.seoTitle?.trim()) {
+      processedData.seoTitle = data.seoTitle.trim();
+    }
+    if (data.seoDescription?.trim()) {
+      processedData.seoDescription = data.seoDescription.trim();
+    }
+    
     onSubmit(processedData);
   };
 
@@ -135,6 +174,19 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       <h2 className="text-2xl font-bold mb-6">{product ? 'Edit Product' : 'Add Product'}</h2>
       
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+        {/* Debug info */}
+        {Object.keys(errors).length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <h4 className="text-sm font-medium text-red-800 mb-2">Form Validation Errors:</h4>
+            <ul className="text-sm text-red-700 space-y-1">
+              {Object.entries(errors).map(([field, error]) => (
+                <li key={field}>
+                  <strong>{field}:</strong> {error?.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
@@ -210,7 +262,9 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
             <select
-              {...register('brandId', { valueAsNumber: true })}
+              {...register('brandId')}
+              value={watch('brandId') || ''}
+              onChange={(e) => setValue('brandId', e.target.value ? Number(e.target.value) : undefined)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Brand</option>
@@ -226,6 +280,16 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
               type="number"
               step="0.01"
               {...register('weight', { valueAsNumber: true })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions</label>
+            <input
+              type="text"
+              {...register('dimensions')}
+              placeholder="e.g., 30cm x 20cm x 15cm"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -327,11 +391,20 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         </div>
 
         {/* Images */}
-        <ImageUpload
-          images={images}
-          onImagesChange={setImages}
-          maxImages={4}
-        />
+        <div className="bg-gray-50 p-6 rounded-lg border">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Product Images</h3>
+          <ImageUpload
+            images={images}
+            onImagesChange={setImages}
+            maxImages={5}
+          />
+          <div className="mt-3 text-sm text-gray-600">
+            <p>• Upload high-quality images for better customer experience</p>
+            <p>• The first image will be used as the main product image</p>
+            <p>• You can upload 1 main image + 4 additional images (5 total)</p>
+            <p>• Supported formats: PNG, JPG, JPEG, WebP (max 5MB each)</p>
+          </div>
+        </div>
 
         {/* Tags */}
         <div>
@@ -398,12 +471,16 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-500">
             {product ? 'Updating existing product' : 'Creating new product'}
+            {isSubmitting && <span className="ml-2 text-blue-600">Processing...</span>}
           </div>
           <div className="flex gap-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+            >
               {product ? 'Update Product' : 'Create Product'}
             </Button>
           </div>

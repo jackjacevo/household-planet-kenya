@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res, ValidationPipe, UsePipes, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Query, Body, Param, UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Res, ValidationPipe, UsePipes, Req, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -138,13 +138,14 @@ export class AdminController {
     return this.adminService.exportProductsCsv();
   }
 
-  @Post('products/:id/images')
+  // Dedicated temp image upload endpoint
+  @Post('products/temp/images')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @UseInterceptors(FilesInterceptor('images', 10, {
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-        return cb(new Error('Only JPG and PNG image files are allowed!'), false);
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+        return cb(new Error('Only JPG, PNG, and WebP image files are allowed!'), false);
       }
       cb(null, true);
     },
@@ -152,22 +153,32 @@ export class AdminController {
       fileSize: 5 * 1024 * 1024, // 5MB limit
     },
   }))
-  uploadProductImages(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[], @Req() req) {
+  uploadTempImages(@UploadedFiles() files: Express.Multer.File[], @Req() req) {
     if (!files || files.length === 0) {
-      throw new Error('No files uploaded');
+      throw new BadRequestException('No files uploaded');
     }
-    
-    // Handle both numeric IDs and 'temp' for new products
-    if (id === 'temp') {
-      return this.adminService.uploadTempImages(files);
+    return this.adminService.uploadTempImages(files);
+  }
+
+  @Post('products/:id/images')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @UseInterceptors(FilesInterceptor('images', 10, {
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+        return cb(new Error('Only JPG, PNG, and WebP image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  }))
+  uploadProductImages(@Param('id', ParseIntPipe) id: number, @UploadedFiles() files: Express.Multer.File[], @Req() req) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files uploaded');
     }
-    
-    const productId = parseInt(id);
-    if (isNaN(productId)) {
-      throw new Error('Invalid product ID');
-    }
-    
-    return this.adminService.uploadProductImages(productId, files, req.user?.id);
+    return this.adminService.uploadProductImages(id, files, req.user?.id);
   }
 
   @Post('products/images/crop')
@@ -181,8 +192,17 @@ export class AdminController {
   }
 
   @Delete('products/:id/images/:imageIndex')
-  deleteProductImage(@Param('id', ParseIntPipe) id: number, @Param('imageIndex', ParseIntPipe) imageIndex: number) {
-    return this.adminService.deleteProductImage(id, imageIndex);
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  deleteProductImage(@Param('id', ParseIntPipe) id: number, @Param('imageIndex', ParseIntPipe) imageIndex: number, @Req() req) {
+    return this.adminService.deleteProductImage(id, imageIndex, req.user?.id);
+  }
+
+  @Delete('products/temp/images')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  deleteTempImage(@Body('imageUrl') imageUrl: string) {
+    return this.adminService.deleteTempImage(imageUrl);
   }
 
   @Post('products/:id/variants')

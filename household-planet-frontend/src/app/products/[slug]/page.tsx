@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import { Product, ProductVariant, Review } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { getImageUrl, handleImageError } from '@/lib/image-utils';
+import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewsList } from '@/components/reviews/ReviewsList';
 import { ProductRecommendations } from '@/components/products/ProductRecommendations';
@@ -29,6 +30,8 @@ export default function ProductDetailPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -57,6 +60,9 @@ export default function ProductDetailPage() {
 
         // Fetch reviews
         await fetchReviews(response.id);
+        
+        // Track as recently viewed
+        addToRecentlyViewed(response);
       } catch (err: any) {
         setError(err.message || 'Failed to load product. Please try again.');
         console.error('Error fetching product:', err);
@@ -172,6 +178,13 @@ export default function ProductDetailPage() {
     openWhatsAppForProduct(product);
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePosition({ x, y });
+  };
+
   const currentPrice = selectedVariant?.price || product.price;
   const currentStock = selectedVariant?.stock || product.stock || 0;
   const productImages = product.images || [];
@@ -195,69 +208,46 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Image Gallery */}
           <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-xl overflow-hidden shadow-lg">
+            <div 
+              className="aspect-square bg-white rounded-xl overflow-hidden shadow-lg cursor-zoom-in"
+              onMouseMove={handleMouseMove}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
               <img
                 src={getImageUrl(productImages[selectedImageIndex])}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-200"
+                style={{
+                  transform: isHovering ? 'scale(2)' : 'scale(1)',
+                  transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`
+                }}
                 onError={handleImageError}
               />
             </div>
             
             {/* Additional Product Images */}
-            <div className="grid grid-cols-4 gap-2">
-              {productImages.slice(1, 5).map((image, index) => (
+            <div className="grid grid-cols-5 gap-2">
+              {productImages.slice(0, 5).map((image, index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedImageIndex(index + 1)}
+                  onClick={() => setSelectedImageIndex(index)}
                   className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImageIndex === index + 1 ? 'border-orange-500' : 'border-gray-200'
+                    selectedImageIndex === index ? 'border-orange-500' : 'border-gray-200'
                   }`}
                 >
                   <img
                     src={getImageUrl(image)}
-                    alt={`${product.name} ${index + 2}`}
+                    alt={`${product.name} ${index + 1}`}
                     className="w-full h-full object-cover"
                     onError={handleImageError}
                   />
                 </button>
               ))}
-              {/* Show placeholders for remaining slots */}
-              {productImages.length < 5 && [...Array(5 - productImages.length)].map((_, index) => {
-                const placeholderImages = [
-                  '/api/placeholder/400/400?text=360°+View',
-                  '/api/placeholder/400/400?text=Size+Guide', 
-                  '/api/placeholder/400/400?text=In+Use',
-                  '/api/placeholder/400/400?text=Details'
-                ];
-                
-                return (
-                  <div key={`placeholder-${index}`} className="aspect-square bg-white rounded-lg">
-                  </div>
-                );
-              })}
+
             </div>
             
-            {productImages.length > 1 && (
-              <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-                {productImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                      selectedImageIndex === index ? 'border-orange-500' : 'border-gray-200'
-                    }`}
-                  >
-                    <img
-                      src={getImageUrl(image)}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={handleImageError}
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+
           </div>
 
           {/* Product Info */}

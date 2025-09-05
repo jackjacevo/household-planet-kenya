@@ -136,7 +136,7 @@ export function OptimizedImage({
           className="object-cover"
           style={{
             // Optimize for mobile networks
-            imageRendering: window.innerWidth <= 768 ? 'crisp-edges' : 'auto',
+            imageRendering: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'crisp-edges' : 'auto',
           }}
         />
       </motion.div>

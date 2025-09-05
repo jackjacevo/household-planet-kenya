@@ -16,9 +16,10 @@ interface ProductCardProps {
   product: Product;
   viewMode?: 'grid' | 'list';
   compact?: boolean;
+  priority?: boolean;
 }
 
-export function ProductCard({ product, viewMode = 'grid', compact = false }: ProductCardProps) {
+export function ProductCard({ product, viewMode = 'grid', compact = false, priority = false }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
@@ -60,6 +61,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               alt={product.name}
               width={200}
               height={144}
+              priority={priority}
               className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
@@ -100,6 +102,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               alt={product.name}
               width={192}
               height={128}
+              priority={priority}
               className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 100vw, 200px"
             />
@@ -175,6 +178,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               alt={product.name}
               width={300}
               height={224}
+              priority={priority}
               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />

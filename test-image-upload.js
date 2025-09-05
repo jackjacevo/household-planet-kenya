@@ -3,89 +3,113 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
+// Test script to verify image upload functionality
 async function testImageUpload() {
   try {
-    console.log('Testing image upload and serving...');
+    console.log('Testing admin image upload endpoints...');
     
-    // Test 1: Check if backend is running
+    const baseURL = 'http://localhost:3001';
+    
+    // First, test if the temp upload endpoint exists
+    console.log('\n1. Testing temp image upload endpoint...');
+    
+    // Create a simple test image (1x1 pixel PNG)
+    const testImageBuffer = Buffer.from([
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
+      0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
+      0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0x00, 0x00, 0x00,
+      0x01, 0x00, 0x01, 0x5C, 0xC2, 0x5D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49,
+      0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
+    ]);
+    
+    // Test without authentication (should fail)
     try {
-      const healthCheck = await axios.get('http://localhost:3001/api/admin/dashboard');
-      console.log('✓ Backend is running');
+      const formData = new FormData();
+      formData.append('images', testImageBuffer, 'test.png');
+      
+      await axios.post(`${baseURL}/api/admin/products/temp/images`, formData, {
+        headers: formData.getHeaders()
+      });
+      console.log('❌ ERROR: Upload succeeded without authentication (should have failed)');
     } catch (error) {
-      console.log('✗ Backend is not running or not accessible');
-      console.log('Please start the backend with: cd household-planet-backend && npm run start:dev');
-      return;
-    }
-    
-    // Test 2: Test CORS headers on image endpoint
-    try {
-      const corsTest = await axios.options('http://localhost:3001/api/admin/categories/image/test.jpg');
-      console.log('✓ CORS preflight request successful');
-    } catch (error) {
-      console.log('✗ CORS preflight failed:', error.message);
-    }
-    
-    // Test 3: Check uploads directory structure
-    const uploadsDir = path.join(__dirname, 'household-planet-backend', 'uploads');
-    const categoriesDir = path.join(uploadsDir, 'categories');
-    const productsDir = path.join(uploadsDir, 'products');
-    
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-      console.log('✓ Created uploads directory');
-    }
-    
-    if (!fs.existsSync(categoriesDir)) {
-      fs.mkdirSync(categoriesDir, { recursive: true });
-      console.log('✓ Created categories directory');
-    }
-    
-    if (!fs.existsSync(productsDir)) {
-      fs.mkdirSync(productsDir, { recursive: true });
-      console.log('✓ Created products directory');
-    }
-    
-    console.log('✓ Upload directories are ready');
-    
-    // Test 4: Check for existing images
-    const categoryImages = fs.readdirSync(categoriesDir);
-    const productImages = fs.readdirSync(productsDir);
-    
-    console.log(`Found ${categoryImages.length} category images`);
-    console.log(`Found ${productImages.length} product images`);
-    
-    // Test 5: Test image serving for existing images
-    if (categoryImages.length > 0) {
-      const testImage = categoryImages[0];
-      try {
-        const response = await axios.get(`http://localhost:3001/api/admin/categories/image/${testImage}`, {
-          headers: {
-            'Origin': 'http://localhost:3000'
-          }
-        });
-        console.log('✓ Category image serving works');
-        console.log('Response headers:', {
-          'access-control-allow-origin': response.headers['access-control-allow-origin'],
-          'content-type': response.headers['content-type'],
-          'cross-origin-resource-policy': response.headers['cross-origin-resource-policy']
-        });
-      } catch (error) {
-        console.log('✗ Category image serving failed:', error.message);
+      if (error.response?.status === 401) {
+        console.log('✅ Correctly rejected upload without authentication');
+      } else {
+        console.log(`❌ Unexpected error: ${error.response?.status} - ${error.message}`);
       }
     }
     
-    console.log('\nImage upload system status:');
-    console.log('- Images will be stored as PNG/JPG (no more WebP conversion)');
-    console.log('- CORS headers are properly configured');
-    console.log('- Upload directories are ready');
-    console.log('\nTo test image upload:');
-    console.log('1. Go to admin panel');
-    console.log('2. Try uploading a PNG or JPG image');
-    console.log('3. Check if the image displays without CORS errors');
+    // Test endpoint availability
+    try {
+      await axios.options(`${baseURL}/api/admin/products/temp/images`);
+      console.log('✅ Temp image upload endpoint is available');
+    } catch (error) {
+      if (error.response?.status === 404) {
+        console.log('❌ Temp image upload endpoint not found');
+      } else {
+        console.log(`✅ Endpoint exists (got ${error.response?.status})`);
+      }
+    }
+    
+    console.log('\n2. Testing admin endpoints structure...');
+    
+    // Test admin routes
+    const adminEndpoints = [
+      '/api/admin/products',
+      '/api/admin/categories',
+      '/api/admin/brands'
+    ];
+    
+    for (const endpoint of adminEndpoints) {
+      try {
+        await axios.get(`${baseURL}${endpoint}`);
+        console.log(`✅ ${endpoint} - Available`);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          console.log(`✅ ${endpoint} - Protected (requires auth)`);
+        } else if (error.response?.status === 404) {
+          console.log(`❌ ${endpoint} - Not found`);
+        } else {
+          console.log(`✅ ${endpoint} - Available (status: ${error.response?.status})`);
+        }
+      }
+    }
+    
+    console.log('\n3. Testing file upload directory structure...');
+    
+    // Check if upload directories exist
+    const uploadDirs = [
+      path.join(process.cwd(), 'household-planet-backend', 'uploads'),
+      path.join(process.cwd(), 'household-planet-backend', 'uploads', 'temp'),
+      path.join(process.cwd(), 'household-planet-backend', 'uploads', 'products')
+    ];
+    
+    for (const dir of uploadDirs) {
+      try {
+        await fs.promises.access(dir);
+        console.log(`✅ Directory exists: ${dir}`);
+      } catch (error) {
+        console.log(`❌ Directory missing: ${dir}`);
+        try {
+          await fs.promises.mkdir(dir, { recursive: true });
+          console.log(`✅ Created directory: ${dir}`);
+        } catch (createError) {
+          console.log(`❌ Failed to create directory: ${dir} - ${createError.message}`);
+        }
+      }
+    }
+    
+    console.log('\n✅ Image upload test completed!');
+    console.log('\nNext steps:');
+    console.log('1. Start the backend server: cd household-planet-backend && npm run start:dev');
+    console.log('2. Start the frontend server: cd household-planet-frontend && npm run dev');
+    console.log('3. Login as admin and test image upload in the admin products page');
     
   } catch (error) {
-    console.error('Test failed:', error.message);
+    console.error('❌ Test failed:', error.message);
   }
 }
 
+// Run the test
 testImageUpload();

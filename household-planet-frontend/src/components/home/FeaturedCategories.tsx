@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -115,20 +116,16 @@ export function FeaturedCategories() {
                 className="category-card bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition duration-300"
               >
                 <div className="p-4">
-                  <div className="w-full h-32 overflow-hidden rounded-lg">
-                    <img 
-                      src={category.image} 
+                  <div className="w-full h-32 overflow-hidden rounded-lg relative">
+                    <Image 
+                      src={category.image || fallbackImages[index % fallbackImages.length]} 
                       alt={category.name} 
-                      className="w-full h-full object-cover transition duration-300"
-                      {...(isMounted && { loading: "lazy" })}
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
+                      fill
+                      priority={index < 3}
+                      className="object-cover transition duration-300"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+                      onError={() => {
                         console.error(`Failed to load image: ${category.image}`);
-                        target.src = fallbackImages[index % fallbackImages.length];
-                      }}
-                      onLoad={() => {
-                        console.log(`Successfully loaded image: ${category.image}`);
                       }}
                     />
                   </div>

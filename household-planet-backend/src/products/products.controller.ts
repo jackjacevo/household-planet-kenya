@@ -69,6 +69,21 @@ export class ProductsController {
     return this.productsService.getAutocomplete(query, validatedLimit);
   }
 
+  // Recently Viewed - Must come before :id route
+  @Get('recently-viewed')
+  getRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
+    const userId = req.user?.id;
+    const sessionId = req.sessionID || req.headers['x-session-id'];
+    return this.productsService.getRecentlyViewed(userId, sessionId, parseInt(limit) || 10);
+  }
+
+  @Get('user/recently-viewed')
+  getUserRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
+    const userId = req.user?.id;
+    const sessionId = req.sessionID || req.headers['x-session-id'];
+    return this.productsService.getRecentlyViewed(userId, sessionId, parseInt(limit) || 10);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     const userId = req.user?.id;
@@ -137,20 +152,7 @@ export class ProductsController {
     return this.productsService.generateRecommendations(productId);
   }
 
-  // Recently Viewed
-  @Get('recently-viewed')
-  getRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
-    const userId = req.user?.id;
-    const sessionId = req.sessionID || req.headers['x-session-id'];
-    return this.productsService.getRecentlyViewed(userId, sessionId, parseInt(limit) || 10);
-  }
 
-  @Get('user/recently-viewed')
-  getUserRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
-    const userId = req.user?.id;
-    const sessionId = req.sessionID || req.headers['x-session-id'];
-    return this.productsService.getRecentlyViewed(userId, sessionId, parseInt(limit) || 10);
-  }
 
   // Low Stock Management
   @Get('inventory/low-stock')

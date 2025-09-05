@@ -104,7 +104,7 @@ export function NewArrivals() {
                 variants={fadeInUp}
                 custom={index}
               >
-                <ProductCard product={product} viewMode="grid" />
+                <ProductCard product={product} viewMode="grid" priority={index < 3} />
               </motion.div>
             ))}
           </motion.div>

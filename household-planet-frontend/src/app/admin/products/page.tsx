@@ -10,7 +10,7 @@ import StockStatus from '@/components/admin/StockStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getImageUrl } from '@/lib/imageUtils';
 import axios from 'axios';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Product {
   id: number;
@@ -29,7 +29,7 @@ interface Product {
 }
 
 export default function AdminProductsPage() {
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -98,13 +98,13 @@ export default function AdminProductsPage() {
     } catch (error) {
       console.error('Error fetching products:', error);
       if (error.response?.status === 401) {
-        toast({
+        showToast({
           title: 'Authentication Error',
           description: 'Please login again to continue.',
           variant: 'destructive'
         });
       } else {
-        toast({
+        showToast({
           title: 'Error',
           description: 'Failed to load products. Please refresh the page.',
           variant: 'destructive'
@@ -121,9 +121,19 @@ export default function AdminProductsPage() {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        toast({
+        showToast({
           title: 'Authentication Error',
           description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Validate required fields
+      if (!productData.name || !productData.categoryId || !productData.price) {
+        showToast({
+          title: 'Validation Error',
+          description: 'Please fill in all required fields (name, category, price).',
           variant: 'destructive'
         });
         return;
@@ -143,15 +153,16 @@ export default function AdminProductsPage() {
       console.log('Product creation response:', response.data);
       await fetchProducts();
       setShowForm(false);
-      toast({
+      setEditingProduct(null);
+      showToast({
         title: 'Success!',
-        description: 'Product created successfully',
+        description: `Product "${productData.name}" created successfully`,
         variant: 'success'
       });
     } catch (error) {
       console.error('Error creating product:', error);
       if (error.response?.status === 401) {
-        toast({
+        showToast({
           title: 'Authentication Error',
           description: 'Please login again to continue.',
           variant: 'destructive'
@@ -160,7 +171,7 @@ export default function AdminProductsPage() {
         window.location.href = '/login';
       } else {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to create product';
-        toast({
+        showToast({
           title: 'Error',
           description: errorMessage,
           variant: 'destructive'
@@ -170,54 +181,153 @@ export default function AdminProductsPage() {
   };
 
   const handleUpdateProduct = async (productData: any) => {
-    if (!editingProduct) return;
+    console.log('AdminProductsPage: handleUpdateProduct called');
+    console.log('AdminProductsPage: editingProduct:', editingProduct);
+    console.log('AdminProductsPage: productData received:', productData);
+    
+    if (!editingProduct) {
+      console.error('AdminProductsPage: No editing product found');
+      showToast({
+        title: 'Error',
+        description: 'No product selected for editing.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     try {
-      console.log('Updating product with data:', productData);
+      console.log('AdminProductsPage: Starting product update...');
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('AdminProductsPage: No token found');
+        showToast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Validate required fields
+      if (!productData.name || !productData.categoryId || !productData.price) {
+        console.error('AdminProductsPage: Validation failed:', {
+          name: productData.name,
+          categoryId: productData.categoryId,
+          price: productData.price
+        });
+        showToast({
+          title: 'Validation Error',
+          description: 'Please fill in all required fields (name, category, price).',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      const updateUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`;
+      console.log('AdminProductsPage: Making PUT request to:', updateUrl);
+      console.log('AdminProductsPage: Request payload:', productData);
+      
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`,
+        updateUrl,
         productData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
-      console.log('Product update response:', response.data);
-      fetchProducts();
+      
+      console.log('AdminProductsPage: Product update response:', response.data);
+      console.log('AdminProductsPage: Update successful, refreshing products...');
+      
+      await fetchProducts();
       setEditingProduct(null);
       setShowForm(false);
-      toast({
+      
+      console.log('AdminProductsPage: Showing success toast');
+      showToast({
         title: 'Success!',
-        description: 'Product updated successfully',
+        description: `Product "${productData.name}" updated successfully`,
         variant: 'success'
       });
     } catch (error) {
-      console.error('Error updating product:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update product. Please try again.',
-        variant: 'destructive'
+      console.error('AdminProductsPage: Error updating product:', error);
+      console.error('AdminProductsPage: Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
       });
+      
+      if (error.response?.status === 401) {
+        showToast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to update product';
+        console.log('Full error response:', error.response?.data);
+        showToast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      }
     }
   };
 
   const handleDeleteProduct = async (productId: number) => {
+    const product = products.find(p => p.id === productId);
+    const productName = product?.name || 'Unknown Product';
+    
+    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        showToast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchProducts();
-      toast({
+      await fetchProducts();
+      showToast({
         title: 'Success!',
-        description: 'Product deleted successfully',
+        description: `Product "${productName}" deleted successfully`,
         variant: 'success'
       });
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete product. Please try again.',
-        variant: 'destructive'
-      });
+      if (error.response?.status === 401) {
+        showToast({
+          title: 'Authentication Error',
+          description: 'Please login again to continue.',
+          variant: 'destructive'
+        });
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to delete product';
+        showToast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      }
     }
   };
 
@@ -538,10 +648,17 @@ export default function AdminProductsPage() {
                       <Button size="sm" variant="outline" onClick={() => setViewingProduct(product)} className="p-2">
                         <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => {
-                        setEditingProduct(product);
-                        setShowForm(true);
-                      }} className="p-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => {
+                          console.log('Editing product:', product);
+                          setEditingProduct(product);
+                          setShowForm(true);
+                        }} 
+                        className="p-2"
+                        title="Edit product"
+                      >
                         <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleDeleteProduct(product.id)} className="p-2">
