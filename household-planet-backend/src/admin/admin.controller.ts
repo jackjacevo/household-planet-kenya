@@ -86,21 +86,27 @@ export class AdminController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: false, forbidNonWhitelisted: false }))
   createProduct(@Body() createProductDto: CreateProductDto, @Req() req) {
     console.log('Received product creation request:', JSON.stringify(createProductDto, null, 2));
-    return this.adminService.createProduct(createProductDto, req.user?.id);
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    return this.adminService.createProduct(createProductDto, req.user?.id, ipAddress, userAgent);
   }
 
   @Put('products/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   updateProduct(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto, @Req() req) {
-    return this.adminService.updateProduct(id, updateProductDto, req.user?.id);
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    return this.adminService.updateProduct(id, updateProductDto, req.user?.id, ipAddress, userAgent);
   }
 
   @Delete('products/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   deleteProduct(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return this.adminService.deleteProduct(id, req.user?.id);
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    return this.adminService.deleteProduct(id, req.user?.id, ipAddress, userAgent);
   }
 
   @Post('products/bulk')

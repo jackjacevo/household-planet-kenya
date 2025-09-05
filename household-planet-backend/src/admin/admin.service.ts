@@ -557,7 +557,7 @@ export class AdminService {
     };
   }
 
-  async createProduct(createProductDto: CreateProductDto, userId?: number) {
+  async createProduct(createProductDto: CreateProductDto, userId?: number, ipAddress?: string, userAgent?: string) {
     try {
       console.log('AdminService: Creating product with data:', createProductDto);
       
@@ -615,7 +615,9 @@ export class AdminService {
           'CREATE_PRODUCT',
           { productName: result.name, sku: result.sku, productId: result.id, imageCount: processedImages.length },
           'Product',
-          result.id
+          result.id,
+          ipAddress,
+          userAgent
         ).catch(console.error);
       }
       
@@ -682,7 +684,7 @@ export class AdminService {
     return permanentImages;
   }
 
-  async updateProduct(id: number, updateProductDto: UpdateProductDto, userId?: number) {
+  async updateProduct(id: number, updateProductDto: UpdateProductDto, userId?: number, ipAddress?: string, userAgent?: string) {
     console.log('AdminService: Updating product', id, 'with data:', updateProductDto);
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
@@ -761,7 +763,9 @@ export class AdminService {
         'UPDATE_PRODUCT',
         { productName: result.name, changes, productId: result.id },
         'Product',
-        result.id
+        result.id,
+        ipAddress,
+        userAgent
       ).catch(console.error);
     }
     
@@ -769,7 +773,7 @@ export class AdminService {
     return result;
   }
 
-  async deleteProduct(id: number, userId?: number) {
+  async deleteProduct(id: number, userId?: number, ipAddress?: string, userAgent?: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
 
@@ -782,7 +786,9 @@ export class AdminService {
         'DELETE_PRODUCT',
         { productName: product.name, sku: product.sku, productId: product.id },
         'Product',
-        product.id
+        product.id,
+        ipAddress,
+        userAgent
       ).catch(console.error);
     }
     

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
-import { SimpleLineChart, SimplePieChart, SimpleBarChart } from '@/components/admin/SimpleChart';
+import { SimpleLineChart, SimplePieChart, SimpleBarChart, CustomerGrowthChart } from '@/components/admin/SimpleChart';
 
 interface DashboardStats {
   overview: {
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     return response.data;
   };
 
-  const { data: stats, isLoading: loading } = useQuery({
+  const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: fetchDashboardStats,
     refetchInterval: 30000,
@@ -105,7 +105,29 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!stats) return <div>Error loading dashboard</div>;
+  if (error) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Error loading dashboard
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Unable to load dashboard data. Please try refreshing the page.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return <div>Loading dashboard...</div>;
 
   const statCards = [
     {
@@ -254,13 +276,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-100 shadow-lg rounded-xl border border-blue-200">
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
             <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
               <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              <span className="hidden sm:inline">Sales Trend</span>
-              <span className="sm:hidden">Sales</span>
+              <span className="hidden sm:inline">Revenue Trend</span>
+              <span className="sm:hidden">Revenue</span>
             </h2>
           </div>
           <div className="p-3 sm:p-4" style={{height: '250px'}}>
@@ -291,6 +313,19 @@ export default function AdminDashboard() {
           </div>
           <div className="p-3 sm:p-4" style={{height: '250px'}}>
             <SimpleBarChart />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-violet-50 to-purple-100 shadow-lg rounded-xl border border-violet-200">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-violet-200 bg-gradient-to-r from-violet-600 to-purple-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Customer Growth</span>
+              <span className="sm:hidden">Growth</span>
+            </h2>
+          </div>
+          <div className="p-3 sm:p-4" style={{height: '250px'}}>
+            <CustomerGrowthChart customerGrowth={stats.customerGrowth || []} />
           </div>
         </div>
       </div>
@@ -347,7 +382,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Orders */}
         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 shadow-lg rounded-xl border border-yellow-200">
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-yellow-200 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-t-xl">
@@ -358,7 +393,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {stats.recentOrders.slice(0, 5).map((order) => (
+            {(stats.recentOrders || []).slice(0, 5).map((order) => (
               <div key={order.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -398,7 +433,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {stats.topProducts.map((product) => (
+            {(stats.topProducts || []).map((product) => (
               <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center">
                   <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
@@ -416,6 +451,46 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-900">
                       {product.totalSold} sold
                     </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sales by County */}
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 shadow-lg rounded-xl border border-indigo-200">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-indigo-200 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Sales by County</span>
+              <span className="sm:hidden">Counties</span>
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
+            {stats.salesByCounty?.slice(0, 5).map((county, index) => (
+              <div key={county.county} className="px-4 sm:px-6 py-3 sm:py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {county.county}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {county.orders} orders
+                    </p>
+                  </div>
+                  <div className="text-right ml-2">
+                    <p className="text-sm font-medium text-gray-900">
+                      KSh {county.revenue.toLocaleString()}
+                    </p>
+                    <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
+                      <div 
+                        className="bg-indigo-600 h-2 rounded-full" 
+                        style={{ 
+                          width: `${Math.min(100, (county.revenue / Math.max(...(stats.salesByCounty?.map(c => c.revenue) || [1]))) * 100)}%` 
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               </div>

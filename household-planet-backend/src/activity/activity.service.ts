@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ActivityService {
   constructor(private prisma: PrismaService) {}
 
-  async logActivity(userId: number, action: string, details: any, entityType?: string, entityId?: number) {
+  async logActivity(userId: number, action: string, details: any, entityType?: string, entityId?: number, ipAddress?: string, userAgent?: string) {
     try {
       return this.prisma.adminActivity.create({
         data: {
@@ -14,8 +14,8 @@ export class ActivityService {
           details: typeof details === 'string' ? details : JSON.stringify(details),
           entityType,
           entityId,
-          ipAddress: details?.ipAddress || null,
-          userAgent: details?.userAgent || null
+          ipAddress: ipAddress || details?.ipAddress || null,
+          userAgent: userAgent || details?.userAgent || null
         }
       });
     } catch (error) {

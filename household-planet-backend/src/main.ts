@@ -120,10 +120,8 @@ async function bootstrap() {
     next();
   });
   
-  // Trust proxy for production
-  if (process.env.NODE_ENV === 'production') {
-    app.getHttpAdapter().getInstance().set('trust proxy', 1);
-  }
+  // Trust proxy for IP address detection
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
   
   const port = process.env.PORT || 3001;
   await app.listen(port);

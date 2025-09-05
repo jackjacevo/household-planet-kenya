@@ -110,8 +110,37 @@ export default function AdminActivitiesPage() {
   };
 
   const formatDetails = (details: any) => {
-    if (typeof details === 'string') return details;
-    return JSON.stringify(details, null, 2);
+    if (!details) return 'N/A';
+    if (typeof details === 'string') {
+      try {
+        const parsed = JSON.parse(details);
+        return formatDetailsObject(parsed);
+      } catch {
+        return details;
+      }
+    }
+    return formatDetailsObject(details);
+  };
+
+  const formatDetailsObject = (obj: any) => {
+    if (typeof obj === 'string') return obj;
+    if (typeof obj !== 'object') return String(obj);
+    
+    let formatted = '';
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === 'changes' && typeof value === 'string') {
+        formatted += `${key}: ${(value as string).split(', ').join(', ')}\n`;
+      } else {
+        formatted += `${key}: ${value}\n`;
+      }
+    }
+    return formatted.trim();
+  };
+
+  const getDetailsPreview = (details: any) => {
+    const formatted = formatDetails(details);
+    if (formatted === 'N/A') return formatted;
+    return formatted.length > 100 ? formatted.substring(0, 100) + '...' : formatted;
   };
 
   if (loading) {
@@ -181,7 +210,7 @@ export default function AdminActivitiesPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP & User Agent</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
             </tr>
           </thead>
@@ -216,12 +245,54 @@ export default function AdminActivitiesPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
-                    <div className="truncate" title={formatDetails(activity.details)}>
-                      {formatDetails(activity.details)}
+                    <div className="group relative">
+                      <div className="truncate cursor-help" title="Click to view full details">
+                        {getDetailsPreview(activity.details)}
+                      </div>
+                      {formatDetails(activity.details) !== 'N/A' && (
+                        <div className="absolute left-0 top-full mt-2 w-96 max-w-screen-sm bg-gray-900 text-white text-xs rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-lg border border-gray-700">
+                          <div className="mb-2 text-gray-300 font-semibold">Activity Details:</div>
+                          <div className="text-gray-100 max-h-64 overflow-y-auto space-y-1">
+                            {formatDetails(activity.details).split('\n').map((line, idx) => {
+                              const [key, ...valueParts] = line.split(': ');
+                              const value = valueParts.join(': ');
+                              return (
+                                <div key={idx} className="flex flex-col">
+                                  <span className="text-blue-300 font-medium">{key}:</span>
+                                  <span className="text-gray-100 ml-2 break-words">{value}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {activity.ipAddress || 'N/A'}
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          IP
+                        </span>
+                        <span className="font-mono text-xs">{activity.ipAddress && activity.ipAddress !== 'null' ? activity.ipAddress : 'N/A'}</span>
+                      </div>
+                      {activity.userAgent && (
+                        <div className="group relative">
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              UA
+                            </span>
+                            <span className="text-xs text-gray-400 truncate max-w-24 cursor-help">
+                              {activity.userAgent.length > 20 ? activity.userAgent.substring(0, 20) + '...' : activity.userAgent}
+                            </span>
+                          </div>
+                          <div className="absolute left-0 top-full mt-1 w-80 bg-gray-900 text-white text-xs rounded-lg p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-lg border border-gray-700">
+                            <div className="mb-1 text-gray-300 font-semibold">User Agent:</div>
+                            <div className="text-gray-100 break-words">{activity.userAgent}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(activity.createdAt).toLocaleString()}

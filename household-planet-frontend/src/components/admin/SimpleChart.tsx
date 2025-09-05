@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +14,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import axios from 'axios';
 
 ChartJS.register(
   CategoryScale,
@@ -27,13 +28,66 @@ ChartJS.register(
   ArcElement
 );
 
+interface SalesData {
+  period: string;
+  revenue: number;
+  orders: number;
+}
+
+interface CategoryData {
+  category: string;
+  sales: number;
+}
+
 export function SimpleLineChart() {
-  const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  const { data: salesData, isLoading, error } = useQuery({
+    queryKey: ['salesAnalytics'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=monthly`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      return response.data;
+    },
+    refetchInterval: 60000,
+    retry: 2
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+        Unable to load chart data
+      </div>
+    );
+  }
+
+  const chartData = {
+    labels: salesData?.length > 0 ? salesData.map((item: SalesData) => {
+      if (item.period.includes('-')) {
+        // Handle YYYY-MM format
+        const [year, month] = item.period.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      } else {
+        // Handle other date formats
+        const date = new Date(item.period);
+        return date.toLocaleDateString('en-US', { month: 'short' });
+      }
+    }) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
         label: 'Revenue (KSh)',
-        data: [125000, 145000, 135000, 175000, 165000, 195000],
+        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.revenue) || 0) : [125000, 145000, 135000, 175000, 165000, 195000],
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         tension: 0.4,
@@ -60,6 +114,11 @@ export function SimpleLineChart() {
         grid: {
           color: 'rgba(99, 102, 241, 0.1)',
         },
+        ticks: {
+          callback: function(value: any) {
+            return 'KSh ' + Number(value).toLocaleString();
+          }
+        }
       },
       x: {
         grid: {
@@ -69,21 +128,57 @@ export function SimpleLineChart() {
     },
   };
 
-  return <Line data={data} options={options} />;
+  return <Line data={chartData} options={options} />;
 }
 
 export function SimplePieChart() {
-  const data = {
-    labels: ['Kitchen & Dining', 'Home Decor', 'Cleaning', 'Storage', 'Bathroom'],
+  const { data: categoryData, isLoading, error } = useQuery({
+    queryKey: ['popularCategories'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/popular?period=monthly`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      return response.data;
+    },
+    refetchInterval: 60000,
+    retry: 2
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+        Unable to load chart data
+      </div>
+    );
+  }
+
+  const chartData = {
+    labels: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => item.category) : ['Kitchen & Dining', 'Home Decor', 'Cleaning', 'Storage', 'Bathroom'],
     datasets: [
       {
-        data: [35, 25, 20, 12, 8],
+        data: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => Number(item.sales) || 0) : [35, 25, 20, 12, 8],
         backgroundColor: [
           '#FF6B6B',
           '#4ECDC4',
           '#45B7D1',
           '#96CEB4',
           '#FFEAA7',
+          '#FF8A80',
+          '#82B1FF',
+          '#B39DDB',
+          '#A5D6A7',
+          '#FFCC02'
         ],
         borderWidth: 0,
         hoverOffset: 8,
@@ -108,24 +203,59 @@ export function SimplePieChart() {
     },
   };
 
-  return <Doughnut data={data} options={options} />;
+  return <Doughnut data={chartData} options={options} />;
 }
 
 export function SimpleBarChart() {
-  const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  const { data: salesData, isLoading, error } = useQuery({
+    queryKey: ['monthlySales'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=monthly`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      return response.data;
+    },
+    refetchInterval: 60000,
+    retry: 2
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+        Unable to load chart data
+      </div>
+    );
+  }
+
+  const chartData = {
+    labels: salesData?.length > 0 ? salesData.map((item: SalesData) => {
+      if (item.period.includes('-')) {
+        // Handle YYYY-MM format
+        const [year, month] = item.period.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      } else {
+        // Handle other date formats
+        const date = new Date(item.period);
+        return date.toLocaleDateString('en-US', { month: 'short' });
+      }
+    }) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
         label: 'Orders',
-        data: [45, 52, 48, 61, 55, 67],
-        backgroundColor: [
-          '#10B981',
-          '#059669',
-          '#047857',
-          '#065F46',
-          '#064E3B',
-          '#022C22',
-        ],
+        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.orders) || 0) : [45, 52, 48, 61, 55, 67],
+        backgroundColor: '#10B981',
         borderRadius: 8,
         borderSkipped: false,
       },
@@ -155,5 +285,59 @@ export function SimpleBarChart() {
     },
   };
 
-  return <Bar data={data} options={options} />;
+  return <Bar data={chartData} options={options} />;
+}
+
+export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<{ month: string; customers: number }> }) {
+  const chartData = {
+    labels: customerGrowth?.map(item => item.month) || [],
+    datasets: [
+      {
+        label: 'New Customers',
+        data: customerGrowth?.map(item => item.customers) || [],
+        borderColor: 'rgb(168, 85, 247)',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.4,
+        borderWidth: 3,
+        pointBackgroundColor: 'rgb(168, 85, 247)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        fill: true,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(168, 85, 247, 0.1)',
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
+
+  if (!customerGrowth || customerGrowth.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+        No customer growth data available
+      </div>
+    );
+  }
+
+  return <Line data={chartData} options={options} />;
 }

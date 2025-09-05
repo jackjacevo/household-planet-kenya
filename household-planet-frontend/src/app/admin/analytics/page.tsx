@@ -12,23 +12,42 @@ interface SalesData {
   avgOrderValue: number;
 }
 
+interface CategoryData {
+  category: string;
+  sales: number;
+}
+
+interface GeographicData {
+  county: string;
+  revenue: number;
+  orders: number;
+}
+
 export default function AnalyticsPage() {
   const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
+  const [geographicData, setGeographicData] = useState<GeographicData[]>([]);
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSalesAnalytics();
+    fetchAnalyticsData();
   }, [period]);
 
-  const fetchSalesAnalytics = async () => {
+  const fetchAnalyticsData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=${period}`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
-      setSalesData(response.data);
+      const headers = { 'Authorization': `Bearer ${token}` };
+      
+      const [salesResponse, categoryResponse, geographicResponse] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=${period}`, { headers }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/popular?period=${period}`, { headers }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/geographic`, { headers })
+      ]);
+      
+      setSalesData(salesResponse.data);
+      setCategoryData(categoryResponse.data);
+      setGeographicData(geographicResponse.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
@@ -157,13 +176,13 @@ export default function AnalyticsPage() {
             <h2 className="text-lg font-medium text-gray-900">Category Performance</h2>
           </div>
           <div className="p-6">
-            <CategoryChart data={[
-              { category: 'Kitchen & Dining', sales: 35 },
-              { category: 'Home Decor', sales: 25 },
-              { category: 'Cleaning Supplies', sales: 20 },
-              { category: 'Storage & Organization', sales: 12 },
-              { category: 'Bathroom Essentials', sales: 8 }
-            ]} />
+            {categoryData.length > 0 ? (
+              <CategoryChart data={categoryData} />
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                {loading ? 'Loading category data...' : 'No category data available'}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -174,13 +193,13 @@ export default function AnalyticsPage() {
           <h2 className="text-lg font-medium text-gray-900">Geographic Performance</h2>
         </div>
         <div className="p-6">
-          <GeographicChart data={[
-            { county: 'Nairobi', revenue: 450000, orders: 125 },
-            { county: 'Mombasa', revenue: 280000, orders: 85 },
-            { county: 'Kisumu', revenue: 180000, orders: 65 },
-            { county: 'Nakuru', revenue: 150000, orders: 45 },
-            { county: 'Eldoret', revenue: 120000, orders: 35 }
-          ]} />
+          {geographicData.length > 0 ? (
+            <GeographicChart data={geographicData} />
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              {loading ? 'Loading geographic data...' : 'No geographic data available'}
+            </div>
+          )}
         </div>
       </div>
 
