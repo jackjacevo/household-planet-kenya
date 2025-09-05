@@ -10,7 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function AccountWishlistPage() {
-  const { items, removeFromWishlist, toggleNotifications } = useWishlist();
+  const { items, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
   const [notifications, setNotifications] = useState<{[key: string]: boolean}>({});
 
@@ -29,10 +29,6 @@ export default function AccountWishlistPage() {
     };
     setNotifications(newNotifications);
     localStorage.setItem('wishlist-notifications', JSON.stringify(newNotifications));
-    
-    if (toggleNotifications) {
-      toggleNotifications(productId, newNotifications[productId]);
-    }
   };
 
   const addToCartFromWishlist = (item: any) => {

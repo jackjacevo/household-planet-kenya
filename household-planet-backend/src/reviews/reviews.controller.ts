@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseIntPipe, Req, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto, UpdateReviewDto, ReviewQueryDto } from './dto/review.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -11,8 +12,22 @@ export class ReviewsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Req() req: any, @Body() createReviewDto: CreateReviewDto) {
-    return this.reviewsService.create(req.user.id, createReviewDto);
+  @UseInterceptors(FilesInterceptor('images', 3, {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    },
+  }))
+  create(
+    @Req() req: any, 
+    @Body() createReviewDto: CreateReviewDto,
+    @UploadedFiles() images?: Express.Multer.File[]
+  ) {
+    return this.reviewsService.create(req.user.id, createReviewDto, images);
   }
 
   @Get()

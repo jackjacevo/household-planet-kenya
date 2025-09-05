@@ -80,16 +80,19 @@ export interface ProductVariant {
 export interface Review {
   id: number;
   productId: number;
-  userId: string;
+  userId: number;
   rating: number;
   title?: string;
   comment?: string;
-  photos?: string[];
-  helpfulVotes: number;
-  unhelpfulVotes: number;
+  images?: string | string[];
+  isHelpful: number;
+  isReported: boolean;
   isVerified: boolean;
   createdAt: string;
-  user: User;
+  updatedAt: string;
+  user: {
+    name: string;
+  };
 }
 
 export interface CartItem {

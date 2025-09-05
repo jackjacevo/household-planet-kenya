@@ -197,49 +197,50 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+    <div className="px-2 sm:px-4 lg:px-8">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-            <p className="mt-2 text-sm text-gray-700">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p className="mt-1 sm:mt-2 text-sm text-gray-700">
               Welcome to your admin dashboard. Here's what's happening with your store today.
             </p>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span>Live updates every 30s</span>
+            <span className="hidden sm:inline">Live updates every 30s</span>
+            <span className="sm:hidden">Live updates</span>
           </div>
         </div>
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
         {statCards.map((item) => (
-          <div key={item.name} className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
+          <div key={item.name} className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div className="p-4 sm:p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className={`p-3 rounded-md ${item.bgColor}`}>
-                    <item.icon className={`h-6 w-6 ${item.color}`} />
+                  <div className={`p-2 sm:p-3 rounded-md ${item.bgColor}`}>
+                    <item.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${item.color}`} />
                   </div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ml-3 sm:ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                       {item.name}
                     </dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900">
+                    <dd className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-0">
+                      <div className="text-lg sm:text-2xl font-semibold text-gray-900">
                         {item.value}
                       </div>
-                      <div className={`ml-2 flex items-baseline text-sm font-semibold ${
+                      <div className={`flex items-baseline text-xs sm:text-sm font-semibold sm:ml-2 ${
                         item.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {item.changeType === 'increase' ? (
-                          <TrendingUp className="self-center flex-shrink-0 h-4 w-4" />
+                          <TrendingUp className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
                         ) : (
-                          <TrendingDown className="self-center flex-shrink-0 h-4 w-4" />
+                          <TrendingDown className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
                         )}
                         <span className="ml-1">{item.change}</span>
                       </div>
@@ -253,62 +254,66 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-100 shadow-lg rounded-xl border border-blue-200">
-          <div className="px-6 py-4 border-b border-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2" />
-              Sales Trend
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Sales Trend</span>
+              <span className="sm:hidden">Sales</span>
             </h2>
           </div>
-          <div className="p-4" style={{height: '300px'}}>
+          <div className="p-3 sm:p-4" style={{height: '250px'}}>
             <SimpleLineChart />
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-purple-50 to-pink-100 shadow-lg rounded-xl border border-purple-200">
-          <div className="px-6 py-4 border-b border-purple-200 bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-xl">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              <PieChart className="h-5 w-5 mr-2" />
-              Popular Categories
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-purple-200 bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <PieChart className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Popular Categories</span>
+              <span className="sm:hidden">Categories</span>
             </h2>
           </div>
-          <div className="p-4" style={{height: '300px'}}>
+          <div className="p-3 sm:p-4" style={{height: '250px'}}>
             <SimplePieChart />
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-green-50 to-emerald-100 shadow-lg rounded-xl border border-green-200">
-          <div className="px-6 py-4 border-b border-green-200 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-xl">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              <Activity className="h-5 w-5 mr-2" />
-              Monthly Orders
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-green-200 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Monthly Orders</span>
+              <span className="sm:hidden">Orders</span>
             </h2>
           </div>
-          <div className="p-4" style={{height: '300px'}}>
+          <div className="p-3 sm:p-4" style={{height: '250px'}}>
             <SimpleBarChart />
           </div>
         </div>
       </div>
 
       {/* Product Stats */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 shadow-lg rounded-xl border border-orange-200 mb-8">
-        <div className="px-6 py-4 border-b border-orange-200 bg-gradient-to-r from-orange-600 to-red-600 rounded-t-xl">
-          <h2 className="text-lg font-semibold text-white flex items-center">
-            <Boxes className="h-5 w-5 mr-2" />
-            Product Overview
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 shadow-lg rounded-xl border border-orange-200 mb-6 sm:mb-8">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-orange-200 bg-gradient-to-r from-orange-600 to-red-600 rounded-t-xl">
+          <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Boxes className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+            <span className="hidden sm:inline">Product Overview</span>
+            <span className="sm:hidden">Products</span>
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-orange-200">
           {productStats.map((stat, index) => (
-            <div key={stat.name} className={`px-6 py-4 ${index < productStats.length - 1 ? 'border-r border-orange-200' : ''}`}>
-              <div className="flex items-center">
-                <div className="p-2 rounded-lg bg-white shadow-sm">
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            <div key={stat.name} className="px-3 sm:px-6 py-3 sm:py-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                <div className="p-2 rounded-lg bg-white shadow-sm w-fit">
+                  <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-orange-700 font-medium">{stat.name}</p>
-                  <p className="text-xl font-bold text-orange-900">{stat.value}</p>
+                <div className="sm:ml-3">
+                  <p className="text-xs sm:text-sm text-orange-700 font-medium truncate">{stat.name}</p>
+                  <p className="text-lg sm:text-xl font-bold text-orange-900">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -317,23 +322,24 @@ export default function AdminDashboard() {
       </div>
 
       {/* Today's Stats */}
-      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 shadow-lg rounded-xl border border-cyan-200 mb-8">
-        <div className="px-6 py-4 border-b border-cyan-200 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-t-xl">
-          <h2 className="text-lg font-semibold text-white flex items-center">
-            <Clock className="h-5 w-5 mr-2" />
-            Today's Performance
+      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 shadow-lg rounded-xl border border-cyan-200 mb-6 sm:mb-8">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-cyan-200 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-t-xl">
+          <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+            <span className="hidden sm:inline">Today's Performance</span>
+            <span className="sm:hidden">Today</span>
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-cyan-200">
           {todayStats.map((stat, index) => (
-            <div key={stat.name} className={`px-6 py-4 ${index < todayStats.length - 1 ? 'border-r border-cyan-200' : ''}`}>
-              <div className="flex items-center">
-                <div className="p-2 rounded-lg bg-white shadow-sm">
-                  <stat.icon className="h-5 w-5 text-cyan-600" />
+            <div key={stat.name} className="px-3 sm:px-6 py-3 sm:py-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                <div className="p-2 rounded-lg bg-white shadow-sm w-fit">
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-cyan-700 font-medium">{stat.name}</p>
-                  <p className="text-xl font-bold text-cyan-900">{stat.value}</p>
+                <div className="sm:ml-3">
+                  <p className="text-xs sm:text-sm text-cyan-700 font-medium truncate">{stat.name}</p>
+                  <p className="text-lg sm:text-xl font-bold text-cyan-900">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -341,29 +347,30 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Recent Orders */}
         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 shadow-lg rounded-xl border border-yellow-200">
-          <div className="px-6 py-4 border-b border-yellow-200 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-t-xl">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              Recent Orders
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-yellow-200 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Recent Orders</span>
+              <span className="sm:hidden">Orders</span>
             </h2>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
             {stats.recentOrders.slice(0, 5).map((order) => (
-              <div key={order.id} className="px-6 py-4">
+              <div key={order.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       #{order.orderNumber}
                     </p>
-                    <p className="text-sm text-gray-500">{order.user.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">{order.user.name}</p>
                     <p className="text-xs text-gray-400">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right ml-2">
                     <p className="text-sm font-medium text-gray-900">
                       KSh {order.total.toLocaleString()}
                     </p>
@@ -383,28 +390,29 @@ export default function AdminDashboard() {
 
         {/* Top Products */}
         <div className="bg-gradient-to-br from-pink-50 to-rose-50 shadow-lg rounded-xl border border-pink-200">
-          <div className="px-6 py-4 border-b border-pink-200 bg-gradient-to-r from-pink-600 to-rose-600 rounded-t-xl">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              <Star className="h-5 w-5 mr-2" />
-              Top Selling Products
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-pink-200 bg-gradient-to-r from-pink-600 to-rose-600 rounded-t-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <Star className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span className="hidden sm:inline">Top Selling Products</span>
+              <span className="sm:hidden">Top Products</span>
             </h2>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
             {stats.topProducts.map((product) => (
-              <div key={product.id} className="px-6 py-4">
+              <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center">
-                  <div className="h-10 w-10 flex-shrink-0">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <img
-                      className="h-10 w-10 rounded object-cover"
+                      className="h-8 w-8 sm:h-10 sm:w-10 rounded object-cover"
                       src={product.images[0] || '/images/products/placeholder.svg'}
                       alt={product.name}
                     />
                   </div>
-                  <div className="ml-4 flex-1">
-                    <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-500">KSh {product.price.toLocaleString()}</p>
+                  <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">KSh {product.price.toLocaleString()}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right ml-2">
                     <p className="text-sm font-medium text-gray-900">
                       {product.totalSold} sold
                     </p>

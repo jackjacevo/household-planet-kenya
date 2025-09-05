@@ -28,34 +28,34 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Profile</h1>
             <button
               onClick={logout}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+              className="px-3 py-2 sm:px-4 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors self-start sm:self-auto"
             >
               Logout
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <User className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-medium">{user.name}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-start space-x-3">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500">Name</p>
+                  <p className="font-medium text-sm sm:text-base break-words">{user.name}</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{user.email}</p>
+              <div className="flex items-start space-x-3">
+                <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500">Email</p>
+                  <p className="font-medium text-sm sm:text-base break-words">{user.email}</p>
                   {user.emailVerified ? (
                     <span className="text-xs text-green-600">Verified</span>
                   ) : (
@@ -65,11 +65,11 @@ export default function ProfilePage() {
               </div>
 
               {user.phone && (
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p className="font-medium">{user.phone}</p>
+                <div className="flex items-start space-x-3">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-500">Phone</p>
+                    <p className="font-medium text-sm sm:text-base">{user.phone}</p>
                     {user.phoneVerified ? (
                       <span className="text-xs text-green-600">Verified</span>
                     ) : (
@@ -79,26 +79,26 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              <div className="flex items-center space-x-3">
-                <Shield className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Role</p>
-                  <p className="font-medium capitalize">{user.role}</p>
+              <div className="flex items-start space-x-3">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500">Role</p>
+                  <p className="font-medium text-sm sm:text-base capitalize">{user.role}</p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Account Status</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Account Status</h3>
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between items-center">
                     <span>Email Verified:</span>
                     <span className={user.emailVerified ? 'text-green-600' : 'text-red-600'}>
                       {user.emailVerified ? 'Yes' : 'No'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Phone Verified:</span>
                     <span className={user.phoneVerified ? 'text-green-600' : 'text-red-600'}>
                       {user.phoneVerified ? 'Yes' : 'No'}

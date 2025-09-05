@@ -97,29 +97,32 @@ export default function AdminLayout({
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
-            <div className="flex h-16 items-center justify-between px-4">
-              <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-              <button onClick={() => setSidebarOpen(false)}>
-                <X className="h-6 w-6" />
+          <div className="fixed inset-y-0 left-0 flex w-72 sm:w-80 flex-col bg-white shadow-xl">
+            <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">Admin Panel</h1>
+              <button 
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
-            <nav className="flex-1 space-y-1 px-2 py-4">
+            <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
               {visibleNavigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-blue-100 text-blue-900'
+                        ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-600'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    <item.icon className="mr-3 h-5 w-5" />
-                    {item.name}
+                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">{item.name}</span>
                   </Link>
                 );
               })}
@@ -129,21 +132,21 @@ export default function AdminLayout({
       )}
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:top-[84px] lg:bottom-0 lg:flex lg:w-64 lg:flex-col lg:z-30">
+      <div className="hidden lg:fixed lg:top-[84px] lg:bottom-0 lg:flex lg:w-64 lg:flex-col lg:z-50">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
-          <div className="flex h-16 items-center px-4">
+          <div className="flex h-16 items-center px-4 border-b border-gray-100">
             <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
           </div>
-          <nav className="flex-1 space-y-1 px-2 py-4">
+          <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
             {visibleNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
-                      ? 'bg-blue-100 text-blue-900'
+                      ? 'bg-blue-100 text-blue-900 border-l-4 border-blue-600'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
@@ -159,15 +162,15 @@ export default function AdminLayout({
       {/* Mobile menu button */}
       <button
         type="button"
-        className="fixed top-[88px] left-4 z-40 p-2 bg-white rounded-md shadow-md lg:hidden"
+        className="fixed top-[88px] left-4 z-40 p-3 bg-white rounded-lg shadow-lg lg:hidden border border-gray-200 hover:bg-gray-50 transition-colors"
         onClick={() => setSidebarOpen(true)}
       >
-        <Menu className="h-6 w-6 text-gray-700" />
+        <Menu className="h-5 w-5 text-gray-700" />
       </button>
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <main className="py-6">
+        <main className="py-4 px-2 sm:py-6 sm:px-4">
           <AdminRoute>
             {children}
           </AdminRoute>

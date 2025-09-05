@@ -265,20 +265,20 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
-      <div className="mb-8 flex justify-between items-center">
+    <div className="px-2 sm:px-4 lg:px-8">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Management</h1>
+          <p className="mt-1 sm:mt-2 text-sm text-gray-700">
             Manage your product catalog and inventory.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowAnalytics(true)} variant="outline">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={() => setShowAnalytics(true)} variant="outline" size="sm" className="w-full sm:w-auto">
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </Button>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} size="sm" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Add Product
           </Button>
@@ -286,26 +286,26 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-4 mb-6 sm:mb-8">
+        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+          <div className="p-3 sm:p-5">
             <div className="flex items-center">
-              <Package className="h-6 w-6 text-blue-600" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Total Products</p>
-                <p className="text-2xl font-semibold text-gray-900">{meta.total}</p>
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              <div className="ml-2 sm:ml-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-500">Total Products</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900">{meta.total}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+          <div className="p-3 sm:p-5">
             <div className="flex items-center">
-              <Package className="h-6 w-6 text-green-600" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Active Products</p>
-                <p className="text-2xl font-semibold text-gray-900">
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              <div className="ml-2 sm:ml-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-500">Active Products</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900">
                   {products.filter(p => p.isActive).length}
                 </p>
               </div>
@@ -313,13 +313,13 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+          <div className="p-3 sm:p-5">
             <div className="flex items-center">
-              <Package className="h-6 w-6 text-yellow-600" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Low Stock</p>
-                <p className="text-2xl font-semibold text-gray-900">
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+              <div className="ml-2 sm:ml-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-500">Low Stock</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900">
                   {products.filter(p => p.trackStock && p.stock <= p.lowStockThreshold && p.stock > 0).length}
                 </p>
               </div>
@@ -327,13 +327,13 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+          <div className="p-3 sm:p-5">
             <div className="flex items-center">
-              <Package className="h-6 w-6 text-red-600" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Out of Stock</p>
-                <p className="text-2xl font-semibold text-gray-900">
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              <div className="ml-2 sm:ml-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-500">Out of Stock</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900">
                   {products.filter(p => p.stock === 0).length}
                 </p>
               </div>
@@ -343,8 +343,8 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
@@ -352,49 +352,58 @@ export default function AdminProductsPage() {
               placeholder="Search products..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
-              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="pl-10 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <select
-            value={filters.categoryId}
-            onChange={(e) => setFilters(prev => ({ ...prev, categoryId: e.target.value, page: 1 }))}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={filters.categoryId}
+              onChange={(e) => setFilters(prev => ({ ...prev, categoryId: e.target.value, page: 1 }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Categories</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
+            <select
+              value={filters.brandId}
+              onChange={(e) => setFilters(prev => ({ ...prev, brandId: e.target.value, page: 1 }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Brands</option>
+              {brands.map(brand => (
+                <option key={brand.id} value={brand.id}>{brand.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={filters.isActive}
+              onChange={(e) => setFilters(prev => ({ ...prev, isActive: e.target.value, page: 1 }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Status</option>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+            <select
+              value={filters.limit}
+              onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+              <option value="100">100 per page</option>
+            </select>
+          </div>
+          <Button 
+            onClick={() => setFilters({ search: '', categoryId: '', brandId: '', isActive: '', page: 1, limit: 10 })} 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
           >
-            <option value="">All Categories</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-          <select
-            value={filters.brandId}
-            onChange={(e) => setFilters(prev => ({ ...prev, brandId: e.target.value, page: 1 }))}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Brands</option>
-            {brands.map(brand => (
-              <option key={brand.id} value={brand.id}>{brand.name}</option>
-            ))}
-          </select>
-          <select
-            value={filters.isActive}
-            onChange={(e) => setFilters(prev => ({ ...prev, isActive: e.target.value, page: 1 }))}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
-          <select
-            value={filters.limit}
-            onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="10">10 per page</option>
-            <option value="25">25 per page</option>
-            <option value="50">50 per page</option>
-            <option value="100">100 per page</option>
-          </select>
-          <Button onClick={() => setFilters({ search: '', categoryId: '', brandId: '', isActive: '', page: 1, limit: 10 })} variant="outline">
             Clear Filters
           </Button>
         </div>
@@ -422,32 +431,32 @@ export default function AdminProductsPage() {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="admin-table-wrapper">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Select
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Product
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Stock
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                   Performance
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -455,7 +464,7 @@ export default function AdminProductsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => (
                 <tr key={product.id} className={selectedProducts.includes(product.id) ? 'bg-blue-50' : ''}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedProducts.includes(product.id)}
@@ -463,39 +472,53 @@ export default function AdminProductsPage() {
                       className="rounded"
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0">
+                      <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                         <img
-                          className="h-10 w-10 rounded object-cover"
+                          className="h-8 w-8 sm:h-10 sm:w-10 rounded object-cover"
                           src={getImageUrl(product.images[0])}
                           alt={product.name}
                         />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                           {product.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs text-gray-500 truncate">
                           {product.brand?.name}
+                        </div>
+                        {/* Show category on mobile */}
+                        <div className="text-xs text-gray-400 md:hidden">
+                          {product.category.name}
+                        </div>
+                        {/* Show status on mobile */}
+                        <div className="sm:hidden mt-1">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            product.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.isActive ? 'Active' : 'Inactive'}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
                     {product.category.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                     KSh {product.price.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                     <StockStatus
                       stock={product.stock}
                       lowStockThreshold={product.lowStockThreshold}
                       trackStock={product.trackStock}
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       product.isActive 
                         ? 'bg-green-100 text-green-800' 
@@ -504,25 +527,27 @@ export default function AdminProductsPage() {
                       {product.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
                     <div className="text-xs">
                       <div>Reviews: {product.reviewCount}</div>
                       <div>Sales: {product.salesCount}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <Button size="sm" variant="outline" onClick={() => setViewingProduct(product)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => {
-                      setEditingProduct(product);
-                      setShowForm(true);
-                    }}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDeleteProduct(product.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setViewingProduct(product)} className="p-2">
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setEditingProduct(product);
+                        setShowForm(true);
+                      }} className="p-2">
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteProduct(product.id)} className="p-2">
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

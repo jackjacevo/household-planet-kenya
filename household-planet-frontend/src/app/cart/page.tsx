@@ -95,10 +95,10 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8">Shopping Cart</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
         <div className="lg:col-span-2 space-y-6">
           {/* Cart Items */}
           {items.length > 0 && (
@@ -107,71 +107,78 @@ export default function CartPage() {
                 <h2 className="text-lg font-semibold">Shopping Cart ({items.length} items)</h2>
               </div>
               {items.map((item) => (
-                <div key={item.id} className="flex items-center p-4 border-b last:border-b-0">
-                  <div className="w-24 h-24 relative">
-                    <Image
-                      src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? JSON.parse(item.product.images)[0] : null))}
-                      alt={item.product.name}
-                      fill
-                      className="object-cover rounded-md"
-                      style={{ height: 'auto' }}
-                    />
-                  </div>
-                  
-                  <div className="flex-1 ml-4">
-                    <h3 className="font-semibold">{item.product.name}</h3>
-                    <p className="text-gray-600">{formatPrice(item.product.price)}</p>
-                    {item.variant && (
-                      <p className="text-sm text-gray-500">
-                        {item.variant.size && `Size: ${item.variant.size}`}
-                        {item.variant.color && ` • Color: ${item.variant.color}`}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
+                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border-b last:border-b-0 space-y-3 sm:space-y-0">
+                  <div className="flex items-start space-x-3 sm:space-x-4 flex-1">
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 relative flex-shrink-0">
+                      <Image
+                        src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? JSON.parse(item.product.images)[0] : null))}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover rounded-md"
+                        style={{ height: 'auto' }}
+                      />
+                    </div>
                     
-                    <span className="w-8 text-center">{item.quantity}</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{item.product.name}</h3>
+                      <p className="text-gray-600 text-sm">{formatPrice(item.product.price)}</p>
+                      {item.variant && (
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {item.variant.size && `Size: ${item.variant.size}`}
+                          {item.variant.color && ` • Color: ${item.variant.color}`}
+                        </p>
+                      )}
+                      <p className="font-semibold text-sm sm:text-base mt-1 sm:hidden">{formatPrice(item.product.price * item.quantity)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-end sm:space-x-4">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      
+                      <span className="w-8 text-center text-sm">{item.quantity}</span>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
                     
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="ml-4">
-                    <p className="font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
-                  </div>
-                  
-                  <div className="ml-4 flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => saveForLater(item.id)}
-                      className="text-orange-600"
-                      title="Save for later"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-red-600"
-                      title="Remove from cart"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="hidden sm:block">
+                      <p className="font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
+                    </div>
+                    
+                    <div className="flex space-x-1 sm:space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => saveForLater(item.id)}
+                        className="text-orange-600 h-8 w-8 p-0"
+                        title="Save for later"
+                      >
+                        <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-red-600 h-8 w-8 p-0"
+                        title="Remove from cart"
+                      >
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

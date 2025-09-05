@@ -76,26 +76,26 @@ export function UserProfile() {
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border py-2 z-50">
-          <div className="px-4 py-3 border-b">
-            <div className="flex items-center space-x-3">
+        <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-lg border py-2 z-50">
+          <div className="px-3 sm:px-4 py-2 sm:py-3 border-b">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {user.avatar ? (
                 <img
                   src={user.avatar}
                   alt={user.name}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-medium text-sm sm:text-base">
                     {user.name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
               )}
-              <div>
-                <p className="font-medium text-gray-900">{user.name}</p>
-                <p className="text-sm text-gray-500">{user.email}</p>
-                {user.phone && <p className="text-xs text-gray-400">{user.phone}</p>}
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{user.name}</p>
+                <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
+                {user.phone && <p className="text-xs text-gray-400 truncate">{user.phone}</p>}
               </div>
             </div>
           </div>

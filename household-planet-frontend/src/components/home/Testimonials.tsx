@@ -68,30 +68,30 @@ const itemVariants = {
 
 export function Testimonials() {
   return (
-    <section className="py-12 bg-white">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-gray-800 text-center mb-8">What Our Customers Say</h2>
+    <section className="py-8 sm:py-12 bg-white">
+      <div className="container mx-auto px-3 sm:px-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6 sm:mb-8">What Our Customers Say</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {testimonials.map((testimonial) => (
-            <div key={testimonial.id} className="bg-gray-50 rounded-lg p-6 shadow-sm">
-              <div className="flex items-center mb-4">
+            <div key={testimonial.id} className="bg-gray-50 rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center mb-3 sm:mb-4">
                 <div className="flex text-yellow-400">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
                 </div>
               </div>
-              <p className="text-gray-600 mb-4">"{testimonial.comment}"</p>
+              <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">"{testimonial.comment}"</p>
               <div className="flex items-center">
                 <img 
                   src={testimonial.avatar} 
                   alt={testimonial.name} 
-                  className="w-10 h-10 rounded-full mr-3"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3"
                 />
                 <div>
-                  <h4 className="font-medium text-gray-900">{testimonial.name}</h4>
-                  <p className="text-sm text-gray-500">{testimonial.location}</p>
+                  <h4 className="font-medium text-gray-900 text-sm sm:text-base">{testimonial.name}</h4>
+                  <p className="text-xs sm:text-sm text-gray-500">{testimonial.location}</p>
                 </div>
               </div>
             </div>

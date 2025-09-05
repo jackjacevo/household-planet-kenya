@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, User, Search, Menu, X, Phone, Mail, MapPin, ChevronDown, Heart, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, Phone, Mail, MapPin, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CartDrawer } from '@/components/ecommerce/CartDrawer';
 import { SearchAutocomplete } from '@/components/products/SearchAutocomplete';
@@ -20,7 +20,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { user, logout, loading } = useAuth();
-  const [isShopOpen, setIsShopOpen] = useState(false);
+
   const { getTotalItems } = useCart();
 
   useEffect(() => {
@@ -39,20 +39,7 @@ export function Header() {
 
   const navItems = [
     { href: '/', label: 'Home' },
-    { 
-      href: '/products', 
-      label: 'Shop',
-      hasDropdown: true,
-      dropdownItems: [
-        { href: '/categories', label: 'All Categories' },
-        { href: '/products?category=kitchen-dining', label: 'Kitchen & Dining' },
-        { href: '/products?category=bathroom-accessories', label: 'Bathroom Accessories' },
-        { href: '/products?category=beddings-bedroom', label: 'Bedding & Bedroom' },
-        { href: '/products?category=home-decor-accessories', label: 'Home Decor' },
-        { href: '/products?category=storage-organization', label: 'Storage & Organization' },
-        { href: '/products', label: 'All Products' },
-      ]
-    },
+    { href: '/products', label: 'Shop' },
     { href: '/categories', label: 'Categories' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
@@ -63,12 +50,12 @@ export function Header() {
       {/* Top Bar - Now sticky and visible */}
       <div className="sticky top-0 z-50 bg-green-800 text-white py-2 px-4 text-sm w-full">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex space-x-4">
-            <span className="flex items-center">
-              <Phone className="h-3 w-3 mr-1" /> +254790 227 760
-            </span>
+          <div className="flex flex-col sm:flex-row sm:space-x-4">
             <span className="flex items-center">
               <Mail className="h-3 w-3 mr-1" /> householdplanet819@gmail.com
+            </span>
+            <span className="flex items-center">
+              <Phone className="h-3 w-3 mr-1" /> +254790 227 760
             </span>
           </div>
           <div className="hidden lg:flex space-x-4">
@@ -85,61 +72,46 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center mr-4 md:mr-8">
+          <Link href="/" className="flex items-center mr-2 sm:mr-4 md:mr-8 flex-shrink-0">
             <img 
               src="/images/logo/hp_logo.jpeg" 
               alt="Household Planet Kenya" 
-              className="h-8 w-8 md:h-12 md:w-12 rounded-full object-cover mr-2"
+              className="h-7 w-7 sm:h-8 sm:w-8 md:h-12 md:w-12 rounded-full object-cover mr-1.5 sm:mr-2"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
                 target.nextElementSibling?.classList.remove('hidden');
               }}
             />
-            <div className="h-8 w-8 md:h-10 md:w-10 bg-green-600 rounded-full flex items-center justify-center mr-2 hidden">
-              <span className="text-white font-bold text-sm md:text-lg">H</span>
+            <div className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 bg-green-600 rounded-full flex items-center justify-center mr-1.5 sm:mr-2 hidden">
+              <span className="text-white font-bold text-xs sm:text-sm md:text-lg">H</span>
             </div>
-            <div className="hidden xs:block">
-              <span className="text-lg md:text-xl font-bold text-green-800 block">
-                <span className="hidden sm:inline">Household Planet Kenya</span>
+            <div className="min-w-0">
+              <span className={`font-bold text-green-800 block leading-tight ${
+                mounted && user ? 'text-sm sm:text-base md:text-lg' : 'text-base sm:text-lg md:text-xl'
+              }`}>
+                <span className="hidden lg:inline">Household Planet Kenya</span>
+                <span className="hidden sm:inline lg:hidden">HP Kenya</span>
                 <span className="sm:hidden">HP Kenya</span>
               </span>
-              <CompanyTagline size="sm" className="text-xs md:text-sm text-orange-600 font-medium" />
+              <CompanyTagline size="sm" className={`text-orange-600 font-medium leading-tight ${
+                mounted && user ? 'hidden md:block text-xs' : 'hidden sm:block text-xs md:text-sm'
+              }`} />
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex space-x-8 ml-8">
             {navItems.map((item) => (
-              <div key={item.href} className="relative group">
-                {item.hasDropdown ? (
-                  <>
-                    <button className="text-gray-700 font-medium hover:text-green-600 transition flex items-center">
-                      {item.label} <ChevronDown className="ml-1 h-4 w-4" />
-                    </button>
-                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                      {item.dropdownItems?.map((dropItem) => (
-                        <Link
-                          key={dropItem.href}
-                          href={dropItem.href}
-                          className="block px-4 py-2 text-gray-800 hover:bg-green-50 hover:text-green-600"
-                        >
-                          {dropItem.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={`font-medium hover:text-green-600 transition ${
-                      item.href === '/' ? 'text-green-800' : 'text-gray-700'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </div>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`font-medium hover:text-green-600 transition ${
+                  item.href === '/' ? 'text-green-800' : 'text-gray-700'
+                }`}
+              >
+                {item.label}
+              </Link>
             ))}
           </nav>
 
@@ -149,28 +121,32 @@ export function Header() {
           </div>
 
           {/* Icons */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className={`flex items-center ${
+            mounted && user ? 'space-x-1 sm:space-x-2' : 'space-x-1 sm:space-x-2 md:space-x-4'
+          }`}>
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 text-gray-700 hover:text-green-600 transition lg:hidden"
+              className="p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition lg:hidden"
             >
               <Search className="h-5 w-5" />
             </button>
             
             <Link 
               href="/wishlist"
-              className="p-2 text-gray-700 hover:text-green-600 transition hidden md:block"
+              className={`p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition ${
+                mounted && user ? 'hidden lg:block' : 'hidden md:block'
+              }`}
             >
               <Heart className="h-5 w-5" />
             </Link>
             
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-gray-700 hover:text-green-600 transition"
+              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition"
             >
               <ShoppingCart className="h-5 w-5" />
               {mounted && getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-green-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
                   {getTotalItems()}
                 </span>
               )}
@@ -192,10 +168,10 @@ export function Header() {
             )}
             
             <button
-              className="lg:hidden p-2 text-gray-700"
+              className="lg:hidden p-1.5 sm:p-2 text-gray-700"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
             </button>
           </div>
         </div>
@@ -210,59 +186,30 @@ export function Header() {
       </header>
 
       {/* Mobile Menu */}
-      <div className={`lg:hidden fixed top-0 right-0 h-full w-80 max-w-full bg-white shadow-lg z-60 transform transition-transform duration-300 ${
+      <div className={`lg:hidden fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white shadow-2xl z-60 transform transition-transform duration-300 ${
         isMenuOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
-        <div className="p-4 flex justify-between items-center border-b">
+        <div className="p-4 flex justify-between items-center border-b bg-green-50">
           <span className="text-lg font-bold text-green-800">Menu</span>
           <button 
-            className="text-gray-500 p-2" 
+            className="text-gray-500 p-1.5 hover:bg-gray-100 rounded-full" 
             onClick={() => setIsMenuOpen(false)}
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="p-4">
+        <nav className="p-3">
           {navItems.map((item) => (
-            <div key={item.href} className="py-3">
-              {item.hasDropdown ? (
-                <>
-                  <button
-                    className="flex items-center justify-between w-full text-gray-700 hover:text-green-600 py-2"
-                    onClick={() => setIsShopOpen(!isShopOpen)}
-                  >
-                    <span className="text-base">{item.label}</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${
-                      isShopOpen ? 'rotate-180' : ''
-                    }`} />
-                  </button>
-                  {isShopOpen && (
-                    <div className="pl-4 mt-2 space-y-2">
-                      {item.dropdownItems?.map((dropItem) => (
-                        <Link
-                          key={dropItem.href}
-                          href={dropItem.href}
-                          className="block py-2 text-gray-600 hover:text-green-600"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {dropItem.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="block text-gray-700 hover:text-green-600 py-2 text-base"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              )}
-            </div>
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center px-3 py-3 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm font-medium"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
           ))}
-          <div className="mt-6 pt-4 border-t space-y-3">
+          <div className="mt-4 pt-3 border-t space-y-1">
             {mounted && (loading ? (
               <div className="flex items-center py-3">
                 <div className="w-5 h-5 bg-gray-200 rounded-full animate-pulse mr-3"></div>
@@ -272,34 +219,26 @@ export function Header() {
               <>
                 <Link 
                   href="/profile" 
-                  className="flex items-center py-3 text-gray-700 hover:text-green-600"
+                  className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <User className="h-5 w-5 mr-3" /> 
+                  <User className="h-4 w-4 mr-3" /> 
                   <span>My Profile</span>
                 </Link>
                 <Link 
-                  href="/account" 
-                  className="flex items-center py-3 text-gray-700 hover:text-green-600"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User className="h-5 w-5 mr-3" /> 
-                  <span>Account Settings</span>
-                </Link>
-                <Link 
                   href="/account/orders" 
-                  className="flex items-center py-3 text-gray-700 hover:text-green-600"
+                  className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <ShoppingCart className="h-5 w-5 mr-3" /> 
+                  <ShoppingCart className="h-4 w-4 mr-3" /> 
                   <span>My Orders</span>
                 </Link>
                 <Link 
                   href="/wishlist" 
-                  className="flex items-center py-3 text-gray-700 hover:text-green-600"
+                  className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Heart className="h-5 w-5 mr-3" /> 
+                  <Heart className="h-4 w-4 mr-3" /> 
                   <span>Wishlist</span>
                 </Link>
                 {(user.role === 'ADMIN' || user.role === 'admin') && (
@@ -317,9 +256,9 @@ export function Header() {
                     logout()
                     setIsMenuOpen(false)
                   }}
-                  className="flex items-center py-3 text-red-600 hover:text-red-700 w-full text-left"
+                  className="flex items-center px-3 py-2.5 text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left rounded-lg transition-colors text-sm"
                 >
-                  <User className="h-5 w-5 mr-3" /> 
+                  <User className="h-4 w-4 mr-3" /> 
                   <span>Logout</span>
                 </button>
               </>
@@ -327,18 +266,18 @@ export function Header() {
               <>
                 <Link 
                   href="/login" 
-                  className="flex items-center py-3 text-gray-700 hover:text-green-600"
+                  className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <User className="h-5 w-5 mr-3" /> 
+                  <User className="h-4 w-4 mr-3" /> 
                   <span>Login</span>
                 </Link>
                 <Link 
                   href="/register" 
-                  className="flex items-center py-3 text-green-600 hover:text-green-700 font-medium"
+                  className="flex items-center px-3 py-2.5 text-green-600 hover:bg-green-50 hover:text-green-700 font-medium rounded-lg transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <User className="h-5 w-5 mr-3" /> 
+                  <User className="h-4 w-4 mr-3" /> 
                   <span>Sign Up</span>
                 </Link>
               </>

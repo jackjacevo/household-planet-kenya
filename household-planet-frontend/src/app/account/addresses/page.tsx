@@ -135,19 +135,19 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">My Addresses</h1>
-          <Button onClick={() => setShowForm(true)}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Addresses</h1>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Add Address
           </Button>
         </div>
 
         {showForm && (
-          <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-            <h3 className="text-lg font-medium mb-4">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 border rounded-lg bg-gray-50">
+            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4">
               {editingAddress ? 'Edit Address' : 'Add New Address'}
             </h3>
             
@@ -213,8 +213,8 @@ export default function AddressesPage() {
                 </label>
               </div>
               
-              <div className="flex space-x-3">
-                <Button type="submit">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <Button type="submit" className="w-full sm:w-auto">
                   {editingAddress ? 'Update Address' : 'Save Address'}
                 </Button>
                 <Button
@@ -224,6 +224,7 @@ export default function AddressesPage() {
                     setShowForm(false);
                     setEditingAddress(null);
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -267,11 +268,12 @@ export default function AddressesPage() {
                   <p>{address.town}, {address.county}</p>
                 </div>
                 
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleEdit(address)}
+                    className="flex-1 sm:flex-none"
                   >
                     <Edit2 className="h-3 w-3 mr-1" />
                     Edit
@@ -282,6 +284,7 @@ export default function AddressesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setAsDefault(address.id)}
+                      className="flex-1 sm:flex-none text-xs sm:text-sm"
                     >
                       Set Default
                     </Button>
@@ -291,7 +294,7 @@ export default function AddressesPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDelete(address.id)}
-                    className="text-red-600 hover:bg-red-50"
+                    className="text-red-600 hover:bg-red-50 flex-1 sm:flex-none"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
                     Delete

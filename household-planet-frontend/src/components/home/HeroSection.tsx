@@ -82,7 +82,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative h-96 md:h-[500px] overflow-hidden bg-gray-100">
+    <section className="relative h-[400px] sm:h-96 md:h-[500px] overflow-hidden bg-gray-100">
       {/* Image Slideshow */}
       <div className="absolute inset-0">
         {householdImages.map((image, index) => (
@@ -125,8 +125,8 @@ export function HeroSection() {
       </div>
       
       {/* Content */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div className="text-center px-4 max-w-4xl">
+      <div className="absolute inset-0 flex items-center justify-center z-10 pt-8 sm:pt-0">
+        <div className="text-center px-3 sm:px-4 max-w-4xl">
           <motion.div
             variants={badgeVariants}
             initial="hidden"
@@ -140,7 +140,7 @@ export function HeroSection() {
             variants={heroVariants}
             initial="hidden"
             animate="visible"
-            className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-3 sm:mb-4 leading-tight"
           >
             Household Planet <span className="text-green-400">Kenya</span>
           </motion.h1>
@@ -149,7 +149,7 @@ export function HeroSection() {
             variants={heroVariants}
             initial="hidden"
             animate="visible"
-            className="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-200 mb-6 sm:mb-8 leading-relaxed"
           >
             Transforming Your Home
           </motion.p>
@@ -158,21 +158,21 @@ export function HeroSection() {
             variants={buttonVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center items-center"
           >
             <Link 
               href="/products" 
-              className="group bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="group bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 sm:py-3 sm:px-7 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
             >
               Shop Now
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
             
             <Link 
               href="/categories" 
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/30 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
+              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/30 text-white font-semibold py-3 px-6 sm:py-3 sm:px-7 rounded-full transition-all duration-300 transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center flex items-center"
             >
               Browse Categories
             </Link>
@@ -183,26 +183,26 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-8 text-center"
+            className="mt-6 sm:mt-12 grid grid-cols-3 gap-4 sm:gap-8 text-center"
           >
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-white mb-1">10,000+</div>
-              <div className="text-green-400 font-medium text-sm">Happy Customers</div>
+              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white mb-1">10K+</div>
+              <div className="text-green-400 font-medium text-xs sm:text-sm">Happy Customers</div>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-white mb-1">24/7</div>
-              <div className="text-green-400 font-medium text-sm">Customer Support</div>
+              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white mb-1">24/7</div>
+              <div className="text-green-400 font-medium text-xs sm:text-sm">Support</div>
             </div>
-            <div className="col-span-2 md:col-span-1">
-              <div className="text-2xl md:text-3xl font-bold text-white mb-1">KSh 100+</div>
-              <div className="text-green-400 font-medium text-sm">Delivery Nationwide</div>
+            <div>
+              <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white mb-1">100+</div>
+              <div className="text-green-400 font-medium text-xs sm:text-sm">Delivery</div>
             </div>
           </motion.div>
         </div>
       </div>
       
       {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 hidden sm:flex space-x-3">
         {householdImages.map((_, index) => (
           <button
             key={index}

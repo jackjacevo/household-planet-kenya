@@ -863,20 +863,21 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="px-2 sm:px-4 lg:px-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-          <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Order Management</h1>
+          <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mt-1">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span>Live updates: Stats 30s, Orders 60s</span>
+            <span className="hidden sm:inline">Live updates: Stats 30s, Orders 60s</span>
+            <span className="sm:hidden">Live updates</span>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           {selectedOrders.length > 0 && (
             <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   Bulk Actions ({selectedOrders.length})
                 </Button>
               </DialogTrigger>
@@ -914,31 +915,32 @@ export default function AdminOrdersPage() {
               </DialogContent>
             </Dialog>
           )}
-          <Button variant="outline">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            <span className="hidden sm:inline">Export</span>
+            <span className="sm:hidden">Export</span>
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold">{stats.totalOrders}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">KSh {(stats.totalRevenue || 0).toLocaleString()}</div>
+            <div className="text-sm sm:text-xl font-bold">KSh {(stats.totalRevenue || 0).toLocaleString()}</div>
             {stats.deliveredRevenue !== undefined && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 mt-1 hidden sm:block">
                 Delivered: KSh {(stats.deliveredRevenue || 0).toLocaleString()}
               </div>
             )}
@@ -946,34 +948,34 @@ export default function AdminOrdersPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendingOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.pendingOrders}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Processing</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Processing</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{stats.processingOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold text-purple-600">{stats.processingOrders}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Shipped</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Shipped</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-indigo-600">{stats.shippedOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold text-indigo-600">{stats.shippedOrders}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Delivered</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.deliveredOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.deliveredOrders}</div>
           </CardContent>
         </Card>
       </div>
@@ -994,21 +996,19 @@ export default function AdminOrdersPage() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search by order number, customer email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 text-sm"
+              />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -1117,171 +1117,183 @@ export default function AdminOrdersPage() {
             </Table>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={selectedOrders.length === orders.length}
-                        onCheckedChange={selectAllOrders}
-                      />
-                    </TableHead>
-                    <TableHead>Order</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>
+              <div className="admin-mobile-table">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedOrders.includes(order.id)}
-                          onCheckedChange={() => toggleOrderSelection(order.id)}
+                          checked={selectedOrders.length === orders.length}
+                          onCheckedChange={selectAllOrders}
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-medium">{order.orderNumber}</span>
-                            {order.source === 'WHATSAPP' && (
-                              <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
-                                <WhatsAppIcon />
-                                WA
-                              </Badge>
+                      </TableHead>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden sm:table-cell">Items</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead className="hidden md:table-cell">Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedOrders.includes(order.id)}
+                            onCheckedChange={() => toggleOrderSelection(order.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-sm">{order.orderNumber}</span>
+                              {order.source === 'WHATSAPP' && (
+                                <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
+                                  <WhatsAppIcon />
+                                  WA
+                                </Badge>
+                              )}
+                            </div>
+                            {order.trackingNumber && (
+                              <div className="text-xs text-gray-500 hidden sm:block">Track: {order.trackingNumber}</div>
+                            )}
+                            {order.deliveryLocation && (
+                              <div className="text-xs text-gray-500 hidden sm:block">Delivery: {order.deliveryLocation}</div>
+                            )}
+                            <div className="text-xs text-gray-400">
+                              {order.paymentMethod === 'MPESA' ? 'M-Pesa' :
+                               order.paymentMethod === 'CASH_ON_DELIVERY' ? 'COD' :
+                               order.paymentMethod}
+                            </div>
+                            {/* Show items count on mobile */}
+                            <div className="text-xs text-gray-500 sm:hidden">
+                              {order.items?.length || 0} items
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-sm">{order.user.name}</div>
+                            <div className="text-xs text-blue-600 font-medium">
+                              {order.user.email.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user.email}
+                            </div>
+                            {order.user.phone && (
+                              <div className="text-xs text-gray-500 hidden sm:block">{order.user.phone}</div>
                             )}
                           </div>
-                          {order.trackingNumber && (
-                            <div className="text-sm text-gray-500">Track: {order.trackingNumber}</div>
-                          )}
-                          {order.deliveryLocation && (
-                            <div className="text-sm text-gray-500">Delivery: {order.deliveryLocation}</div>
-                          )}
-                          <div className="text-xs text-gray-400">
-                            {order.paymentMethod === 'MPESA' ? 'M-Pesa' :
-                             order.paymentMethod === 'CASH_ON_DELIVERY' ? 'COD' :
-                             order.paymentMethod}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{order.user.name}</div>
-                          <div className="text-sm text-blue-600 font-medium">
-                            {order.user.email.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user.email}
-                          </div>
-                          {order.user.phone && (
-                            <div className="text-sm text-gray-500">{order.user.phone}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <Badge className={statusColors[order.status as keyof typeof statusColors]}>
-                            {order.status}
-                          </Badge>
-                          {order.priority !== 'NORMAL' && (
-                            <Badge className={priorityColors[order.priority as keyof typeof priorityColors]} variant="outline">
-                              {order.priority}
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                              {order.status}
                             </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <span className="font-medium">{order.items?.length || 0} items</span>
-                          <div className="text-sm text-gray-500">
-                            Subtotal: KSh {order.subtotal?.toLocaleString() || order.total.toLocaleString()}
+                            {order.priority !== 'NORMAL' && (
+                              <Badge className={priorityColors[order.priority as keyof typeof priorityColors]} variant="outline">
+                                {order.priority}
+                              </Badge>
+                            )}
+                            {/* Show date on mobile */}
+                            <div className="text-xs text-gray-500 md:hidden">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-400">
-                            Delivery: {order.shippingCost === 0 ? 'FREE' : `KSh ${order.shippingCost.toLocaleString()}`}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <span className="font-bold">KSh {order.total.toLocaleString()}</span>
-                          {order.deliveryPrice && order.deliveryPrice !== order.shippingCost && (
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div>
+                            <span className="font-medium text-sm">{order.items?.length || 0} items</span>
                             <div className="text-xs text-gray-500">
-                              +KSh {order.deliveryPrice.toLocaleString()} delivery
+                              Subtotal: KSh {order.subtotal?.toLocaleString() || order.total.toLocaleString()}
                             </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
-                          <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
-                          {order.updatedAt !== order.createdAt && (
                             <div className="text-xs text-gray-400">
-                              Updated: {new Date(order.updatedAt).toLocaleDateString()}
+                              Delivery: {order.shippingCost === 0 ? 'FREE' : `KSh ${order.shippingCost.toLocaleString()}`}
                             </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-1">
-                          <Link href={`/admin/orders/${order.id}`}>
-                            <Button variant="outline" size="sm" title="View Order Details">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </Link>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <span className="font-bold text-sm">KSh {order.total.toLocaleString()}</span>
+                            {order.deliveryPrice && order.deliveryPrice !== order.shippingCost && (
+                              <div className="text-xs text-gray-500 hidden sm:block">
+                                +KSh {order.deliveryPrice.toLocaleString()} delivery
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div>
+                            <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
+                            <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                            {order.updatedAt !== order.createdAt && (
+                              <div className="text-xs text-gray-400">
+                                Updated: {new Date(order.updatedAt).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-1">
+                            <div className="flex gap-1">
+                              <Link href={`/admin/orders/${order.id}`}>
+                                <Button variant="outline" size="sm" title="View Order Details" className="p-2">
+                                  <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              </Link>
 
-                          {order.status === 'CONFIRMED' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: order.user.phone || '' })}
-                              disabled={actionLoading[`stk-${order.id}`]}
-                              title="Send M-Pesa STK Push"
-                              className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                            >
-                              {actionLoading[`stk-${order.id}`] ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                              ) : (
-                                <Smartphone className="h-4 w-4" />
+                              {order.status === 'CONFIRMED' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: order.user.phone || '' })}
+                                  disabled={actionLoading[`stk-${order.id}`]}
+                                  title="Send M-Pesa STK Push"
+                                  className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 p-2"
+                                >
+                                  {actionLoading[`stk-${order.id}`] ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-green-600"></div>
+                                  ) : (
+                                    <Smartphone className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  )}
+                                </Button>
                               )}
-                            </Button>
-                          )}
-                          {order.status === 'DELIVERED' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => viewReceipt(order.id)}
-                              title="View Receipt"
-                              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                              {order.status === 'DELIVERED' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => viewReceipt(order.id)}
+                                  title="View Receipt"
+                                  className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 p-2"
+                                >
+                                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <Select
+                              value={order.status}
+                              onValueChange={(status) => {
+                                updateOrderStatus(order.id, status);
+                              }}
                             >
-                              <FileText className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Select
-                            value={order.status}
-                            onValueChange={(status) => {
-                              updateOrderStatus(order.id, status);
-                            }}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="z-50">
-                              <SelectItem value="PENDING">Pending</SelectItem>
-                              <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                              <SelectItem value="PROCESSING">Processing</SelectItem>
-                              <SelectItem value="SHIPPED">Shipped</SelectItem>
-                              <SelectItem value="DELIVERED">Delivered</SelectItem>
-                              <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </TableCell>
+                              <SelectTrigger className="w-full sm:w-32 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="z-50">
+                                <SelectItem value="PENDING">Pending</SelectItem>
+                                <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                                <SelectItem value="PROCESSING">Processing</SelectItem>
+                                <SelectItem value="SHIPPED">Shipped</SelectItem>
+                                <SelectItem value="DELIVERED">Delivered</SelectItem>
+                                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
-              </Table>
+                  </TableBody>
+                </Table>
+              </div>
               
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4">

@@ -1,12 +1,29 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto, UpdateReviewDto, ReviewQueryDto } from './dto/review.dto';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ReviewsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: number, createReviewDto: CreateReviewDto) {
+  async create(userId: number, createReviewDto: CreateReviewDto, images?: Express.Multer.File[]) {
+    // Check if user has already reviewed this product
+    const existingReview = await this.prisma.review.findUnique({
+      where: {
+        productId_userId: {
+          productId: createReviewDto.productId,
+          userId
+        }
+      }
+    });
+
+    if (existingReview) {
+      throw new ForbiddenException('You have already reviewed this product');
+    }
+
     // Check if user has purchased this product
     const hasPurchased = await this.prisma.orderItem.findFirst({
       where: {
@@ -15,11 +32,18 @@ export class ReviewsService {
       }
     });
 
+    // Handle image uploads
+    let imageUrls: string[] = [];
+    if (images && images.length > 0) {
+      imageUrls = await this.saveReviewImages(images);
+    }
+
     const review = await this.prisma.review.create({
       data: {
         ...createReviewDto,
         userId,
-        isVerified: !!hasPurchased
+        isVerified: !!hasPurchased,
+        images: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null
       },
       include: {
         user: { select: { name: true } },
@@ -31,6 +55,31 @@ export class ReviewsService {
     await this.updateProductRatingStats(createReviewDto.productId);
 
     return review;
+  }
+
+  private async saveReviewImages(images: Express.Multer.File[]): Promise<string[]> {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'reviews');
+    
+    // Ensure upload directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const imageUrls: string[] = [];
+
+    for (const image of images) {
+      const fileExtension = path.extname(image.originalname);
+      const fileName = `${uuidv4()}${fileExtension}`;
+      const filePath = path.join(uploadDir, fileName);
+      
+      // Save file
+      fs.writeFileSync(filePath, image.buffer);
+      
+      // Store relative URL
+      imageUrls.push(`/uploads/reviews/${fileName}`);
+    }
+
+    return imageUrls;
   }
 
   async findAll(query: ReviewQueryDto) {

@@ -76,11 +76,11 @@ export default function OrdersPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Order History</h1>
-          <div className="flex items-center space-x-3">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Order History</h1>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -89,18 +89,19 @@ export default function OrdersPage() {
                 fetchOrders();
               }}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <div className="relative flex-1 sm:flex-none">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <input
                 type="text"
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-2 focus:ring-orange-500"
+                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white"
               />
             </div>
           </div>
@@ -124,11 +125,11 @@ export default function OrdersPage() {
         ) : filteredOrders.length > 0 ? (
           <div className="space-y-4">
             {filteredOrders.map((order: any) => (
-              <div key={order.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-lg">Order #{order.orderNumber}</h3>
+              <div key={order.id} className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-start sm:justify-between mb-3 sm:mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      <h3 className="font-semibold text-base sm:text-lg">Order #{order.orderNumber}</h3>
                       {order.source === 'WHATSAPP' && (
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -156,9 +157,9 @@ export default function OrdersPage() {
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col items-end space-y-1 mt-2 sm:mt-0">
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  <div className="flex flex-col sm:items-end space-y-1">
+                    <div className="flex items-center justify-between sm:justify-end space-x-2">
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
                         order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
                         order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
                         order.status === 'PROCESSING' ? 'bg-purple-100 text-purple-800' :
@@ -168,7 +169,7 @@ export default function OrdersPage() {
                       }`}>
                         {order.status}
                       </span>
-                      <span className="font-semibold">{formatPrice(order.total)}</span>
+                      <span className="font-semibold text-sm sm:text-base">{formatPrice(order.total)}</span>
                     </div>
                     {order.paymentStatus && (
                       <span className={`text-xs px-2 py-1 rounded-full ${

@@ -76,73 +76,73 @@ export default function AccountDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+    <div className="space-y-4 sm:space-y-8">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
             {user.avatar ? (
               <Image src={user.avatar} alt={user.name} width={64} height={64} className="rounded-full" />
             ) : (
-              <span className="text-2xl font-bold text-orange-600">
+              <span className="text-lg sm:text-2xl font-bold text-orange-600">
                 {user.name?.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
-            <p className="text-gray-600">{user.email}</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">Welcome back, {user.name}!</h1>
+            <p className="text-sm sm:text-base text-gray-600 truncate">{user.email}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
           <div className="flex items-center">
-            <ShoppingBag className="h-8 w-8 text-blue-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+            <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-500">Total Orders</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
           <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-green-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Spent</p>
-              <p className="text-2xl font-bold text-gray-900">{formatPrice(stats.totalSpent)}</p>
+            <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-500">Total Spent</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{formatPrice(stats.totalSpent)}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
           <div className="flex items-center">
-            <Star className="h-8 w-8 text-yellow-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Loyalty Points</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.loyaltyPoints}</p>
+            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-500">Loyalty Points</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.loyaltyPoints}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
           <div className="flex items-center">
-            <Heart className="h-8 w-8 text-red-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Wishlist Items</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
+            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-500">Wishlist Items</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Recent Orders</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-semibold">Recent Orders</h2>
             <Link href="/account/orders">
-              <Button variant="outline" size="sm">View All</Button>
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">View All</Button>
             </Link>
           </div>
           
@@ -200,34 +200,34 @@ export default function AccountDashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
             <Link href="/account/orders">
-              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                <ShoppingBag className="h-6 w-6 mb-2" />
-                <span className="text-sm">View Orders</span>
+              <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col items-center justify-center">
+                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 mb-1 sm:mb-2" />
+                <span className="text-xs sm:text-sm">View Orders</span>
               </Button>
             </Link>
             
             <Link href="/account/addresses">
-              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                <MapPin className="h-6 w-6 mb-2" />
-                <span className="text-sm">Addresses</span>
+              <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col items-center justify-center">
+                <MapPin className="h-5 w-5 sm:h-6 sm:w-6 mb-1 sm:mb-2" />
+                <span className="text-xs sm:text-sm">Addresses</span>
               </Button>
             </Link>
             
             <Link href="/account/wishlist">
-              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                <Heart className="h-6 w-6 mb-2" />
-                <span className="text-sm">Wishlist</span>
+              <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col items-center justify-center">
+                <Heart className="h-5 w-5 sm:h-6 sm:w-6 mb-1 sm:mb-2" />
+                <span className="text-xs sm:text-sm">Wishlist</span>
               </Button>
             </Link>
             
             <Link href="/account/support">
-              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                <MessageSquare className="h-6 w-6 mb-2" />
-                <span className="text-sm">Support</span>
+              <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col items-center justify-center">
+                <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 mb-1 sm:mb-2" />
+                <span className="text-xs sm:text-sm">Support</span>
               </Button>
             </Link>
           </div>

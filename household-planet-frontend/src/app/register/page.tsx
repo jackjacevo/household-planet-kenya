@@ -161,12 +161,12 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
+          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-4 sm:p-8 border border-white/20 relative overflow-hidden"
         >
           {/* Subtle gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-slate-50/50 rounded-3xl" />
           <div className="relative z-10">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
             {/* Enhanced Global Error */}
             <AnimatePresence>
               {errors.root && (
@@ -198,7 +198,7 @@ export default function RegisterPage() {
                   {...register('firstName')}
                   type="text"
                   placeholder="Enter your first name"
-                  className={`pl-10 h-14 text-base text-gray-900 bg-white border-2 rounded-xl transition-all duration-200 focus:bg-white focus:shadow-lg placeholder:text-gray-500 ${
+                  className={`pl-10 h-10 sm:h-14 text-sm sm:text-base text-gray-900 bg-white border-2 rounded-xl transition-all duration-200 focus:bg-white focus:shadow-lg placeholder:text-gray-500 ${
                     errors.firstName 
                       ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
                       : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500/20'
@@ -239,7 +239,7 @@ export default function RegisterPage() {
                   {...register('lastName')}
                   type="text"
                   placeholder="Enter your last name"
-                  className={`pl-10 h-14 text-base text-gray-900 bg-white border-2 rounded-xl transition-all duration-200 focus:bg-white focus:shadow-lg placeholder:text-gray-500 ${
+                  className={`pl-10 h-10 sm:h-14 text-sm sm:text-base text-gray-900 bg-white border-2 rounded-xl transition-all duration-200 focus:bg-white focus:shadow-lg placeholder:text-gray-500 ${
                     errors.lastName 
                       ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
                       : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500/20'
@@ -277,7 +277,7 @@ export default function RegisterPage() {
                   {...register('email')}
                   type="email"
                   placeholder="Enter your email"
-                  className={`pl-10 h-12 text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
+                  className={`pl-10 h-10 sm:h-12 text-sm sm:text-base text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
                 />
               </div>
               {errors.email && (
@@ -303,7 +303,7 @@ export default function RegisterPage() {
                   {...register('phone')}
                   type="tel"
                   placeholder="+254..."
-                  className={`pl-10 h-12 text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
+                  className={`pl-10 h-10 sm:h-12 text-sm sm:text-base text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
                 />
               </div>
               {errors.phone && (
@@ -329,7 +329,7 @@ export default function RegisterPage() {
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Create a strong password"
-                  className={`pl-10 pr-10 h-12 text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
+                  className={`pl-10 pr-10 h-10 sm:h-12 text-sm sm:text-base text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
                 />
                 <button
                   type="button"
@@ -401,7 +401,7 @@ export default function RegisterPage() {
                   {...register('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm your password"
-                  className={`pl-10 pr-10 h-12 text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
+                  className={`pl-10 pr-10 h-10 sm:h-12 text-sm sm:text-base text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
                 />
                 <button
                   type="button"
@@ -443,7 +443,7 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-14 bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 hover:from-orange-600 hover:via-orange-700 hover:to-red-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                className="w-full h-10 sm:h-14 bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 hover:from-orange-600 hover:via-orange-700 hover:to-red-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group text-sm sm:text-base"
               >
                 {/* Button shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />

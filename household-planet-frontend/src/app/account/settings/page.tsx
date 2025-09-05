@@ -132,7 +132,9 @@ export default function SettingsPage() {
       if (response.ok) {
         const { avatarUrl } = await response.json();
         setProfileData(prev => ({ ...prev, avatar: avatarUrl }));
-        updateUser({ ...user, avatar: avatarUrl });
+        if (user?.id) {
+          updateUser({ ...user, avatar: avatarUrl });
+        }
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);

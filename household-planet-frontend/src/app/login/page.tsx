@@ -61,17 +61,17 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg"
+            className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center shadow-lg"
           >
-            <Lock className="w-8 h-8 text-white" />
+            <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your Household Planet account</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <p className="text-sm sm:text-base text-gray-600">Sign in to your Household Planet account</p>
         </div>
 
         {/* Login Form */}
@@ -79,9 +79,9 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
+          className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 border border-gray-100"
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
             {/* Success Message */}
             {successMessage && (
               <motion.div
@@ -117,7 +117,7 @@ export default function LoginPage() {
                   {...register('email')}
                   type="email"
                   placeholder="Enter your email"
-                  className={`flex h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                  className={`flex h-10 sm:h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 />
               </div>
               {errors.email && (
@@ -143,7 +143,7 @@ export default function LoginPage() {
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  className={`flex h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 pr-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                  className={`flex h-10 sm:h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 pr-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 />
                 <button
                   type="button"
@@ -179,7 +179,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md disabled:opacity-50 inline-flex items-center justify-center"
+              className="w-full h-10 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md disabled:opacity-50 inline-flex items-center justify-center text-sm sm:text-base"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

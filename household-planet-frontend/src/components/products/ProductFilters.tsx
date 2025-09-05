@@ -176,13 +176,13 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
     <div className="border-b border-gray-100 last:border-b-0 relative">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-4 text-left hover:bg-gray-50 px-2 rounded-lg transition-colors"
+        className="w-full flex items-center justify-between py-3 sm:py-4 text-left hover:bg-gray-50 px-2 rounded-lg transition-colors min-h-[44px]"
       >
-        <span className="font-medium text-gray-900">{title}</span>
+        <span className="font-medium text-gray-900 text-sm sm:text-base">{title}</span>
         {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-500" />
+          <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
+          <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
         )}
       </button>
       <motion.div
@@ -191,40 +191,40 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
         transition={{ duration: 0.2 }}
         className="overflow-visible"
       >
-        <div className="pb-4 px-2 overflow-visible">{children}</div>
+        <div className="pb-3 sm:pb-4 px-2 overflow-visible">{children}</div>
       </motion.div>
     </div>
   );
 
   return (
     <div className="space-y-0">
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-2">
-              <Filter className="h-5 w-5 text-white" />
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Filters</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Filters</h3>
               {activeFiltersCount > 0 && (
-                <p className="text-sm text-orange-600">{activeFiltersCount} active filters</p>
+                <p className="text-xs sm:text-sm text-orange-600">{activeFiltersCount} active</p>
               )}
             </div>
           </div>
           {activeFiltersCount > 0 && (
             <button
               onClick={resetFilters}
-              className="text-sm text-gray-500 hover:text-red-600 flex items-center space-x-1"
+              className="text-xs sm:text-sm text-gray-500 hover:text-red-600 flex items-center space-x-1 min-h-[44px] px-2"
             >
               <X className="h-4 w-4" />
-              <span>Clear All</span>
+              <span className="hidden sm:inline">Clear All</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Search Input - Always Visible */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <input
@@ -232,7 +232,7 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
             placeholder="Search products..."
             value={filters.search}
             onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="pl-10 w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="pl-10 w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
           />
         </div>
       </div>
@@ -270,7 +270,7 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
               const value = e.target.value;
               handleFilterChange('brand', value ? Number(value) : undefined);
             }}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
           >
             <option value="">All Brands</option>
             {brands.map((brand) => (
@@ -282,32 +282,32 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
         </div>
       </FilterSection>
 
-      <div className="border-b border-gray-100 pb-4 mb-4">
-        <h4 className="font-medium text-gray-900 mb-3">Price Range</h4>
-        <div className="grid grid-cols-2 gap-3">
+      <div className="border-b border-gray-100 pb-3 sm:pb-4 mb-3 sm:mb-4">
+        <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Price Range</h4>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <input
             type="number"
             placeholder="Min Price"
             value={filters.minPrice || ''}
             onChange={(e) => handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : undefined)}
-            className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
           />
           <input
             type="number"
             placeholder="Max Price"
             value={filters.maxPrice || ''}
             onChange={(e) => handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
-            className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
           />
         </div>
       </div>
 
-      <div className="border-b border-gray-100 pb-4 mb-4">
-        <h4 className="font-medium text-gray-900 mb-3">Minimum Rating</h4>
+      <div className="border-b border-gray-100 pb-3 sm:pb-4 mb-3 sm:mb-4">
+        <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Minimum Rating</h4>
         <select
           value={filters.minRating || ''}
           onChange={(e) => handleFilterChange('minRating', e.target.value ? Number(e.target.value) : undefined)}
-          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
         >
           <option value="">Any Rating</option>
           <option value="4">4+ Stars</option>
@@ -322,15 +322,15 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
         isExpanded={expandedSections.availability}
         onToggle={() => toggleSection('availability')}
       >
-        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors min-h-[44px]">
           <input
             type="checkbox"
             checked={filters.inStock}
             onChange={(e) => handleFilterChange('inStock', e.target.checked)}
-            className="mr-3 text-orange-600 focus:ring-orange-500"
+            className="mr-3 text-orange-600 focus:ring-orange-500 w-4 h-4"
           />
-          <Package className="h-4 w-4 text-green-600 mr-2" />
-          <span className="text-sm font-medium">In Stock Only</span>
+          <Package className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+          <span className="text-sm sm:text-base font-medium">In Stock Only</span>
         </label>
       </FilterSection>
 

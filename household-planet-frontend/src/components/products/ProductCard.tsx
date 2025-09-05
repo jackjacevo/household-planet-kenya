@@ -54,14 +54,13 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300"
       >
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-32 sm:h-36 bg-gray-100 flex items-center justify-center overflow-hidden relative">
+          <div className="w-full h-32 sm:h-36 bg-gray-50 flex items-center justify-center overflow-hidden relative p-2">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               width={200}
               height={144}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              style={{ height: 'auto' }}
+              className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
@@ -94,15 +93,14 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
         whileTap={{ scale: 0.98 }}
         className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 flex flex-col sm:flex-row"
       >
-        <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+        <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative p-3">
           <Link href={`/products/${product.slug}`}>
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               width={192}
               height={128}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              style={{ height: 'auto' }}
+              className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 100vw, 200px"
             />
           </Link>
@@ -178,22 +176,21 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
     >
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden relative">
+          <div className="w-full h-56 bg-gray-50 flex items-center justify-center overflow-hidden relative p-2">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               width={300}
-              height={192}
+              height={224}
               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              style={{ height: 'auto' }}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
         </Link>
         
         {/* Stock indicator */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-          <span className="text-xs text-white">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
+          <span className="text-xs text-white font-medium">
             {product.stock && product.stock > 0 ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
@@ -224,7 +221,7 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
           <p className="text-xs text-gray-500 mt-1">{product.brand.name}</p>
         )}
 
-        <div className="flex items-center mt-2">
+        <div className="hidden sm:flex items-center mt-2">
           <div className="flex text-yellow-400 text-sm">
             {[...Array(5)].map((_, i) => (
               <Star
@@ -249,22 +246,22 @@ export function ProductCard({ product, viewMode = 'grid', compact = false }: Pro
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button
               onClick={handleWhatsAppOrder}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
               title="Order via WhatsApp"
             >
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-xs">WhatsApp</span>
+              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs hidden sm:inline">WhatsApp</span>
             </button>
             <button
               onClick={handleAddToCart}
               disabled={!product.stock || product.stock <= 0}
-              className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors disabled:bg-gray-300 w-10 h-10 flex items-center justify-center"
+              className="bg-orange-600 hover:bg-orange-700 text-white p-1.5 sm:p-2 rounded-lg transition-colors disabled:bg-gray-300 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center"
               title="Add to Cart"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>

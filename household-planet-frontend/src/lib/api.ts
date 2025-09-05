@@ -72,6 +72,10 @@ class ApiClient {
     return this.request(`/api/products/${id}`)
   }
 
+  async getProductBySlug(slug: string) {
+    return this.request(`/api/products/slug/${slug}`)
+  }
+
   // Categories endpoints
   async getCategories() {
     return this.request('/api/categories')
@@ -162,6 +166,39 @@ class ApiClient {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    })
+  }
+
+  // Reviews endpoints
+  async createReview(formData: FormData) {
+    const token = localStorage.getItem('token')
+    return fetch(`${this.baseURL}/api/reviews`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(res => res.json())
+  }
+
+  async getProductReviews(productId: number, page = 1, limit = 10) {
+    return this.request(`/api/reviews/product/${productId}?page=${page}&limit=${limit}`)
+  }
+
+  async getReviewStats(productId: number) {
+    return this.request(`/api/reviews/product/${productId}/stats`)
+  }
+
+  async updateReview(reviewId: number, data: any) {
+    return this.request(`/api/reviews/${reviewId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteReview(reviewId: number) {
+    return this.request(`/api/reviews/${reviewId}`, {
+      method: 'DELETE',
     })
   }
 

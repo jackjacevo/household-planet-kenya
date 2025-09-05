@@ -42,9 +42,10 @@ export default function ProductsPage() {
   const [scrollMode, setScrollMode] = useState<'pagination' | 'infinite'>('pagination');
   const [hasMore, setHasMore] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   const [filters, setFilters] = useState({
-    category: undefined as string | undefined,
-    brand: undefined as string | undefined,
+    category: undefined as number | undefined,
+    brand: undefined as number | undefined,
     search: undefined as string | undefined,
     featured: undefined as boolean | undefined,
     minPrice: undefined as number | undefined,
@@ -65,21 +66,39 @@ export default function ProductsPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Load categories for slug-to-ID conversion
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await api.getCategories();
+        setCategories(response);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
+
   // Handle URL parameters
   useEffect(() => {
     const categoryParam = searchParams.get('category');
-    if (categoryParam) {
-      setFilters(prev => ({ ...prev, category: categoryParam }));
+    if (categoryParam && categories.length > 0) {
+      // Convert category slug to ID
+      const category = categories.find(cat => cat.slug === categoryParam);
+      if (category) {
+        setFilters(prev => ({ ...prev, category: category.id }));
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, categories]);
 
   useEffect(() => {
-    if (currentPage === 1) {
-      fetchProducts();
-    } else {
-      fetchProducts(scrollMode === 'infinite');
-    }
+    fetchProducts(currentPage > 1 && scrollMode === 'infinite');
   }, [currentPage, filters, scrollMode]);
+
+  // Initial load
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const fetchProducts = async (append = false, refresh = false) => {
     try {
@@ -128,16 +147,18 @@ export default function ProductsPage() {
       }
       
       const response = await api.getProducts(queryParams) as any;
+      console.log('API Response:', response);
       
-      const newProducts = response.data || [];
+      const newProducts = response.data || response || [];
+      console.log('Processed products:', newProducts);
       if (append && scrollMode === 'infinite') {
         setProducts(prev => [...prev, ...newProducts]);
       } else {
         setProducts(newProducts);
       }
       
-      setTotalPages(response.pagination?.totalPages || 1);
-      setHasMore(currentPage < (response.pagination?.totalPages || 1));
+      setTotalPages(response.pagination?.totalPages || response.meta?.totalPages || 1);
+      setHasMore(currentPage < (response.pagination?.totalPages || response.meta?.totalPages || 1));
     } catch (error) {
       console.error('Error fetching products:', error);
       setError('Failed to load products. Please try again.');
@@ -165,17 +186,17 @@ export default function ProductsPage() {
     // If newFilters is empty object, reset all filters
     if (Object.keys(newFilters).length === 0) {
       setFilters({
-        category: undefined,
-        brand: undefined,
-        search: undefined,
-        featured: undefined,
-        minPrice: undefined,
-        maxPrice: undefined,
-        minRating: undefined,
-        inStock: undefined,
-        onSale: undefined,
+        category: undefined as number | undefined,
+        brand: undefined as number | undefined,
+        search: undefined as string | undefined,
+        featured: undefined as boolean | undefined,
+        minPrice: undefined as number | undefined,
+        maxPrice: undefined as number | undefined,
+        minRating: undefined as number | undefined,
+        inStock: undefined as boolean | undefined,
+        onSale: undefined as boolean | undefined,
         sortBy: 'createdAt',
-        sortOrder: undefined,
+        sortOrder: undefined as string | undefined,
       });
     } else {
       setFilters(prev => ({ ...prev, ...newFilters }));
@@ -238,54 +259,41 @@ export default function ProductsPage() {
           </div>
         </div>
         
-        {/* Hero Section */}
-        <section className="relative overflow-hidden py-8 md:py-16 px-4">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-amber-600/10" />
-          <div className="container mx-auto max-w-7xl relative z-10">
-            <motion.div 
-              className="text-center"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <motion.h1 
-                className="text-3xl md:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-4"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-              >
-                All Products
-              </motion.h1>
-              <motion.p 
-                className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
-                Discover our complete collection of quality home products
-              </motion.p>
-            </motion.div>
+        {/* Header Section */}
+        <section className="py-6 px-4">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-gray-800">All Products</h1>
+              <p className="text-gray-600 hidden md:block">Discover our complete collection</p>
+            </div>
           </div>
         </section>
 
         {/* Mobile Filters Overlay */}
         {showFilters && isMobile && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-br from-orange-50 to-amber-50 rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
+            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-br from-orange-50 to-amber-50 rounded-t-3xl max-h-[85vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-orange-100 flex-shrink-0">
                 <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-white/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <ProductFilters onFilterChange={handleFilterChange} initialFilters={filters} />
-              <div className="mt-6">
+              
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-4 pb-2">
+                <ProductFilters onFilterChange={handleFilterChange} initialFilters={filters} />
+              </div>
+              
+              {/* Footer */}
+              <div className="p-4 border-t border-orange-100 bg-white/50 flex-shrink-0">
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-4 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300 min-h-[48px]"
                 >
                   Apply Filters
                 </button>
@@ -314,34 +322,39 @@ export default function ProductsPage() {
             <main className="flex-1">
               {/* Controls Bar */}
               <motion.div 
-                className="bg-white rounded-2xl p-4 mb-8 shadow-lg border border-gray-100"
+                className="bg-white rounded-2xl p-3 sm:p-4 mb-6 sm:mb-8 shadow-lg border border-gray-100"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-                  <div className="flex items-center space-x-4 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row lg:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center justify-between w-full sm:w-auto">
                     <div className="flex items-center space-x-2 whitespace-nowrap">
-                      <Package className="h-5 w-5 text-gray-600" />
-                      <span className="text-gray-600 font-medium">
+                      <Package className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <span className="text-gray-600 font-medium text-sm sm:text-base">
                         {loading ? 'Loading...' : `${products.length} products`}
                       </span>
                     </div>
                     
                     <button
                       onClick={() => setShowFilters(!showFilters)}
-                      className="lg:hidden flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+                      className="lg:hidden flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 min-h-[44px] text-sm sm:text-base"
                     >
                       <Filter className="h-4 w-4" />
                       <span>Filters</span>
+                      {Object.values(filters).some(v => v !== undefined && v !== '' && v !== false) && (
+                        <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-medium">
+                          {Object.values(filters).filter(v => v !== undefined && v !== '' && v !== false).length}
+                        </span>
+                      )}
                     </button>
                   </div>
 
-                  <div className="flex items-center space-x-4 flex-shrink-0">
+                  <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 flex-shrink-0">
                     <div className="hidden md:flex items-center bg-gray-100 rounded-xl p-1">
                       <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
+                        className={`p-2 rounded-lg transition-all duration-300 min-h-[36px] min-w-[36px] flex items-center justify-center ${
                           viewMode === 'grid'
                             ? 'bg-white shadow-md text-orange-600'
                             : 'text-gray-600 hover:text-orange-600'
@@ -351,7 +364,7 @@ export default function ProductsPage() {
                       </button>
                       <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
+                        className={`p-2 rounded-lg transition-all duration-300 min-h-[36px] min-w-[36px] flex items-center justify-center ${
                           viewMode === 'list'
                             ? 'bg-white shadow-md text-orange-600'
                             : 'text-gray-600 hover:text-orange-600'
@@ -361,11 +374,11 @@ export default function ProductsPage() {
                       </button>
                     </div>
                     
-                    <div className="flex items-center space-x-4 whitespace-nowrap">
-                      <div className="flex items-center bg-gray-100 rounded-xl p-1">
+                    <div className="flex items-center space-x-2 sm:space-x-4 whitespace-nowrap">
+                      <div className="hidden sm:flex items-center bg-gray-100 rounded-xl p-1">
                         <button
                           onClick={() => setScrollMode('pagination')}
-                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors min-h-[32px] ${
                             scrollMode === 'pagination'
                               ? 'bg-white shadow-md text-orange-600'
                               : 'text-gray-600 hover:text-orange-600'
@@ -375,7 +388,7 @@ export default function ProductsPage() {
                         </button>
                         <button
                           onClick={() => setScrollMode('infinite')}
-                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors min-h-[32px] ${
                             scrollMode === 'infinite'
                               ? 'bg-white shadow-md text-orange-600'
                               : 'text-gray-600 hover:text-orange-600'
@@ -385,7 +398,9 @@ export default function ProductsPage() {
                         </button>
                       </div>
                       
-                      <ProductSort onSortChange={(sortBy, sortOrder) => handleFilterChange({ sortBy, sortOrder })} />
+                      <div className="flex-shrink-0">
+                        <ProductSort onSortChange={(sortBy, sortOrder) => handleFilterChange({ sortBy, sortOrder })} />
+                      </div>
                     </div>
                   </div>
                 </div>

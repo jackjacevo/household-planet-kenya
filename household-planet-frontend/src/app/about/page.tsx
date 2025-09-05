@@ -56,7 +56,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4">
+      <section className="relative overflow-hidden py-12 sm:py-20 px-3 sm:px-4">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-amber-600/10" />
         <div className="container mx-auto max-w-6xl relative z-10">
           <motion.div 
@@ -66,7 +66,7 @@ export default function AboutPage() {
             transition={{ duration: 0.8 }}
           >
             <motion.h1 
-              className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-6"
+              className="text-3xl sm:text-5xl md:text-7xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-4 sm:mb-6"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
@@ -74,7 +74,7 @@ export default function AboutPage() {
               About Us
             </motion.h1>
             <motion.p 
-              className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+              className="text-lg sm:text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -86,10 +86,10 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4">
+      <section className="py-8 sm:py-16 px-3 sm:px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
@@ -103,10 +103,10 @@ export default function AboutPage() {
                   variants={fadeInUp}
                   className="text-center group"
                 >
-                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-2">
-                    <Icon className="h-8 w-8 text-orange-600 mx-auto mb-4" />
-                    <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                    <div className="text-gray-600 text-sm">{stat.label}</div>
+                  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-2">
+                    <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 mx-auto mb-3 sm:mb-4" />
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stat.value}</div>
+                    <div className="text-gray-600 text-xs sm:text-sm">{stat.label}</div>
                   </div>
                 </motion.div>
               );
@@ -155,8 +155,8 @@ export default function AboutPage() {
               <div className="relative h-96 rounded-3xl overflow-hidden shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/20 to-amber-600/20 z-10" />
                 <Image
-                  src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop"
-                  alt="Our store interior"
+                  src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=600&h=400&fit=crop"
+                  alt="Electronics and technology products"
                   fill
                   className="object-cover"
                 />

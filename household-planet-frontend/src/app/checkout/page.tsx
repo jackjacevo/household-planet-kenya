@@ -303,8 +303,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-4 md:py-8 pb-20 md:pb-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Checkout</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8 pb-20 md:pb-8">
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8">Checkout</h1>
       
       {/* Progress Indicator */}
       <div className="mb-6 md:mb-8">
@@ -353,11 +353,11 @@ export default function CheckoutPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <div className="lg:col-span-2 order-2 lg:order-1">
           {/* Account Step */}
           {step === 'account' && (
-            <div className="bg-gradient-to-br from-green-50 to-orange-50 rounded-lg shadow-sm p-6 border border-green-100">
+            <div className="bg-gradient-to-br from-green-50 to-orange-50 rounded-lg shadow-sm p-4 sm:p-6 border border-green-100">
               {localStorage.getItem('token') ? (
                 <div className="text-center">
                   <div className="mb-6">

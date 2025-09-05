@@ -63,30 +63,30 @@ const itemVariants = {
 
 export function ValuePropositions() {
   return (
-    <section className="py-20 bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 relative overflow-hidden">
+    <section className="py-12 sm:py-20 bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-10 left-1/4 w-32 h-32 bg-green-200/20 rounded-full blur-2xl animate-pulse" />
         <div className="absolute bottom-10 right-1/4 w-40 h-40 bg-blue-200/20 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
       
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 relative z-10">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-8 sm:mb-16"
         >
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <Award className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+            <Award className="w-3 h-3 sm:w-4 sm:h-4" />
             Why Choose Us
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             Your <span className="text-green-600">Satisfaction</span> is Our Priority
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+          <p className="text-gray-600 max-w-2xl mx-auto text-base sm:text-lg">
             Experience premium service with every purchase. We're committed to making your home transformation journey seamless.
           </p>
         </motion.div>
@@ -97,7 +97,7 @@ export function ValuePropositions() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
         >
           {values.map((value, index) => (
             <motion.div
@@ -106,7 +106,7 @@ export function ValuePropositions() {
               className="group relative"
             >
               {/* Card */}
-              <div className="relative bg-white rounded-2xl p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 border border-gray-100 overflow-hidden h-full">
+              <div className="relative bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 border border-gray-100 overflow-hidden h-full">
                 {/* Background Pattern */}
                 <div className="absolute top-0 right-0 w-20 h-20 opacity-5">
                   <div className={`w-full h-full bg-gradient-to-br ${value.color} rounded-full transform translate-x-6 -translate-y-6`} />

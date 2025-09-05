@@ -26,8 +26,10 @@ export function ProductRecommendations({
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/products/${productId}/recommendations?type=${type}&limit=${limit}`) as any;
-        setRecommendations(Array.isArray(response.data) ? response.data : []);
+        console.log('Fetching recommendations for product:', productId, 'type:', type);
+        const response = await api.getProductRecommendations(productId, type, limit);
+        console.log('Recommendations response:', response);
+        setRecommendations(Array.isArray(response) ? response : []);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
         setRecommendations([]);
@@ -43,29 +45,30 @@ export function ProductRecommendations({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
-        <span className="ml-2 text-gray-600">Loading recommendations...</span>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-gray-200 rounded-lg aspect-[3/4] animate-pulse" />
+        ))}
       </div>
     );
   }
 
-  if (recommendations.length === 0) {
-    return null;
-  }
-
   return (
-    <div className="py-8">
-      <div className="flex items-center mb-6">
+    <div className="py-4 md:py-8">
+      <div className="flex items-center mb-4 md:mb-6">
         <Sparkles className="h-5 w-5 text-orange-600 mr-2" />
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {recommendations.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {recommendations.length === 0 ? (
+        <p className="text-gray-500 text-center py-8">No related products found.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {recommendations.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        input, textarea { margin: 5px; padding: 8px; }
+        .review-form { background: #f9f9f9; padding: 15px; margin: 10px 0; }
+        .review-item { background: #fff; border: 1px solid #eee; padding: 10px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Review System Frontend Test</h1>
+    
+    <div class="test-section">
+        <h2>1. API Connection Test</h2>
+        <button onclick="testApiConnection()">Test API Connection</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Fetch Reviews Test</h2>
+        <button onclick="fetchReviews()">Fetch Reviews for Product 1</button>
+        <div id="reviews-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Review Form Test</h2>
+        <div class="review-form">
+            <h3>Submit a Test Review</h3>
+            <p class="info">Note: This requires authentication. Login first in the main app.</p>
+            
+            <div>
+                <label>Product ID:</label>
+                <input type="number" id="productId" value="1">
+            </div>
+            
+            <div>
+                <label>Rating:</label>
+                <select id="rating">
+                    <option value="">Select Rating</option>
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                </select>
+            </div>
+            
+            <div>
+                <label>Comment:</label>
+                <textarea id="comment" placeholder="Write your review..."></textarea>
+            </div>
+            
+            <div>
+                <label>Images:</label>
+                <input type="file" id="images" multiple accept="image/*">
+            </div>
+            
+            <button onclick="submitReview()">Submit Review</button>
+        </div>
+        <div id="submit-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Review Display Test</h2>
+        <div id="review-display"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        
+        async function testApiConnection() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<p class="info">Testing API connection...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/reviews/product/1/stats`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ API Connection Successful!</p>
+                        <p>Stats: ${JSON.stringify(data, null, 2)}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ API Error: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Connection Failed: ${error.message}</p>`;
+            }
+        }
+        
+        async function fetchReviews() {
+            const resultDiv = document.getElementById('reviews-result');
+            resultDiv.innerHTML = '<p class="info">Fetching reviews...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/reviews/product/1`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Reviews Fetched Successfully!</p>
+                        <p>Total Reviews: ${data.meta.total}</p>
+                        <p>Average Rating: ${data.meta.averageRating || 0}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    
+                    displayReviews(data.data);
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Fetch Error: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Fetch Failed: ${error.message}</p>`;
+            }
+        }
+        
+        async function submitReview() {
+            const resultDiv = document.getElementById('submit-result');
+            const productId = document.getElementById('productId').value;
+            const rating = document.getElementById('rating').value;
+            const comment = document.getElementById('comment').value;
+            const images = document.getElementById('images').files;
+            
+            if (!productId || !rating) {
+                resultDiv.innerHTML = '<p class="error">❌ Please fill in Product ID and Rating</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p class="info">Submitting review...</p>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('productId', productId);
+                formData.append('rating', rating);
+                if (comment) formData.append('comment', comment);
+                
+                for (let i = 0; i < images.length; i++) {
+                    formData.append('images', images[i]);
+                }
+                
+                // Get token from localStorage (if available)
+                const token = localStorage.getItem('token');
+                
+                const response = await fetch(`${API_BASE}/reviews`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: token ? {
+                        'Authorization': `Bearer ${token}`
+                    } : {}
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Review Submitted Successfully!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    
+                    // Clear form
+                    document.getElementById('rating').value = '';
+                    document.getElementById('comment').value = '';
+                    document.getElementById('images').value = '';
+                    
+                    // Refresh reviews
+                    setTimeout(fetchReviews, 1000);
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Submit Error: ${response.status}</p>
+                        <p>${JSON.stringify(data, null, 2)}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Submit Failed: ${error.message}</p>`;
+            }
+        }
+        
+        function displayReviews(reviews) {
+            const displayDiv = document.getElementById('review-display');
+            
+            if (!reviews || reviews.length === 0) {
+                displayDiv.innerHTML = '<p class="info">No reviews to display</p>';
+                return;
+            }
+            
+            const reviewsHtml = reviews.map(review => `
+                <div class="review-item">
+                    <h4>${review.user.name} - ${review.rating} ⭐</h4>
+                    <p><strong>Title:</strong> ${review.title || 'No title'}</p>
+                    <p><strong>Comment:</strong> ${review.comment || 'No comment'}</p>
+                    <p><strong>Verified:</strong> ${review.isVerified ? '✅' : '❌'}</p>
+                    <p><strong>Date:</strong> ${new Date(review.createdAt).toLocaleDateString()}</p>
+                    ${review.images ? `<p><strong>Images:</strong> ${JSON.parse(review.images).length} uploaded</p>` : ''}
+                </div>
+            `).join('');
+            
+            displayDiv.innerHTML = `
+                <h3>Reviews Display:</h3>
+                ${reviewsHtml}
+            `;
+        }
+        
+        // Auto-test API connection on load
+        window.onload = function() {
+            testApiConnection();
+        };
+    </script>
+</body>
+</html>

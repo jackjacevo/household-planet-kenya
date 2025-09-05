@@ -876,6 +876,15 @@ section {
   display: none;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Safe area utilities for notched devices */
 .safe-top {
   padding-top: env(safe-area-inset-top, 0px);
@@ -937,4 +946,133 @@ button svg,
 .btn svg {
   flex-shrink: 0;
   pointer-events: none;
+}
+
+/* Admin Dashboard Mobile Optimizations */
+.admin-mobile-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-mobile-table table {
+  min-width: 800px;
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-table table {
+    min-width: 600px;
+  }
+  
+  .admin-mobile-table th,
+  .admin-mobile-table td {
+    padding: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Admin card optimizations */
+.admin-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.admin-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin stats cards mobile */
+@media (max-width: 640px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  
+  .admin-stat-card {
+    padding: 0.75rem !important;
+  }
+  
+  .admin-stat-value {
+    font-size: 1.25rem !important;
+  }
+  
+  .admin-stat-label {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 640px) {
+  /* Ensure all text is readable on mobile */
+  .text-xs { font-size: 0.75rem !important; }
+  .text-sm { font-size: 0.875rem !important; }
+  .text-base { font-size: 1rem !important; }
+  
+  /* Optimize spacing for mobile */
+  .space-y-8 > * + * { margin-top: 1rem !important; }
+  .space-y-6 > * + * { margin-top: 0.75rem !important; }
+  .space-y-4 > * + * { margin-top: 0.5rem !important; }
+  
+  /* Mobile-friendly padding */
+  .p-8 { padding: 1rem !important; }
+  .p-6 { padding: 0.75rem !important; }
+  .py-8 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  .py-6 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+  
+  /* Ensure buttons are touch-friendly */
+  button, .btn, a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Optimize grid gaps */
+  .gap-8 { gap: 1rem !important; }
+  .gap-6 { gap: 0.75rem !important; }
+  .gap-4 { gap: 0.5rem !important; }
+  
+  /* Admin-specific mobile optimizations */
+  .admin-header {
+    padding: 1rem !important;
+  }
+  
+  .admin-content {
+    padding: 0.75rem !important;
+  }
+  
+  .admin-card {
+    margin-bottom: 0.75rem !important;
+  }
+}
+
+/* Mobile-first responsive text */
+.responsive-text {
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+@media (min-width: 640px) {
+  .responsive-text {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
+/* Mobile-optimized containers */
+.mobile-container {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
