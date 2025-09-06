@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types';
 import { api, apiEndpoints } from '@/lib/api';
+import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
 
 interface AuthContextType {
   user: User | null;
@@ -28,7 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      refreshUser();
+      refreshUser().then(() => {
+        // Sync backend data to local state on app load
+        const { syncWithBackend: syncCart } = useCart.getState();
+        const { syncWithBackend: syncWishlist } = useWishlist.getState();
+        
+        Promise.all([
+          syncCart(),
+          syncWishlist()
+        ]).catch(error => {
+          console.warn('Failed to sync backend data on load:', error);
+        });
+      });
     } else {
       setIsLoading(false);
     }
@@ -55,6 +68,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
+      
+      // Sync local cart and wishlist with backend
+      const { syncLocalToBackend: syncCart } = useCart.getState();
+      const { syncLocalToBackend: syncWishlist } = useWishlist.getState();
+      
+      try {
+        await Promise.all([
+          syncCart(),
+          syncWishlist()
+        ]);
+      } catch (error) {
+        console.warn('Failed to sync local data on login:', error);
+      }
     }
   };
 
@@ -69,6 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
+      
+      // Sync local cart and wishlist with backend
+      const { syncLocalToBackend: syncCart } = useCart.getState();
+      const { syncLocalToBackend: syncWishlist } = useWishlist.getState();
+      
+      try {
+        await Promise.all([
+          syncCart(),
+          syncWishlist()
+        ]);
+      } catch (error) {
+        console.warn('Failed to sync local data on register:', error);
+      }
     }
   };
 

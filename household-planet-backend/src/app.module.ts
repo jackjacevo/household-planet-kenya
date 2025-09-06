@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -21,6 +22,9 @@ import { EmailModule } from './email/email.module';
 import { LoyaltyModule } from './loyalty/loyalty.module';
 import { ReturnsModule } from './returns/returns.module';
 import { StaffModule } from './staff/staff.module';
+import { SettingsModule } from './settings/settings.module';
+import { WishlistModule } from './wishlist/wishlist.module';
+import { CleanupService } from './common/cleanup.service';
 
 @Module({
   imports: [
@@ -31,6 +35,7 @@ import { StaffModule } from './staff/staff.module';
       ttl: 60000,
       limit: 100,
     }]),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -51,6 +56,9 @@ import { StaffModule } from './staff/staff.module';
     LoyaltyModule,
     ReturnsModule,
     StaffModule,
+    SettingsModule,
+    WishlistModule,
   ],
+  providers: [CleanupService],
 })
 export class AppModule {}

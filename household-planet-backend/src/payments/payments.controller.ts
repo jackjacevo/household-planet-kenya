@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Ip, Param, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Ip, Param, Query, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PaymentsService } from './payments.service';
 import { MpesaService } from './mpesa.service';
@@ -22,11 +22,41 @@ export class PaymentsController {
   @Post('initiate')
   @UseGuards(AuthGuard('jwt'))
   async initiatePayment(@Request() req, @Body() body: { orderId: number; paymentMethod: string; phoneNumber: string }) {
-    if (body.paymentMethod === 'MPESA') {
-      const order = await this.paymentsService.getOrder(body.orderId);
-      return this.mpesaService.initiateSTKPush(body.phoneNumber, parseFloat(order.total.toString()), body.orderId);
+    try {
+      console.log('Payment initiation request:', { orderId: body.orderId, paymentMethod: body.paymentMethod, phoneNumber: body.phoneNumber });
+      
+      // Validate required fields
+      if (!body.orderId || !body.paymentMethod || !body.phoneNumber) {
+        throw new BadRequestException('Missing required fields: orderId, paymentMethod, phoneNumber');
+      }
+      
+      if (body.paymentMethod === 'MPESA') {
+        const order = await this.paymentsService.getOrder(body.orderId);
+        console.log('Retrieved order:', order);
+        
+        if (!order) {
+          console.error(`Order not found: ${body.orderId}`);
+          throw new BadRequestException('Order not found');
+        }
+        if (!order.total || order.total <= 0) {
+          console.error(`Order total is invalid: ${order.total}`);
+          throw new BadRequestException('Order total is invalid');
+        }
+        
+        // Validate phone number format
+        const phoneRegex = /^(\+254|254|07|7)\d{8,9}$/;
+        if (!phoneRegex.test(body.phoneNumber.replace(/[\s\-]/g, ''))) {
+          throw new BadRequestException('Invalid phone number format. Use format: +254XXXXXXXXX or 07XXXXXXXX');
+        }
+        
+        console.log(`Initiating M-Pesa payment for order ${body.orderId} with amount ${order.total}`);
+        return this.mpesaService.initiateSTKPush(body.phoneNumber, parseFloat(order.total.toString()), body.orderId);
+      }
+      throw new BadRequestException('Payment method not supported');
+    } catch (error) {
+      console.error('Payment initiation error:', error);
+      throw error;
     }
-    throw new Error('Payment method not supported');
   }
 
   @Get('status/:orderId')

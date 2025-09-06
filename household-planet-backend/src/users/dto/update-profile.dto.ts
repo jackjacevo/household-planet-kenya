@@ -1,4 +1,5 @@
 import { IsString, IsEmail, IsOptional, IsUrl, IsEnum } from 'class-validator';
+import { IsKenyanPhone } from '../../common/validators/enhanced-validators';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -10,7 +11,7 @@ export class UpdateProfileDto {
   email?: string;
 
   @IsOptional()
-  @IsString()
+  @IsKenyanPhone()
   phone?: string;
 
   @IsOptional()

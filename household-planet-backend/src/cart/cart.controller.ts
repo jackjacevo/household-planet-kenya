@@ -54,4 +54,17 @@ export class CartController {
   validateCart(@Request() req) {
     return this.cartService.validateCartForCheckout(req.user.id);
   }
+
+  @Post('sync')
+  @UseGuards(AuthGuard('jwt'))
+  async syncLocalCart(@Request() req, @Body() body: { items: Array<{ productId: number; variantId?: number; quantity: number }> }) {
+    await this.cartService.syncLocalCart(req.user.id, body.items);
+    return { success: true, message: 'Cart synced successfully' };
+  }
+
+  @Post('move-to-cart/:id')
+  @UseGuards(AuthGuard('jwt'))
+  moveToCart(@Request() req, @Param('id') id: string) {
+    return this.cartService.moveToCart(req.user.id, +id);
+  }
 }

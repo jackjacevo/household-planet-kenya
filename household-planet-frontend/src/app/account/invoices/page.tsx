@@ -1,29 +1,46 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
-import { FileText, Download, Eye, Search } from 'lucide-react';
+import { FileText, Download, Eye, Search, Lock, LogIn } from 'lucide-react';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchInvoices();
+    checkAuthAndFetchInvoices();
   }, []);
+
+  const checkAuthAndFetchInvoices = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+    setIsAuthenticated(true);
+    await fetchInvoices();
+  };
 
   const fetchInvoices = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?status=DELIVERED`, {
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders?status=DELIVERED`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
         setInvoices(data.orders || []);
+      } else {
+        console.error('Failed to fetch invoices:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -76,7 +93,35 @@ export default function InvoicesPage() {
           </div>
         </div>
 
-        {loading ? (
+        {!isAuthenticated ? (
+          <div className="text-center py-16">
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 max-w-md mx-auto">
+              <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Lock className="h-10 w-10 text-orange-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Access Your Invoices</h3>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Sign in to view and download your order invoices. Keep track of all your purchases in one place!
+              </p>
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => router.push('/login')}
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105"
+                >
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Sign In to Continue
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => router.push('/register')}
+                  className="w-full border-2 border-orange-200 text-orange-600 hover:bg-orange-50 font-medium py-3 px-6 rounded-lg transition"
+                >
+                  Create New Account
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse border rounded-lg p-4">

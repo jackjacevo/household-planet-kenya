@@ -1,261 +1,316 @@
 'use client';
 
-import { useState } from 'react';
-import { Settings, Save, Bell, Shield, Globe, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { 
+  Settings, 
+  Save, 
+  Bell, 
+  Shield, 
+  Globe, 
+  CreditCard, 
+  Building2,
+  Truck,
+  Search,
+  Lock,
+  Mail,
+  Share2,
+  Package,
+  Download,
+  Upload,
+  RotateCcw
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { settingsApi, type SettingsResponse } from '@/lib/settings-api';
+// import toast from 'react-hot-toast';
+const toast = {
+  success: (msg: string) => {
+    console.log('✅', msg);
+    if (typeof window !== 'undefined') {
+      // Create a simple toast notification
+      const toastEl = document.createElement('div');
+      toastEl.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+      toastEl.textContent = msg;
+      document.body.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 3000);
+    }
+  },
+  error: (msg: string) => {
+    console.error('❌', msg);
+    if (typeof window !== 'undefined') {
+      const toastEl = document.createElement('div');
+      toastEl.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
+      toastEl.textContent = msg;
+      document.body.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 5000);
+    }
+  }
+};
+import { CompanySettingsTab } from '@/components/admin/settings/CompanySettingsTab';
+import { PaymentSettingsTab } from '@/components/admin/settings/PaymentSettingsTab';
+import { NotificationSettingsTab } from '@/components/admin/settings/NotificationSettingsTab';
+import { InventorySettingsTab } from '@/components/admin/settings/InventorySettingsTab';
+import { SEOSettingsTab } from '@/components/admin/settings/SEOSettingsTab';
+import { SecuritySettingsTab } from '@/components/admin/settings/SecuritySettingsTab';
+import { EmailSettingsTab } from '@/components/admin/settings/EmailSettingsTab';
+import { SocialMediaSettingsTab } from '@/components/admin/settings/SocialMediaSettingsTab';
+import { DeliverySettingsTab } from '@/components/admin/settings/DeliverySettingsTab';
+
+const TABS = [
+  { id: 'company', label: 'Company', icon: Building2 },
+  { id: 'payment', label: 'Payment', icon: CreditCard },
+  { id: 'notification', label: 'Notifications', icon: Bell },
+  { id: 'inventory', label: 'Inventory', icon: Package },
+  { id: 'delivery', label: 'Delivery', icon: Truck },
+  { id: 'seo', label: 'SEO', icon: Search },
+  { id: 'security', label: 'Security', icon: Lock },
+  { id: 'email', label: 'Email', icon: Mail },
+  { id: 'social', label: 'Social Media', icon: Share2 },
+];
 
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState({
-    siteName: 'Household Planet Kenya',
-    siteDescription: 'Your one-stop shop for household items in Kenya',
-    contactEmail: 'admin@householdplanet.co.ke',
-    contactPhone: '+254700000000',
-    currency: 'KSh',
-    taxRate: 16,
-    shippingFee: 200,
-    freeShippingThreshold: 5000,
-    mpesaShortcode: '174379',
-    mpesaPasskey: '',
-    emailNotifications: true,
-    smsNotifications: true,
-    lowStockThreshold: 10,
-    autoApproveReviews: false,
-  });
+  const [activeTab, setActiveTab] = useState('company');
+  const [settings, setSettings] = useState<SettingsResponse>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    // Save settings logic here
-    alert('Settings saved successfully!');
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading settings...');
+      
+      // Try admin settings first, fallback to public settings, then mock data
+      let data;
+      try {
+        data = await settingsApi.getSettings();
+      } catch (adminError) {
+        console.log('Admin settings failed, trying public settings:', adminError);
+        try {
+          data = await settingsApi.getPublicSettings();
+        } catch (publicError) {
+          console.log('Public settings failed, using mock data:', publicError);
+          // Mock data fallback
+          data = {
+            company: {
+              site_name: { value: 'Household Planet Kenya' },
+              site_description: { value: 'Your one-stop shop for household items in Kenya' },
+              company_name: { value: 'Household Planet Kenya Ltd' },
+              contact_email: { value: 'info@householdplanet.co.ke' },
+              contact_phone: { value: '+254700000000' },
+              currency: { value: 'KSh' },
+            },
+            payment: {
+              tax_rate: { value: 16 },
+              shipping_fee: { value: 200 },
+              free_shipping_threshold: { value: 5000 },
+              mpesa_shortcode: { value: '174379' },
+              enable_cash_payments: { value: true },
+              enable_bank_transfer: { value: true },
+            },
+            notification: {
+              email_notifications: { value: true },
+              sms_notifications: { value: true },
+              low_stock_alerts: { value: true },
+            },
+            inventory: {
+              low_stock_threshold: { value: 10 },
+              track_stock: { value: true },
+              auto_approve_reviews: { value: false },
+            }
+          };
+        }
+      }
+      
+      console.log('Loaded settings:', data);
+      setSettings(data || {});
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      toast.error('Failed to load settings');
+      // Set empty settings to prevent crashes
+      setSettings({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const data = await settingsApi.exportSettings();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `settings-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Settings exported successfully');
+    } catch (error) {
+      toast.error('Failed to export settings');
+    }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      await settingsApi.importSettings(data);
+      await loadSettings();
+      toast.success('Settings imported successfully');
+    } catch (error) {
+      toast.error('Failed to import settings');
+    }
+  };
+
+  const handleReset = async () => {
+    if (!confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await settingsApi.resetToDefaults();
+      await loadSettings();
+      toast.success('Settings reset to defaults');
+    } catch (error) {
+      toast.error('Failed to reset settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderTabContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-500">Loading settings...</p>
+        </div>
+      );
+    }
+    
+    // Show debug info in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Current settings state:', settings);
+      console.log('Active tab:', activeTab);
+    }
+
+    switch (activeTab) {
+      case 'company':
+        return <CompanySettingsTab settings={settings.company || {}} onSettingsChange={loadSettings} />;
+      case 'payment':
+        return <PaymentSettingsTab settings={settings.payment || {}} onSettingsChange={loadSettings} />;
+      case 'notification':
+        return <NotificationSettingsTab settings={settings.notification || {}} onSettingsChange={loadSettings} />;
+      case 'inventory':
+        return <InventorySettingsTab settings={settings.inventory || {}} onSettingsChange={loadSettings} />;
+      case 'delivery':
+        return <DeliverySettingsTab settings={settings.delivery || {}} onSettingsChange={loadSettings} />;
+      case 'seo':
+        return <SEOSettingsTab settings={settings.seo || {}} onSettingsChange={loadSettings} />;
+      case 'security':
+        return <SecuritySettingsTab settings={settings.security || {}} onSettingsChange={loadSettings} />;
+      case 'email':
+        return <EmailSettingsTab settings={settings.email || {}} onSettingsChange={loadSettings} />;
+      case 'social':
+        return <SocialMediaSettingsTab settings={settings.social || {}} onSettingsChange={loadSettings} />;
+      default:
+        return <div>Tab not found</div>;
+    }
   };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
-        <p className="mt-2 text-sm text-gray-700">
-          Configure your store settings and preferences.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
+            <p className="mt-2 text-sm text-gray-700">
+              Configure your store settings and preferences.
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              className="flex items-center"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+              />
+              <span className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />
+                Import
+              </span>
+            </label>
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              className="flex items-center text-red-600 hover:text-red-700"
+              disabled={saving}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-8">
-        {/* General Settings */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <Globe className="h-5 w-5 text-gray-600 mr-2" />
-              <h2 className="text-lg font-medium text-gray-900">General Settings</h2>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Site Name
-                </label>
-                <Input
-                  value={settings.siteName}
-                  onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Email
-                </label>
-                <Input
-                  type="email"
-                  value={settings.contactEmail}
-                  onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Phone
-                </label>
-                <Input
-                  value={settings.contactPhone}
-                  onChange={(e) => setSettings({ ...settings, contactPhone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Currency
-                </label>
-                <Input
-                  value={settings.currency}
-                  onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Site Description
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                rows={3}
-                value={settings.siteDescription}
-                onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200 mb-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="h-4 w-4 mr-2" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
-        {/* Payment Settings */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <CreditCard className="h-5 w-5 text-gray-600 mr-2" />
-              <h2 className="text-lg font-medium text-gray-900">Payment Settings</h2>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tax Rate (%)
-                </label>
-                <Input
-                  type="number"
-                  value={settings.taxRate}
-                  onChange={(e) => setSettings({ ...settings, taxRate: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Shipping Fee (KSh)
-                </label>
-                <Input
-                  type="number"
-                  value={settings.shippingFee}
-                  onChange={(e) => setSettings({ ...settings, shippingFee: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Free Shipping Threshold (KSh)
-                </label>
-                <Input
-                  type="number"
-                  value={settings.freeShippingThreshold}
-                  onChange={(e) => setSettings({ ...settings, freeShippingThreshold: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  M-Pesa Shortcode
-                </label>
-                <Input
-                  value={settings.mpesaShortcode}
-                  onChange={(e) => setSettings({ ...settings, mpesaShortcode: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                M-Pesa Passkey
-              </label>
-              <Input
-                type="password"
-                value={settings.mpesaPasskey}
-                onChange={(e) => setSettings({ ...settings, mpesaPasskey: e.target.value })}
-                placeholder="Enter M-Pesa passkey"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Notification Settings */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <Bell className="h-5 w-5 text-gray-600 mr-2" />
-              <h2 className="text-lg font-medium text-gray-900">Notification Settings</h2>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Email Notifications</h3>
-                <p className="text-sm text-gray-500">Receive email notifications for new orders and updates</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.emailNotifications}
-                  onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">SMS Notifications</h3>
-                <p className="text-sm text-gray-500">Send SMS notifications to customers</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.smsNotifications}
-                  onChange={(e) => setSettings({ ...settings, smsNotifications: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Inventory Settings */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <Shield className="h-5 w-5 text-gray-600 mr-2" />
-              <h2 className="text-lg font-medium text-gray-900">Inventory Settings</h2>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Low Stock Threshold
-              </label>
-              <Input
-                type="number"
-                value={settings.lowStockThreshold}
-                onChange={(e) => setSettings({ ...settings, lowStockThreshold: Number(e.target.value) })}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Alert when product stock falls below this number
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Auto-approve Reviews</h3>
-                <p className="text-sm text-gray-500">Automatically approve customer reviews</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.autoApproveReviews}
-                  onChange={(e) => setSettings({ ...settings, autoApproveReviews: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button onClick={handleSave} className="flex items-center">
-            <Save className="h-4 w-4 mr-2" />
-            Save Settings
-          </Button>
+      {/* Tab Content */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="p-6">
+          {renderTabContent()}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Fallback component for missing tab components
+function FallbackTabContent({ title }: { title: string }) {
+  return (
+    <div className="text-center py-12">
+      <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 mb-2">{title} Settings</h3>
+      <p className="text-gray-500">This settings section is coming soon.</p>
     </div>
   );
 }

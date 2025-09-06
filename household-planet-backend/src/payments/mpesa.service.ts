@@ -165,7 +165,7 @@ export class MpesaService {
         PartyA: formattedPhone,
         PartyB: this.businessShortCode,
         PhoneNumber: formattedPhone,
-        CallBackURL: `${process.env.APP_URL || 'http://localhost:3001'}/payments/mpesa/callback`,
+        CallBackURL: `${process.env.APP_URL || 'http://localhost:3001'}/api/payments/mpesa/callback`,
         AccountReference: 'HouseholdPlanet',
         TransactionDesc: 'Household Planet Kenya Payment',
       };
@@ -221,7 +221,7 @@ export class MpesaService {
         status: error.response?.status,
         data: error.response?.data,
         orderId,
-        phoneNumber: phoneNumber.replace(/(\\d{3})(\\d{6})(\\d{3})/, '$1***$3')
+        phoneNumber: phoneNumber.replace(/(\d{3})(\d{6})(\d{3})/, '$1***$3')
       });
       
       if (error.response?.status === 401) {
@@ -423,8 +423,8 @@ export class MpesaService {
       const registerData = {
         ShortCode: this.businessShortCode,
         ResponseType: 'Completed',
-        ConfirmationURL: `${process.env.APP_URL || 'http://localhost:3001'}/payments/mpesa/c2b/confirmation`,
-        ValidationURL: `${process.env.APP_URL || 'http://localhost:3001'}/payments/mpesa/c2b/validation`,
+        ConfirmationURL: `${process.env.APP_URL || 'http://localhost:3001'}/api/payments/mpesa/c2b/confirmation`,
+        ValidationURL: `${process.env.APP_URL || 'http://localhost:3001'}/api/payments/mpesa/c2b/validation`,
       };
 
       const response = await axios.post(
@@ -448,16 +448,22 @@ export class MpesaService {
 
   private validateAndFormatPhoneNumber(phoneNumber: string): string {
     // Remove spaces and special characters
-    const cleaned = phoneNumber.replace(/[\\s\\-\\(\\)]/g, '');
+    const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
     
     // Remove + prefix
-    const withoutPlus = cleaned.replace(/^\\+/, '');
+    let formatted = cleaned.replace(/^\+/, '');
     
-    // Convert 07xx to 2547xx format
-    const formatted = withoutPlus.replace(/^0/, '254');
+    // Convert different formats to 254xxxxxxxxx
+    if (formatted.startsWith('07')) {
+      formatted = '254' + formatted.substring(1);
+    } else if (formatted.startsWith('7') && formatted.length === 9) {
+      formatted = '254' + formatted;
+    } else if (!formatted.startsWith('254')) {
+      throw new BadRequestException('Invalid phone number format');
+    }
     
-    // Validate Kenyan mobile number format
-    if (!/^254[17]\\d{8}$/.test(formatted)) {
+    // Validate final format
+    if (!/^254\d{9}$/.test(formatted)) {
       throw new BadRequestException('Invalid Kenyan mobile number format');
     }
     

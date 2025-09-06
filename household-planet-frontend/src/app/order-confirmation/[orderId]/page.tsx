@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/imageUtils';
 import { 
   CheckCircle, 
   Package, 
@@ -28,6 +29,7 @@ export default function OrderConfirmationPage() {
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [trackingNumber, setTrackingNumber] = useState('');
 
   useEffect(() => {
@@ -39,16 +41,32 @@ export default function OrderConfirmationPage() {
   const loadOrder = async (orderId: string) => {
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Please log in to view your order details.');
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}`,
         {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          headers: { 'Authorization': `Bearer ${token}` },
         }
       );
       setOrder(response.data);
       setTrackingNumber(response.data.trackingNumber || generateTrackingNumber());
-    } catch (error) {
-      console.error('Error loading order:', error);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please log in again to view your order.');
+        localStorage.removeItem('token');
+      } else if (error.response?.status === 404) {
+        setError('Order not found. Please check your order number.');
+      } else if (error.response?.status === 403) {
+        setError('You do not have permission to view this order.');
+      } else {
+        setError('Unable to load order details. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -90,6 +108,23 @@ export default function OrderConfirmationPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4 text-red-600">Unable to Load Order</h1>
+          <p className="text-gray-600 mb-8">{error}</p>
+          <div className="space-x-4">
+            {error.includes('log in') && (
+              <Button onClick={() => router.push('/login')}>Log In</Button>
+            )}
+            <Button variant="outline" onClick={() => router.push('/products')}>Continue Shopping</Button>
+          </div>
         </div>
       </div>
     );
@@ -201,7 +236,21 @@ export default function OrderConfirmationPage() {
                   <div key={item.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-16 h-16 relative">
                       <Image
-                        src={item.product.images?.[0] || '/placeholder.jpg'}
+                        src={getImageUrl((() => {
+                          const images = item.product.images;
+                          if (Array.isArray(images) && images.length > 0) {
+                            return images[0];
+                          }
+                          if (typeof images === 'string') {
+                            try {
+                              const parsed = JSON.parse(images);
+                              return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
+                            } catch {
+                              return null;
+                            }
+                          }
+                          return null;
+                        })())}
                         alt={item.product.name}
                         fill
                         className="object-cover rounded-md"

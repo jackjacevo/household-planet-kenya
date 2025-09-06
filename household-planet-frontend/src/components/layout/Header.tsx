@@ -8,9 +8,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CartDrawer } from '@/components/ecommerce/CartDrawer';
 import { SearchAutocomplete } from '@/components/products/SearchAutocomplete';
 import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
 import { UserProfile } from '@/components/auth/UserProfile';
 import { AuthButtons } from '@/components/auth/AuthButtons';
 import { CompanyTagline } from '@/components/ui/CompanyTagline';
+import { CartHover } from '@/components/ui/CartHover';
+import { WishlistHover } from '@/components/ui/WishlistHover';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,6 +25,7 @@ export function Header() {
   const { user, logout, loading } = useAuth();
 
   const { getTotalItems } = useCart();
+  const { items: wishlistItems } = useWishlist();
 
   useEffect(() => {
     setMounted(true);
@@ -131,26 +135,35 @@ export function Header() {
               <Search className="h-5 w-5" />
             </button>
             
-            <Link 
-              href="/wishlist"
-              className={`p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition ${
-                mounted && user ? 'hidden lg:block' : 'hidden md:block'
-              }`}
-            >
-              <Heart className="h-5 w-5" />
-            </Link>
+            <WishlistHover>
+              <Link 
+                href="/wishlist"
+                className={`relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition ${
+                  mounted && user ? 'hidden lg:block' : 'hidden md:block'
+                }`}
+              >
+                <Heart className="h-5 w-5" />
+                {mounted && wishlistItems.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
+              </Link>
+            </WishlistHover>
             
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {mounted && getTotalItems() > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-green-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
-                  {getTotalItems()}
-                </span>
-              )}
-            </button>
+            <CartHover>
+              <button 
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {mounted && getTotalItems() > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-green-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </button>
+            </CartHover>
             
             {/* Auth Section - Only render after mount to prevent hydration mismatch */}
             {mounted && (
@@ -239,7 +252,7 @@ export function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Heart className="h-4 w-4 mr-3" /> 
-                  <span>Wishlist</span>
+                  <span>Wishlist {wishlistItems.length > 0 && `(${wishlistItems.length})`}</span>
                 </Link>
                 {(user.role === 'ADMIN' || user.role === 'admin') && (
                   <Link 

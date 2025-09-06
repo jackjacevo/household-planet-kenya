@@ -11,12 +11,13 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, AlertCircle, Check, X
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { phoneSchema } from '@/lib/validation'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number'),
+  phone: phoneSchema,
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
@@ -302,7 +303,7 @@ export default function RegisterPage() {
                 <Input
                   {...register('phone')}
                   type="tel"
-                  placeholder="+254..."
+                  placeholder="0700123456 or +254700123456"
                   className={`pl-10 h-10 sm:h-12 text-sm sm:text-base text-gray-900 bg-white border-gray-300 placeholder:text-gray-500 ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
                 />
               </div>

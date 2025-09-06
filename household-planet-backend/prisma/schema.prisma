@@ -222,7 +222,7 @@ model LowStockAlert {
 
 model Order {
   id                  Int                  @id @default(autoincrement())
-  userId              Int
+  userId              Int?
   orderNumber         String               @unique
   status              String               @default("PENDING")
   subtotal            Float
@@ -244,7 +244,7 @@ model Order {
   items               OrderItem[]
   notes               OrderNote[]
   statusHistory       OrderStatusHistory[]
-  user                User                 @relation(fields: [userId], references: [id])
+  user                User?                @relation(fields: [userId], references: [id])
   paymentTransactions PaymentTransaction[]
   returnRequests      ReturnRequest[]
 
@@ -1113,4 +1113,21 @@ model PhoneVerificationToken {
   @@index([phone])
   @@index([userId])
   @@map("phone_verification_tokens")
+}
+
+model Setting {
+  id          Int      @id @default(autoincrement())
+  category    String   // 'company', 'payment', 'notification', etc.
+  key         String   // 'site_name', 'mpesa_shortcode', etc.
+  value       String   // JSON string for complex values
+  type        String   // 'string', 'number', 'boolean', 'json', 'file'
+  description String?  // Human readable description
+  isPublic    Boolean  @default(false) // Whether this setting can be accessed by frontend
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, key])
+  @@index([category])
+  @@index([isPublic])
+  @@map("settings")
 }

@@ -15,6 +15,7 @@ interface CartContextType {
   getTotalPrice: () => number;
   getTotalItems: () => number;
   refreshCart: () => Promise<void>;
+  syncLocalCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -42,6 +43,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  // Sync local cart with backend when user logs in
+  const syncLocalCart = async () => {
+    if (!user || items.length === 0) return;
+    
+    const localItems = items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity
+    }));
+    
+    try {
+      await api.post('/api/cart/sync', { items: localItems });
+      localStorage.removeItem('guestCart');
+      await refreshCart();
+    } catch (error) {
+      console.error('Failed to sync local cart:', error);
+    }
+  };
+
   const refreshCart = async () => {
     if (!user) return;
     
@@ -57,9 +77,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = async (productId: string, variantId?: string, quantity = 1) => {
     if (user) {
-      await api.post('/api/cart/add', {
-        productId,
-        variantId,
+      await api.post('/api/cart', {
+        productId: parseInt(productId),
+        variantId: variantId ? parseInt(variantId) : undefined,
         quantity,
       });
       await refreshCart();
@@ -141,6 +161,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         getTotalPrice,
         getTotalItems,
         refreshCart,
+        syncLocalCart,
       }}
     >
       {children}

@@ -64,7 +64,7 @@ export class UsersService {
   }
 
   async findById(id: number) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -86,6 +86,16 @@ export class UsersService {
         updatedAt: true,
       },
     });
+    
+    if (user) {
+      // Ensure fullName is available for frontend compatibility
+      return {
+        ...user,
+        fullName: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || null
+      };
+    }
+    
+    return user;
   }
 
   async updateProfile(id: number, updateData: any) {
@@ -192,7 +202,30 @@ export class UsersService {
   }
 
   async changePassword(id: number, changePasswordDto: any) {
-    return this.update(id, { password: changePasswordDto.newPassword });
+    const bcrypt = require('bcryptjs');
+    
+    // Get current user with password
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+    
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 12);
+    
+    // Update password
+    await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedNewPassword }
+    });
+    
+    return { message: 'Password changed successfully' };
   }
 
   async updateNotificationSettings(id: number, settings: any) {
@@ -208,7 +241,23 @@ export class UsersService {
   }
 
   async getDashboardStats(id: number) {
-    return { orders: 0, totalSpent: 0, points: 0 };
+    const orders = await this.prisma.order.findMany({
+      where: { userId: id },
+      select: {
+        total: true,
+        status: true
+      }
+    });
+
+    const totalOrders = orders.length;
+    const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
+    const loyaltyPoints = Math.floor(totalSpent / 100); // 1 point per 100 KSh spent
+
+    return {
+      totalOrders,
+      totalSpent,
+      loyaltyPoints
+    };
   }
 
   async getAddresses(id: number) {
@@ -216,7 +265,13 @@ export class UsersService {
   }
 
   async createAddress(id: number, addressData: any) {
-    return this.prisma.address.create({ data: { ...addressData, userId: id } });
+    // Ensure type is set if not provided
+    const data = {
+      ...addressData,
+      userId: id,
+      type: addressData.type || 'SHIPPING'
+    };
+    return this.prisma.address.create({ data });
   }
 
   async updateAddress(userId: number, id: number, addressData: any) {

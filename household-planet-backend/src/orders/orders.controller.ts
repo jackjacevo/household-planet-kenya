@@ -133,8 +133,30 @@ export class OrdersController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(req.user.id, createOrderDto);
+  async create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
+    try {
+      // Check if user is authenticated
+      if (req.user?.id) {
+        // Authenticated user
+        return await this.ordersService.create(req.user.id, createOrderDto);
+      } else {
+        // This shouldn't happen with the guard, but fallback to guest
+        return await this.ordersService.createGuestOrder(createOrderDto);
+      }
+    } catch (error) {
+      console.error('Order creation error:', error);
+      throw error;
+    }
+  }
+
+  @Post('guest')
+  async createGuestOrder(@Body() createOrderDto: CreateOrderDto) {
+    try {
+      return await this.ordersService.createGuestOrder(createOrderDto);
+    } catch (error) {
+      console.error('Guest order creation error:', error);
+      throw error;
+    }
   }
 
   @Put(':id/status')

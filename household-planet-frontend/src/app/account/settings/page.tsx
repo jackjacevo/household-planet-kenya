@@ -8,7 +8,7 @@ import { User, Camera, Lock, Bell, Shield, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SettingsPage() {
-  const { user, updateProfile, updateUser } = useAuth();
+  const { user, updateProfile, updateUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -28,6 +28,12 @@ export default function SettingsPage() {
     newsletter: true,
     sms: false
   });
+  const [privacy, setPrivacy] = useState({
+    profileVisibility: 'public',
+    showPurchaseHistory: true,
+    allowDataCollection: true,
+    allowPersonalization: true
+  });
 
   useEffect(() => {
     if (user) {
@@ -37,6 +43,30 @@ export default function SettingsPage() {
         phone: user.phone || '',
         avatar: user.avatar || ''
       });
+      
+      // Load notification settings if available
+      if (user.notificationSettings) {
+        try {
+          const settings = typeof user.notificationSettings === 'string' 
+            ? JSON.parse(user.notificationSettings) 
+            : user.notificationSettings;
+          setNotifications(prev => ({ ...prev, ...settings }));
+        } catch (e) {
+          console.error('Error parsing notification settings:', e);
+        }
+      }
+      
+      // Load privacy settings if available
+      if (user.privacySettings) {
+        try {
+          const settings = typeof user.privacySettings === 'string' 
+            ? JSON.parse(user.privacySettings) 
+            : user.privacySettings;
+          setPrivacy(prev => ({ ...prev, ...settings }));
+        } catch (e) {
+          console.error('Error parsing privacy settings:', e);
+        }
+      }
     }
   }, [user]);
 
@@ -120,6 +150,7 @@ export default function SettingsPage() {
 
     const formData = new FormData();
     formData.append('avatar', file);
+    setLoading(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -130,14 +161,103 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        const { avatarUrl } = await response.json();
-        setProfileData(prev => ({ ...prev, avatar: avatarUrl }));
+        const updatedUser = await response.json();
+        setProfileData(prev => ({ ...prev, avatar: updatedUser.avatar }));
         if (user?.id) {
-          updateUser({ ...user, avatar: avatarUrl });
+          updateUser({ ...user, avatar: updatedUser.avatar });
         }
+        alert('Profile photo updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to upload photo');
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
+      alert('Failed to upload photo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotificationUpdate = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/notifications`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(notifications)
+      });
+
+      if (response.ok) {
+        alert('Notification preferences updated!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update notifications');
+      }
+    } catch (error) {
+      console.error('Error updating notifications:', error);
+      alert('Failed to update notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrivacyUpdate = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/privacy`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(privacy)
+      });
+
+      if (response.ok) {
+        alert('Privacy settings updated!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update privacy settings');
+      }
+    } catch (error) {
+      console.error('Error updating privacy:', error);
+      alert('Failed to update privacy settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/delete-account`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert('Account deleted successfully');
+        logout();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to delete account');
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -193,7 +313,7 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-                  <label className="absolute bottom-0 right-0 bg-orange-500 text-white p-2 rounded-full cursor-pointer hover:bg-orange-600">
+                  <label className="absolute bottom-0 right-0 bg-orange-500 text-white w-8 h-8 rounded-full cursor-pointer hover:bg-orange-600 flex items-center justify-center">
                     <Camera className="h-4 w-4" />
                     <input
                       type="file"
@@ -311,6 +431,9 @@ export default function SettingsPage() {
                     </div>
                   ))}
                 </div>
+                <Button onClick={handleNotificationUpdate} disabled={loading} className="mt-6">
+                  {loading ? 'Saving...' : 'Save Preferences'}
+                </Button>
               </div>
             </div>
           )}
@@ -319,13 +442,87 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium mb-4">Privacy Settings</h3>
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Profile Visibility</p>
+                        <p className="text-sm text-gray-500">Control who can see your profile information</p>
+                      </div>
+                      <select 
+                        value={privacy.profileVisibility}
+                        onChange={(e) => setPrivacy(prev => ({ ...prev, profileVisibility: e.target.value }))}
+                        className="border border-gray-300 rounded-md px-3 py-2"
+                      >
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                      </select>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Show Purchase History</p>
+                        <p className="text-sm text-gray-500">Allow others to see your purchase history</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={privacy.showPurchaseHistory}
+                          onChange={(e) => setPrivacy(prev => ({ ...prev, showPurchaseHistory: e.target.checked }))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Allow Data Collection</p>
+                        <p className="text-sm text-gray-500">Help us improve by sharing usage data</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={privacy.allowDataCollection}
+                          onChange={(e) => setPrivacy(prev => ({ ...prev, allowDataCollection: e.target.checked }))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Allow Personalization</p>
+                        <p className="text-sm text-gray-500">Personalize your experience based on preferences</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={privacy.allowPersonalization}
+                          onChange={(e) => setPrivacy(prev => ({ ...prev, allowPersonalization: e.target.checked }))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <Button onClick={handlePrivacyUpdate} disabled={loading}>
+                    {loading ? 'Saving...' : 'Save Privacy Settings'}
+                  </Button>
+                  
                   <div className="border border-red-200 rounded-lg p-4">
                     <h4 className="font-medium text-red-800 mb-2">Danger Zone</h4>
                     <p className="text-sm text-red-600 mb-4">
                       Once you delete your account, there is no going back. Please be certain.
                     </p>
-                    <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                    <Button 
+                      variant="outline" 
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={handleDeleteAccount}
+                      disabled={loading}
+                    >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Account
                     </Button>

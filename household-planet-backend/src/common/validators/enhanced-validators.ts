@@ -10,7 +10,7 @@ export function IsKenyanPhone(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: any, args: ValidationArguments) {
           if (!value) return true; // Allow optional
-          const kenyanPhoneRegex = /^(\+254|254|0)[17]\d{8}$|^[17]\d{8}$/;
+          const kenyanPhoneRegex = /^(\+254|254|07|7)[0-9]{8,9}$/;
           return kenyanPhoneRegex.test(value);
         },
         defaultMessage(args: ValidationArguments) {

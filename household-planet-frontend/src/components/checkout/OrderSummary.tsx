@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/imageUtils';
 import { 
   ShoppingBag, 
   Truck, 
@@ -78,9 +79,10 @@ export function OrderSummary({
               <div key={item.id} className="flex items-center space-x-3 p-2 border border-gray-100 rounded">
                 <div className="w-12 h-12 relative flex-shrink-0">
                   <Image
-                    src={item.product.images[0] || '/placeholder.jpg'}
+                    src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? (() => { try { return JSON.parse(item.product.images)[0]; } catch { return null; } })() : null))}
                     alt={item.product.name}
                     fill
+                    sizes="48px"
                     className="object-cover rounded"
                   />
                 </div>

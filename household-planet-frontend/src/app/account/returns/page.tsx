@@ -61,13 +61,15 @@ export default function ReturnsPage() {
       
       if (response.ok) {
         const data = await response.json();
-        setEligibleOrders(data || []);
+        setEligibleOrders(Array.isArray(data) ? data : []);
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Failed to fetch eligible orders:', response.status, errorData);
+        setEligibleOrders([]);
       }
     } catch (error) {
       console.error('Error fetching eligible orders:', error);
+      setEligibleOrders([]);
     } finally {
       setLoading(false);
     }
@@ -143,7 +145,7 @@ export default function ReturnsPage() {
               <div>
                 <h4 className="font-medium mb-3">Select Order to Return</h4>
                 <div className="space-y-3">
-                  {eligibleOrders.map((order: any) => (
+                  {Array.isArray(eligibleOrders) && eligibleOrders.map((order: any) => (
                     <div
                       key={order.id}
                       onClick={() => setSelectedOrder(order)}
@@ -334,7 +336,7 @@ export default function ReturnsPage() {
               <RotateCcw className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No return requests</h3>
               <p className="text-gray-500 mb-6">You haven't made any return requests yet</p>
-              {eligibleOrders.length > 0 && (
+              {Array.isArray(eligibleOrders) && eligibleOrders.length > 0 && (
                 <Button onClick={() => setShowForm(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Return Request

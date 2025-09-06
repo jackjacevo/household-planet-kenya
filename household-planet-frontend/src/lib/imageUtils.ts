@@ -13,18 +13,17 @@ export function getImageUrl(imagePath: string | null | undefined): string {
     return imagePath;
   }
 
+  // Get API URL from environment
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
   // If it starts with /uploads/, prepend the API URL
   if (imagePath.startsWith('/uploads/')) {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}${imagePath}`;
-    console.log('Generated image URL:', url);
-    return url;
+    return `${apiUrl}${imagePath}`;
   }
 
   // If it's a relative path starting with uploads/, prepend API URL with slash
   if (imagePath.startsWith('uploads/')) {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/${imagePath}`;
-    console.log('Generated image URL:', url);
-    return url;
+    return `${apiUrl}/${imagePath}`;
   }
 
   // For other paths (like /images/), treat as frontend static assets

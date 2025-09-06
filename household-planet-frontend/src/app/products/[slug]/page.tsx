@@ -7,6 +7,7 @@ import { RatingDisplay } from '@/components/ui/RatingDisplay';
 import { Star, ShoppingCart, Heart, MessageCircle, Truck, Shield, RotateCcw, Package } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useToast } from '@/contexts/ToastContext';
 import { openWhatsAppForProduct } from '@/lib/whatsapp';
 import { api } from '@/lib/api';
 import { Product, ProductVariant, Review } from '@/types';
@@ -43,7 +44,8 @@ export default function ProductDetailPage() {
   }, []);
   
   const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -153,14 +155,18 @@ export default function ProductDetailPage() {
     );
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const maxStock = selectedVariant?.stock || product.stock || 0;
     if (quantity > maxStock) {
-      alert(`Only ${maxStock} items available in stock`);
+      showToast({
+        variant: 'destructive',
+        title: 'Insufficient Stock ⚠️',
+        description: `Only ${maxStock} items available`,
+      });
       return;
     }
     
-    addToCart({
+    const wasAdded = await addToCart({
       id: `${selectedVariant?.id || product.id}-${Date.now()}`,
       productId: product.id,
       variantId: selectedVariant?.id,
@@ -168,10 +174,46 @@ export default function ProductDetailPage() {
       product,
       variant: selectedVariant,
     });
+    
+    if (wasAdded) {
+      showToast({
+        variant: 'cart',
+        title: 'Added to Cart! 🛒',
+        description: `${quantity}x ${product.name} • Ready for checkout`,
+      });
+    } else {
+      showToast({
+        variant: 'info',
+        title: 'Already in Cart 📦',
+        description: `${product.name} • Check your cart`,
+      });
+    }
   };
 
-  const handleAddToWishlist = () => {
-    addToWishlist(product);
+  const handleAddToWishlist = async () => {
+    if (isInWishlist(product.id.toString())) {
+      await removeFromWishlist(product.id.toString());
+      showToast({
+        variant: 'wishlist',
+        title: 'Removed from Wishlist 💔',
+        description: `${product.name} • No longer saved`,
+      });
+    } else {
+      const added = await addToWishlist(product);
+      if (added) {
+        showToast({
+          variant: 'wishlist',
+          title: 'Added to Wishlist! ❤️',
+          description: `${product.name} • Saved for later`,
+        });
+      } else {
+        showToast({
+          variant: 'info',
+          title: 'Already in Wishlist 💖',
+          description: `${product.name} • Already saved`,
+        });
+      }
+    }
   };
 
   const handleWhatsAppOrder = () => {

@@ -484,7 +484,7 @@ export default function ProductsPage() {
                               variants={fadeInUp}
                               custom={index}
                             >
-                              <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} />
+                              <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} priority={index < 4} />
                             </motion.div>
                           ))}
                         </motion.div>
@@ -506,7 +506,7 @@ export default function ProductsPage() {
                             variants={fadeInUp}
                             custom={index}
                           >
-                            <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} />
+                            <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} priority={index < 4} />
                           </motion.div>
                         ))}
                       </motion.div>

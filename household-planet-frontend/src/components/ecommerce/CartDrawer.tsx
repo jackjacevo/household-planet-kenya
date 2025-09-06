@@ -5,6 +5,7 @@ import { X, ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/contexts/ToastContext';
 import { getImageUrl } from '@/lib/imageUtils';
 import Image from 'next/image';
 
@@ -15,6 +16,16 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, updateQuantity, removeFromCart, getTotalPrice, getTotalItems, isLoading } = useCart();
+  const { showToast } = useToast();
+
+  const handleRemoveFromCart = (item: any) => {
+    removeFromCart(item.id);
+    showToast({
+      variant: 'destructive',
+      title: 'Removed from Cart 🗑️',
+      description: `${item.product.name} • Item removed`,
+    });
+  };
 
   const subtotal = getTotalPrice();
   const shipping = subtotal > 5000 ? 0 : 100;
@@ -90,9 +101,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <Image
                           src={getImageUrl(item.product.images && item.product.images.length > 0 ? item.product.images[0] : null)}
                           alt={item.product.name}
-                          width={64}
-                          height={64}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="64px"
+                          className="object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.src = '/images/products/placeholder.svg';
@@ -139,7 +150,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                       {/* Remove Button */}
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => handleRemoveFromCart(item)}
                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100 text-red-500 transition-colors"
                         disabled={isLoading}
                       >
@@ -173,9 +184,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  <Link href="/checkout" onClick={onClose}>
+                  <Link href="/cart" onClick={onClose}>
                     <Button className="w-full bg-green-600 hover:bg-green-700 text-white btn-hover">
-                      Proceed to Checkout
+                      Proceed to Cart Page
                     </Button>
                   </Link>
                   <Button 

@@ -13,7 +13,7 @@ import IconPreloader from '@/components/ui/IconPreloader'
 const inter = Inter({ 
   subsets: ['latin'],
   display: 'swap',
-  fallback: ['system-ui', 'arial']
+  preload: true
 })
 
 export default function RootLayout({

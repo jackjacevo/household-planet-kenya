@@ -1,6 +1,7 @@
 import { IsEnum, IsInt, IsString, IsOptional, IsArray, ValidateNested, IsDecimal, IsBoolean, IsDateString, IsNotEmpty, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderStatus, PaymentMethod } from '../../common/enums';
+import { IsKenyanPhone } from '../../common/validators/enhanced-validators';
 
 export class CreateOrderItemDto {
   @IsInt()
@@ -13,7 +14,7 @@ export class CreateOrderItemDto {
   @IsInt()
   quantity: number;
 
-  @IsDecimal()
+  @IsNumber()
   price: number;
 }
 
@@ -22,8 +23,6 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items: CreateOrderItemDto[];
-
-
 
   @IsOptional()
   @IsString()
@@ -34,11 +33,27 @@ export class CreateOrderDto {
   deliveryLocationId?: string;
 
   @IsOptional()
-  @IsDecimal()
+  @IsNumber()
   deliveryPrice?: number;
 
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsString()
+  customerName?: string;
+
+  @IsOptional()
+  @IsString()
+  customerPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  customerEmail?: string;
 }
 
 export class UpdateOrderStatusDto {
@@ -185,7 +200,7 @@ export class SendCustomerEmailDto {
 }
 
 export class CreateWhatsAppOrderDto {
-  @IsString()
+  @IsKenyanPhone()
   @IsNotEmpty()
   customerPhone: string;
 

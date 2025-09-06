@@ -106,7 +106,7 @@ export function BestSellers() {
                 variants={fadeInUp}
                 custom={index}
               >
-                <ProductCard product={product} viewMode="grid" priority={index < 3} />
+                <ProductCard product={product} viewMode="grid" priority={false} />
               </motion.div>
             ))}
           </motion.div>

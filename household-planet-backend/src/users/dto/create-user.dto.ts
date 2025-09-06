@@ -1,4 +1,5 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { IsKenyanPhone } from '../../common/validators/enhanced-validators';
 
 export class CreateUserDto {
   @IsString()
@@ -11,6 +12,7 @@ export class CreateUserDto {
   @MinLength(6)
   password: string;
 
-  @IsString()
+  @IsOptional()
+  @IsKenyanPhone()
   phone?: string;
 }

@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/Button';
 import { RatingDisplay } from '@/components/ui/RatingDisplay';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { openWhatsAppForProduct } from '@/lib/whatsapp';
 import { getImageUrl } from '@/lib/imageUtils';
+import { toastMessages } from '@/lib/toast-messages';
 import { Product } from '@/types';
 
 interface ProductCardProps {
@@ -21,19 +24,42 @@ interface ProductCardProps {
 
 export function ProductCard({ product, viewMode = 'grid', compact = false, priority = false }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
-  const handleAddToCart = () => {
-    addToCart({
+  const handleAddToCart = async () => {
+    const wasAdded = await addToCart({
       id: `${product.id}-default`,
       productId: product.id,
       quantity: 1,
       product,
     });
+    
+    if (wasAdded) {
+      showToast(toastMessages.cart.added(product.name));
+    } else {
+      showToast(toastMessages.cart.alreadyExists(product.name));
+    }
   };
 
-  const handleAddToWishlist = () => {
-    addToWishlist(product);
+  const handleAddToWishlist = async () => {
+    try {
+      const isAuthenticated = !!user;
+      if (isInWishlist(product.id)) {
+        await removeFromWishlist(product.id, isAuthenticated);
+        showToast(toastMessages.wishlist.removed(product.name));
+      } else {
+        const added = await addToWishlist(product, isAuthenticated);
+        if (added) {
+          showToast(toastMessages.wishlist.added(product.name));
+        } else {
+          showToast(toastMessages.wishlist.alreadyExists(product.name));
+        }
+      }
+    } catch (error) {
+      console.error('Wishlist operation failed:', error);
+    }
   };
 
   const handleWhatsAppOrder = () => {
@@ -55,15 +81,14 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300"
       >
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-32 sm:h-36 bg-gray-50 flex items-center justify-center overflow-hidden relative p-2">
+          <div className="w-full h-32 sm:h-36 bg-gray-50 overflow-hidden relative p-2">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
-              width={200}
-              height={144}
+              fill
+              sizes="(max-width: 768px) 100vw, 200px"
               priority={priority}
-              className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
         </Link>
@@ -95,16 +120,15 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         whileTap={{ scale: 0.98 }}
         className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 flex flex-col sm:flex-row"
       >
-        <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative p-3">
+        <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-50 overflow-hidden flex-shrink-0 relative p-3">
           <Link href={`/products/${product.slug}`}>
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
-              width={192}
-              height={128}
-              priority={priority}
-              className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              fill
               sizes="(max-width: 768px) 100vw, 200px"
+              priority={priority}
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
         </div>
@@ -172,15 +196,14 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
     >
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-56 bg-gray-50 flex items-center justify-center overflow-hidden relative p-2">
+          <div className="w-full h-56 bg-gray-50 overflow-hidden relative p-2">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
-              width={300}
-              height={224}
+              fill
+              sizes="(max-width: 768px) 100vw, 300px"
               priority={priority}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
         </Link>

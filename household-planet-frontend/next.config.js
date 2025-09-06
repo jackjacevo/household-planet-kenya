@@ -186,6 +186,16 @@ const nextConfig = {
     ];
   },
   
+  // Rewrites for backend uploads
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: 'http://localhost:3001/uploads/:path*',
+      },
+    ];
+  },
+  
   // Output optimization
   output: 'standalone',
   

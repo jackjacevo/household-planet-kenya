@@ -1,16 +1,26 @@
 'use client';
 
 import { useWishlist } from '@/hooks/useWishlist';
-import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/contexts/AuthContext';
+import { ProductCard } from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/Button';
-import { Heart, ShoppingCart } from 'lucide-react';
-import Image from 'next/image';
+
 import Link from 'next/link';
-import { formatPrice } from '@/lib/utils';
+import { useEffect } from 'react';
 
 export default function WishlistPage() {
-  const { items, removeFromWishlist } = useWishlist();
-  const { addToCart } = useCart();
+  const { items, wishlistData, syncWithBackend } = useWishlist();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      // Only sync if we don't have local items or if it's the first load
+      const hasLocalItems = items.length > 0;
+      if (!hasLocalItems) {
+        syncWithBackend();
+      }
+    }
+  }, [user]);
 
   if (items.length === 0) {
     return (
@@ -32,69 +42,20 @@ export default function WishlistPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {items.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="relative">
-              <Link href={`/products/${item.slug}`}>
-                <Image
-                  src={item.images[0]}
-                  alt={item.name}
-                  width={300}
-                  height={300}
-                  className="w-full h-48 object-cover"
-                />
-              </Link>
-              
-              <button
-                onClick={() => removeFromWishlist(item.id)}
-                className="absolute top-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white transition-colors"
-              >
-                <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-              </button>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {items.map((item, index) => {
+          const product = item.product || item;
+          return (
+            <div key={product.id} className="relative">
+              <ProductCard 
+                product={product} 
+                viewMode="grid" 
+                priority={index < 4}
+              />
             </div>
-
-            <div className="p-4">
-              <Link href={`/products/${item.slug}`}>
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-orange-600 transition-colors">
-                  {item.name}
-                </h3>
-              </Link>
-
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xl font-bold text-gray-900">
-                  {formatPrice(item.price)}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <Button
-                  onClick={() => addToCart({
-                    id: item.id,
-                    productId: item.id,
-                    quantity: 1,
-                    product: item
-                  })}
-                  disabled={!item.stock || item.stock <= 0}
-                  className="w-full"
-                  size="sm"
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => removeFromWishlist(item.id)}
-                  className="w-full"
-                  size="sm"
-                >
-                  Remove
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { IsString, IsNumber, IsOptional, IsEnum, Matches, Length, ValidateIf } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { IsKenyanPhone } from '../../common/validators/enhanced-validators';
 
 export enum PaymentMethod {
   CARD = 'card',
@@ -49,8 +50,7 @@ export class ProcessPaymentDto {
 }
 
 export class MpesaPaymentDto {
-  @IsString()
-  @Matches(/^254[0-9]{9}$/)
+  @IsKenyanPhone()
   phoneNumber: string;
 
   @ValidateIf((o) => isNumericAmount(o.amount))

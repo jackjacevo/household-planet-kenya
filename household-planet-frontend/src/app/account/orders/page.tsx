@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/imageUtils';
 import { Package, Eye, RotateCcw, Download, Search, Truck, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -196,7 +197,7 @@ export default function OrdersPage() {
                       <div key={item.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
                         <div className="w-12 h-12 relative">
                           <Image
-                            src={item.product.images?.[0] || '/placeholder.jpg'}
+                            src={getImageUrl(item.product.images?.[0])}
                             alt={item.product.name}
                             fill
                             className="object-cover rounded"

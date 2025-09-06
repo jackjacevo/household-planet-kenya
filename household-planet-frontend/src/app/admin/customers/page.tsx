@@ -572,6 +572,17 @@ export default function CustomersPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Wishlist & Cart Info */}
+                    <div className="mt-4 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                      <h4 className="text-sm font-medium text-yellow-800 mb-2">Wishlist & Cart Data</h4>
+                      <p className="text-xs text-yellow-700 mb-2">These are stored in user's browser and not synced to backend:</p>
+                      <ul className="text-xs text-yellow-700 ml-4 list-disc">
+                        <li>User can view in their account dashboard</li>
+                        <li>Admin cannot access this data remotely</li>
+                        <li>Data persists only on user's device</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>

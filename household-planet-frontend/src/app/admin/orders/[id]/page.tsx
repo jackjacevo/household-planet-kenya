@@ -460,15 +460,9 @@ export default function OrderDetailsPage() {
                   <p className="font-medium">KSh {order.subtotal.toLocaleString()}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Shipping:</span>
-                  <p className="font-medium">KSh {order.shippingCost.toLocaleString()}</p>
+                  <span className="text-gray-500">Delivery Cost:</span>
+                  <p className="font-medium">KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</p>
                 </div>
-                {order.deliveryPrice && (
-                  <div>
-                    <span className="text-gray-500">Delivery:</span>
-                    <p className="font-medium">KSh {order.deliveryPrice.toLocaleString()}</p>
-                  </div>
-                )}
                 <div>
                   <span className="text-gray-500">Total:</span>
                   <p className="font-bold text-lg">KSh {order.total.toLocaleString()}</p>
@@ -518,7 +512,19 @@ export default function OrderDetailsPage() {
                   order.items.map((item) => (
                     <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                       <img
-                        src={item.product.images ? JSON.parse(item.product.images)[0] : '/images/placeholder.jpg'}
+                        src={(() => {
+                          try {
+                            const images = typeof item.product.images === 'string' 
+                              ? JSON.parse(item.product.images) 
+                              : item.product.images;
+                            const imageUrl = Array.isArray(images) ? images[0] : images;
+                            return imageUrl?.startsWith('http') 
+                              ? imageUrl 
+                              : `${process.env.NEXT_PUBLIC_API_URL}${imageUrl}`;
+                          } catch {
+                            return '/images/placeholder.jpg';
+                          }
+                        })()} 
                         alt={item.product.name}
                         className="w-16 h-16 object-cover rounded"
                         onError={(e) => {
@@ -552,8 +558,8 @@ export default function OrderDetailsPage() {
                   <span>KSh {order.subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Shipping:</span>
-                  <span>KSh {order.shippingCost.toLocaleString()}</span>
+                  <span>Delivery Cost:</span>
+                  <span>KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold mt-2 pt-2 border-t">
                   <span>Total:</span>
@@ -711,24 +717,70 @@ export default function OrderDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <User className="h-5 w-5 mr-2" />
-                Customer
+                Customer Details
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="font-medium">{order.user.name}</p>
-                <p className="text-sm font-medium text-blue-600">
-                  {order.user.email.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user.email}
-                </p>
-                {order.user.phone && (
-                  <p className="text-sm text-gray-600">{order.user.phone}</p>
-                )}
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Customer Name</label>
+                  <p className="font-medium text-gray-900">{order.user.name || 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email Address</label>
+                  <p className="text-sm font-medium text-blue-600">
+                    {order.user.email.endsWith('@whatsapp.temp') ? (
+                      <span className="flex items-center">
+                        <div className="w-4 h-4 mr-1">
+                          <WhatsAppIcon />
+                        </div>
+                        WhatsApp User
+                      </span>
+                    ) : (
+                      <a href={`mailto:${order.user.email}`} className="hover:underline">
+                        {order.user.email}
+                      </a>
+                    )}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
+                  {order.user.phone ? (
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium text-gray-900">
+                        <a href={`tel:${order.user.phone}`} className="hover:underline">
+                          {order.user.phone}
+                        </a>
+                      </p>
+                      {order.user.phoneVerified && (
+                        <Badge className="bg-green-100 text-green-800 text-xs">
+                          ✓ Verified
+                        </Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 italic">No phone number provided</p>
+                  )}
+                </div>
               </div>
-              <div className="flex space-x-2">
+              
+              <div className="flex space-x-2 pt-2 border-t">
                 {order.user.phone && (
-                  <Button size="sm" variant="outline">
-                    <Phone className="h-4 w-4 mr-1" />
-                    Call
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={`tel:${order.user.phone}`}>
+                      <Phone className="h-4 w-4 mr-1" />
+                      Call Customer
+                    </a>
+                  </Button>
+                )}
+                {!order.user.email.endsWith('@whatsapp.temp') && (
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={`mailto:${order.user.email}`}>
+                      <Mail className="h-4 w-4 mr-1" />
+                      Email
+                    </a>
                   </Button>
                 )}
               </div>
@@ -754,10 +806,29 @@ export default function OrderDetailsPage() {
                 </div>
               )}
               
+              {order.shippingAddress && (() => {
+                try {
+                  const address = JSON.parse(order.shippingAddress);
+                  return (
+                    <div>
+                      <h4 className="font-medium mb-2">Shipping Address</h4>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>Name:</strong> {order.user.name || address.fullName}</p>
+                        {order.user.phone && <p><strong>Phone:</strong> {order.user.phone}</p>}
+                        {order.user.email && <p><strong>Email:</strong> {order.user.email}</p>}
+                        <p><strong>Address:</strong> {address.street}, {address.town}, {address.county}</p>
+                      </div>
+                    </div>
+                  );
+                } catch {
+                  return null;
+                }
+              })()}
+              
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">Delivery Cost:</span>
-                  <p className="font-medium">KSh {order.shippingCost.toLocaleString()}</p>
+                  <p className="font-medium">KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</p>
                 </div>
                 {order.trackingNumber && (
                   <div>
@@ -804,12 +875,12 @@ export default function OrderDetailsPage() {
                   <span>KSh {order.subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Shipping:</span>
-                  <span>KSh {order.shippingCost.toLocaleString()}</span>
+                  <span>Delivery Cost:</span>
+                  <span>KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between font-medium border-t pt-2">
                   <span>Total Amount:</span>
-                  <span>KSh {order.total.toLocaleString()}</span>
+                  <span className="font-bold text-lg">KSh {order.total.toLocaleString()}</span>
                 </div>
               </div>
               

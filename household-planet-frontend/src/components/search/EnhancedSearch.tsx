@@ -79,8 +79,8 @@ export default function EnhancedSearch() {
 
       setIsLoading(true);
       try {
-        const response = await api.get(`/products/search/autocomplete?q=${encodeURIComponent(query)}&limit=8`);
-        setResults(response.data);
+        const response = await api.get(`/api/products?search=${encodeURIComponent(query)}&limit=15`);
+        setResults(response.data?.data || response.data || []);
         setIsOpen(true);
       } catch (error) {
         console.error('Search error:', error);
@@ -156,6 +156,27 @@ export default function EnhancedSearch() {
     Array.isArray(value) ? value.length > 0 : value !== undefined
   );
 
+  const getImageUrl = (images: string[]) => {
+    if (!images || images.length === 0) {
+      return '/images/placeholder.jpg';
+    }
+    
+    const firstImage = images[0];
+    
+    // If it's already a full URL, return as is
+    if (firstImage.startsWith('http')) {
+      return firstImage;
+    }
+    
+    // If it starts with /uploads, prepend the API base URL
+    if (firstImage.startsWith('/uploads')) {
+      return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${firstImage}`;
+    }
+    
+    // Otherwise, assume it's a relative path and prepend /uploads
+    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/uploads/${firstImage}`;
+  };
+
   return (
     <div ref={searchRef} className="relative flex-1 max-w-2xl">
       <form onSubmit={handleSearch} className="relative">
@@ -166,9 +187,11 @@ export default function EnhancedSearch() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products, brands, categories..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
-            <MagnifyingGlassIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+            <div className="absolute left-2 top-2.5 bg-orange-500 rounded-full p-1.5 flex items-center justify-center">
+              <MagnifyingGlassIcon className="h-5 w-5 text-white" />
+            </div>
           </div>
           
           <button
@@ -303,40 +326,65 @@ export default function EnhancedSearch() {
 
       {/* Search Results Dropdown */}
       {isOpen && !showFilters && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-40 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-40 max-h-[700px] overflow-y-auto backdrop-blur-sm">
           {isLoading ? (
-            <div className="p-4 text-center text-gray-500">Searching...</div>
+            <div className="p-6 text-center">
+              <div className="inline-flex items-center space-x-2 text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-orange-500 border-t-transparent"></div>
+                <span>Searching...</span>
+              </div>
+            </div>
           ) : results.length > 0 ? (
             <>
-              {results.map((product) => (
+              {results.map((product, index) => (
                 <button
                   key={product.id}
                   onClick={() => handleResultClick(product.slug)}
-                  className="w-full p-3 text-left hover:bg-gray-50 flex items-center space-x-3 border-b border-gray-100 last:border-b-0"
+                  className={`w-full p-5 text-left hover:bg-gradient-to-r hover:from-orange-50 hover:to-green-50 flex items-center space-x-5 transition-all duration-200 group ${
+                    index !== results.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
                 >
-                  <img
-                    src={product.images[0] || '/images/placeholder.jpg'}
-                    alt={product.name}
-                    className="w-12 h-12 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 line-clamp-1">{product.name}</div>
-                    <div className="text-sm text-green-600 font-semibold">
+                  <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                    <img
+                      src={getImageUrl(product.images)}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/images/placeholder.jpg';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-lg font-semibold text-gray-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                      {product.name}
+                    </div>
+                    <div className="text-xl font-bold text-green-600 mt-2">
                       KSh {product.price.toLocaleString()}
                     </div>
                   </div>
                 </button>
               ))}
-              <button
-                onClick={() => handleSearch()}
-                className="w-full p-3 text-center text-green-600 hover:bg-gray-50 border-t border-gray-200 font-medium"
-              >
-                View all results for "{query}"
-              </button>
+              <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <button
+                  onClick={() => handleSearch()}
+                  className="w-full text-center text-base font-medium text-orange-600 hover:text-orange-700 transition-colors py-2"
+                >
+                  View all results for "{query}" →
+                </button>
+              </div>
             </>
           ) : (
-            <div className="p-4 text-center text-gray-500">
-              No products found for "{query}"
+            <div className="p-6 text-center text-gray-500">
+              <div className="text-gray-500">
+                <div className="h-8 w-8 mx-auto mb-2 text-gray-300">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm">No products found for "{query}"</p>
+                <p className="text-xs text-gray-400 mt-1">Try different keywords or check spelling</p>
+              </div>
             </div>
           )}
         </div>

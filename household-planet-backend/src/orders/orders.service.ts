@@ -84,9 +84,12 @@ export class OrdersService {
           include: {
             user: { 
               select: { 
+                id: true,
                 name: true, 
                 email: true, 
                 phone: true,
+                firstName: true,
+                lastName: true,
                 createdAt: true
               } 
             },
@@ -161,7 +164,18 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
-        user: { select: { name: true, email: true, phone: true } },
+        user: { 
+          select: { 
+            id: true,
+            name: true, 
+            email: true, 
+            phone: true,
+            firstName: true,
+            lastName: true,
+            phoneVerified: true,
+            createdAt: true
+          } 
+        },
         items: {
           include: {
             product: true,
@@ -203,7 +217,134 @@ export class OrdersService {
     return order;
   }
 
+  async createGuestOrder(dto: CreateOrderDto) {
+    // Batch validate stock for all variants
+    const variantIds = dto.items.filter(item => item.variantId).map(item => item.variantId!);
+    const variants = await this.prisma.productVariant.findMany({
+      where: { id: { in: variantIds } },
+      select: { id: true, stock: true }
+    });
+    
+    const variantStockMap = new Map(variants.map(v => [v.id, v.stock]));
+    
+    for (const item of dto.items) {
+      if (item.variantId) {
+        const stock = variantStockMap.get(item.variantId);
+        if (stock === undefined || stock < item.quantity) {
+          throw new BadRequestException(`Insufficient stock for product variant ${item.variantId}`);
+        }
+      } else {
+        // Validate base product stock
+        const product = await this.prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { id: true }
+        });
+        if (!product) {
+          throw new BadRequestException(`Product ${item.productId} not found`);
+        }
+      }
+    }
+
+    const subtotal = dto.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    // Calculate delivery cost - prioritize manual delivery price
+    let shippingCost = 0;
+    
+    if (dto.deliveryPrice !== undefined && dto.deliveryPrice >= 0) {
+      // Use manual delivery price if provided
+      shippingCost = dto.deliveryPrice;
+    } else if (dto.deliveryLocationId) {
+      // Get the specific delivery location and use its price
+      const deliveryLocation = this.deliveryService.getAllLocations().find(loc => loc.id === dto.deliveryLocationId);
+      
+      if (deliveryLocation) {
+        shippingCost = deliveryLocation.price;
+        
+        // Apply free shipping ONLY if order value is above threshold
+        if (subtotal >= this.FREE_SHIPPING_THRESHOLD) {
+          shippingCost = 0;
+        }
+      } else {
+        throw new BadRequestException('Invalid delivery location selected');
+      }
+    } else {
+      shippingCost = subtotal >= this.FREE_SHIPPING_THRESHOLD ? 0 : this.DEFAULT_SHIPPING_COST;
+    }
+    
+    const total = subtotal + shippingCost;
+
+    // Create order in transaction to ensure inventory is updated
+    return this.prisma.$transaction(async (tx) => {
+      const orderNumber = await this.orderIdService.generateOrderId('WEB');
+      // Generate tracking number at order creation
+      const trackingNumber = `TRK-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`;
+      
+      const order = await tx.order.create({
+        data: {
+          orderNumber,
+          trackingNumber,
+          subtotal,
+          shippingCost,
+          total,
+          shippingAddress: JSON.stringify({
+            fullName: dto.customerName || 'Guest Customer',
+            phone: dto.customerPhone || '',
+            email: dto.customerEmail || '',
+            street: dto.deliveryLocation || '',
+            town: dto.deliveryLocation || '',
+            county: 'Kenya'
+          }),
+          deliveryLocation: dto.deliveryLocation || dto.deliveryLocationId,
+          deliveryPrice: shippingCost,
+          paymentMethod: dto.paymentMethod,
+
+          items: {
+            create: dto.items.map(item => ({
+              productId: item.productId,
+              variantId: item.variantId,
+              quantity: item.quantity,
+              price: item.price,
+              total: item.price * item.quantity
+            }))
+          }
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+              variant: true
+            }
+          }
+        }
+      });
+
+      // Batch update inventory
+      const inventoryUpdates = dto.items
+        .filter(item => item.variantId)
+        .map(item => 
+          tx.productVariant.update({
+            where: { id: item.variantId! },
+            data: { stock: { decrement: item.quantity } }
+          })
+        );
+      
+      await Promise.all(inventoryUpdates);
+
+      return order;
+    });
+  }
+
   async create(userId: number, dto: CreateOrderDto) {
+    // Get user profile data for customer information
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, phone: true, firstName: true, lastName: true }
+    });
+    
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
     // Batch validate stock for all variants
     const variantIds = dto.items.filter(item => item.variantId).map(item => item.variantId!);
     const variants = await this.prisma.productVariant.findMany({
@@ -274,8 +415,9 @@ export class OrdersService {
           shippingCost,
           total,
           shippingAddress: JSON.stringify({
-            fullName: 'Customer',
-            phone: '',
+            fullName: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer',
+            phone: user.phone || '',
+            email: user.email || '',
             street: dto.deliveryLocation || '',
             town: dto.deliveryLocation || '',
             county: 'Kenya'
@@ -315,8 +457,10 @@ export class OrdersService {
       
       await Promise.all(inventoryUpdates);
 
-      // Clear user's cart
-      await tx.cart.deleteMany({ where: { userId } });
+      // Clear user's cart (only for authenticated users)
+      if (userId) {
+        await tx.cart.deleteMany({ where: { userId } });
+      }
 
       return order;
     });
@@ -378,18 +522,20 @@ export class OrdersService {
 
       // Handle delivered status updates asynchronously
       if (dto.status === 'DELIVERED') {
-        // Run these in background without blocking the response
-        setImmediate(async () => {
-          try {
-            await Promise.all([
-              this.customersService.updateCustomerStats(updatedOrder.userId),
-              this.loyaltyService.earnPoints(updatedOrder.userId, updatedOrder.id, Number(updatedOrder.total))
-            ]);
-            this.logger.debug(`Customer stats and loyalty points updated for order ${id}`);
-          } catch (error) {
-            this.logger.error('Error updating customer stats or loyalty points', error.stack, 'OrdersService');
-          }
-        });
+        // Run these in background without blocking the response (only for authenticated users)
+        if (updatedOrder.userId) {
+          setImmediate(async () => {
+            try {
+              await Promise.all([
+                this.customersService.updateCustomerStats(updatedOrder.userId),
+                this.loyaltyService.earnPoints(updatedOrder.userId, updatedOrder.id, Number(updatedOrder.total))
+              ]);
+              this.logger.debug(`Customer stats and loyalty points updated for order ${id}`);
+            } catch (error) {
+              this.logger.error('Error updating customer stats or loyalty points', error.stack, 'OrdersService');
+            }
+          });
+        }
       }
 
       return updatedOrder;

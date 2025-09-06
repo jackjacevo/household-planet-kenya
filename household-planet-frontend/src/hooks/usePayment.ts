@@ -85,7 +85,13 @@ export function usePayment() {
 
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Payment failed';
+      console.error('Payment initiation error details:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message
+      });
+      console.error('Full error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || err.message || 'Payment failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

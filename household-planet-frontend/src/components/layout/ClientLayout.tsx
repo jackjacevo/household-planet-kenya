@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { Header } from './Header'
 import { Footer } from './Footer'
+import { PersistentDataSync } from '@/components/ui/PersistentDataSync'
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -21,5 +22,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
-  return <LayoutContent>{children}</LayoutContent>
+  return (
+    <>
+      <PersistentDataSync />
+      <LayoutContent>{children}</LayoutContent>
+    </>
+  )
 }

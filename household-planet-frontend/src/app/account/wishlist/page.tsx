@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
+import { toastMessages } from '@/lib/toast-messages';
 import { Heart, ShoppingCart, Bell, BellOff, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,6 +14,7 @@ import Link from 'next/link';
 export default function AccountWishlistPage() {
   const { items, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const [notifications, setNotifications] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
@@ -31,13 +34,19 @@ export default function AccountWishlistPage() {
     localStorage.setItem('wishlist-notifications', JSON.stringify(newNotifications));
   };
 
-  const addToCartFromWishlist = (item: any) => {
-    addToCart({
+  const addToCartFromWishlist = async (item: any) => {
+    const wasAdded = await addToCart({
       id: `${item.id}-default`,
       productId: item.id,
       quantity: 1,
       product: item
     });
+    
+    if (wasAdded) {
+      showToast(toastMessages.cart.added(item.name));
+    } else {
+      showToast(toastMessages.cart.alreadyExists(item.name));
+    }
   };
 
   if (items.length === 0) {
@@ -73,11 +82,14 @@ export default function AccountWishlistPage() {
               <div className="relative">
                 <Link href={`/products/${item.slug}`}>
                   <div className="aspect-square relative">
-                    <Image
-                      src={item.images?.[0] || '/placeholder.jpg'}
+                    <img
+                      src={item.images?.[0] || '/images/products/placeholder.svg'}
                       alt={item.name}
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/images/products/placeholder.svg';
+                      }}
                     />
                   </div>
                 </Link>
@@ -100,7 +112,10 @@ export default function AccountWishlistPage() {
                   </button>
                   
                   <button
-                    onClick={() => removeFromWishlist(item.id)}
+                    onClick={() => {
+                      removeFromWishlist(item.id);
+                      showToast(toastMessages.wishlist.removed(item.name));
+                    }}
                     className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
                     title="Remove from wishlist"
                   >
@@ -172,7 +187,10 @@ export default function AccountWishlistPage() {
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
-                      onClick={() => removeFromWishlist(item.id)}
+                      onClick={() => {
+                        removeFromWishlist(item.id);
+                        showToast(toastMessages.wishlist.removed(item.name));
+                      }}
                       className="flex-1 text-red-600 hover:bg-red-50"
                       size="sm"
                     >

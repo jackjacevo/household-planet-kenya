@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .search-result { 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .search-result img { 
+            width: 60px; 
+            height: 60px; 
+            object-fit: cover; 
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+        .product-info h3 { margin: 0 0 5px 0; }
+        .product-info p { margin: 0; color: #666; }
+        .price { color: #16a34a; font-weight: bold; }
+        input { 
+            width: 300px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            margin-right: 10px;
+        }
+        button { 
+            padding: 10px 20px; 
+            background: #f97316; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search Test</h1>
+    <div>
+        <input type="text" id="searchInput" placeholder="Search products..." />
+        <button onclick="searchProducts()">Search</button>
+    </div>
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        
+        function getImageUrl(images) {
+            if (!images || images.length === 0) {
+                return '/images/placeholder.svg';
+            }
+            
+            const firstImage = images[0];
+            
+            if (firstImage.startsWith('http')) {
+                return firstImage;
+            }
+            
+            if (firstImage.startsWith('/uploads')) {
+                return `${API_BASE}${firstImage}`;
+            }
+            
+            return `${API_BASE}/uploads/${firstImage}`;
+        }
+        
+        async function searchProducts() {
+            const query = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('results');
+            
+            if (!query.trim()) {
+                resultsDiv.innerHTML = '<p>Please enter a search term</p>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p>Searching...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/products?search=${encodeURIComponent(query)}&limit=10`);
+                const result = await response.json();
+                const products = result.data || result || [];
+                
+                if (products.length === 0) {
+                    resultsDiv.innerHTML = '<p>No products found</p>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = products.map(product => `
+                    <div class="search-result">
+                        <img src="${getImageUrl(product.images)}" alt="${product.name}" 
+                             onerror="this.src='/images/placeholder.svg'" />
+                        <div class="product-info">
+                            <h3>${product.name}</h3>
+                            <p class="price">KSh ${product.price.toLocaleString()}</p>
+                            ${product.category ? `<p>Category: ${product.category.name}</p>` : ''}
+                            ${product.averageRating ? `<p>Rating: ${product.averageRating.toFixed(1)} ⭐</p>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = '<p>Error searching products. Please try again.</p>';
+            }
+        }
+        
+        // Allow Enter key to trigger search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+    </script>
+</body>
+</html>

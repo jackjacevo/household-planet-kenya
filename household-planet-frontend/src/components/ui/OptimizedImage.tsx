@@ -134,7 +134,7 @@ export function OptimizedImage({
           onLoad={handleLoad}
           onError={handleError}
           className="object-cover"
-          style={{
+          style={fill ? undefined : {
             // Optimize for mobile networks
             imageRendering: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'crisp-edges' : 'auto',
           }}

@@ -57,7 +57,7 @@ export function FeaturedCategories() {
     
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/admin/categories`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/categories`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -121,7 +121,7 @@ export function FeaturedCategories() {
                       src={category.image || fallbackImages[index % fallbackImages.length]} 
                       alt={category.name} 
                       fill
-                      priority={index < 3}
+                      priority={index === 0}
                       className="object-cover transition duration-300"
                       sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
                       onError={() => {

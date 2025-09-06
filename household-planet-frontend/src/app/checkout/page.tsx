@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/Input';
 import { PaymentMethods } from '@/components/payment/PaymentMethods';
 import { PaymentStatus } from '@/components/payment/PaymentStatus';
 import { formatPrice } from '@/lib/utils';
-import { MapPin, Phone, Mail, User, Check, ChevronRight, Plus, Edit2, Truck, Store } from 'lucide-react';
+import { getImageUrl } from '@/lib/imageUtils';
+import { MapPin, Phone, Mail, User, Check, ChevronRight, Plus, Edit2, Truck, Store, X } from 'lucide-react';
 import { Address } from '@/types';
 import axios from 'axios';
 import Image from 'next/image';
@@ -58,21 +59,61 @@ export default function CheckoutPage() {
       loadSavedAddresses();
       loadUserProfile();
     }
+    
+    // Load delivery info from cart
+    const deliveryInfo = localStorage.getItem('checkoutDeliveryInfo');
+    if (deliveryInfo) {
+      const { selectedLocation, deliveryCost, manualDeliveryCost } = JSON.parse(deliveryInfo);
+      setSelectedDeliveryLocation(selectedLocation || '');
+      setDeliveryCost(deliveryCost || 0);
+      setManualDeliveryCost(manualDeliveryCost || '');
+      if (selectedLocation || manualDeliveryCost) {
+        setDeliveryType('DELIVERY');
+      }
+      // Clear the stored info after loading
+      localStorage.removeItem('checkoutDeliveryInfo');
+    }
   }, []);
+
+  // Sync cart on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const { syncWithBackend } = useCart.getState();
+      syncWithBackend().catch(console.error);
+    }
+  }, []);
+
+  // Load user profile when moving to delivery step if authenticated
+  useEffect(() => {
+    if (step === 'delivery') {
+      const token = localStorage.getItem('token');
+      if (token && !formData.phone) {
+        loadUserProfile();
+      }
+    }
+  }, [step]);
 
   const loadUserProfile = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
+      
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       const user = response.data;
+      
+      // Auto-fill user information, prioritizing existing form data
       setFormData(prev => ({
         ...prev,
-        fullName: user.fullName || user.name || '',
-        phone: user.phone || ''
+        fullName: prev.fullName || user.fullName || user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '',
+        phone: prev.phone || user.phone || '',
+        email: prev.email || user.email || ''
       }));
+      
+      console.log('User profile loaded:', { name: user.name, phone: user.phone, email: user.email });
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
@@ -126,6 +167,20 @@ export default function CheckoutPage() {
         street: formData.street,
       };
       
+      // Validate required fields
+      if (!items || items.length === 0) {
+        throw new Error('No items in cart');
+      }
+      
+      if (!selectedPaymentMethod) {
+        throw new Error('Payment method is required');
+      }
+      
+      // Validate delivery information
+      if (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && !manualDeliveryCost) {
+        throw new Error('Delivery location or cost is required');
+      }
+      
       const orderData = {
         items: items.map(item => ({
           productId: item.product.id,
@@ -133,25 +188,35 @@ export default function CheckoutPage() {
           quantity: item.quantity,
           price: item.product.price
         })),
-        deliveryLocationId: selectedDeliveryLocation,
+        deliveryLocationId: selectedDeliveryLocation || undefined,
         deliveryPrice: deliveryCost,
         paymentMethod: selectedPaymentMethod,
-        notes: formData.notes,
+        notes: formData.notes || '',
+
       };
       
       console.log('Creating order with data:', orderData);
       console.log('Selected delivery location:', deliveryLocations.find(loc => loc.id === selectedDeliveryLocation));
+      console.log('Delivery cost:', deliveryCost);
       
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
-        orderData,
-        {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        }
-      );
+      // Use different endpoints for authenticated vs guest users
+      const endpoint = token && token !== 'null' && token !== 'undefined' 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/orders`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/orders/guest`;
+      
+      const headers = token && token !== 'null' && token !== 'undefined'
+        ? { 'Authorization': `Bearer ${token}` }
+        : {};
+      
+      const response = await axios.post(endpoint, orderData, { headers });
+      console.log('Order creation response:', response.data);
       return response.data.id;
     } catch (error) {
       console.error('Error creating order:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       throw error;
     }
   };
@@ -160,6 +225,13 @@ export default function CheckoutPage() {
     if (isGuest && formData.createAccount) {
       // Create account logic here
     }
+    
+    // Load user profile when moving to delivery step for authenticated users
+    const token = localStorage.getItem('token');
+    if (token) {
+      loadUserProfile();
+    }
+    
     setStep('delivery');
   };
 
@@ -199,25 +271,43 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     try {
+      console.log('Creating order...');
       const newOrderId = await createOrder();
+      console.log('Order created successfully with ID:', newOrderId);
       setOrderId(newOrderId);
       
-      if (selectedPaymentMethod === 'CASH' || selectedPaymentMethod === 'BANK') {
+      if (selectedPaymentMethod === 'CASH_ON_DELIVERY' || selectedPaymentMethod === 'BANK_TRANSFER') {
         clearCart();
         // Add a flag to indicate successful order creation
         localStorage.setItem('orderCreated', 'true');
         router.push(`/order-confirmation/${newOrderId}`);
       } else {
+        console.log('Initiating payment for order:', newOrderId);
+        
+        // Validate phone number before payment
+        if (!formData.phone || formData.phone.trim() === '') {
+          throw new Error('Phone number is required for M-Pesa payment');
+        }
+        
+        console.log('Payment data:', {
+          orderId: newOrderId,
+          paymentMethod: selectedPaymentMethod,
+          phoneNumber: formData.phone,
+          amount: getTotal()
+        });
+        
         await initiatePayment({
           orderId: newOrderId,
           paymentMethod: selectedPaymentMethod,
           phoneNumber: formData.phone,
+          amount: getTotal()
         });
         setStep('processing');
       }
     } catch (error) {
       console.error('Order error:', error);
-      alert('Order failed. Please try again.');
+      const errorMessage = error.response?.data?.message || error.message || 'Order failed. Please try again.';
+      alert(errorMessage);
     }
   };
 
@@ -265,16 +355,22 @@ export default function CheckoutPage() {
 
   const getSubtotal = () => getTotalPrice();
   const getTotal = () => {
-    let deliveryFee = 0;
-    if (deliveryType === 'DELIVERY') {
-      if (selectedDeliveryLocation) {
-        deliveryFee = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.price || 0;
-      } else if (manualDeliveryCost) {
-        deliveryFee = parseFloat(manualDeliveryCost) || 0;
-      }
-    }
-    return getTotalPrice() + deliveryFee;
+    const subtotal = getTotalPrice();
+    const finalDeliveryCost = deliveryType === 'PICKUP' ? 0 : (deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) : 0));
+    return subtotal + finalDeliveryCost;
   };
+
+  // Show loading state while cart is being synced
+  if (loading && items.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -440,7 +536,7 @@ export default function CheckoutPage() {
                 <h3 className="text-lg font-medium mb-3">Customer Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Full Name</label>
+                    <label className="block text-sm font-medium mb-2">Full Name *</label>
                     <Input
                       type="text"
                       name="fullName"
@@ -452,7 +548,7 @@ export default function CheckoutPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-2">Phone</label>
+                    <label className="block text-sm font-medium mb-2">Phone Number *</label>
                     <Input
                       type="tel"
                       name="phone"
@@ -461,6 +557,18 @@ export default function CheckoutPage() {
                       required
                       placeholder="+254700000000"
                     />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2">Email Address</label>
+                    <Input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="john@example.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Optional - for order updates and receipts</p>
                   </div>
                 </div>
               </div>
@@ -624,25 +732,23 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[
-                  { id: 'CASH', name: 'Cash on Delivery', icon: '💵' },
-                  { id: 'PAYBILL', name: 'Paybill', icon: '📱' },
-                  { id: 'BANK', name: 'Bank on Delivery', icon: '🏦' },
+                  { id: 'CASH_ON_DELIVERY', name: 'Cash on Delivery', icon: '💵' },
+                  { id: 'BANK_TRANSFER', name: 'Bank Transfer', icon: '🏦' },
                   { id: 'MPESA', name: 'M-Pesa', icon: '📱' },
-
                 ].map((method) => (
                   <div
                     key={method.id}
-                    className={`p-4 border rounded-lg cursor-pointer ${
+                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer ${
                       selectedPaymentMethod === method.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                     }`}
                     onClick={() => setSelectedPaymentMethod(method.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">{method.icon}</span>
-                        <span className="font-medium">{method.name}</span>
+                        <span className="text-xl sm:text-2xl mr-2 sm:mr-3">{method.icon}</span>
+                        <span className="font-medium text-sm sm:text-base">{method.name}</span>
                       </div>
                       <input
                         type="radio"
@@ -657,7 +763,7 @@ export default function CheckoutPage() {
               <Button
                 onClick={handlePaymentSubmit}
                 disabled={!selectedPaymentMethod}
-                className="w-full mt-4 min-h-44"
+                className="w-full mt-4"
                 size="lg"
               >
                 Review Order
@@ -678,9 +784,10 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex items-center space-x-3">
                       <div className="w-16 h-16 relative">
                         <Image
-                          src={item.product.images[0] || '/placeholder.jpg'}
+                          src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? (() => { try { return JSON.parse(item.product.images)[0]; } catch { return null; } })() : null))}
                           alt={item.product.name}
                           fill
+                          sizes="64px"
                           className="object-cover rounded-md"
                         />
                       </div>
@@ -696,10 +803,22 @@ export default function CheckoutPage() {
               
               {/* Customer Information */}
               <div className="mb-6">
-                <h3 className="font-medium mb-2">Customer Information</h3>
-                <div className="text-sm text-gray-600">
-                  <p>{formData.fullName}</p>
-                  <p>{formData.phone}</p>
+                <h3 className="font-medium mb-3">Customer Information</h3>
+                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Name:</span>
+                    <span className="text-sm font-medium">{formData.fullName || 'Not provided'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Phone:</span>
+                    <span className="text-sm font-medium">{formData.phone || 'Not provided'}</span>
+                  </div>
+                  {formData.email && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Email:</span>
+                      <span className="text-sm font-medium">{formData.email}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -711,24 +830,23 @@ export default function CheckoutPage() {
                   {deliveryType === 'DELIVERY' && (
                     <p><strong>Location:</strong> 
                       {selectedDeliveryLocation 
-                        ? deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name
-                        : manualDeliveryCost ? `Custom location (${formatPrice(parseFloat(manualDeliveryCost) || 0)})` : 'Not specified'
+                        ? `${deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name} (${formatPrice(deliveryCost)})`
+                        : manualDeliveryCost ? `Custom location (${formatPrice(deliveryCost)})` : 'Not specified'
                       }
                     </p>
                   )}
                   <p><strong>Payment:</strong> 
-                    {selectedPaymentMethod === 'CASH' && 'Cash on Delivery'}
-                    {selectedPaymentMethod === 'PAYBILL' && 'Paybill'}
-                    {selectedPaymentMethod === 'BANK' && 'Bank on Delivery'}
+                    {selectedPaymentMethod === 'CASH_ON_DELIVERY' && 'Cash on Delivery'}
+                    {selectedPaymentMethod === 'BANK_TRANSFER' && 'Bank Transfer'}
                     {selectedPaymentMethod === 'MPESA' && 'M-Pesa'}
-
                   </p>
+                  <p><strong>Order Total:</strong> {formatPrice(getTotal())}</p>
                 </div>
               </div>
               
               <Button
                 onClick={handlePlaceOrder}
-                className="w-full min-h-44"
+                className="w-full"
                 size="lg"
                 disabled={loading}
               >
@@ -744,9 +862,33 @@ export default function CheckoutPage() {
             
             <div className="space-y-3 mb-4">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span>{item.product.name} x {item.quantity}</span>
-                  <span>{formatPrice(item.product.price * item.quantity)}</span>
+                <div key={item.id} className="flex items-center space-x-2 sm:space-x-3 group p-2 sm:p-0">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 relative flex-shrink-0">
+                    <Image
+                      src={getImageUrl(Array.isArray(item.product.images) ? item.product.images[0] : (typeof item.product.images === 'string' ? (() => { try { return JSON.parse(item.product.images)[0]; } catch { return null; } })() : null))}
+                      alt={item.product.name}
+                      fill
+                      sizes="(max-width: 640px) 56px, 64px"
+                      className="object-cover rounded"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm sm:text-base font-medium truncate">{item.product.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Qty: {item.quantity}</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <p className="text-sm sm:text-base font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
+                    <button
+                      onClick={() => {
+                        const { removeFromCart } = useCart.getState();
+                        removeFromCart(item.id);
+                      }}
+                      className="text-red-500 hover:text-red-700 font-bold transition-colors self-end sm:self-auto"
+                      title="Remove item"
+                    >
+                      <X className="h-4 w-4 sm:h-5 sm:w-5 stroke-2" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -761,12 +903,12 @@ export default function CheckoutPage() {
                 <span>
                   {deliveryType === 'PICKUP' ? (
                     formatPrice(0)
-                  ) : selectedDeliveryLocation ? (
-                    formatPrice(deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.price || 0)
+                  ) : deliveryCost > 0 ? (
+                    formatPrice(deliveryCost)
                   ) : manualDeliveryCost ? (
                     formatPrice(parseFloat(manualDeliveryCost) || 0)
                   ) : (
-                    'TBD'
+                    formatPrice(0)
                   )}
                 </span>
               </div>
