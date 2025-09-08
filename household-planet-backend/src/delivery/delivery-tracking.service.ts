@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { DeliveryStatus, DeliveryTimeSlot, ScheduleDeliveryDto, UpdateDeliveryStatusDto, DeliveryFeedbackDto } from './dto/delivery.dto';
 
 @Injectable()
 export class DeliveryTrackingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService
+  ) {}
 
   async scheduleDelivery(dto: ScheduleDeliveryDto) {
     const order = await this.prisma.order.findUnique({
@@ -50,69 +54,102 @@ export class DeliveryTrackingService {
       }
     });
 
+    // Get updated status history for real-time notification
+    const statusHistory = await this.prisma.deliveryStatusHistory.findMany({
+      where: { deliveryId: delivery.id },
+      orderBy: { timestamp: 'asc' }
+    });
+
+    // Emit real-time tracking update
+    try {
+      await this.notificationsService.sendTrackingUpdate({
+        trackingNumber,
+        status: dto.status,
+        statusHistory: statusHistory.map(h => ({
+          status: h.status,
+          notes: h.notes,
+          timestamp: h.timestamp.toISOString()
+        }))
+      });
+    } catch (error) {
+      console.error('Error sending tracking update notification:', error);
+    }
+
     return delivery;
   }
 
   async getDeliveryTracking(trackingNumber: string) {
-    // First try to find by tracking number
-    let delivery = await this.prisma.delivery.findUnique({
-      where: { trackingNumber },
-      include: {
-        order: {
+    try {
+      // First try to find by tracking number
+      let delivery = await this.prisma.delivery.findUnique({
+        where: { trackingNumber },
+        include: {
+          order: {
+            select: {
+              orderNumber: true,
+              total: true,
+              deliveryLocation: true,
+              status: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          statusHistory: {
+            orderBy: { timestamp: 'asc' }
+          }
+        }
+      });
+
+      // If not found, try to find order by order number or tracking number
+      if (!delivery) {
+        const order = await this.prisma.order.findFirst({
+          where: {
+            OR: [
+              { orderNumber: trackingNumber },
+              { trackingNumber: trackingNumber }
+            ]
+          },
           select: {
+            id: true,
             orderNumber: true,
             total: true,
             deliveryLocation: true,
             status: true,
             createdAt: true,
-            updatedAt: true
+            updatedAt: true,
+            trackingNumber: true
           }
-        },
-        statusHistory: {
-          orderBy: { timestamp: 'asc' }
+        });
+
+        if (!order) {
+          throw new Error('Order not found');
         }
+
+        // Create mock delivery tracking data based on order status
+        const mockStatusHistory = this.generateMockStatusHistory(order);
+        
+        return {
+          trackingNumber: order.trackingNumber || trackingNumber,
+          status: this.mapOrderStatusToDeliveryStatus(order.status),
+          scheduledDate: new Date(order.createdAt.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days from order
+          timeSlot: 'MORNING',
+          order: {
+            orderNumber: order.orderNumber,
+            total: order.total,
+            deliveryLocation: order.deliveryLocation || 'Not specified'
+          },
+          statusHistory: mockStatusHistory
+        };
       }
-    });
 
-    // If not found, try to find order by order number and create mock delivery data
-    if (!delivery) {
-      const order = await this.prisma.order.findUnique({
-        where: { orderNumber: trackingNumber },
-        select: {
-          id: true,
-          orderNumber: true,
-          total: true,
-          deliveryLocation: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          trackingNumber: true
-        }
-      });
-
-      if (!order) throw new Error('Order not found');
-
-      // Create mock delivery tracking data based on order status
-      const mockStatusHistory = this.generateMockStatusHistory(order);
-      
       return {
-        trackingNumber: order.trackingNumber || `TRK-${order.orderNumber}`,
-        status: this.mapOrderStatusToDeliveryStatus(order.status),
-        scheduledDate: new Date(order.createdAt.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days from order
-        timeSlot: 'MORNING',
-        order: {
-          orderNumber: order.orderNumber,
-          total: order.total,
-          deliveryLocation: order.deliveryLocation || 'Not specified'
-        },
-        statusHistory: mockStatusHistory
+        ...delivery,
+        estimatedDelivery: this.calculateEstimatedDelivery(delivery.scheduledDate, delivery.order.deliveryLocation),
       };
+    } catch (error) {
+      console.error('Error in getDeliveryTracking:', error);
+      throw error;
     }
-
-    return {
-      ...delivery,
-      estimatedDelivery: this.calculateEstimatedDelivery(delivery.scheduledDate, delivery.order.deliveryLocation),
-    };
   }
 
   private generateMockStatusHistory(order: any) {

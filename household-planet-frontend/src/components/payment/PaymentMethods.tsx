@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Smartphone, CreditCard, Banknote } from 'lucide-react';
+import { Smartphone, CreditCard, Banknote, Building2 } from 'lucide-react';
 
 interface PaymentMethodsProps {
   total: number;
@@ -61,6 +61,22 @@ export function PaymentMethods({ total, onPaymentSelect, loading }: PaymentMetho
           <input
             type="radio"
             name="payment"
+            value="BANK_TRANSFER"
+            checked={selectedMethod === 'BANK_TRANSFER'}
+            onChange={(e) => setSelectedMethod(e.target.value)}
+            className="mr-3"
+          />
+          <Building2 className="h-5 w-5 mr-3 text-blue-600" />
+          <div>
+            <div className="font-medium">Bank Transfer</div>
+            <div className="text-sm text-gray-600">Pay via bank transfer or mobile banking</div>
+          </div>
+        </label>
+
+        <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+          <input
+            type="radio"
+            name="payment"
             value="CASH_ON_DELIVERY"
             checked={selectedMethod === 'CASH_ON_DELIVERY'}
             onChange={(e) => setSelectedMethod(e.target.value)}
@@ -89,6 +105,8 @@ export function PaymentMethods({ total, onPaymentSelect, loading }: PaymentMetho
           </p>
         </div>
       )}
+
+
 
       <Button
         onClick={handleSubmit}

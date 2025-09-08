@@ -13,7 +13,9 @@ const navigationPermissions: { [key: string]: string } = {
   '/admin/products': 'manage_products',
   '/admin/categories': 'manage_products',
   '/admin/brands': 'manage_products',
+  '/admin/promo-codes': 'manage_products',
   '/admin/customers': 'manage_customers',
+  '/admin/loyalty': 'manage_customers',
   '/admin/analytics': 'view_analytics',
   '/admin/payments': 'manage_payments',
   '/admin/delivery': 'manage_orders',
@@ -37,7 +39,9 @@ import {
   X,
   Activity,
   FolderTree,
-  Tag
+  Tag,
+  Star,
+  Percent
 } from 'lucide-react';
 
 const navigation = [
@@ -47,7 +51,9 @@ const navigation = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderTree },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
+  { name: 'Promo Codes', href: '/admin/promo-codes', icon: Percent },
   { name: 'Customers', href: '/admin/customers', icon: Users },
+  { name: 'Loyalty', href: '/admin/loyalty', icon: Star },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard },
   { name: 'Delivery', href: '/admin/delivery', icon: Truck },

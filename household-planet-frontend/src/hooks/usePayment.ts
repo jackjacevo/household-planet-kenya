@@ -7,7 +7,6 @@ interface PaymentData {
   orderId: number;
   paymentMethod: string;
   phoneNumber?: string;
-  amount?: number | string; // Support both numeric amounts and payment IDs
 }
 
 interface PaymentResponse {
@@ -65,11 +64,9 @@ export function usePayment() {
         throw new Error('Authentication required');
       }
 
-      // Validate payment amount/ID if provided
-      if (data.amount !== undefined) {
-        if (typeof data.amount === 'string' && !isPaymentId(data.amount)) {
-          throw new Error('Invalid payment ID format. Expected format: XX-XXXXXXXXXXXXX-XXXX');
-        }
+      // Validate required fields
+      if (!data.orderId || !data.paymentMethod || !data.phoneNumber) {
+        throw new Error('Missing required fields: orderId, paymentMethod, phoneNumber');
       }
 
       const response = await axios.post<PaymentResponse>(

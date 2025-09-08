@@ -241,17 +241,23 @@ export class UsersService {
   }
 
   async getDashboardStats(id: number) {
-    const orders = await this.prisma.order.findMany({
-      where: { userId: id },
-      select: {
-        total: true,
-        status: true
-      }
-    });
+    const [orders, customerProfile] = await Promise.all([
+      this.prisma.order.findMany({
+        where: { userId: id },
+        select: {
+          total: true,
+          status: true
+        }
+      }),
+      this.prisma.customerProfile.findUnique({
+        where: { userId: id },
+        select: { loyaltyPoints: true }
+      })
+    ]);
 
     const totalOrders = orders.length;
     const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
-    const loyaltyPoints = Math.floor(totalSpent / 100); // 1 point per 100 KSh spent
+    const loyaltyPoints = customerProfile?.loyaltyPoints || 0;
 
     return {
       totalOrders,

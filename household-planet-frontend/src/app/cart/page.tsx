@@ -16,47 +16,89 @@ export default function CartPage() {
   const { items, savedForLater, updateQuantity, removeFromCart, saveForLater, moveToCart, getTotalPrice, cartData, isLoading } = useCart();
   const { calculateDeliveryCost, deliveryLocations } = useDelivery();
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<{code: string, discount: number} | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{code: string, discount: number, discountAmount?: number} | null>(null);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [manualDeliveryCost, setManualDeliveryCost] = useState('');
   const [promoError, setPromoError] = useState('');
+  const [hasMounted, setHasMounted] = useState(false);
+
+  // Handle client-side mounting
+  React.useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   // Sync cart on component mount (only once)
   React.useEffect(() => {
+    if (!hasMounted) return;
+    
     const token = localStorage.getItem('token');
     if (token) {
       const { syncWithBackend } = useCart.getState();
       syncWithBackend().catch(console.error);
     }
-  }, []); // Empty dependency array ensures this runs only once
+  }, [hasMounted]);
+
+  // Restore checkout data if returning from checkout
+  React.useEffect(() => {
+    if (!hasMounted) return;
+    
+    const checkoutData = localStorage.getItem('checkoutData');
+    if (checkoutData) {
+      try {
+        const data = JSON.parse(checkoutData);
+        if (data.promoInfo) {
+          setAppliedPromo({
+            code: data.promoInfo.code,
+            discount: data.promoInfo.discountAmount / data.totals.subtotal,
+            discountAmount: data.promoInfo.discountAmount
+          });
+        }
+        if (data.deliveryInfo) {
+          setSelectedLocation(data.deliveryInfo.selectedLocation || '');
+          setDeliveryCost(data.deliveryInfo.deliveryCost || 0);
+          setManualDeliveryCost(data.deliveryInfo.manualDeliveryCost || '');
+        }
+      } catch (error) {
+        console.error('Error restoring checkout data:', error);
+      }
+    }
+  }, [hasMounted]);
 
   const applyPromoCode = async () => {
     if (!promoCode.trim()) return;
     
-    // Mock promo codes - replace with API call
-    const promoCodes = {
-      'SAVE10': { discount: 0.1, minAmount: 1000 },
-      'WELCOME20': { discount: 0.2, minAmount: 2000 },
-      'HOUSEHOLD15': { discount: 0.15, minAmount: 1500 }
-    };
-    
-    const promo = promoCodes[promoCode.toUpperCase() as keyof typeof promoCodes];
-    const subtotal = getTotalPrice();
-    
-    if (!promo) {
-      setPromoError('Invalid promo code');
-      return;
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/promo-codes/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(localStorage.getItem('token') && { Authorization: `Bearer ${localStorage.getItem('token')}` })
+        },
+        body: JSON.stringify({
+          code: promoCode,
+          orderAmount: getTotalPrice(),
+          productIds: items.map(item => item.product.id),
+          categoryIds: items.map(item => item.product.categoryId)
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAppliedPromo({ 
+          code: data.promoCode.code, 
+          discount: data.discountAmount / getTotalPrice(),
+          discountAmount: data.discountAmount
+        });
+        setPromoError('');
+        setPromoCode('');
+      } else {
+        const error = await response.json();
+        setPromoError(error.message || 'Invalid promo code');
+      }
+    } catch (error) {
+      setPromoError('Failed to validate promo code');
     }
-    
-    if (subtotal < promo.minAmount) {
-      setPromoError(`Minimum order of ${formatPrice(promo.minAmount)} required`);
-      return;
-    }
-    
-    setAppliedPromo({ code: promoCode.toUpperCase(), discount: promo.discount });
-    setPromoError('');
-    setPromoCode('');
   };
 
   const removePromoCode = () => {
@@ -94,13 +136,25 @@ export default function CartPage() {
   };
 
   const getDiscountAmount = () => {
-    return appliedPromo ? getTotalPrice() * appliedPromo.discount : 0;
+    return appliedPromo ? (appliedPromo.discountAmount || getTotalPrice() * appliedPromo.discount) : 0;
   };
 
   const getFinalTotal = () => {
     const currentDeliveryCost = deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) : 0);
     return getTotalPrice() - getDiscountAmount() + currentDeliveryCost;
   };
+
+  // Prevent hydration mismatch
+  if (!hasMounted) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0 && savedForLater.length === 0) {
     return (
@@ -449,12 +503,33 @@ export default function CartPage() {
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all"
                   disabled={(deliveryCost === 0 && !manualDeliveryCost) || isLoading}
                   onClick={() => {
-                    const deliveryInfo = {
-                      selectedLocation,
-                      deliveryCost,
-                      manualDeliveryCost
+                    // Ensure cart items are available before proceeding
+                    if (items.length === 0) {
+                      alert('Your cart is empty. Please add items before checkout.');
+                      return;
+                    }
+                    
+                    // Store checkout data including promo code info
+                    const checkoutData = {
+                      items: items,
+                      deliveryInfo: {
+                        selectedLocation,
+                        deliveryCost,
+                        manualDeliveryCost
+                      },
+                      promoInfo: appliedPromo ? {
+                        code: appliedPromo.code,
+                        discountAmount: getDiscountAmount()
+                      } : null,
+                      totals: {
+                        subtotal: getTotalPrice(),
+                        discount: getDiscountAmount(),
+                        delivery: deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) : 0),
+                        final: getFinalTotal()
+                      }
                     };
-                    localStorage.setItem('checkoutDeliveryInfo', JSON.stringify(deliveryInfo));
+                    
+                    localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
                     window.location.href = '/checkout';
                   }}
                 >

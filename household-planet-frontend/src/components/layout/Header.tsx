@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, User, Search, Menu, X, Phone, Mail, MapPin, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { CartDrawer } from '@/components/ecommerce/CartDrawer';
+
 import { SearchAutocomplete } from '@/components/products/SearchAutocomplete';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
@@ -17,7 +17,7 @@ import { WishlistHover } from '@/components/ui/WishlistHover';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -45,6 +45,7 @@ export function Header() {
     { href: '/', label: 'Home' },
     { href: '/products', label: 'Shop' },
     { href: '/categories', label: 'Categories' },
+    { href: '/track-order', label: 'Track Order' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
   ];
@@ -91,16 +92,12 @@ export function Header() {
               <span className="text-white font-bold text-xs sm:text-sm md:text-lg">H</span>
             </div>
             <div className="min-w-0">
-              <span className={`font-bold text-green-800 block leading-tight ${
-                mounted && user ? 'text-sm sm:text-base md:text-lg' : 'text-base sm:text-lg md:text-xl'
-              }`}>
+              <span className="font-bold text-green-800 block leading-tight text-sm sm:text-base md:text-lg">
                 <span className="hidden lg:inline">Household Planet Kenya</span>
                 <span className="hidden sm:inline lg:hidden">HP Kenya</span>
                 <span className="sm:hidden">HP Kenya</span>
               </span>
-              <CompanyTagline size="sm" className={`text-orange-600 font-medium leading-tight ${
-                mounted && user ? 'hidden md:block text-xs' : 'hidden sm:block text-xs md:text-sm'
-              }`} />
+              <CompanyTagline size="sm" className="text-orange-600 font-medium leading-tight hidden md:block text-xs" />
             </div>
           </Link>
 
@@ -125,9 +122,7 @@ export function Header() {
           </div>
 
           {/* Icons */}
-          <div className={`flex items-center ${
-            mounted && user ? 'space-x-1 sm:space-x-2' : 'space-x-1 sm:space-x-2 md:space-x-4'
-          }`}>
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition lg:hidden"
@@ -138,9 +133,7 @@ export function Header() {
             <WishlistHover>
               <Link 
                 href="/wishlist"
-                className={`relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition ${
-                  mounted && user ? 'hidden lg:block' : 'hidden md:block'
-                }`}
+                className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition hidden md:block"
               >
                 <Heart className="h-5 w-5" />
                 {mounted && wishlistItems.length > 0 && (
@@ -152,8 +145,8 @@ export function Header() {
             </WishlistHover>
             
             <CartHover>
-              <button 
-                onClick={() => setIsCartOpen(true)}
+              <Link 
+                href="/cart"
                 className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition"
               >
                 <ShoppingCart className="h-5 w-5" />
@@ -162,7 +155,7 @@ export function Header() {
                     {getTotalItems()}
                   </span>
                 )}
-              </button>
+              </Link>
             </CartHover>
             
             {/* Auth Section - Only render after mount to prevent hydration mismatch */}
@@ -247,6 +240,14 @@ export function Header() {
                   <span>My Orders</span>
                 </Link>
                 <Link 
+                  href="/track-order" 
+                  className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <MapPin className="h-4 w-4 mr-3" /> 
+                  <span>Track Order</span>
+                </Link>
+                <Link 
                   href="/wishlist" 
                   className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
@@ -317,8 +318,7 @@ export function Header() {
         />
       )}
 
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
     </>
   );
 }

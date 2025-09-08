@@ -7,14 +7,15 @@ import { useWishlist } from '@/hooks/useWishlist';
 
 export function PersistentDataSync() {
   const { user } = useAuth();
-  const { syncWithBackend: syncCart, syncLocalToBackend: syncLocalCart } = useCart();
-  const { syncWithBackend: syncWishlist, syncLocalToBackend: syncLocalWishlist } = useWishlist();
 
   useEffect(() => {
     if (user) {
       // User is authenticated - sync local data to backend, then sync backend to local
       const syncOnAuth = async () => {
         try {
+          const { syncWithBackend: syncCart, syncLocalToBackend: syncLocalCart } = useCart.getState();
+          const { syncWithBackend: syncWishlist, syncLocalToBackend: syncLocalWishlist } = useWishlist.getState();
+          
           // First sync local data to backend
           await Promise.all([
             syncLocalCart(),
@@ -33,7 +34,7 @@ export function PersistentDataSync() {
       
       syncOnAuth();
     }
-  }, [user, syncCart, syncWishlist, syncLocalCart, syncLocalWishlist]);
+  }, [user]);
 
   // This component doesn't render anything - it just handles data sync
   return null;

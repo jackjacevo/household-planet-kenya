@@ -1207,7 +1207,7 @@ export default function AdminOrdersPage() {
                               Subtotal: KSh {order.subtotal?.toLocaleString() || order.total.toLocaleString()}
                             </div>
                             <div className="text-xs text-gray-400">
-                              Delivery: {order.shippingCost === 0 ? 'FREE' : `KSh ${order.shippingCost.toLocaleString()}`}
+                              Delivery: KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}
                             </div>
                           </div>
                         </TableCell>

@@ -85,9 +85,11 @@ export function SmartImage({
 
   // Generate responsive sizes if not provided
   const responsiveSizes = sizes || (
-    width 
-      ? `(max-width: 768px) ${Math.min(width, 400)}px, (max-width: 1200px) ${Math.min(width, 600)}px, ${width}px`
-      : '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+    fill 
+      ? '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+      : width 
+        ? `(max-width: 768px) ${Math.min(width, 400)}px, (max-width: 1200px) ${Math.min(width, 600)}px, ${width}px`
+        : '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
   );
 
   if (hasError) {

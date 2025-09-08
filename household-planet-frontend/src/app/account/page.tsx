@@ -39,6 +39,10 @@ export default function AccountDashboard() {
     }
   }, [user]);
 
+  useEffect(() => {
+    setStats(prev => ({ ...prev, wishlistItems: wishlistItems?.length || 0 }));
+  }, [wishlistItems]);
+
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -53,12 +57,12 @@ export default function AccountDashboard() {
 
       if (statsRes.ok) {
         const statsData = await statsRes.json();
-        setStats(statsData);
+        setStats(prev => ({ ...prev, ...statsData }));
       }
 
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
-        const orders = Array.isArray(ordersData) ? ordersData : [];
+        const orders = ordersData.orders || ordersData || [];
         setRecentOrders(orders.slice(0, 3));
       }
     } catch (error) {
@@ -115,7 +119,7 @@ export default function AccountDashboard() {
             <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
             <div className="ml-2 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-500">Total Spent</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{formatPrice(stats.totalSpent)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatPrice(stats.totalSpent)}</p>
             </div>
           </div>
         </div>

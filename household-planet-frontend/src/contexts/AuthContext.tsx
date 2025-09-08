@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { api } from '@/lib/api'
-import { useCart } from '@/hooks/useCart'
-import { useWishlist } from '@/hooks/useWishlist'
 
 interface User {
   id: number
@@ -73,21 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Handle both direct user object and wrapped response
       const userData = response.user || response
       setUser(userData)
-      
-      // Sync backend data to local state on app load
-      if (userData) {
-        try {
-          const { syncWithBackend: syncCart } = useCart.getState()
-          const { syncWithBackend: syncWishlist } = useWishlist.getState()
-          
-          await Promise.all([
-            syncCart(),
-            syncWishlist()
-          ])
-        } catch (syncError) {
-          console.warn('Failed to sync backend data on load:', syncError)
-        }
-      }
     } catch (error) {
       console.error('Failed to fetch user profile:', error)
       localStorage.removeItem('token')
@@ -101,22 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       const response = await api.login(email, password) as any
-      localStorage.setItem('token', response.accessToken)
+      const token = response.accessToken || response.access_token
+      localStorage.setItem('token', token)
       setUser(response.user)
-      
-      // Sync local cart and wishlist with backend
-      try {
-        const { syncLocalToBackend: syncCart } = useCart.getState()
-        const { syncLocalToBackend: syncWishlist } = useWishlist.getState()
-        
-        await Promise.all([
-          syncCart(),
-          syncWishlist()
-        ])
-      } catch (syncError) {
-        console.warn('Failed to sync local data on login:', syncError)
-      }
-      
       setLoading(false)
       return response
     } catch (error) {

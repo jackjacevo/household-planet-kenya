@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DeliveryLocationsService } from './delivery-locations.service';
 
 export interface DeliveryLocation {
   id: string;
@@ -13,7 +14,9 @@ export interface DeliveryLocation {
 
 @Injectable()
 export class DeliveryService {
-  private readonly locations: DeliveryLocation[] = [
+  constructor(private deliveryLocationsService: DeliveryLocationsService) {}
+
+  private readonly fallbackLocations: DeliveryLocation[] = [
     // Tier 1 - Ksh 100-200
     { id: '1', name: 'Nairobi CBD', tier: 1, price: 100, description: 'Orders within CBD only', estimatedDays: 1, expressAvailable: true, expressPrice: 200 },
     { id: '2', name: 'Kajiado (Naekana)', tier: 1, price: 150, description: 'Via Naekana', estimatedDays: 2, expressAvailable: false },
@@ -86,35 +89,43 @@ export class DeliveryService {
     { id: '63', name: 'Ngong Town', tier: 4, price: 1000, estimatedDays: 4, expressAvailable: false },
   ];
 
-  getAllLocations(): DeliveryLocation[] {
-    return this.locations;
+  async getAllLocations(): Promise<DeliveryLocation[]> {
+    try {
+      const locations = await this.deliveryLocationsService.getAllLocations();
+      return locations.length > 0 ? locations.map(loc => ({ ...loc, id: loc.id! })) : this.fallbackLocations;
+    } catch (error) {
+      console.error('Error fetching locations from database:', error);
+      return this.fallbackLocations;
+    }
   }
 
-  getLocationsByTier(tier: number): DeliveryLocation[] {
-    return this.locations.filter(location => location.tier === tier);
+  async getLocationsByTier(tier: number): Promise<DeliveryLocation[]> {
+    const locations = await this.getAllLocations();
+    return locations.filter(location => location.tier === tier);
   }
 
-  getLocationByName(name: string): DeliveryLocation | undefined {
-    return this.locations.find(location => 
+  async getLocationByName(name: string): Promise<DeliveryLocation | undefined> {
+    const locations = await this.getAllLocations();
+    return locations.find(location => 
       location.name.toLowerCase().includes(name.toLowerCase())
     );
   }
 
-  getDeliveryPrice(locationName: string): { price: number; location: DeliveryLocation | null } {
-    const location = this.getLocationByName(locationName);
+  async getDeliveryPrice(locationName: string): Promise<{ price: number; location: DeliveryLocation | null }> {
+    const location = await this.getLocationByName(locationName);
     return {
       price: location?.price || 300, // Default price if location not found
       location: location || null
     };
   }
 
-  getDeliveryEstimate(locationName: string): { 
+  async getDeliveryEstimate(locationName: string): Promise<{ 
     estimatedDays: number; 
     expressAvailable: boolean; 
     expressPrice?: number;
     location: DeliveryLocation | null;
-  } {
-    const location = this.getLocationByName(locationName);
+  }> {
+    const location = await this.getLocationByName(locationName);
     return {
       estimatedDays: location?.estimatedDays || 3,
       expressAvailable: location?.expressAvailable || false,
@@ -123,13 +134,13 @@ export class DeliveryService {
     };
   }
 
-  calculateShippingCost(locationName: string, orderValue: number, isExpress = false): {
+  async calculateShippingCost(locationName: string, orderValue: number, isExpress = false): Promise<{
     cost: number;
     freeShipping: boolean;
     bulkDiscount: number;
     finalCost: number;
-  } {
-    const location = this.getLocationByName(locationName);
+  }> {
+    const location = await this.getLocationByName(locationName);
     let baseCost = location?.price || 300;
     
     if (isExpress && location?.expressPrice) {
@@ -150,19 +161,25 @@ export class DeliveryService {
     return { cost: baseCost, freeShipping, bulkDiscount, finalCost };
   }
 
-  searchLocations(query: string): DeliveryLocation[] {
+  async searchLocations(query: string): Promise<DeliveryLocation[]> {
+    const locations = await this.getAllLocations();
     const searchTerm = query.toLowerCase();
-    return this.locations.filter(location =>
+    return locations.filter(location =>
       location.name.toLowerCase().includes(searchTerm)
     );
   }
 
-  getTierInfo() {
+  async getTierInfo() {
+    const tier1 = await this.getLocationsByTier(1);
+    const tier2 = await this.getLocationsByTier(2);
+    const tier3 = await this.getLocationsByTier(3);
+    const tier4 = await this.getLocationsByTier(4);
+    
     return {
-      tier1: { range: 'Ksh 100-200', count: this.getLocationsByTier(1).length },
-      tier2: { range: 'Ksh 250-300', count: this.getLocationsByTier(2).length },
-      tier3: { range: 'Ksh 350-400', count: this.getLocationsByTier(3).length },
-      tier4: { range: 'Ksh 450-1000', count: this.getLocationsByTier(4).length },
+      tier1: { range: 'Ksh 100-200', count: tier1.length },
+      tier2: { range: 'Ksh 250-300', count: tier2.length },
+      tier3: { range: 'Ksh 350-400', count: tier3.length },
+      tier4: { range: 'Ksh 450-1000', count: tier4.length },
     };
   }
 

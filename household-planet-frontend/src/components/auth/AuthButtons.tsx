@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export function AuthButtons() {
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-3 whitespace-nowrap">
       <Link
         href="/login"
         className="text-sm font-medium text-gray-600 hover:text-orange-600 transition-colors"
@@ -14,7 +14,7 @@ export function AuthButtons() {
       
       <Link
         href="/register"
-        className="px-3 py-1.5 text-sm font-medium bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+        className="text-sm font-medium text-gray-600 hover:text-orange-600 transition-colors"
       >
         Sign Up
       </Link>

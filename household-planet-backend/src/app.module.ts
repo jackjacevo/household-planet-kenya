@@ -24,8 +24,9 @@ import { ReturnsModule } from './returns/returns.module';
 import { StaffModule } from './staff/staff.module';
 import { SettingsModule } from './settings/settings.module';
 import { WishlistModule } from './wishlist/wishlist.module';
+import { PromoCodesModule } from './promo-codes/promo-codes.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { CleanupService } from './common/cleanup.service';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,6 +59,8 @@ import { CleanupService } from './common/cleanup.service';
     StaffModule,
     SettingsModule,
     WishlistModule,
+    PromoCodesModule,
+    NotificationsModule,
   ],
   providers: [CleanupService],
 })

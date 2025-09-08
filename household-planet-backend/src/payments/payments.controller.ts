@@ -43,14 +43,25 @@ export class PaymentsController {
           throw new BadRequestException('Order total is invalid');
         }
         
-        // Validate phone number format
-        const phoneRegex = /^(\+254|254|07|7)\d{8,9}$/;
-        if (!phoneRegex.test(body.phoneNumber.replace(/[\s\-]/g, ''))) {
-          throw new BadRequestException('Invalid phone number format. Use format: +254XXXXXXXXX or 07XXXXXXXX');
+        // Normalize phone number to +254XXXXXXXXX format
+        let phoneNumber = body.phoneNumber.replace(/[\s\-]/g, '');
+        if (phoneNumber.startsWith('07')) {
+          phoneNumber = '+254' + phoneNumber.substring(1);
+        } else if (phoneNumber.startsWith('7')) {
+          phoneNumber = '+254' + phoneNumber;
+        } else if (phoneNumber.startsWith('254')) {
+          phoneNumber = '+' + phoneNumber;
+        } else if (!phoneNumber.startsWith('+254')) {
+          throw new BadRequestException('Invalid phone number format. Use format: +254XXXXXXXXX, 254XXXXXXXXX, 07XXXXXXXX, or 7XXXXXXXX');
+        }
+        
+        // Validate normalized phone number
+        if (!/^\+254[17]\d{8}$/.test(phoneNumber)) {
+          throw new BadRequestException('Invalid Kenyan phone number. Must be a valid Safaricom or Airtel number.');
         }
         
         console.log(`Initiating M-Pesa payment for order ${body.orderId} with amount ${order.total}`);
-        return this.mpesaService.initiateSTKPush(body.phoneNumber, parseFloat(order.total.toString()), body.orderId);
+        return this.mpesaService.initiateSTKPush(phoneNumber, parseFloat(order.total.toString()), body.orderId);
       }
       throw new BadRequestException('Payment method not supported');
     } catch (error) {

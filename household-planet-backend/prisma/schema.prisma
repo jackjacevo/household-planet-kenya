@@ -64,6 +64,7 @@ model User {
   userPrivacySettings     UserPrivacySettings?
   sessions                UserSession[]
   wishlist                Wishlist[]
+  promoCodeUsages         PromoCodeUsage[]
 
   @@map("users")
 }
@@ -226,6 +227,8 @@ model Order {
   orderNumber         String               @unique
   status              String               @default("PENDING")
   subtotal            Float
+  discountAmount      Float?               @default(0)
+  promoCode           String?
   shippingCost        Float
   total               Float
   shippingAddress     String
@@ -247,6 +250,7 @@ model Order {
   user                User?                @relation(fields: [userId], references: [id])
   paymentTransactions PaymentTransaction[]
   returnRequests      ReturnRequest[]
+  promoCodeUsages     PromoCodeUsage[]
 
   @@index([userId])
   @@index([orderNumber])
@@ -1113,6 +1117,53 @@ model PhoneVerificationToken {
   @@index([phone])
   @@index([userId])
   @@map("phone_verification_tokens")
+}
+
+model PromoCode {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
+  name            String
+  description     String?
+  discountType    String   // 'PERCENTAGE' or 'FIXED'
+  discountValue   Float
+  minOrderAmount  Float?   @default(0)
+  maxDiscount     Float?   // For percentage discounts
+  usageLimit      Int?     // Total usage limit
+  usageCount      Int      @default(0)
+  userUsageLimit  Int?     @default(1) // Per user limit
+  isActive        Boolean  @default(true)
+  validFrom       DateTime @default(now())
+  validUntil      DateTime?
+  applicableProducts String? // JSON array of product IDs
+  applicableCategories String? // JSON array of category IDs
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  usages          PromoCodeUsage[]
+
+  @@index([code])
+  @@index([isActive])
+  @@index([validFrom, validUntil])
+  @@map("promo_codes")
+}
+
+model PromoCodeUsage {
+  id          Int       @id @default(autoincrement())
+  promoCodeId Int
+  userId      Int?
+  orderId     Int?
+  sessionId   String?
+  discountAmount Float
+  orderAmount Float
+  usedAt      DateTime  @default(now())
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+  order       Order?    @relation(fields: [orderId], references: [id])
+
+  @@index([promoCodeId])
+  @@index([userId])
+  @@index([orderId])
+  @@map("promo_code_usages")
 }
 
 model Setting {

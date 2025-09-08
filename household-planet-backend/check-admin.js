@@ -3,62 +3,58 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-async function checkAdmin() {
-  console.log('🔍 Checking admin user...');
-  
-  const adminEmail = 'admin@householdplanet.co.ke';
-  
+async function checkAndCreateAdmin() {
   try {
-    const admin = await prisma.user.findUnique({
-      where: { email: adminEmail }
+    // Check if admin user exists
+    const adminUser = await prisma.user.findUnique({
+      where: { email: 'admin@householdplanet.co.ke' }
     });
-    
-    if (!admin) {
-      console.log('❌ Admin user not found');
-      return;
-    }
-    
-    console.log('✅ Admin user found:');
-    console.log('📧 Email:', admin.email);
-    console.log('🆔 ID:', admin.id);
-    console.log('👤 Name:', admin.name);
-    console.log('🔑 Role:', admin.role);
-    console.log('✉️ Email Verified:', admin.emailVerified);
-    console.log('📱 Phone Verified:', admin.phoneVerified);
-    console.log('🔓 Is Active:', admin.isActive);
-    console.log('🔒 Login Attempts:', admin.loginAttempts);
-    console.log('⏰ Locked Until:', admin.lockedUntil);
-    console.log('🕐 Last Login:', admin.lastLogin);
-    console.log('📅 Created At:', admin.createdAt);
-    
-    // Test password
-    const testPassword = 'HouseholdAdmin2024!';
-    const isPasswordValid = await bcrypt.compare(testPassword, admin.password);
-    console.log('🔐 Password Valid:', isPasswordValid);
-    
-    if (!isPasswordValid) {
-      console.log('⚠️ Password does not match! Updating password...');
-      const hashedPassword = await bcrypt.hash(testPassword, 12);
+
+    if (adminUser) {
+      console.log('✅ Admin user exists');
+      console.log('Email:', adminUser.email);
+      console.log('Role:', adminUser.role);
+      console.log('Active:', adminUser.isActive);
+      console.log('Email Verified:', adminUser.emailVerified);
       
-      await prisma.user.update({
-        where: { id: admin.id },
+      // Test password
+      const isPasswordValid = await bcrypt.compare('Admin@2025', adminUser.password);
+      console.log('Password Valid:', isPasswordValid);
+      
+      if (!isPasswordValid) {
+        console.log('🔄 Updating admin password...');
+        const hashedPassword = await bcrypt.hash('Admin@2025', 12);
+        await prisma.user.update({
+          where: { id: adminUser.id },
+          data: { password: hashedPassword }
+        });
+        console.log('✅ Admin password updated');
+      }
+    } else {
+      console.log('❌ Admin user not found. Creating...');
+      const hashedPassword = await bcrypt.hash('Admin@2025', 12);
+      
+      const admin = await prisma.user.create({
         data: {
+          email: 'admin@householdplanet.co.ke',
           password: hashedPassword,
-          loginAttempts: 0,
-          lockedUntil: null,
+          firstName: 'Admin',
+          lastName: 'User',
+          name: 'Admin User',
+          role: 'ADMIN',
+          emailVerified: true,
           isActive: true,
-          emailVerified: true
         }
       });
       
-      console.log('✅ Password updated successfully!');
+      console.log('✅ Admin user created');
+      console.log('ID:', admin.id);
     }
-    
   } catch (error) {
-    console.error('❌ Error checking admin:', error.message);
+    console.error('❌ Error:', error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-checkAdmin();
+checkAndCreateAdmin();

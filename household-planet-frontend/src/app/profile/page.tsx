@@ -3,9 +3,11 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { User, Mail, Phone, Shield, Lock, Eye, EyeOff } from 'lucide-react'
+import { User, Mail, Phone, Shield, Lock, Eye, EyeOff, Package, MapPin, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { formatPrice } from '@/lib/utils'
+import Link from 'next/link'
 import axios from 'axios'
 
 export default function ProfilePage() {
@@ -24,12 +26,34 @@ export default function ProfilePage() {
   })
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState('')
+  const [recentOrders, setRecentOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
+    } else if (user) {
+      fetchRecentOrders()
     }
   }, [user, loading, router])
+
+  const fetchRecentOrders = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setRecentOrders(data.orders?.slice(0, 3) || [])
+      }
+    } catch (error) {
+      console.error('Error fetching recent orders:', error)
+    } finally {
+      setOrdersLoading(false)
+    }
+  }
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,7 +118,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-start space-x-3">
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1" />
@@ -251,6 +275,82 @@ export default function ProfilePage() {
                       {passwordLoading ? 'Changing...' : 'Change Password'}
                     </Button>
                   </form>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Orders Section */}
+            <div className="lg:col-span-1">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900 text-sm sm:text-base flex items-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Recent Orders
+                  </h3>
+                  <Link href="/account/orders">
+                    <Button variant="outline" size="sm">
+                      View All
+                    </Button>
+                  </Link>
+                </div>
+                
+                {ordersLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse bg-white p-3 rounded-lg">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentOrders.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentOrders.map((order: any) => (
+                      <div key={order.id} className="bg-white p-3 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm">#{order.orderNumber}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                            order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                          <span>{formatPrice(order.total)}</span>
+                          <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Link href={`/order-confirmation/${order.id}`}>
+                            <Button variant="outline" size="sm" className="text-xs">
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                          {order.trackingNumber && (
+                            <Link href={`/track-order/${order.trackingNumber}`}>
+                              <Button variant="outline" size="sm" className="text-xs">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                Track
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No orders yet</p>
+                    <Link href="/products">
+                      <Button size="sm" className="mt-2">
+                        Start Shopping
+                      </Button>
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>

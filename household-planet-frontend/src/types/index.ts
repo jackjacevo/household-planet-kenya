@@ -133,14 +133,21 @@ export interface Order {
   status: OrderStatus;
   subtotal: number;
   shippingCost: number;
+  deliveryPrice?: number;
   total: number;
-  shippingAddress: Address;
-  deliveryLocation: DeliveryLocation;
+  shippingAddress?: Address;
+  deliveryLocation?: string | DeliveryLocation;
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
+  paymentStatus?: PaymentStatus;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
+  trackingNumber?: string;
+  notes?: string;
+  priority?: 'NORMAL' | 'HIGH' | 'URGENT';
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
 }
 
 export interface OrderItem {
@@ -174,6 +181,7 @@ export type PaymentStatus =
   | 'PENDING'
   | 'PROCESSING'
   | 'COMPLETED'
+  | 'PAID'
   | 'FAILED'
   | 'REFUNDED'
   | 'PARTIAL';

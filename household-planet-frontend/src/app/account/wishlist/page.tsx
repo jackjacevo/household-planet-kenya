@@ -96,15 +96,15 @@ export default function AccountWishlistPage() {
                 
                 <div className="absolute top-2 right-2 flex flex-col space-y-2">
                   <button
-                    onClick={() => handleNotificationToggle(item.id)}
+                    onClick={() => handleNotificationToggle(item.id.toString())}
                     className={`p-2 rounded-full transition-colors ${
-                      notifications[item.id]
+                      notifications[item.id.toString()]
                         ? 'bg-blue-500 text-white'
                         : 'bg-white/80 text-gray-600 hover:bg-white'
                     }`}
                     title={notifications[item.id] ? 'Notifications enabled' : 'Enable notifications'}
                   >
-                    {notifications[item.id] ? (
+                    {notifications[item.id.toString()] ? (
                       <Bell className="h-4 w-4" />
                     ) : (
                       <BellOff className="h-4 w-4" />
@@ -123,7 +123,7 @@ export default function AccountWishlistPage() {
                   </button>
                 </div>
 
-                {!item.inStock && (
+                {(!item.stock || item.stock === 0) && (
                   <div className="absolute bottom-2 left-2">
                     <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full">
                       Out of Stock
@@ -131,7 +131,7 @@ export default function AccountWishlistPage() {
                   </div>
                 )}
 
-                {item.onSale && (
+                {(item.comparePrice && item.comparePrice > item.price) && (
                   <div className="absolute top-2 left-2">
                     <span className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
                       On Sale
@@ -149,13 +149,13 @@ export default function AccountWishlistPage() {
 
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    {item.salePrice ? (
+                    {(item.comparePrice && item.comparePrice > item.price) ? (
                       <>
                         <span className="text-lg font-bold text-orange-600">
-                          {formatPrice(item.salePrice)}
+                          {formatPrice(item.price)}
                         </span>
                         <span className="text-sm text-gray-500 line-through">
-                          {formatPrice(item.price)}
+                          {formatPrice(item.comparePrice)}
                         </span>
                       </>
                     ) : (
@@ -165,10 +165,10 @@ export default function AccountWishlistPage() {
                     )}
                   </div>
                   
-                  {item.rating && (
+                  {item.averageRating && (
                     <div className="flex items-center">
                       <span className="text-yellow-400">★</span>
-                      <span className="text-sm text-gray-600 ml-1">{item.rating}</span>
+                      <span className="text-sm text-gray-600 ml-1">{item.averageRating.toFixed(1)}</span>
                     </div>
                   )}
                 </div>
@@ -176,12 +176,12 @@ export default function AccountWishlistPage() {
                 <div className="space-y-2">
                   <Button
                     onClick={() => addToCartFromWishlist(item)}
-                    disabled={!item.inStock}
+                    disabled={!item.stock || item.stock === 0}
                     className="w-full"
                     size="sm"
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {item.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    {(item.stock && item.stock > 0) ? 'Add to Cart' : 'Out of Stock'}
                   </Button>
                   
                   <div className="flex space-x-2">
@@ -206,7 +206,7 @@ export default function AccountWishlistPage() {
                   </div>
                 </div>
 
-                {notifications[item.id] && (
+                {notifications[item.id.toString()] && (
                   <div className="mt-3 p-2 bg-blue-50 rounded-lg">
                     <div className="flex items-center text-xs text-blue-700">
                       <Bell className="h-3 w-3 mr-1" />

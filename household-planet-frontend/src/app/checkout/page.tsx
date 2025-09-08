@@ -34,6 +34,15 @@ export default function CheckoutPage() {
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [manualDeliveryCost, setManualDeliveryCost] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+
+  // Auto-select first payment method when step changes to payment
+  useEffect(() => {
+    if (step === 'payment' && !selectedPaymentMethod) {
+      setSelectedPaymentMethod('CASH_ON_DELIVERY'); // Default to most common method
+    }
+  }, [step, selectedPaymentMethod]);
+  const [isCartLoading, setIsCartLoading] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -57,32 +66,94 @@ export default function CheckoutPage() {
     const token = localStorage.getItem('token');
     if (token) {
       loadSavedAddresses();
-      loadUserProfile();
+      loadUserProfile(); // Load user profile immediately on mount
     }
     
-    // Load delivery info from cart
-    const deliveryInfo = localStorage.getItem('checkoutDeliveryInfo');
-    if (deliveryInfo) {
-      const { selectedLocation, deliveryCost, manualDeliveryCost } = JSON.parse(deliveryInfo);
-      setSelectedDeliveryLocation(selectedLocation || '');
-      setDeliveryCost(deliveryCost || 0);
-      setManualDeliveryCost(manualDeliveryCost || '');
-      if (selectedLocation || manualDeliveryCost) {
-        setDeliveryType('DELIVERY');
+    // Load checkout data from cart
+    const checkoutData = localStorage.getItem('checkoutData');
+    if (checkoutData) {
+      try {
+        const data = JSON.parse(checkoutData);
+        console.log('Loading checkout data:', data);
+        
+        // Restore delivery info
+        if (data.deliveryInfo) {
+          const { selectedLocation, deliveryCost: savedDeliveryCost, manualDeliveryCost: savedManualCost } = data.deliveryInfo;
+          setSelectedDeliveryLocation(selectedLocation || '');
+          
+          if (savedDeliveryCost > 0) {
+            setDeliveryCost(savedDeliveryCost);
+          } else if (savedManualCost && parseFloat(savedManualCost) > 0) {
+            setDeliveryCost(parseFloat(savedManualCost));
+          }
+          
+          setManualDeliveryCost(savedManualCost || '');
+          
+          if (selectedLocation || savedManualCost) {
+            setDeliveryType('DELIVERY');
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing checkout data:', error);
       }
-      // Clear the stored info after loading
-      localStorage.removeItem('checkoutDeliveryInfo');
     }
   }, []);
 
-  // Sync cart on component mount
+  // Also load user profile when component mounts
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const { syncWithBackend } = useCart.getState();
-      syncWithBackend().catch(console.error);
+    if (hasMounted) {
+      const token = localStorage.getItem('token');
+      if (token && !formData.fullName) {
+        loadUserProfile();
+      }
     }
+  }, [hasMounted]);
+
+  // Handle client-side mounting
+  useEffect(() => {
+    setHasMounted(true);
   }, []);
+
+  // Sync cart on component mount with retry logic
+  useEffect(() => {
+    if (!hasMounted) return;
+    
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      setIsCartLoading(true);
+      
+      // Set a timeout to stop loading after 5 seconds
+      const loadingTimeout = setTimeout(() => {
+        setIsCartLoading(false);
+      }, 5000);
+      
+      const { syncWithBackend } = useCart.getState();
+      
+      // Retry cart sync up to 3 times with delays
+      const syncWithRetry = async (retries = 3) => {
+        try {
+          await syncWithBackend();
+          console.log('Cart synced successfully');
+          setIsCartLoading(false);
+          clearTimeout(loadingTimeout);
+        } catch (error) {
+          console.error('Cart sync failed:', error);
+          if (retries > 0) {
+            console.log(`Retrying cart sync... ${retries} attempts left`);
+            setTimeout(() => syncWithRetry(retries - 1), 1000);
+          } else {
+            setIsCartLoading(false);
+            clearTimeout(loadingTimeout);
+          }
+        }
+      };
+      
+      syncWithRetry();
+      
+      return () => clearTimeout(loadingTimeout);
+    }
+  }, [hasMounted]);
 
   // Load user profile when moving to delivery step if authenticated
   useEffect(() => {
@@ -106,14 +177,21 @@ export default function CheckoutPage() {
       const user = response.data;
       
       // Auto-fill user information, prioritizing existing form data
+      const userData = {
+        fullName: user.fullName || user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '',
+        phone: user.phone || '',
+        email: user.email || ''
+      };
+      
       setFormData(prev => ({
         ...prev,
-        fullName: prev.fullName || user.fullName || user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '',
-        phone: prev.phone || user.phone || '',
-        email: prev.email || user.email || ''
+        fullName: prev.fullName || userData.fullName,
+        phone: prev.phone || userData.phone,
+        email: prev.email || userData.email
       }));
       
-      console.log('User profile loaded:', { name: user.name, phone: user.phone, email: user.email });
+      console.log('User profile loaded:', userData);
+      console.log('Form data after profile load:', formData);
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
@@ -176,6 +254,14 @@ export default function CheckoutPage() {
         throw new Error('Payment method is required');
       }
       
+      if (!formData.fullName || formData.fullName.trim() === '') {
+        throw new Error('Full name is required');
+      }
+      
+      if (!formData.phone || formData.phone.trim() === '') {
+        throw new Error('Phone number is required');
+      }
+      
       // Validate delivery information
       if (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && !manualDeliveryCost) {
         throw new Error('Delivery location or cost is required');
@@ -189,10 +275,12 @@ export default function CheckoutPage() {
           price: item.product.price
         })),
         deliveryLocationId: selectedDeliveryLocation || undefined,
-        deliveryPrice: deliveryCost,
+        deliveryPrice: manualDeliveryCost ? parseFloat(manualDeliveryCost) : deliveryCost,
         paymentMethod: selectedPaymentMethod,
         notes: formData.notes || '',
-
+        customerName: formData.fullName,
+        customerPhone: formData.phone,
+        customerEmail: formData.email
       };
       
       console.log('Creating order with data:', orderData);
@@ -216,6 +304,7 @@ export default function CheckoutPage() {
       if (error.response) {
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
+        console.error('Validation errors:', error.response.data.message);
       }
       throw error;
     }
@@ -233,6 +322,13 @@ export default function CheckoutPage() {
     }
     
     setStep('delivery');
+  };
+
+  const goBackStep = () => {
+    const currentIndex = getCurrentStepIndex();
+    if (currentIndex > 0) {
+      setStep(steps[currentIndex - 1].id as CheckoutStep);
+    }
   };
 
   const handleShippingSubmit = (e: React.FormEvent) => {
@@ -271,39 +367,42 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     try {
-      console.log('Creating order...');
+      console.log('Creating order with form data:', { name: formData.fullName, phone: formData.phone, email: formData.email });
       const newOrderId = await createOrder();
       console.log('Order created successfully with ID:', newOrderId);
       setOrderId(newOrderId);
       
-      if (selectedPaymentMethod === 'CASH_ON_DELIVERY' || selectedPaymentMethod === 'BANK_TRANSFER') {
-        clearCart();
-        // Add a flag to indicate successful order creation
-        localStorage.setItem('orderCreated', 'true');
-        router.push(`/order-confirmation/${newOrderId}`);
-      } else {
-        console.log('Initiating payment for order:', newOrderId);
-        
-        // Validate phone number before payment
-        if (!formData.phone || formData.phone.trim() === '') {
-          throw new Error('Phone number is required for M-Pesa payment');
-        }
-        
-        console.log('Payment data:', {
-          orderId: newOrderId,
-          paymentMethod: selectedPaymentMethod,
-          phoneNumber: formData.phone,
-          amount: getTotal()
-        });
-        
-        await initiatePayment({
-          orderId: newOrderId,
-          paymentMethod: selectedPaymentMethod,
-          phoneNumber: formData.phone,
-          amount: getTotal()
-        });
-        setStep('processing');
-      }
+      // Store order completion data for confirmation page
+      const orderCompletionData = {
+        orderId: newOrderId,
+        customerInfo: {
+          name: formData.fullName?.trim() || 'Not provided',
+          phone: formData.phone?.trim() || 'Not provided',
+          email: formData.email?.trim() || ''
+        },
+        deliveryInfo: {
+          type: deliveryType,
+          location: selectedDeliveryLocation,
+          cost: getCurrentDeliveryCost(),
+          notes: formData.notes
+        },
+        paymentInfo: {
+          method: selectedPaymentMethod,
+          total: getTotal()
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('Storing completion data:', orderCompletionData);
+      localStorage.setItem('orderCreated', 'true');
+      localStorage.setItem('orderIdToConfirm', newOrderId.toString());
+      localStorage.setItem('orderCompletionData', JSON.stringify(orderCompletionData));
+      
+      // Clear checkout data after successful order creation
+      localStorage.removeItem('checkoutData');
+      
+      // DON'T clear cart yet - wait for order confirmation
+      router.push(`/order-confirmation/${newOrderId}`);
     } catch (error) {
       console.error('Order error:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Order failed. Please try again.';
@@ -315,6 +414,8 @@ export default function CheckoutPage() {
     clearCart();
     // Add a flag to indicate successful order creation
     localStorage.setItem('orderCreated', 'true');
+    // Clean up completion data
+    localStorage.removeItem('orderCompletionData');
     router.push('/account/orders');
   };
 
@@ -356,12 +457,37 @@ export default function CheckoutPage() {
   const getSubtotal = () => getTotalPrice();
   const getTotal = () => {
     const subtotal = getTotalPrice();
-    const finalDeliveryCost = deliveryType === 'PICKUP' ? 0 : (deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) : 0));
+    let finalDeliveryCost = 0;
+    
+    if (deliveryType === 'PICKUP') {
+      finalDeliveryCost = 0;
+    } else {
+      // Use deliveryCost if set, otherwise use manualDeliveryCost
+      finalDeliveryCost = deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) || 0 : 0);
+    }
+    
     return subtotal + finalDeliveryCost;
   };
+  
+  const getCurrentDeliveryCost = () => {
+    if (deliveryType === 'PICKUP') return 0;
+    return deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) || 0 : 0);
+  };
+
+  // Prevent hydration mismatch by ensuring consistent initial render
+  if (!hasMounted) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state while cart is being synced
-  if (loading && items.length === 0) {
+  if (isCartLoading || (loading && items.length === 0)) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
@@ -400,7 +526,16 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8 pb-20 md:pb-8">
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8">Checkout</h1>
+      <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Checkout</h1>
+        <Button
+          variant="outline"
+          onClick={() => router.push('/cart')}
+          className="flex items-center space-x-2"
+        >
+          ← Back to Cart
+        </Button>
+      </div>
       
       {/* Progress Indicator */}
       <div className="mb-6 md:mb-8">
@@ -716,14 +851,24 @@ export default function CheckoutPage() {
                 />
               </div>
               
-              <Button
-                onClick={handleDeliverySubmit}
-                disabled={!deliveryType || (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && !manualDeliveryCost)}
-                className="w-full mt-4"
-                size="lg"
-              >
-                Continue to Payment
-              </Button>
+              <div className="flex space-x-4 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={goBackStep}
+                  className="flex-1"
+                  size="lg"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  onClick={handleDeliverySubmit}
+                  disabled={!deliveryType || (deliveryType === 'DELIVERY' && !selectedDeliveryLocation && !manualDeliveryCost)}
+                  className="flex-1"
+                  size="lg"
+                >
+                  Continue to Payment
+                </Button>
+              </div>
             </div>
           )}
           
@@ -734,40 +879,56 @@ export default function CheckoutPage() {
               
               <div className="space-y-3">
                 {[
-                  { id: 'CASH_ON_DELIVERY', name: 'Cash on Delivery', icon: '💵' },
-                  { id: 'BANK_TRANSFER', name: 'Bank Transfer', icon: '🏦' },
-                  { id: 'MPESA', name: 'M-Pesa', icon: '📱' },
+                  { id: 'CASH_ON_DELIVERY', name: 'Cash on Delivery', icon: '💵', description: 'Pay when your order arrives' },
+                  { id: 'BANK_TRANSFER', name: 'Bank Transfer', icon: '🏦', description: 'Pay via bank transfer or mobile banking' },
+                  { id: 'MPESA', name: 'M-Pesa', icon: '📱', description: 'Pay with your M-Pesa mobile money' },
                 ].map((method) => (
                   <div
                     key={method.id}
-                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer ${
-                      selectedPaymentMethod === method.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedPaymentMethod === method.id ? 'border-orange-500 bg-orange-50 shadow-md' : 'border-gray-200 hover:border-gray-300'
                     }`}
                     onClick={() => setSelectedPaymentMethod(method.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <span className="text-xl sm:text-2xl mr-2 sm:mr-3">{method.icon}</span>
-                        <span className="font-medium text-sm sm:text-base">{method.name}</span>
+                        <div>
+                          <span className="font-medium text-sm sm:text-base block">{method.name}</span>
+                          <span className="text-xs text-gray-500">{method.description}</span>
+                        </div>
                       </div>
                       <input
                         type="radio"
                         checked={selectedPaymentMethod === method.id}
                         onChange={() => setSelectedPaymentMethod(method.id)}
+                        className="text-orange-500 focus:ring-orange-500"
                       />
                     </div>
                   </div>
                 ))}
               </div>
               
-              <Button
-                onClick={handlePaymentSubmit}
-                disabled={!selectedPaymentMethod}
-                className="w-full mt-4"
-                size="lg"
-              >
-                Review Order
-              </Button>
+
+              
+              <div className="flex space-x-4 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={goBackStep}
+                  className="flex-1"
+                  size="lg"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  onClick={handlePaymentSubmit}
+                  disabled={!selectedPaymentMethod}
+                  className="flex-1"
+                  size="lg"
+                >
+                  Review Order
+                </Button>
+              </div>
             </div>
           )}
           
@@ -844,14 +1005,25 @@ export default function CheckoutPage() {
                 </div>
               </div>
               
-              <Button
-                onClick={handlePlaceOrder}
-                className="w-full"
-                size="lg"
-                disabled={loading}
-              >
-                {loading ? 'Processing...' : 'Place Order'}
-              </Button>
+              <div className="flex space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={goBackStep}
+                  className="flex-1"
+                  size="lg"
+                  disabled={loading}
+                >
+                  ← Back
+                </Button>
+                <Button
+                  onClick={handlePlaceOrder}
+                  className="flex-1"
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? 'Processing...' : 'Place Order'}
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -900,17 +1072,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between">
                 <span>Delivery Cost</span>
-                <span>
-                  {deliveryType === 'PICKUP' ? (
-                    formatPrice(0)
-                  ) : deliveryCost > 0 ? (
-                    formatPrice(deliveryCost)
-                  ) : manualDeliveryCost ? (
-                    formatPrice(parseFloat(manualDeliveryCost) || 0)
-                  ) : (
-                    formatPrice(0)
-                  )}
-                </span>
+                <span>{formatPrice(getCurrentDeliveryCost())}</span>
               </div>
 
               <div className="flex justify-between font-semibold text-lg border-t pt-2">

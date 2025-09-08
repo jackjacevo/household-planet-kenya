@@ -92,13 +92,31 @@ export default function ProductDetailPage() {
 
   const handleReviewSubmit = async (formData: FormData) => {
     try {
-      await api.createReview(formData);
+      const response = await api.createReview(formData);
+      
+      // Show success message
+      showToast({
+        variant: 'default',
+        title: 'Review Submitted! ⭐',
+        description: 'Thank you for your feedback. Your review has been posted.',
+      });
+      
       // Refresh reviews after submission
       if (product) {
         await fetchReviews(product.id);
       }
+      
+      return response;
     } catch (error: any) {
       console.error('Error submitting review:', error);
+      
+      // Show error message
+      showToast({
+        variant: 'destructive',
+        title: 'Review Failed ❌',
+        description: error.message || 'Failed to submit review. Please try again.',
+      });
+      
       throw error;
     }
   };

@@ -19,9 +19,9 @@ interface CartStore {
   addToCart: (item: CartItem, isAuthenticated?: boolean) => Promise<boolean>;
   removeFromCart: (id: string, isAuthenticated?: boolean) => Promise<void>;
   updateQuantity: (id: string, quantity: number, isAuthenticated?: boolean) => Promise<void>;
-  clearCart: (isAuthenticated?: boolean) => Promise<void>;
+  clearCart: (isAuthenticated?: boolean, force?: boolean) => Promise<void>;
   saveForLater: (id: string, isAuthenticated?: boolean) => Promise<void>;
-  moveToCart: (id: string) => void;
+  moveToCart: (id: string) => Promise<void>;
   syncWithBackend: () => Promise<void>;
   syncLocalToBackend: () => Promise<void>;
   getTotalPrice: () => number;
@@ -138,7 +138,13 @@ export const useCart = create<CartStore>()(
         set({ isLoading: false });
       },
       
-      clearCart: async (isAuthenticated = false) => {
+      clearCart: async (isAuthenticated = false, force = false) => {
+        // Only clear if forced (after order confirmation) or explicitly requested
+        if (!force) {
+          console.log('Cart clear prevented - use force=true after order confirmation');
+          return;
+        }
+        
         set({ isLoading: true });
         
         const token = localStorage.getItem('token');
@@ -152,6 +158,8 @@ export const useCart = create<CartStore>()(
           }
         }
         
+        // Clear checkout data as well
+        localStorage.removeItem('checkoutData');
         set({ items: [], cartData: null, isLoading: false });
       },
       

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Orders Authentication</title>
+</head>
+<body>
+    <h1>Debug Orders Authentication</h1>
+    <div id="output"></div>
+
+    <script>
+        async function debugAuth() {
+            const output = document.getElementById('output');
+            
+            function log(message) {
+                output.innerHTML += '<p>' + message + '</p>';
+                console.log(message);
+            }
+
+            log('🔍 Starting authentication debug...');
+
+            try {
+                // Test 1: Register a test user
+                log('1. Registering test user...');
+                const testUser = {
+                    name: 'Test User',
+                    email: `test${Date.now()}@example.com`,
+                    password: 'password123',
+                    phone: '+254700000000'
+                };
+
+                const registerResponse = await fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUser)
+                });
+
+                if (registerResponse.ok) {
+                    log('✅ Registration successful');
+                    
+                    // Test 2: Login
+                    log('2. Logging in...');
+                    const loginResponse = await fetch('http://localhost:3001/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: testUser.email,
+                            password: testUser.password
+                        })
+                    });
+
+                    if (loginResponse.ok) {
+                        const loginData = await loginResponse.json();
+                        log('✅ Login successful');
+                        log('Token field: ' + (loginData.access_token ? 'access_token' : loginData.accessToken ? 'accessToken' : 'unknown'));
+                        
+                        const token = loginData.access_token || loginData.accessToken;
+                        if (token) {
+                            log('Token: ' + token.substring(0, 20) + '...');
+                            
+                            // Test 3: Test orders endpoint
+                            log('3. Testing orders endpoint...');
+                            const ordersResponse = await fetch('http://localhost:3001/api/orders/my-orders', {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+
+                            if (ordersResponse.ok) {
+                                const ordersData = await ordersResponse.json();
+                                log('✅ Orders API working! Found ' + (ordersData.orders?.length || 0) + ' orders');
+                            } else {
+                                const errorText = await ordersResponse.text();
+                                log('❌ Orders API failed: ' + ordersResponse.status + ' - ' + errorText);
+                            }
+                        } else {
+                            log('❌ No token received from login');
+                        }
+                    } else {
+                        const errorText = await loginResponse.text();
+                        log('❌ Login failed: ' + errorText);
+                    }
+                } else {
+                    const errorText = await registerResponse.text();
+                    log('❌ Registration failed: ' + errorText);
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        }
+
+        debugAuth();
+    </script>
+</body>
+</html>

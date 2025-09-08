@@ -54,6 +54,14 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   customerEmail?: string;
+
+  @IsOptional()
+  @IsNumber()
+  discountAmount?: number;
+
+  @IsOptional()
+  @IsString()
+  promoCode?: string;
 }
 
 export class UpdateOrderStatusDto {

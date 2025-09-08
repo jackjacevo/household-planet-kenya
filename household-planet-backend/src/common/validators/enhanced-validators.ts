@@ -10,11 +10,23 @@ export function IsKenyanPhone(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: any, args: ValidationArguments) {
           if (!value) return true; // Allow optional
-          const kenyanPhoneRegex = /^(\+254|254|07|7)[0-9]{8,9}$/;
-          return kenyanPhoneRegex.test(value);
+          
+          // Normalize phone number
+          let phoneNumber = value.replace(/[\s\-]/g, '');
+          if (phoneNumber.startsWith('07')) {
+            phoneNumber = '+254' + phoneNumber.substring(1);
+          } else if (phoneNumber.startsWith('7')) {
+            phoneNumber = '+254' + phoneNumber;
+          } else if (phoneNumber.startsWith('254')) {
+            phoneNumber = '+' + phoneNumber;
+          }
+          
+          // Validate normalized phone number
+          const kenyanPhoneRegex = /^\+254[17]\d{8}$/;
+          return kenyanPhoneRegex.test(phoneNumber);
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be a valid Kenyan phone number`;
+          return `${args.property} must be a valid Kenyan phone number (+254XXXXXXXXX, 254XXXXXXXXX, 07XXXXXXXX, or 7XXXXXXXX)`;
         }
       }
     });

@@ -33,7 +33,7 @@ export default function MobileCodeSplitting({
 
 // Pre-configured lazy components for common mobile sections
 export const LazyProductGrid = lazy(() => import('@/components/products/MobileProductGrid'));
-export const LazyCartDrawer = lazy(() => import('@/components/ecommerce/CartDrawer'));
+
 export const LazyCheckoutForm = lazy(() => import('@/components/checkout/MobileCheckoutForm'));
 export const LazySearch = lazy(() => import('@/components/search/MobileSearch'));
 
@@ -52,14 +52,3 @@ export function LazyProductGridWrapper(props: any) {
   );
 }
 
-export function LazyCartDrawerWrapper(props: any) {
-  return (
-    <Suspense fallback={
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-        <div className="bg-white w-full h-96 rounded-t-xl animate-pulse" />
-      </div>
-    }>
-      <LazyCartDrawer {...props} />
-    </Suspense>
-  );
-}

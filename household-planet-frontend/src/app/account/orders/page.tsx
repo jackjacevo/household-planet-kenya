@@ -4,15 +4,21 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
 import { getImageUrl } from '@/lib/imageUtils';
-import { Package, Eye, RotateCcw, Download, Search, Truck, RefreshCw } from 'lucide-react';
+import { Package, Eye, RotateCcw, Download, Search, RefreshCw, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+
 import STKPushButton from '@/components/payment/STKPushButton';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetchOrders();
@@ -32,26 +38,47 @@ export default function OrdersPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error('No authentication token found');
+        console.error('❌ No authentication token found');
         setLoading(false);
         return;
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`;
+      console.log('🔍 Fetching orders from:', apiUrl);
+      console.log('🔑 Token exists:', !!token);
+      
+      const response = await fetch(apiUrl, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
+      console.log('📡 Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        console.log('Orders fetched:', data);
+        console.log('✅ Orders fetched successfully');
+        console.log('📊 Orders count:', data.orders?.length || 0);
+        console.log('📋 Orders data structure:', {
+          hasOrders: !!data.orders,
+          isArray: Array.isArray(data.orders),
+          firstOrder: data.orders?.[0] ? {
+            id: data.orders[0].id,
+            orderNumber: data.orders[0].orderNumber,
+            status: data.orders[0].status
+          } : null
+        });
         setOrders(data.orders || []);
       } else {
-        console.error('Failed to fetch orders:', response.status, response.statusText);
+        console.error('❌ Failed to fetch orders:', response.status, response.statusText);
         const errorText = await response.text();
-        console.error('Error response:', errorText);
+        console.error('❌ Error response:', errorText);
+        
+        // If unauthorized, might need to refresh login
+        if (response.status === 401) {
+          console.log('🔄 Token might be expired, consider redirecting to login');
+        }
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('❌ Network error fetching orders:', error);
     } finally {
       setLoading(false);
     }
@@ -72,9 +99,11 @@ export default function OrdersPage() {
 
 
 
-  const filteredOrders = orders.filter((order: any) =>
-    order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOrders = orders.filter((order: any) => {
+    const matchesSearch = order?.orderNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) || false;
+    const matchesStatus = statusFilter === 'ALL' || order?.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
@@ -95,6 +124,21 @@ export default function OrdersPage() {
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
+            {mounted && (
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white"
+              >
+                <option value="ALL">All Orders</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="SHIPPED">Shipped</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            )}
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <input
@@ -123,9 +167,9 @@ export default function OrdersPage() {
               </div>
             ))}
           </div>
-        ) : filteredOrders.length > 0 ? (
+        ) : filteredOrders && filteredOrders.length > 0 ? (
           <div className="space-y-4">
-            {filteredOrders.map((order: any) => (
+            {filteredOrders.filter(order => order && order.id && order.orderNumber).map((order: any) => (
               <div key={order.id} className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
                 <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-start sm:justify-between mb-3 sm:mb-4">
                   <div className="flex-1">
@@ -193,14 +237,28 @@ export default function OrdersPage() {
 
                 <div className="space-y-3 mb-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {order.items && order.items.length > 0 ? order.items.slice(0, 3).map((item: any) => (
+                    {order.items && order.items.length > 0 ? order.items.slice(0, 3).filter(item => item && item.product).map((item: any) => (
                       <div key={item.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
                         <div className="w-12 h-12 relative">
-                          <Image
-                            src={getImageUrl(item.product.images?.[0])}
-                            alt={item.product.name}
-                            fill
-                            className="object-cover rounded"
+                          <img
+                            src={(() => {
+                              const images = item.product?.images;
+                              if (!images) return '/images/products/placeholder.svg';
+                              if (typeof images === 'string') {
+                                try {
+                                  const parsed = JSON.parse(images);
+                                  return getImageUrl(Array.isArray(parsed) ? parsed[0] : images);
+                                } catch {
+                                  return getImageUrl(images);
+                                }
+                              }
+                              return getImageUrl(Array.isArray(images) ? images[0] : images);
+                            })()}
+                            alt={item.product?.name || 'Product'}
+                            className="w-full h-full object-cover rounded"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/products/placeholder.svg';
+                            }}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -233,13 +291,7 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <span className="text-gray-500">Delivery Cost:</span>
-                        <p className="font-medium">
-                          {order.shippingCost === 0 ? (
-                            <span className="text-green-600">FREE</span>
-                          ) : (
-                            formatPrice(order.shippingCost)
-                          )}
-                        </p>
+                        <p className="font-medium">{formatPrice(order.deliveryPrice || order.shippingCost || 0)}</p>
                       </div>
                       <div>
                         <span className="text-gray-500">Items:</span>
@@ -260,6 +312,15 @@ export default function OrdersPage() {
                       View Details
                     </Button>
                   </Link>
+                  
+                  {order.trackingNumber && (
+                    <Link href={`/track-order/${order.trackingNumber}`}>
+                      <Button variant="outline" size="sm">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        Track Order
+                      </Button>
+                    </Link>
+                  )}
                   
                   {order.status === 'DELIVERED' && (
                     <>
@@ -288,20 +349,7 @@ export default function OrdersPage() {
                     </>
                   )}
                   
-                  {(order.trackingNumber || ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status)) && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                      onClick={() => {
-                        const trackingId = order.trackingNumber || order.orderNumber;
-                        window.location.href = `/track/${trackingId}`;
-                      }}
-                    >
-                      <Truck className="h-4 w-4 mr-1" />
-                      Track Delivery
-                    </Button>
-                  )}
+
                   
 
                 </div>

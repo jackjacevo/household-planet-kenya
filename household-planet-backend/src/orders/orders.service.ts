@@ -5,6 +5,8 @@ import { CustomersService } from '../customers/customers.service';
 import { LoyaltyService } from '../customers/loyalty.service';
 import { ShippingService } from './shipping.service';
 import { OrderIdService } from './order-id.service';
+import { PromoCodesService } from '../promo-codes/promo-codes.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOrderDto, UpdateOrderStatusDto, CreateReturnDto, BulkOrderUpdateDto, OrderFilterDto, AddOrderNoteDto, SendCustomerEmailDto, ProcessReturnDto } from './dto/order.dto';
 import { OrderStatus } from '../common/enums';
 import { Prisma } from '@prisma/client';
@@ -41,7 +43,9 @@ export class OrdersService {
     private customersService: CustomersService,
     private loyaltyService: LoyaltyService,
     private shippingService: ShippingService,
-    private orderIdService: OrderIdService
+    private orderIdService: OrderIdService,
+    private promoCodesService: PromoCodesService,
+    private notificationsService: NotificationsService
   ) {}
 
   async findAll(filters?: OrderFilterDto) {
@@ -249,13 +253,15 @@ export class OrdersService {
     
     // Calculate delivery cost - prioritize manual delivery price
     let shippingCost = 0;
+    let deliveryLocation = null;
     
     if (dto.deliveryPrice !== undefined && dto.deliveryPrice >= 0) {
       // Use manual delivery price if provided
       shippingCost = dto.deliveryPrice;
     } else if (dto.deliveryLocationId) {
       // Get the specific delivery location and use its price
-      const deliveryLocation = this.deliveryService.getAllLocations().find(loc => loc.id === dto.deliveryLocationId);
+      const locations = await this.deliveryService.getAllLocations();
+      deliveryLocation = locations.find(loc => loc.id === dto.deliveryLocationId);
       
       if (deliveryLocation) {
         shippingCost = deliveryLocation.price;
@@ -284,6 +290,8 @@ export class OrdersService {
           orderNumber,
           trackingNumber,
           subtotal,
+          discountAmount: dto.discountAmount || 0,
+          promoCode: dto.promoCode,
           shippingCost,
           total,
           shippingAddress: JSON.stringify({
@@ -294,7 +302,7 @@ export class OrdersService {
             town: dto.deliveryLocation || '',
             county: 'Kenya'
           }),
-          deliveryLocation: dto.deliveryLocation || dto.deliveryLocationId,
+          deliveryLocation: dto.deliveryLocationId ? (deliveryLocation?.name || dto.deliveryLocation) : dto.deliveryLocation,
           deliveryPrice: shippingCost,
           paymentMethod: dto.paymentMethod,
 
@@ -329,6 +337,17 @@ export class OrdersService {
         );
       
       await Promise.all(inventoryUpdates);
+
+      // Record promo code usage if applicable
+      if (dto.promoCode && dto.discountAmount) {
+        await this.promoCodesService.recordOrderUsage(
+          dto.promoCode,
+          null, // Guest order
+          order.id,
+          dto.discountAmount,
+          subtotal
+        );
+      }
 
       return order;
     });
@@ -376,13 +395,15 @@ export class OrdersService {
     
     // Calculate delivery cost - prioritize manual delivery price
     let shippingCost = 0;
+    let deliveryLocation = null;
     
     if (dto.deliveryPrice !== undefined && dto.deliveryPrice >= 0) {
       // Use manual delivery price if provided
       shippingCost = dto.deliveryPrice;
     } else if (dto.deliveryLocationId) {
       // Get the specific delivery location and use its price
-      const deliveryLocation = this.deliveryService.getAllLocations().find(loc => loc.id === dto.deliveryLocationId);
+      const locations = await this.deliveryService.getAllLocations();
+      deliveryLocation = locations.find(loc => loc.id === dto.deliveryLocationId);
       
       if (deliveryLocation) {
         shippingCost = deliveryLocation.price;
@@ -412,6 +433,8 @@ export class OrdersService {
           orderNumber,
           trackingNumber,
           subtotal,
+          discountAmount: dto.discountAmount || 0,
+          promoCode: dto.promoCode,
           shippingCost,
           total,
           shippingAddress: JSON.stringify({
@@ -422,7 +445,7 @@ export class OrdersService {
             town: dto.deliveryLocation || '',
             county: 'Kenya'
           }),
-          deliveryLocation: dto.deliveryLocation || dto.deliveryLocationId,
+          deliveryLocation: dto.deliveryLocationId ? (deliveryLocation?.name || dto.deliveryLocation) : dto.deliveryLocation,
           deliveryPrice: shippingCost,
           paymentMethod: dto.paymentMethod,
           items: {
@@ -457,9 +480,18 @@ export class OrdersService {
       
       await Promise.all(inventoryUpdates);
 
-      // Clear user's cart (only for authenticated users)
-      if (userId) {
-        await tx.cart.deleteMany({ where: { userId } });
+      // DON'T clear cart immediately - let frontend handle it after order confirmation
+      // Cart will be cleared by frontend after user sees order confirmation
+
+      // Record promo code usage if applicable
+      if (dto.promoCode && dto.discountAmount) {
+        await this.promoCodesService.recordOrderUsage(
+          dto.promoCode,
+          userId,
+          order.id,
+          dto.discountAmount,
+          subtotal
+        );
       }
 
       return order;
@@ -518,6 +550,40 @@ export class OrdersService {
         this.logger.debug(`Status history created for order ${id}`);
       } catch (historyError) {
         this.logger.error(`Error creating status history for order ${id}:`, historyError.message);
+      }
+
+      // Emit real-time notification for order status update
+      try {
+        // Get status history for tracking updates
+        const statusHistory = await this.prisma.orderStatusHistory.findMany({
+          where: { orderId: id },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        });
+
+        await this.notificationsService.sendOrderUpdate({
+          orderId: id,
+          orderNumber: updatedOrder.orderNumber,
+          status: dto.status,
+          trackingNumber: updatedOrder.trackingNumber
+        });
+
+        // Also send detailed tracking update if tracking number exists
+        if (updatedOrder.trackingNumber) {
+          await this.notificationsService.sendTrackingUpdate({
+            trackingNumber: updatedOrder.trackingNumber,
+            status: dto.status,
+            statusHistory: statusHistory.map(h => ({
+              status: h.status,
+              notes: h.notes,
+              createdAt: h.createdAt
+            }))
+          });
+        }
+        
+        this.logger.debug(`Real-time notification sent for order ${id}`);
+      } catch (notificationError) {
+        this.logger.error(`Error sending real-time notification for order ${id}:`, notificationError.message);
       }
 
       // Handle delivered status updates asynchronously

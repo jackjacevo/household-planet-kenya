@@ -149,6 +149,14 @@ export class MpesaService {
 
   async initiateSTKPush(phoneNumber: string, amount: number, orderId: number): Promise<any> {
     try {
+      // Check if we're in development mode and should simulate payments
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const simulatePayments = process.env.SIMULATE_MPESA_PAYMENTS === 'true';
+      
+      if (isDevelopment && simulatePayments) {
+        return this.simulateSTKPush(phoneNumber, amount, orderId);
+      }
+
       const accessToken = await this.getAccessToken();
       const timestamp = this.generateTimestamp();
       const password = this.generatePassword(timestamp);
@@ -165,7 +173,7 @@ export class MpesaService {
         PartyA: formattedPhone,
         PartyB: this.businessShortCode,
         PhoneNumber: formattedPhone,
-        CallBackURL: `${process.env.APP_URL || 'http://localhost:3001'}/api/payments/mpesa/callback`,
+        CallBackURL: process.env.MPESA_CALLBACK_URL || 'https://householdplanet.requestcatcher.com/api/payments/mpesa/callback',
         AccountReference: 'HouseholdPlanet',
         TransactionDesc: 'Household Planet Kenya Payment',
       };
@@ -230,6 +238,76 @@ export class MpesaService {
       }
       
       throw new BadRequestException('Failed to initiate payment. Please try again.');
+    }
+  }
+
+  private async simulateSTKPush(phoneNumber: string, amount: number, orderId: number): Promise<any> {
+    try {
+      // Validate and format phone number
+      const formattedPhone = this.validateAndFormatPhoneNumber(phoneNumber);
+      
+      // Generate mock response data
+      const checkoutRequestId = `ws_CO_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const merchantRequestId = `ws_MR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      this.logger.log('Simulating STK Push for development', {
+        orderId,
+        amount,
+        phoneNumber: formattedPhone
+      });
+
+      // Store payment request in database
+      await this.prisma.paymentTransaction.create({
+        data: {
+          orderId,
+          merchantRequestId,
+          checkoutRequestId,
+          phoneNumber: formattedPhone,
+          amount,
+          status: 'PENDING',
+          provider: 'MPESA',
+          paymentType: 'STK_PUSH',
+        },
+      });
+
+      // Simulate successful payment after 5 seconds
+      setTimeout(async () => {
+        try {
+          await this.simulatePaymentCallback(checkoutRequestId, formattedPhone, amount);
+        } catch (error) {
+          this.logger.error('Failed to simulate payment callback', error);
+        }
+      }, 5000);
+
+      return {
+        success: true,
+        message: 'Payment request sent to your phone. Please enter your M-Pesa PIN to complete the transaction.',
+        checkoutRequestId,
+        merchantRequestId,
+      };
+    } catch (error) {
+      this.logger.error('Simulated STK Push failed', error);
+      throw new BadRequestException('Failed to initiate payment. Please try again.');
+    }
+  }
+
+  private async simulatePaymentCallback(checkoutRequestId: string, phoneNumber: string, amount: number): Promise<void> {
+    try {
+      const mpesaReceiptNumber = `NLJ${Math.random().toString(36).substr(2, 7).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
+      
+      this.logger.log(`Simulating successful payment callback for ${checkoutRequestId}`);
+      
+      await this.updateTransactionWithRetry(checkoutRequestId, {
+        status: 'COMPLETED',
+        mpesaReceiptNumber,
+        transactionDate: new Date(),
+        resultCode: '0',
+        resultDescription: 'The service request is processed successfully.',
+      });
+      
+      this.logger.log(`Simulated payment completed: ${checkoutRequestId} - Receipt: ${mpesaReceiptNumber}`);
+    } catch (error) {
+      this.logger.error('Failed to simulate payment callback', error);
     }
   }
 

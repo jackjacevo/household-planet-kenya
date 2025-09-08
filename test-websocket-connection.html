@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Real-time Tracking Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .update { background-color: #d1ecf1; color: #0c5460; margin: 5px 0; padding: 8px; border-radius: 3px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #updates { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Real-time Order Tracking Test</h1>
+    
+    <div id="connectionStatus" class="status disconnected">
+        ❌ Not connected to WebSocket server
+    </div>
+
+    <div>
+        <button onclick="connectWebSocket()">Connect WebSocket</button>
+        <button onclick="disconnectWebSocket()">Disconnect</button>
+        <button onclick="clearUpdates()">Clear Updates</button>
+    </div>
+
+    <h3>📡 Real-time Updates:</h3>
+    <div id="updates">
+        <p><em>Waiting for updates...</em></p>
+    </div>
+
+    <h3>🧪 Test Instructions:</h3>
+    <ol>
+        <li>Click "Connect WebSocket" to establish connection</li>
+        <li>Go to admin panel and update any order status</li>
+        <li>Watch for real-time updates appearing below</li>
+        <li>Open order tracking page and see instant updates</li>
+    </ol>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        const statusDiv = document.getElementById('connectionStatus');
+        const updatesDiv = document.getElementById('updates');
+
+        function connectWebSocket() {
+            if (socket && socket.connected) {
+                addUpdate('Already connected!', 'info');
+                return;
+            }
+
+            socket = io('http://localhost:3001', {
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                statusDiv.className = 'status connected';
+                statusDiv.innerHTML = '✅ Connected to WebSocket server';
+                addUpdate('Connected to WebSocket server', 'success');
+            });
+
+            socket.on('disconnect', () => {
+                statusDiv.className = 'status disconnected';
+                statusDiv.innerHTML = '❌ Disconnected from WebSocket server';
+                addUpdate('Disconnected from WebSocket server', 'error');
+            });
+
+            socket.on('orderStatusUpdate', (data) => {
+                addUpdate(`Order Status Update: ${data.orderNumber} → ${data.status}`, 'update');
+                console.log('Order status update:', data);
+            });
+
+            socket.on('trackingUpdate', (data) => {
+                addUpdate(`Tracking Update: ${data.trackingNumber} → ${data.status}`, 'update');
+                console.log('Tracking update:', data);
+            });
+
+            socket.on('connect_error', (error) => {
+                addUpdate(`Connection error: ${error.message}`, 'error');
+            });
+        }
+
+        function disconnectWebSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+        }
+
+        function addUpdate(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            const updateElement = document.createElement('div');
+            updateElement.className = 'update';
+            updateElement.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
+            
+            if (updatesDiv.innerHTML.includes('Waiting for updates')) {
+                updatesDiv.innerHTML = '';
+            }
+            
+            updatesDiv.insertBefore(updateElement, updatesDiv.firstChild);
+        }
+
+        function clearUpdates() {
+            updatesDiv.innerHTML = '<p><em>Waiting for updates...</em></p>';
+        }
+
+        // Auto-connect on page load
+        window.onload = () => {
+            setTimeout(connectWebSocket, 1000);
+        };
+    </script>
+</body>
+</html>

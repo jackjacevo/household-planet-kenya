@@ -126,6 +126,10 @@ class ApiClient {
     return this.request(`/api/delivery/locations/tier?tier=${tier}`)
   }
 
+  async trackDelivery(trackingNumber: string) {
+    return this.request(`/api/delivery/track/${trackingNumber}`)
+  }
+
   // Advanced product features
   async searchProducts(query: string, limit = 10) {
     return this.request(`/api/products/search/autocomplete?q=${encodeURIComponent(query)}&limit=${limit}`)

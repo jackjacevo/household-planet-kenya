@@ -874,6 +874,12 @@ export default function OrderDetailsPage() {
                   <span>Subtotal:</span>
                   <span>KSh {order.subtotal.toLocaleString()}</span>
                 </div>
+                {order.promoCode && order.discountAmount && order.discountAmount > 0 && (
+                  <div className="flex justify-between text-sm bg-green-100 -mx-1 px-2 py-1 rounded">
+                    <span className="text-green-700 font-medium">Promo Discount ({order.promoCode})</span>
+                    <span className="font-medium text-green-600">-KSh {order.discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span>Delivery Cost:</span>
                   <span>KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</span>

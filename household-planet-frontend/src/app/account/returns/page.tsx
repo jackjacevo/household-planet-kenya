@@ -8,8 +8,8 @@ import { RotateCcw, Plus, Package, Clock, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
 export default function ReturnsPage() {
-  const [returns, setReturns] = useState([]);
-  const [eligibleOrders, setEligibleOrders] = useState([]);
+  const [returns, setReturns] = useState<any[]>([]);
+  const [eligibleOrders, setEligibleOrders] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
