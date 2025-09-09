@@ -74,44 +74,128 @@ export default function OrderConfirmationPage() {
     try {
       const token = localStorage.getItem('token');
       
-      if (!token) {
-        setError('Please log in to view your order details.');
-        setLoading(false);
-        return;
-      }
-
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` },
+      // Try authenticated request first if token exists
+      if (token && token !== 'null' && token !== 'undefined') {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}`,
+            {
+              headers: { 'Authorization': `Bearer ${token}` },
+            }
+          );
+          setOrder(response.data);
+          setTrackingNumber(response.data.trackingNumber || generateTrackingNumber());
+          
+          // Clear cart after successful order confirmation
+          const orderCreated = localStorage.getItem('orderCreated');
+          if (orderCreated === 'true') {
+            clearCart(false, true); // Force clear the cart
+            localStorage.removeItem('orderCreated');
+            localStorage.removeItem('orderIdToConfirm');
+            localStorage.removeItem('checkoutData'); // Clear checkout data
+            // Keep completion data for a bit longer for better UX
+            setTimeout(() => {
+              localStorage.removeItem('orderCompletionData');
+            }, 10000);
+          }
+          return;
+        } catch (authError: any) {
+          // If authenticated request fails, try guest lookup if we have completion data
+          if (authError.response?.status === 401 || authError.response?.status === 403) {
+            localStorage.removeItem('token'); // Clear invalid token
+          }
         }
-      );
-      setOrder(response.data);
-      setTrackingNumber(response.data.trackingNumber || generateTrackingNumber());
+      }
       
-      // Clear cart after successful order confirmation
-      const orderCreated = localStorage.getItem('orderCreated');
-      if (orderCreated === 'true') {
-        clearCart(false, true); // Force clear the cart
-        localStorage.removeItem('orderCreated');
-        localStorage.removeItem('orderIdToConfirm');
-        localStorage.removeItem('checkoutData'); // Clear checkout data
-        // Keep completion data for a bit longer for better UX
-        setTimeout(() => {
-          localStorage.removeItem('orderCompletionData');
-        }, 10000);
+      // Try guest order lookup using completion data or order tracking
+      if (orderCompletionData?.customerInfo?.phone) {
+        try {
+          // Extract order number from orderId or completion data
+          const orderNumber = orderCompletionData.orderNumber || 
+                             (typeof orderId === 'string' && orderId.includes('-') ? orderId : `ORDER-${orderId}`);
+          
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/orders/guest/${orderNumber}?phone=${encodeURIComponent(orderCompletionData.customerInfo.phone)}`
+          );
+          
+          // Transform guest order data to match expected format
+          const guestOrder = {
+            ...response.data,
+            user: null,
+            customerName: response.data.customerInfo?.name,
+            customerPhone: response.data.customerInfo?.phone,
+            customerEmail: response.data.customerInfo?.email,
+            shippingAddress: {
+              fullName: response.data.customerInfo?.name,
+              phone: response.data.customerInfo?.phone,
+              email: response.data.customerInfo?.email
+            }
+          };
+          
+          setOrder(guestOrder);
+          setTrackingNumber(guestOrder.trackingNumber || generateTrackingNumber());
+          
+          // Clear cart for guest orders too
+          const orderCreated = localStorage.getItem('orderCreated');
+          if (orderCreated === 'true') {
+            clearCart(false, true);
+            localStorage.removeItem('orderCreated');
+            localStorage.removeItem('orderIdToConfirm');
+            localStorage.removeItem('checkoutData');
+          }
+          return;
+        } catch (guestError) {
+          console.error('Guest order lookup failed:', guestError);
+        }
+      }
+      
+      // Try order tracking as fallback for guest orders
+      try {
+        const trackingResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/orders/track/${orderId}`
+        );
+        
+        if (trackingResponse.data?.order) {
+          const trackingOrder = {
+            ...trackingResponse.data.order,
+            user: null,
+            items: trackingResponse.data.order.items || [],
+            customerName: 'Guest Customer',
+            customerPhone: 'Not provided',
+            customerEmail: '',
+            shippingAddress: {
+              fullName: 'Guest Customer',
+              phone: 'Not provided',
+              email: ''
+            }
+          };
+          
+          setOrder(trackingOrder);
+          setTrackingNumber(trackingOrder.trackingNumber || generateTrackingNumber());
+          
+          // Clear cart for guest orders
+          const orderCreated = localStorage.getItem('orderCreated');
+          if (orderCreated === 'true') {
+            clearCart(false, true);
+            localStorage.removeItem('orderCreated');
+            localStorage.removeItem('orderIdToConfirm');
+            localStorage.removeItem('checkoutData');
+          }
+          return;
+        }
+      } catch (trackingError) {
+        console.error('Order tracking fallback failed:', trackingError);
+      }
+      
+      // If all attempts fail, show appropriate error
+      if (!token || token === 'null' || token === 'undefined') {
+        setError('Unable to load order details. Please log in to view your order or use the guest order lookup.');
+      } else {
+        setError('Order not found. Please check your order number or contact support.');
       }
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        setError('Your session has expired. Please log in again to view your order.');
-        localStorage.removeItem('token');
-      } else if (error.response?.status === 404) {
-        setError('Order not found. Please check your order number.');
-      } else if (error.response?.status === 403) {
-        setError('You do not have permission to view this order.');
-      } else {
-        setError('Unable to load order details. Please try again later.');
-      }
+      console.error('Order loading error:', error);
+      setError('Unable to load order details. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -175,21 +259,32 @@ export default function OrderConfirmationPage() {
           <p className="text-gray-600 mb-8 leading-relaxed">{error}</p>
           <div className="space-y-3">
             {error.includes('log in') && (
+              <>
+                <Button 
+                  onClick={() => router.push('/guest-order-lookup')}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                >
+                  🔍 Guest Order Lookup
+                </Button>
+                <Button 
+                  onClick={() => router.push('/login')}
+                  variant="outline"
+                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Log In
+                </Button>
+              </>
+            )}
+            {!error.includes('log in') && (
               <Button 
-                onClick={() => router.push('/login')}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                variant="outline" 
+                onClick={() => window.location.reload()}
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
               >
-                <User className="h-4 w-4 mr-2" />
-                Log In
+                Try Again
               </Button>
             )}
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.reload()}
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Try Again
-            </Button>
             <Button 
               variant="outline" 
               onClick={() => router.push('/products')}
@@ -271,6 +366,18 @@ export default function OrderConfirmationPage() {
             <p className="text-green-200 text-sm mb-4">
               Hi {orderCompletionData.customerInfo.name}! Your order is being processed.
             </p>
+          )}
+          
+          {/* Guest order instructions */}
+          {(!localStorage.getItem('token') || localStorage.getItem('token') === 'null') && (
+            <div className="mt-4 bg-white/10 rounded-lg p-3 text-sm">
+              <p className="text-green-100 mb-2">📱 <strong>Save this information:</strong></p>
+              <p className="text-green-200 text-xs">
+                Order Number: <strong>{order?.orderNumber}</strong><br/>
+                Phone: <strong>{orderCompletionData?.customerInfo?.phone}</strong><br/>
+                Use these details to track your order anytime!
+              </p>
+            </div>
           )}
           
           <div className="mt-4 inline-flex items-center bg-white/10 rounded-full px-6 py-2">
@@ -368,10 +475,10 @@ export default function OrderConfirmationPage() {
                     </p>
                     <p><span className="text-gray-600">Phone:</span> 
                       <span className="font-medium">
-                        {orderCompletionData?.customerInfo?.phone || 
-                         order.customerPhone || 
-                         order.shippingAddress?.phone || 
-                         order.user?.phone || 'Not provided'}
+                        {(orderCompletionData?.customerInfo?.phone && orderCompletionData.customerInfo.phone !== 'Not provided') ? orderCompletionData.customerInfo.phone :
+                         (order.customerPhone && order.customerPhone !== 'Not provided') ? order.customerPhone :
+                         (order.shippingAddress?.phone && order.shippingAddress.phone !== 'Not provided') ? order.shippingAddress.phone :
+                         (order.user?.phone && order.user.phone !== 'Not provided') ? order.user.phone : 'Not provided'}
                       </span>
                     </p>
                     {(orderCompletionData?.customerInfo?.email || order.customerEmail || order.user?.email) && (
@@ -383,11 +490,9 @@ export default function OrderConfirmationPage() {
                     )}
                     <p><span className="text-gray-600">Location:</span> 
                       <span className="font-medium">
-                        {orderCompletionData?.deliveryInfo?.location ? 
-                          (deliveryLocations?.find(loc => loc.id === orderCompletionData.deliveryInfo.location)?.name || 'Custom Location') :
-                          (typeof order.deliveryLocation === 'string' 
-                            ? order.deliveryLocation 
-                            : order.deliveryLocation?.name || 'Custom Location')}
+                        {typeof order.deliveryLocation === 'string' 
+                          ? order.deliveryLocation 
+                          : order.deliveryLocation?.name || 'N/A'}
                       </span>
                     </p>
                     {orderCompletionData?.deliveryInfo?.notes && (

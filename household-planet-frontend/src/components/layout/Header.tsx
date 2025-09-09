@@ -12,8 +12,7 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { UserProfile } from '@/components/auth/UserProfile';
 import { AuthButtons } from '@/components/auth/AuthButtons';
 import { CompanyTagline } from '@/components/ui/CompanyTagline';
-import { CartHover } from '@/components/ui/CartHover';
-import { WishlistHover } from '@/components/ui/WishlistHover';
+
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,7 +44,6 @@ export function Header() {
     { href: '/', label: 'Home' },
     { href: '/products', label: 'Shop' },
     { href: '/categories', label: 'Categories' },
-    { href: '/track-order', label: 'Track Order' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
   ];
@@ -130,33 +128,29 @@ export function Header() {
               <Search className="h-5 w-5" />
             </button>
             
-            <WishlistHover>
-              <Link 
-                href="/wishlist"
-                className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition hidden md:block"
-              >
-                <Heart className="h-5 w-5" />
-                {mounted && wishlistItems.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
-                    {wishlistItems.length}
-                  </span>
-                )}
-              </Link>
-            </WishlistHover>
+            <Link 
+              href="/wishlist"
+              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-red-500 transition hidden md:block"
+            >
+              <Heart className="h-5 w-5" />
+              {mounted && wishlistItems.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full h-3 w-3 flex items-center justify-center">
+                  {wishlistItems.length}
+                </span>
+              )}
+            </Link>
             
-            <CartHover>
-              <Link 
-                href="/cart"
-                className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {mounted && getTotalItems() > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-green-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
-                    {getTotalItems()}
-                  </span>
-                )}
-              </Link>
-            </CartHover>
+            <Link 
+              href="/cart"
+              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {mounted && getTotalItems() > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-green-600 text-white text-xs rounded-full h-3 w-3 flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
+            </Link>
             
             {/* Auth Section - Only render after mount to prevent hydration mismatch */}
             {mounted && (
@@ -239,14 +233,7 @@ export function Header() {
                   <ShoppingCart className="h-4 w-4 mr-3" /> 
                   <span>My Orders</span>
                 </Link>
-                <Link 
-                  href="/track-order" 
-                  className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <MapPin className="h-4 w-4 mr-3" /> 
-                  <span>Track Order</span>
-                </Link>
+
                 <Link 
                   href="/wishlist" 
                   className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
@@ -254,6 +241,14 @@ export function Header() {
                 >
                   <Heart className="h-4 w-4 mr-3" /> 
                   <span>Wishlist {wishlistItems.length > 0 && `(${wishlistItems.length})`}</span>
+                </Link>
+                <Link 
+                  href="/guest-order-lookup" 
+                  className="flex items-center px-3 py-2.5 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors text-sm"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Search className="h-4 w-4 mr-3" /> 
+                  <span>Track Order</span>
                 </Link>
                 {(user.role === 'ADMIN' || user.role === 'admin') && (
                   <Link 
@@ -293,6 +288,14 @@ export function Header() {
                 >
                   <User className="h-4 w-4 mr-3" /> 
                   <span>Sign Up</span>
+                </Link>
+                <Link 
+                  href="/guest-order-lookup" 
+                  className="flex items-center px-3 py-2.5 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors text-sm"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Search className="h-4 w-4 mr-3" /> 
+                  <span>Track Order</span>
                 </Link>
               </>
             ))}

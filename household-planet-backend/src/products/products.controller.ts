@@ -52,6 +52,11 @@ export class ProductsController {
     return this.productsService.getFeatured(validatedLimit);
   }
 
+  @Get('brands')
+  getBrands() {
+    return this.productsService.getBrands();
+  }
+
   @Get('search')
   @UsePipes(new ValidationPipe({ transform: true }))
   search(@Query() searchDto: SearchDto) {

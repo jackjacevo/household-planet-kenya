@@ -5,10 +5,6 @@ class SocketService {
   private listeners: Map<string, Function[]> = new Map();
 
   connect() {
-    // Temporarily disabled WebSocket - using polling fallback
-    console.log('WebSocket temporarily disabled, using polling fallback');
-    return;
-    
     if (this.socket?.connected) return;
 
     const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';

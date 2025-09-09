@@ -121,28 +121,24 @@ export class OrdersController {
     try {
       return await this.ordersService.getOrderTracking(orderNumber);
     } catch (error) {
-      // Return mock data if tracking fails
-      return {
-        order: {
-          id: 1,
-          orderNumber: orderNumber,
-          status: 'PROCESSING',
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          updatedAt: new Date(),
-          total: 2500,
-          paymentMethod: 'MPESA',
-          deliveryLocation: 'Nairobi CBD',
-          trackingNumber: orderNumber
-        },
-        statusHistory: [
-          { status: 'PENDING', date: new Date(Date.now() - 24 * 60 * 60 * 1000), completed: true, description: 'Order placed successfully' },
-          { status: 'CONFIRMED', date: new Date(Date.now() - 12 * 60 * 60 * 1000), completed: true, description: 'Order confirmed and being prepared' },
-          { status: 'PROCESSING', date: new Date(), completed: true, description: 'Order is being processed' },
-          { status: 'SHIPPED', date: null, completed: false, description: 'Order has been shipped' },
-          { status: 'DELIVERED', date: null, completed: false, description: 'Order delivered successfully' }
-        ],
-        trackingInfo: null
-      };
+      console.error('Order tracking error:', error);
+      throw new BadRequestException('Order not found or tracking unavailable');
+    }
+  }
+
+  @Get('guest/:orderNumber')
+  async getGuestOrder(
+    @Param('orderNumber') orderNumber: string,
+    @Query('phone') phone?: string
+  ) {
+    try {
+      if (!phone) {
+        throw new BadRequestException('Phone number is required to view guest orders');
+      }
+      return await this.ordersService.getGuestOrder(orderNumber, phone);
+    } catch (error) {
+      console.error('Guest order lookup error:', error);
+      throw error;
     }
   }
 

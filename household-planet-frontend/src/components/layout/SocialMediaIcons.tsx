@@ -57,7 +57,7 @@ export function SocialMediaIcons() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 2 + (index * 0.1), duration: 0.3 }}
-            className={`${social.color} text-white p-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 hover:shadow-xl group relative`}
+            className={`${social.color} text-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 hover:shadow-xl group relative`}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >

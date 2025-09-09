@@ -275,12 +275,13 @@ export default function CheckoutPage() {
           price: item.product.price
         })),
         deliveryLocationId: selectedDeliveryLocation || undefined,
+        deliveryLocation: selectedDeliveryLocation ? deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name : undefined,
         deliveryPrice: manualDeliveryCost ? parseFloat(manualDeliveryCost) : deliveryCost,
         paymentMethod: selectedPaymentMethod,
         notes: formData.notes || '',
-        customerName: formData.fullName,
-        customerPhone: formData.phone,
-        customerEmail: formData.email
+        customerName: formData.fullName?.trim() || 'Not provided',
+        customerPhone: formData.phone?.trim() || 'Not provided',
+        customerEmail: formData.email?.trim() || ''
       };
       
       console.log('Creating order with data:', orderData);

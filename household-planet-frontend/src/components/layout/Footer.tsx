@@ -1,7 +1,8 @@
-'use client';
+
 
 import Link from 'next/link';
 import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { PaymentIcons } from '../PaymentIcons';
 
 export function Footer() {
   return (
@@ -62,7 +63,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/orders" className="text-gray-400 hover:text-green-400 transition-colors">
+                <Link href="/track-order" className="text-gray-400 hover:text-green-400 transition-colors">
                   Order Tracking
                 </Link>
               </li>
@@ -133,17 +134,7 @@ export function Footer() {
               © 2025 Household Planet Kenya. All rights reserved.<br className="sm:hidden" />
               <span className="hidden sm:inline"> | </span>Developed by Jacevo Systems (+254) 704 000 165
             </p>
-            <div className="flex space-x-3 sm:space-x-6">
-              <div className="h-6 w-10 bg-green-600 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">M-PESA</span>
-              </div>
-              <div className="h-6 w-10 bg-blue-600 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">VISA</span>
-              </div>
-              <div className="h-6 w-10 bg-red-600 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">MC</span>
-              </div>
-            </div>
+            <PaymentIcons />
           </div>
         </div>
       </div>

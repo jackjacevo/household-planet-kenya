@@ -226,6 +226,13 @@ export class ProductsService {
     }));
   }
 
+  async getBrands() {
+    return this.prisma.brand.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' }
+    });
+  }
+
   async search(query: string, limit = 20) {
     // Sanitize and validate search input
     const sanitizedQuery = query ? String(query).trim().slice(0, 100) : '';

@@ -74,18 +74,13 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
         setCategories(apiCategories);
         
         try {
-          const productsRes = await api.getProducts({ limit: 100 });
-          const products = productsRes?.data || [];
-          const uniqueBrands = new Set();
-          
-          products.forEach((product: any) => {
-            if (product.brand?.name) {
-              uniqueBrands.add(JSON.stringify({ id: product.brand.id, name: product.brand.name }));
-            }
-          });
-          
-          const brandsArray = Array.from(uniqueBrands).map(brandStr => JSON.parse(brandStr as string));
-          setBrands(brandsArray.sort((a, b) => a.name.localeCompare(b.name)));
+          const brandsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`);
+          if (brandsRes.ok) {
+            const brandsData = await brandsRes.json();
+            setBrands(brandsData);
+          } else {
+            setBrands([]);
+          }
         } catch (brandError) {
           setBrands([]);
         }

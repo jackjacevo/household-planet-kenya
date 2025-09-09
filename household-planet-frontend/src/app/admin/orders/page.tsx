@@ -938,12 +938,10 @@ export default function AdminOrdersPage() {
             <CardTitle className="text-xs sm:text-sm font-medium">Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm sm:text-xl font-bold">KSh {(stats.totalRevenue || 0).toLocaleString()}</div>
-            {stats.deliveredRevenue !== undefined && (
-              <div className="text-xs text-gray-500 mt-1 hidden sm:block">
-                Delivered: KSh {(stats.deliveredRevenue || 0).toLocaleString()}
-              </div>
-            )}
+            <div className="text-sm sm:text-xl font-bold">KSh {(stats.deliveredRevenue || 0).toLocaleString()}</div>
+            <div className="text-xs text-gray-500 mt-1 hidden sm:block">
+              Total: KSh {(stats.totalRevenue || 0).toLocaleString()}
+            </div>
           </CardContent>
         </Card>
         <Card>

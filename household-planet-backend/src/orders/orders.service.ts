@@ -222,6 +222,14 @@ export class OrdersService {
   }
 
   async createGuestOrder(dto: CreateOrderDto) {
+    // Validate required customer information for guest orders
+    if (!dto.customerName || dto.customerName.trim() === '') {
+      throw new BadRequestException('Customer name is required for guest orders');
+    }
+    if (!dto.customerPhone || dto.customerPhone.trim() === '') {
+      throw new BadRequestException('Customer phone is required for guest orders');
+    }
+
     // Batch validate stock for all variants
     const variantIds = dto.items.filter(item => item.variantId).map(item => item.variantId!);
     const variants = await this.prisma.productVariant.findMany({
@@ -295,9 +303,9 @@ export class OrdersService {
           shippingCost,
           total,
           shippingAddress: JSON.stringify({
-            fullName: dto.customerName || 'Guest Customer',
-            phone: dto.customerPhone || '',
-            email: dto.customerEmail || '',
+            fullName: dto.customerName.trim(),
+            phone: dto.customerPhone.trim(),
+            email: dto.customerEmail?.trim() || '',
             street: dto.deliveryLocation || '',
             town: dto.deliveryLocation || '',
             county: 'Kenya'
@@ -305,7 +313,7 @@ export class OrdersService {
           deliveryLocation: dto.deliveryLocationId ? (deliveryLocation?.name || dto.deliveryLocation) : dto.deliveryLocation,
           deliveryPrice: shippingCost,
           paymentMethod: dto.paymentMethod,
-
+          source: 'WEB_GUEST',
           items: {
             create: dto.items.map(item => ({
               productId: item.productId,
@@ -349,6 +357,7 @@ export class OrdersService {
         );
       }
 
+      this.logger.log(`Guest order created: ${orderNumber} for ${dto.customerName} (${dto.customerPhone})`);
       return order;
     });
   }
@@ -448,6 +457,7 @@ export class OrdersService {
           deliveryLocation: dto.deliveryLocationId ? (deliveryLocation?.name || dto.deliveryLocation) : dto.deliveryLocation,
           deliveryPrice: shippingCost,
           paymentMethod: dto.paymentMethod,
+          source: 'WEB_USER',
           items: {
             create: dto.items.map(item => ({
               productId: item.productId,
@@ -655,9 +665,10 @@ export class OrdersService {
     });
   }
 
-  async getOrderTracking(orderNumber: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { orderNumber },
+  async getOrderTracking(orderIdentifier: string) {
+    // Try to find by orderNumber first, then by ID if it's numeric
+    let order = await this.prisma.order.findUnique({
+      where: { orderNumber: orderIdentifier },
       select: {
         id: true,
         orderNumber: true,
@@ -667,9 +678,57 @@ export class OrdersService {
         total: true,
         paymentMethod: true,
         deliveryLocation: true,
-        trackingNumber: true
+        trackingNumber: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                images: true
+              }
+            },
+            variant: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
       }
     });
+
+    // If not found by orderNumber and identifier is numeric, try by ID
+    if (!order && /^\d+$/.test(orderIdentifier)) {
+      order = await this.prisma.order.findUnique({
+        where: { id: parseInt(orderIdentifier) },
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          total: true,
+          paymentMethod: true,
+          deliveryLocation: true,
+          trackingNumber: true,
+          items: {
+            include: {
+              product: {
+                select: {
+                  name: true,
+                  images: true
+                }
+              },
+              variant: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          }
+        }
+      });
+    }
 
     if (!order) throw new NotFoundException('Order not found');
 
@@ -691,6 +750,87 @@ export class OrdersService {
     ];
 
     return { order, statusHistory, trackingInfo };
+  }
+
+  async getGuestOrder(orderNumber: string, phone: string) {
+    // Clean phone number for comparison
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNumber,
+        // For guest orders, check if userId is null or if shippingAddress contains the phone
+        OR: [
+          { userId: null },
+          { userId: { equals: null } }
+        ]
+      },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                images: true,
+                price: true
+              }
+            },
+            variant: {
+              select: {
+                name: true,
+                sku: true
+              }
+            }
+          }
+        },
+        statusHistory: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Verify phone number from shipping address
+    let shippingAddress: any = {};
+    try {
+      shippingAddress = typeof order.shippingAddress === 'string' 
+        ? JSON.parse(order.shippingAddress) 
+        : order.shippingAddress || {};
+    } catch (error) {
+      this.logger.warn('Could not parse shipping address');
+    }
+
+    const orderPhone = (shippingAddress.phone || '').replace(/\D/g, '');
+    
+    // Check if the provided phone matches the order phone
+    if (!orderPhone || !cleanPhone.includes(orderPhone.slice(-9)) && !orderPhone.includes(cleanPhone.slice(-9))) {
+      throw new BadRequestException('Phone number does not match order records');
+    }
+
+    // Return order details without sensitive information
+    return {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      trackingNumber: order.trackingNumber,
+      status: order.status,
+      total: order.total,
+      subtotal: order.subtotal,
+      shippingCost: order.shippingCost,
+      deliveryLocation: order.deliveryLocation,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      items: order.items,
+      customerInfo: {
+        name: shippingAddress.fullName || 'Guest Customer',
+        phone: shippingAddress.phone || '',
+        email: shippingAddress.email || ''
+      },
+      statusHistory: order.statusHistory
+    };
   }
 
   async getOrderStats() {

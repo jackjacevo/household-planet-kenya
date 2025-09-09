@@ -1,294 +1,332 @@
-import { Metadata } from 'next';
-import Link from 'next/link';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy - Household Planet Kenya',
-  description: 'Comprehensive privacy policy detailing how we collect, use, and protect your personal information in compliance with GDPR and Kenya Data Protection Act.',
-};
+import { motion } from 'framer-motion';
+import { Shield, Eye, Lock, UserCheck, Database, Phone } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
-          
-          <div className="prose prose-gray max-w-none">
-            <p className="text-lg text-gray-600 mb-8">
-              Last updated: {new Date().toLocaleDateString()}
-            </p>
+      <div className="container mx-auto px-4 max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Privacy <span className="text-orange-600">Policy</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            How we collect, use, and protect your personal information
+          </p>
+          <p className="text-sm text-gray-500 mt-2">Last updated: January 2025</p>
+        </motion.div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold text-blue-900 mb-3">Quick Links to Legal Documents</h2>
+        <div className="space-y-8">
+          {/* Information We Collect */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center mb-4">
+              <Database className="h-6 w-6 text-blue-600 mr-3" />
+              <h2 className="text-2xl font-bold text-gray-900">Information We Collect</h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Personal Information</h3>
+                <ul className="text-gray-700 space-y-1">
+                  <li>• Name, email address, and phone number</li>
+                  <li>• Delivery address and billing information</li>
+                  <li>• Payment information (processed securely)</li>
+                  <li>• Order history and preferences</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Automatically Collected</h3>
+                <ul className="text-gray-700 space-y-1">
+                  <li>• Device information and IP address</li>
+                  <li>• Browser type and operating system</li>
+                  <li>• Pages visited and time spent on site</li>
+                  <li>• Cookies and similar tracking technologies</li>
+                </ul>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* How We Use Information */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center mb-4">
+              <Eye className="h-6 w-6 text-green-600 mr-3" />
+              <h2 className="text-2xl font-bold text-gray-900">How We Use Your Information</h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-green-800 mb-3">✅ We Use Your Data To:</h3>
+                <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">•</span>
+                    Process and fulfill your orders
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">•</span>
+                    Send order confirmations and updates
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">•</span>
+                    Provide customer support
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">•</span>
+                    Improve our website and services
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">•</span>
+                    Send promotional offers (with consent)
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-red-800 mb-3">❌ We Never:</h3>
+                <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    Sell your personal information
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    Share data with unauthorized parties
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    Send spam or unwanted messages
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    Store payment card details
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    Use data for unauthorized purposes
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Data Security */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center mb-4">
+              <Lock className="h-6 w-6 text-purple-600 mr-3" />
+              <h2 className="text-2xl font-bold text-gray-900">Data Security</h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                We implement industry-standard security measures to protect your personal information:
+              </p>
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Link href="/legal/terms" className="text-blue-700 hover:text-blue-900 font-medium">Terms of Service</Link>
-                  <br />
-                  <Link href="/legal/cookies" className="text-blue-700 hover:text-blue-900 font-medium">Cookie Policy</Link>
-                  <br />
-                  <Link href="/legal/data-protection" className="text-blue-700 hover:text-blue-900 font-medium">Data Protection Agreement</Link>
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <h3 className="font-semibold text-purple-800 mb-2">🔒 Technical Safeguards</h3>
+                  <ul className="text-purple-700 space-y-1">
+                    <li>• SSL encryption for data transmission</li>
+                    <li>• Secure servers and databases</li>
+                    <li>• Regular security updates</li>
+                    <li>• Access controls and monitoring</li>
+                  </ul>
                 </div>
-                <div>
-                  <Link href="/legal/returns" className="text-blue-700 hover:text-blue-900 font-medium">Return & Refund Policy</Link>
-                  <br />
-                  <Link href="/legal/shipping" className="text-blue-700 hover:text-blue-900 font-medium">Shipping & Delivery Policy</Link>
-                  <br />
-                  <Link href="/legal/acceptable-use" className="text-blue-700 hover:text-blue-900 font-medium">Acceptable Use Policy</Link>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="font-semibold text-blue-800 mb-2">👥 Administrative Safeguards</h3>
+                  <ul className="text-blue-700 space-y-1">
+                    <li>• Limited employee access</li>
+                    <li>• Staff training on data protection</li>
+                    <li>• Regular security audits</li>
+                    <li>• Incident response procedures</li>
+                  </ul>
                 </div>
               </div>
             </div>
+          </motion.section>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
-              <p className="text-gray-700 mb-4">
-                Household Planet Kenya ("we," "our," or "us") is committed to protecting your privacy and personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our e-commerce platform, mobile application, and related services.
+          {/* Information Sharing */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center mb-4">
+              <UserCheck className="h-6 w-6 text-indigo-600 mr-3" />
+              <h2 className="text-2xl font-bold text-gray-900">Information Sharing</h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                We may share your information only in these limited circumstances:
               </p>
-              <p className="text-gray-700 mb-4">
-                This policy complies with the General Data Protection Regulation (GDPR), Kenya's Data Protection Act, and other applicable privacy laws.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Information We Collect</h2>
-              <div className="space-y-6">
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Personal Information You Provide</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
-                    <li>Name, email address, and phone number</li>
-                    <li>Delivery and billing addresses</li>
-                    <li>Date of birth (optional, for age verification)</li>
-                    <li>Payment information (processed securely by our payment partners)</li>
-                    <li>Account credentials and security questions</li>
-                    <li>Product reviews, ratings, and feedback</li>
-                    <li>Customer service communications</li>
-                  </ul>
+              <div className="space-y-3">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">🚚 Service Providers</h3>
+                  <p className="text-gray-700">Delivery companies and payment processors to fulfill orders</p>
                 </div>
-
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Automatically Collected Information</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
-                    <li>Device information (type, model, operating system)</li>
-                    <li>Browser type, version, and language settings</li>
-                    <li>IP address and approximate location</li>
-                    <li>Website usage patterns and navigation data</li>
-                    <li>Cookies, web beacons, and similar technologies</li>
-                    <li>Referral sources and search terms</li>
-                    <li>Time stamps and session duration</li>
-                  </ul>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">⚖️ Legal Requirements</h3>
+                  <p className="text-gray-700">When required by law or to protect our rights and safety</p>
                 </div>
-
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Information from Third Parties</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-gray-700">
-                    <li>Social media profile information (when you connect accounts)</li>
-                    <li>Payment processor transaction data</li>
-                    <li>Delivery partner tracking information</li>
-                    <li>Marketing partner data (with your consent)</li>
-                    <li>Fraud prevention service data</li>
-                  </ul>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">✅ With Your Consent</h3>
+                  <p className="text-gray-700">When you explicitly agree to share information with third parties</p>
                 </div>
               </div>
-            </section>
+            </div>
+          </motion.section>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. How We Use Your Information</h2>
-              <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-green-900 mb-2">Essential Services</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-green-800">
-                    <li>Process and fulfill your orders</li>
-                    <li>Handle payments and prevent fraud</li>
-                    <li>Provide customer support and respond to inquiries</li>
-                    <li>Send order confirmations and delivery updates</li>
-                    <li>Manage your account and preferences</li>
-                  </ul>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-blue-900 mb-2">Service Improvement</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-blue-800">
-                    <li>Analyze usage patterns to improve our platform</li>
-                    <li>Personalize your shopping experience</li>
-                    <li>Develop new features and services</li>
-                    <li>Conduct research and analytics</li>
-                    <li>Test and optimize our website performance</li>
-                  </ul>
-                </div>
-
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-purple-900 mb-2">Marketing (With Your Consent)</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-purple-800">
-                    <li>Send promotional emails and newsletters</li>
-                    <li>Show personalized advertisements</li>
-                    <li>Notify you about special offers and new products</li>
-                    <li>Conduct surveys and market research</li>
-                  </ul>
-                </div>
-
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-orange-900 mb-2">Legal and Security</h3>
-                  <ul className="list-disc pl-6 space-y-1 text-orange-800">
-                    <li>Comply with legal obligations and regulations</li>
-                    <li>Prevent fraud, abuse, and security threats</li>
-                    <li>Enforce our terms of service and policies</li>
-                    <li>Respond to legal requests and court orders</li>
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Legal Basis for Processing (GDPR)</h2>
-              <div className="space-y-4 text-gray-700">
-                <p>We process your personal data based on the following legal grounds:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li><strong>Contract Performance:</strong> Processing necessary to fulfill our contract with you</li>
-                  <li><strong>Legitimate Interest:</strong> Processing for fraud prevention, security, and business operations</li>
-                  <li><strong>Consent:</strong> Processing based on your explicit consent (marketing, cookies)</li>
-                  <li><strong>Legal Obligation:</strong> Processing required by law (tax records, regulatory compliance)</li>
+          {/* Your Rights */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center mb-4">
+              <Shield className="h-6 w-6 text-orange-600 mr-3" />
+              <h2 className="text-2xl font-bold text-gray-900">Your Rights</h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-orange-800 mb-3">📋 Data Rights</h3>
+                <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Access your personal data
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Correct inaccurate information
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Delete your account and data
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Export your data
+                  </li>
                 </ul>
               </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Your Privacy Rights</h2>
-              <div className="space-y-4 text-gray-700">
-                <p>Under GDPR and Kenya's Data Protection Act, you have the following rights:</p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Access & Portability</h3>
-                    <ul className="list-disc pl-6 space-y-1 text-sm">
-                      <li>Request a copy of your personal data</li>
-                      <li>Receive data in a portable format</li>
-                      <li>Understand how your data is processed</li>
-                    </ul>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Control & Correction</h3>
-                    <ul className="list-disc pl-6 space-y-1 text-sm">
-                      <li>Correct inaccurate or incomplete data</li>
-                      <li>Request deletion of your data</li>
-                      <li>Restrict or object to processing</li>
-                    </ul>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Consent Management</h3>
-                    <ul className="list-disc pl-6 space-y-1 text-sm">
-                      <li>Withdraw consent at any time</li>
-                      <li>Opt out of marketing communications</li>
-                      <li>Manage cookie preferences</li>
-                    </ul>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Complaints</h3>
-                    <ul className="list-disc pl-6 space-y-1 text-sm">
-                      <li>File complaints with supervisory authorities</li>
-                      <li>Seek legal remedies</li>
-                      <li>Contact our Data Protection Officer</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Data Sharing and Disclosure</h2>
-              <div className="space-y-4 text-gray-700">
-                <p>We may share your information with:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li><strong>Service Providers:</strong> Payment processors, delivery partners, cloud hosting services</li>
-                  <li><strong>Business Partners:</strong> Marketing partners (with your consent), analytics providers</li>
-                  <li><strong>Legal Requirements:</strong> Government authorities, law enforcement (when required by law)</li>
-                  <li><strong>Business Transfers:</strong> In case of merger, acquisition, or sale of assets</li>
+              <div>
+                <h3 className="font-semibold text-orange-800 mb-3">📧 Communication Rights</h3>
+                <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Opt out of marketing emails
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Unsubscribe from SMS notifications
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Control cookie preferences
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    Request communication preferences
+                  </li>
                 </ul>
-                <p className="mt-4">
-                  <strong>We never sell your personal data to third parties for their marketing purposes.</strong>
-                </p>
               </div>
-            </section>
+            </div>
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-orange-800">
+                <strong>To exercise your rights:</strong> Contact us at householdplanet819@gmail.com or +254 790 227 760
+              </p>
+            </div>
+          </motion.section>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Data Security</h2>
-              <div className="space-y-4 text-gray-700">
-                <p>We implement comprehensive security measures including:</p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Technical Safeguards</h3>
-                    <ul className="list-disc pl-6 space-y-1 text-sm">
-                      <li>End-to-end encryption (TLS 1.3)</li>
-                      <li>Data encryption at rest (AES-256)</li>
-                      <li>Multi-factor authentication</li>
-                      <li>Regular security audits</li>
-                      <li>Intrusion detection systems</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Organizational Measures</h3>
-                    <ul className="list-disc pl-6 space-y-1 text-sm">
-                      <li>Employee training programs</li>
-                      <li>Access control policies</li>
-                      <li>Incident response procedures</li>
-                      <li>Regular risk assessments</li>
-                      <li>Vendor security requirements</li>
-                    </ul>
-                  </div>
+          {/* Cookies */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center mb-4">
+              <Database className="h-6 w-6 text-yellow-600 mr-3" />
+              <h2 className="text-2xl font-bold text-gray-900">Cookies & Tracking</h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                We use cookies and similar technologies to improve your experience:
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h3 className="font-semibold text-yellow-800 mb-1">Essential</h3>
+                  <p className="text-sm text-yellow-700">Required for site functionality</p>
+                </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="font-semibold text-blue-800 mb-1">Analytics</h3>
+                  <p className="text-sm text-blue-700">Help us improve our website</p>
+                </div>
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <h3 className="font-semibold text-green-800 mb-1">Marketing</h3>
+                  <p className="text-sm text-green-700">Personalized content (optional)</p>
                 </div>
               </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. International Data Transfers</h2>
-              <p className="text-gray-700 mb-4">
-                When we transfer your data outside Kenya or the EEA, we ensure adequate protection through approved mechanisms such as Standard Contractual Clauses, adequacy decisions, or certification schemes.
+              <p className="text-sm text-gray-600">
+                You can control cookie settings through your browser preferences or our cookie banner.
               </p>
-            </section>
+            </div>
+          </motion.section>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Data Retention</h2>
-              <p className="text-gray-700 mb-4">
-                We retain your personal data only as long as necessary for the purposes outlined in this policy or as required by law. Account data is kept until deletion, transaction records for 7 years, and marketing data until consent is withdrawn.
+          {/* Contact */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-6"
+          >
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Questions About Privacy?</h2>
+              <p className="text-gray-700">
+                Contact us if you have any questions about this privacy policy or how we handle your data
               </p>
-            </section>
+            </div>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Children's Privacy</h2>
-              <p className="text-gray-700 mb-4">
-                Our services are not intended for children under 16. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Changes to This Policy</h2>
-              <p className="text-gray-700 mb-4">
-                We may update this Privacy Policy periodically. We'll notify you of significant changes via email or prominent notice on our website. Your continued use of our services constitutes acceptance of the updated policy.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Contact Information</h2>
-              <div className="space-y-4 text-gray-700">
-                <p>For privacy-related questions or to exercise your rights:</p>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">General Privacy Inquiries</h3>
-                    <ul className="list-none space-y-1 text-sm">
-                      <li><strong>Email:</strong> privacy@householdplanet.co.ke</li>
-                      <li><strong>Phone:</strong> +254 700 000 000</li>
-                      <li><strong>Response Time:</strong> Within 48 hours</li>
-                    </ul>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Data Protection Officer</h3>
-                    <ul className="list-none space-y-1 text-sm">
-                      <li><strong>Email:</strong> dpo@householdplanet.co.ke</li>
-                      <li><strong>Address:</strong> Nairobi, Kenya</li>
-                      <li><strong>For:</strong> GDPR requests, complaints</li>
-                    </ul>
-                  </div>
-                </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                <Phone className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <h3 className="font-semibold text-gray-900 mb-1">Call Us</h3>
+                <a href="tel:+254790227760" className="text-orange-600 font-medium hover:text-orange-700">
+                  +254 790 227 760
+                </a>
+                <p className="text-xs text-gray-500 mt-1">Mon-Sat 8AM-6PM</p>
               </div>
-            </section>
-          </div>
+
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                <Shield className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                <h3 className="font-semibold text-gray-900 mb-1">Email Us</h3>
+                <a href="mailto:householdplanet819@gmail.com" className="text-blue-600 font-medium hover:text-blue-700">
+                  householdplanet819@gmail.com
+                </a>
+                <p className="text-xs text-gray-500 mt-1">Privacy inquiries</p>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                <strong>Business Address:</strong> Moi Avenue, Iconic Business Plaza, Basement Shop B10, Nairobi
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>

@@ -131,8 +131,9 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      name: 'Total Revenue',
-      value: `KSh ${(stats.overview.totalRevenue || 0).toLocaleString()}`,
+      name: 'Revenue',
+      value: `KSh ${(stats.overview.deliveredRevenue || 0).toLocaleString()}`,
+      subValue: `Total: KSh ${(stats.overview.totalRevenue || 0).toLocaleString()}`,
       change: '+12.5%',
       changeType: 'increase',
       icon: DollarSign,
@@ -256,6 +257,11 @@ export default function AdminDashboard() {
                       <div className="text-lg sm:text-2xl font-semibold text-gray-900">
                         {item.value}
                       </div>
+                      {item.subValue && (
+                        <div className="text-xs text-gray-500 hidden sm:block">
+                          {item.subValue}
+                        </div>
+                      )}
                       <div className={`flex items-baseline text-xs sm:text-sm font-semibold sm:ml-2 ${
                         item.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
                       }`}>

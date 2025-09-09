@@ -126,6 +126,14 @@ export function UserProfile() {
               My Orders
             </Link>
             <Link
+              href="/track-order"
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={handleMenuClick}
+            >
+              <ShoppingBag className="w-4 h-4 mr-3" />
+              Track Order
+            </Link>
+            <Link
               href="/account/wishlist"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={handleMenuClick}

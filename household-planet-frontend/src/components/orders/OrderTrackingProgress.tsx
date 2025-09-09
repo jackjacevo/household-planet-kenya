@@ -35,7 +35,7 @@ export default function OrderTrackingProgress({
   className = '' 
 }: TrackingProgressProps) {
   const [status, setStatus] = useState(currentStatus);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
     // Connect to real-time updates
@@ -114,13 +114,14 @@ export default function OrderTrackingProgress({
           <span className="text-sm font-medium text-gray-700">Progress</span>
           <span className="text-sm text-gray-500">{Math.round(getProgressPercentage())}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden relative">
           <div 
-            className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressBarColor()} ${
-              isAnimating ? 'animate-pulse' : ''
-            }`}
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressBarColor()}`}
             style={{ width: `${getProgressPercentage()}%` }}
           />
+          {isAnimating && (
+            <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_1.5s_ease-in-out_infinite]" />
+          )}
         </div>
         <div className="mt-4">
           <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)}`}>
@@ -134,13 +135,14 @@ export default function OrderTrackingProgress({
       <div className="hidden sm:block">
         <div className="relative">
           {/* Progress Line */}
-          <div className="absolute top-6 left-0 right-0 h-2 bg-gray-200 rounded-full">
+          <div className="absolute top-6 left-0 right-0 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
-              className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressBarColor()} ${
-                isAnimating ? 'animate-pulse' : ''
-              }`}
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressBarColor()}`}
               style={{ width: `${getProgressPercentage()}%` }}
             />
+            {isAnimating && (
+              <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_1.5s_ease-in-out_infinite]" />
+            )}
           </div>
           
           {/* Steps */}

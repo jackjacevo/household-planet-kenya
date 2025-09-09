@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import { useDelivery } from '@/hooks/useDelivery';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +14,7 @@ import { getImageUrl } from '@/lib/imageUtils';
 
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, savedForLater, updateQuantity, removeFromCart, saveForLater, moveToCart, getTotalPrice, cartData, isLoading } = useCart();
   const { calculateDeliveryCost, deliveryLocations } = useDelivery();
   const [promoCode, setPromoCode] = useState('');
@@ -530,7 +532,7 @@ export default function CartPage() {
                     };
                     
                     localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-                    window.location.href = '/checkout';
+                    router.push('/checkout');
                   }}
                 >
                   {isLoading ? '⏳ Loading...' : (deliveryCost === 0 && !manualDeliveryCost ? '⚠️ Add Delivery Cost' : '🛒 Proceed to Checkout')}

@@ -1,9 +1,11 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { PersistentDataSync } from '@/components/ui/PersistentDataSync'
+import { socketService } from '@/lib/socket'
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -22,6 +24,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    // Initialize WebSocket connection for real-time updates
+    socketService.connect()
+    
+    return () => {
+      socketService.disconnect()
+    }
+  }, [])
+
   return (
     <>
       <PersistentDataSync />

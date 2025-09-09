@@ -47,36 +47,36 @@ export default function TrackOrderPage() {
   useEffect(() => {
     const fetchOrderByTracking = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/simple-delivery/track/${trackingNumber}`);
+        // Try tracking by order number first (works for both authenticated and guest orders)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/track/${trackingNumber}`);
         
         if (response.ok) {
           const data = await response.json();
-          if (data.success) {
-            // Handle the current API structure
-            const orderData = {
-              id: data.data.order?.id || 0,
-              orderNumber: data.data.order?.orderNumber || '',
-              status: data.data.status,
-              trackingNumber: data.data.trackingNumber,
-              total: data.data.order?.total || 0,
-              deliveryLocation: data.data.order?.deliveryLocation || '',
-              createdAt: data.data.order?.createdAt || new Date().toISOString(),
-              items: data.data.order?.items || [],
-              statusHistory: data.data.statusHistory?.map(h => ({
-                status: h.status,
-                notes: h.notes,
-                createdAt: h.timestamp
-              })) || []
-            };
-            setOrder(orderData);
-          } else {
-            setError(data.message || 'Order not found');
-          }
+          // Handle the API response structure
+          const orderData = {
+            id: data.order?.id || 0,
+            orderNumber: data.order?.orderNumber || trackingNumber,
+            status: data.order?.status || 'PENDING',
+            trackingNumber: data.order?.trackingNumber || trackingNumber,
+            total: data.order?.total || 0,
+            deliveryLocation: data.order?.deliveryLocation || '',
+            createdAt: data.order?.createdAt || new Date().toISOString(),
+            items: data.order?.items || [],
+            statusHistory: data.statusHistory?.map(h => ({
+              status: h.status,
+              notes: h.description || h.notes || '',
+              createdAt: h.date || h.createdAt || new Date().toISOString()
+            })) || []
+          };
+          setOrder(orderData);
+        } else if (response.status === 404) {
+          setError('Order not found. Please check your order number or tracking number.');
         } else {
-          setError(response.status === 404 ? 'Order not found' : 'Unable to fetch order information');
+          setError('Unable to fetch order information. Please try again later.');
         }
       } catch (err) {
-        setError('Unable to fetch order information');
+        console.error('Tracking fetch error:', err);
+        setError('Unable to connect to our servers. Please check your internet connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -108,8 +108,13 @@ export default function TrackOrderPage() {
             We couldn't find an order with tracking number: <strong>{trackingNumber}</strong>
           </p>
           <div className="space-y-3">
-            <Link href="/account/orders">
+            <Link href="/guest-order-lookup">
               <Button className="w-full">
+                🔍 Look Up Order
+              </Button>
+            </Link>
+            <Link href="/account/orders">
+              <Button variant="outline" className="w-full">
                 View My Orders
               </Button>
             </Link>
