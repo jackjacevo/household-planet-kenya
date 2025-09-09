@@ -406,7 +406,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-900 truncate">
                       #{order.orderNumber}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500 truncate">{order.user.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">{order.user?.name || 'Guest Customer'}</p>
                     <p className="text-xs text-gray-400">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>

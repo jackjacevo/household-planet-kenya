@@ -48,12 +48,12 @@ interface OrderDetails {
   deliveryPrice?: number;
   source?: string;
   tags?: string;
-  user: {
+  user?: {
     id: number;
     name: string;
     email: string;
     phone?: string;
-  };
+  } | null;
   items: Array<{
     id: number;
     quantity: number;
@@ -724,65 +724,135 @@ export default function OrderDetailsPage() {
               <div className="space-y-2">
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Customer Name</label>
-                  <p className="font-medium text-gray-900">{order.user.name || 'N/A'}</p>
+                  <p className="font-medium text-gray-900">{(() => {
+                    if (order.user?.name) return order.user.name;
+                    try {
+                      const shippingAddr = JSON.parse(order.shippingAddress || '{}');
+                      return shippingAddr.fullName || 'Guest Customer';
+                    } catch {
+                      return 'Guest Customer';
+                    }
+                  })()}</p>
                 </div>
                 
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email Address</label>
                   <p className="text-sm font-medium text-blue-600">
-                    {order.user.email.endsWith('@whatsapp.temp') ? (
-                      <span className="flex items-center">
-                        <div className="w-4 h-4 mr-1">
-                          <WhatsAppIcon />
-                        </div>
-                        WhatsApp User
-                      </span>
-                    ) : (
-                      <a href={`mailto:${order.user.email}`} className="hover:underline">
-                        {order.user.email}
-                      </a>
-                    )}
+                    {(() => {
+                      const userEmail = order.user?.email;
+                      if (userEmail?.endsWith('@whatsapp.temp')) {
+                        return (
+                          <span className="flex items-center">
+                            <div className="w-4 h-4 mr-1">
+                              <WhatsAppIcon />
+                            </div>
+                            WhatsApp User
+                          </span>
+                        );
+                      }
+                      if (userEmail) {
+                        return (
+                          <a href={`mailto:${userEmail}`} className="hover:underline">
+                            {userEmail}
+                          </a>
+                        );
+                      }
+                      // Try to get email from shipping address for guest orders
+                      try {
+                        const shippingAddr = JSON.parse(order.shippingAddress || '{}');
+                        const guestEmail = shippingAddr.email;
+                        if (guestEmail && guestEmail.trim()) {
+                          return (
+                            <a href={`mailto:${guestEmail}`} className="hover:underline">
+                              {guestEmail}
+                            </a>
+                          );
+                        }
+                      } catch {}
+                      return <span className="text-gray-400 italic">Guest Order</span>;
+                    })()}
                   </p>
                 </div>
                 
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
-                  {order.user.phone ? (
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm font-medium text-gray-900">
-                        <a href={`tel:${order.user.phone}`} className="hover:underline">
-                          {order.user.phone}
-                        </a>
-                      </p>
-                      {order.user.phoneVerified && (
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          ✓ Verified
-                        </Badge>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic">No phone number provided</p>
-                  )}
+                  {(() => {
+                    const userPhone = order.user?.phone;
+                    if (userPhone) {
+                      return (
+                        <div className="flex items-center space-x-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            <a href={`tel:${userPhone}`} className="hover:underline">
+                              {userPhone}
+                            </a>
+                          </p>
+                          {order.user.phoneVerified && (
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              ✓ Verified
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    }
+                    // Try to get phone from shipping address for guest orders
+                    try {
+                      const shippingAddr = JSON.parse(order.shippingAddress || '{}');
+                      const guestPhone = shippingAddr.phone;
+                      if (guestPhone && guestPhone.trim()) {
+                        return (
+                          <div className="flex items-center space-x-2">
+                            <p className="text-sm font-medium text-gray-900">
+                              <a href={`tel:${guestPhone}`} className="hover:underline">
+                                {guestPhone}
+                              </a>
+                            </p>
+                            <Badge className="bg-blue-100 text-blue-800 text-xs">
+                              Guest
+                            </Badge>
+                          </div>
+                        );
+                      }
+                    } catch {}
+                    return <p className="text-sm text-gray-400 italic">No phone number provided</p>;
+                  })()}
                 </div>
               </div>
               
               <div className="flex space-x-2 pt-2 border-t">
-                {order.user.phone && (
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={`tel:${order.user.phone}`}>
-                      <Phone className="h-4 w-4 mr-1" />
-                      Call Customer
-                    </a>
-                  </Button>
-                )}
-                {!order.user.email.endsWith('@whatsapp.temp') && (
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={`mailto:${order.user.email}`}>
-                      <Mail className="h-4 w-4 mr-1" />
-                      Email
-                    </a>
-                  </Button>
-                )}
+                {(() => {
+                  let phone = order.user?.phone;
+                  let email = order.user?.email;
+                  
+                  // Get contact info from shipping address for guest orders
+                  if (!phone || !email) {
+                    try {
+                      const shippingAddr = JSON.parse(order.shippingAddress || '{}');
+                      phone = phone || shippingAddr.phone;
+                      email = email || shippingAddr.email;
+                    } catch {}
+                  }
+                  
+                  return (
+                    <>
+                      {phone && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={`tel:${phone}`}>
+                            <Phone className="h-4 w-4 mr-1" />
+                            Call Customer
+                          </a>
+                        </Button>
+                      )}
+                      {email && !email.endsWith('@whatsapp.temp') && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={`mailto:${email}`}>
+                            <Mail className="h-4 w-4 mr-1" />
+                            Email
+                          </a>
+                        </Button>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -813,9 +883,9 @@ export default function OrderDetailsPage() {
                     <div>
                       <h4 className="font-medium mb-2">Shipping Address</h4>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>Name:</strong> {order.user.name || address.fullName}</p>
-                        {order.user.phone && <p><strong>Phone:</strong> {order.user.phone}</p>}
-                        {order.user.email && <p><strong>Email:</strong> {order.user.email}</p>}
+                        <p><strong>Name:</strong> {order.user?.name || address.fullName}</p>
+                        {order.user?.phone && <p><strong>Phone:</strong> {order.user.phone}</p>}
+                        {order.user?.email && <p><strong>Email:</strong> {order.user.email}</p>}
                         <p><strong>Address:</strong> {address.street}, {address.town}, {address.county}</p>
                       </div>
                     </div>

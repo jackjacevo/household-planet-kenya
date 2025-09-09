@@ -40,11 +40,11 @@ interface Order {
   createdAt: string;
   trackingNumber?: string;
   priority: string;
-  user: {
+  user?: {
     name: string;
     email: string;
     phone?: string;
-  };
+  } | null;
   items: Array<{
     id: number;
     quantity: number;
@@ -783,6 +783,468 @@ export default function AdminOrdersPage() {
     return receiptHTML;
   };
 
+  const exportOrdersStatement = () => {
+    console.log('Export button clicked!');
+    console.log('Orders data:', orders);
+    console.log('Stats data:', stats);
+    
+    try {
+      const statementHTML = generateOrdersStatementHTML();
+      console.log('Statement HTML generated successfully');
+      
+      const statementWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes');
+      if (statementWindow) {
+        statementWindow.document.write(statementHTML);
+        statementWindow.document.close();
+        console.log('Statement window opened successfully');
+      } else {
+        console.error('Failed to open popup window - popup blocked?');
+        showToast({
+          title: 'Popup Blocked',
+          description: 'Please allow popups for this site to export the statement.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error generating statement:', error);
+      showToast({
+        title: 'Error',
+        description: `Failed to generate statement: ${error.message}`,
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const generateOrdersStatementHTML = () => {
+    const currentDate = new Date();
+    const dateRange = `${new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toLocaleDateString('en-GB')} - ${currentDate.toLocaleDateString('en-GB')}`;
+    
+    // Calculate analytics
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+    const statusBreakdown = orders.reduce((acc, order) => {
+      acc[order.status] = (acc[order.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const paymentMethodBreakdown = orders.reduce((acc, order) => {
+      const method = order.paymentMethod || 'Unknown';
+      acc[method] = (acc[method] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topCustomers = orders
+      .filter(order => order.user?.name)
+      .reduce((acc, order) => {
+        const customerName = order.user!.name;
+        if (!acc[customerName]) {
+          acc[customerName] = { count: 0, total: 0 };
+        }
+        acc[customerName].count += 1;
+        acc[customerName].total += order.total;
+        return acc;
+      }, {} as Record<string, { count: number; total: number }>);
+
+    const sortedCustomers = Object.entries(topCustomers)
+      .sort(([,a], [,b]) => b.total - a.total)
+      .slice(0, 5);
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Orders Management Statement - ${currentDate.toLocaleDateString('en-GB')}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          @page {
+            size: A4;
+            margin: 20mm;
+          }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            background: #ffffff;
+          }
+          .statement-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            min-height: 297mm;
+          }
+          .header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 12px;
+          }
+          .company-name {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+          }
+          .statement-title {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 500;
+          }
+          .statement-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #16a34a;
+          }
+          .meta-item h3 {
+            font-size: 14px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 600;
+          }
+          .meta-item p {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+          }
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+          }
+          .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+          .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #16a34a;
+            margin-bottom: 8px;
+          }
+          .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+          }
+          .section {
+            margin-bottom: 40px;
+          }
+          .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #16a34a;
+          }
+          .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+          }
+          .breakdown-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+          }
+          .breakdown-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+          }
+          .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          .breakdown-item:last-child {
+            border-bottom: none;
+          }
+          .breakdown-label {
+            font-weight: 500;
+            color: #475569;
+          }
+          .breakdown-value {
+            font-weight: 700;
+            color: #1e293b;
+          }
+          .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          .orders-table th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .orders-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+          }
+          .orders-table tr:hover {
+            background: #f8fafc;
+          }
+          .status-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .status-pending { background: #fef3c7; color: #92400e; }
+          .status-confirmed { background: #dbeafe; color: #1e40af; }
+          .status-processing { background: #e9d5ff; color: #7c3aed; }
+          .status-shipped { background: #c7d2fe; color: #4338ca; }
+          .status-delivered { background: #d1fae5; color: #065f46; }
+          .status-cancelled { background: #fee2e2; color: #dc2626; }
+          .footer {
+            margin-top: 50px;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+          }
+          .footer-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #16a34a;
+            margin-bottom: 8px;
+          }
+          .footer-subtitle {
+            color: #64748b;
+            font-size: 14px;
+          }
+          .print-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+          }
+          .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+          }
+          .btn-primary {
+            background: #16a34a;
+            color: white;
+          }
+          .btn-primary:hover {
+            background: #15803d;
+          }
+          .btn-secondary {
+            background: #3b82f6;
+            color: white;
+          }
+          .btn-secondary:hover {
+            background: #2563eb;
+          }
+          @media print {
+            .print-controls { display: none !important; }
+            body { background: white !important; }
+            .statement-container { 
+              box-shadow: none !important;
+              max-width: none !important;
+              margin: 0 !important;
+            }
+            .header {
+              background: #16a34a !important;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .stat-card:hover {
+              transform: none !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-controls">
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print Statement</button>
+          <button class="btn btn-secondary" onclick="downloadStatement()">📄 Download PDF</button>
+        </div>
+        
+        <div class="statement-container">
+          <div class="header">
+            <div class="company-name">Household Planet Kenya</div>
+            <div class="statement-title">Orders Management Statement</div>
+          </div>
+          
+          <div class="statement-meta">
+            <div class="meta-item">
+              <h3>Report Period</h3>
+              <p>${dateRange}</p>
+            </div>
+            <div class="meta-item">
+              <h3>Generated On</h3>
+              <p>${currentDate.toLocaleDateString('en-GB')} at ${currentDate.toLocaleTimeString('en-GB')}</p>
+            </div>
+            <div class="meta-item">
+              <h3>Total Orders</h3>
+              <p>${orders.length}</p>
+            </div>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">KSh ${totalRevenue.toLocaleString()}</div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">KSh ${avgOrderValue.toLocaleString()}</div>
+              <div class="stat-label">Average Order Value</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${stats.deliveredOrders}</div>
+              <div class="stat-label">Delivered Orders</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${stats.pendingOrders}</div>
+              <div class="stat-label">Pending Orders</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-grid">
+            <div class="breakdown-card">
+              <div class="breakdown-title">Order Status Breakdown</div>
+              ${Object.entries(statusBreakdown).map(([status, count]) => `
+                <div class="breakdown-item">
+                  <span class="breakdown-label">${status}</span>
+                  <span class="breakdown-value">${count}</span>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="breakdown-card">
+              <div class="breakdown-title">Payment Methods</div>
+              ${Object.entries(paymentMethodBreakdown).map(([method, count]) => `
+                <div class="breakdown-item">
+                  <span class="breakdown-label">${method === 'MPESA' ? 'M-Pesa' : method === 'CASH_ON_DELIVERY' ? 'Cash on Delivery' : method}</span>
+                  <span class="breakdown-value">${count}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          ${sortedCustomers.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Top Customers</div>
+              <div class="breakdown-card">
+                ${sortedCustomers.map(([name, data]) => `
+                  <div class="breakdown-item">
+                    <span class="breakdown-label">${name} (${data.count} orders)</span>
+                    <span class="breakdown-value">KSh ${data.total.toLocaleString()}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="section">
+            <div class="section-title">Recent Orders</div>
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders.slice(0, 20).map(order => `
+                  <tr>
+                    <td><strong>${order.orderNumber}</strong></td>
+                    <td>${order.user?.name || 'Guest Customer'}</td>
+                    <td><span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span></td>
+                    <td><strong>KSh ${order.total.toLocaleString()}</strong></td>
+                    <td>${new Date(order.createdAt).toLocaleDateString('en-GB')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${orders.length > 20 ? `<p style="text-align: center; color: #64748b; font-style: italic;">Showing 20 of ${orders.length} orders</p>` : ''}
+          </div>
+          
+          <div class="footer">
+            <div class="footer-title">Household Planet Kenya</div>
+            <div class="footer-subtitle">Modern E-commerce Solutions • Generated automatically</div>
+          </div>
+        </div>
+        
+        <script>
+          function downloadStatement() {
+            const statementContent = document.querySelector('.statement-container').outerHTML;
+            const styles = document.querySelector('style').innerHTML;
+            const printHTML = '<!DOCTYPE html><html><head><title>Orders Statement - ${currentDate.toLocaleDateString('en-GB')}</title><meta charset="UTF-8"><style>' + styles + '.statement-container { margin: 20px auto; } .print-controls { display: none !important; }</style></head><body>' + statementContent + '</body></html>';
+            
+            const blob = new Blob([printHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'orders-statement-${currentDate.toISOString().split('T')[0]}.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+  };
+
   const triggerSTKPush = async (orderId: number, phoneNumber: string) => {
     if (!phoneNumber.trim()) {
       showToast({
@@ -915,9 +1377,14 @@ export default function AdminOrdersPage() {
               </DialogContent>
             </Dialog>
           )}
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full sm:w-auto"
+            onClick={exportOrdersStatement}
+          >
             <Download className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">Export Statement</span>
             <span className="sm:hidden">Export</span>
           </Button>
         </div>
@@ -1076,8 +1543,8 @@ export default function AdminOrdersPage() {
                     <TableCell>{returnReq.order.orderNumber}</TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{returnReq.order.user.name}</div>
-                        <div className="text-sm text-gray-500">{returnReq.order.user.email}</div>
+                        <div className="font-medium">{returnReq.order.user?.name || 'Guest Customer'}</div>
+                        <div className="text-sm text-gray-500">{returnReq.order.user?.email || 'Guest Order'}</div>
                       </div>
                     </TableCell>
                     <TableCell>{returnReq.reason}</TableCell>
@@ -1173,11 +1640,11 @@ export default function AdminOrdersPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium text-sm">{order.user.name}</div>
+                            <div className="font-medium text-sm">{order.user?.name || 'Guest Customer'}</div>
                             <div className="text-xs text-blue-600 font-medium">
-                              {order.user.email.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user.email}
+                              {order.user?.email?.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user?.email || 'Guest Order'}
                             </div>
-                            {order.user.phone && (
+                            {order.user?.phone && (
                               <div className="text-xs text-gray-500 hidden sm:block">{order.user.phone}</div>
                             )}
                           </div>
@@ -1243,7 +1710,7 @@ export default function AdminOrdersPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: order.user.phone || '' })}
+                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: order.user?.phone || '' })}
                                   disabled={actionLoading[`stk-${order.id}`]}
                                   title="Send M-Pesa STK Push"
                                   className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 p-2"
@@ -1343,7 +1810,7 @@ export default function AdminOrdersPage() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                   <div className="flex items-center space-x-2">
                     <Smartphone className="h-4 w-4 text-green-600" />
-                    <span className="font-medium text-green-800">{stkPushDialog.phone}</span>
+                    <span className="font-medium text-green-800">{stkPushDialog.phone || 'No phone'}</span>
                   </div>
                   <p className="text-xs text-green-600 mt-1">
                     ✅ Phone number available - ready to send payment prompt
