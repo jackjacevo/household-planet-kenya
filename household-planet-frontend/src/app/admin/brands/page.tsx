@@ -192,62 +192,54 @@ export default function AdminBrandsPage() {
       )}
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <h3 className="text-lg font-medium mb-4">
-            {editingBrand ? 'Edit Brand' : 'Add Brand'}
-          </h3>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
-              <input
-                type="text"
-                value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
-              <input
-                type="url"
-                value={formData.logo}
-                onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loading}
-              />
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                className="mr-2"
-                disabled={loading}
-              />
-              <label className="text-sm font-medium text-gray-700">Active</label>
-            </div>
-            <div className="md:col-span-2 flex gap-2">
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : editingBrand ? 'Update Brand' : 'Create Brand'}
-              </Button>
-              <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white max-w-2xl w-full mx-4 p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              {editingBrand ? 'Edit Brand' : 'Add Brand'}
+            </h3>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="mr-2"
+                  disabled={loading}
+                />
+                <label className="text-sm font-medium text-gray-700">Active</label>
+              </div>
+              <div className="md:col-span-2 flex gap-2">
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Saving...' : editingBrand ? 'Update Brand' : 'Create Brand'}
+                </Button>
+                <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

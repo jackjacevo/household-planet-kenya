@@ -336,18 +336,32 @@ export default function ProductsPage() {
                       </span>
                     </div>
                     
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="lg:hidden flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 min-h-[44px] text-sm sm:text-base"
-                    >
-                      <Filter className="h-4 w-4" />
-                      <span>Filters</span>
-                      {Object.values(filters).some(v => v !== undefined && v !== '' && v !== false) && (
-                        <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-medium">
-                          {Object.values(filters).filter(v => v !== undefined && v !== '' && v !== false).length}
-                        </span>
+                    <div className="flex items-center space-x-2">
+                      {filters.category && (
+                        <button
+                          onClick={() => {
+                            setFilters(prev => ({ ...prev, category: undefined }));
+                            setCurrentPage(1);
+                          }}
+                          className="flex items-center space-x-2 px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm border border-orange-200 ml-4"
+                        >
+                          <span>Clear Category Filter</span>
+                          <X className="h-4 w-4" />
+                        </button>
                       )}
-                    </button>
+                      <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="lg:hidden flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 min-h-[44px] text-sm sm:text-base"
+                      >
+                        <Filter className="h-4 w-4" />
+                        <span>Filters</span>
+                        {Object.values(filters).some(v => v !== undefined && v !== '' && v !== false) && (
+                          <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-medium">
+                            {Object.values(filters).filter(v => v !== undefined && v !== '' && v !== false).length}
+                          </span>
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 flex-shrink-0">

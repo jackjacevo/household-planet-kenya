@@ -562,6 +562,7 @@ export default function OrderConfirmationPage() {
                             })())}
                             alt={item.product.name}
                             fill
+                            sizes="80px"
                             className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-200"
                           />
                         </div>
@@ -758,7 +759,13 @@ export default function OrderConfirmationPage() {
                   <div className="border-t border-green-200 pt-3">
                     <div className="flex justify-between">
                       <span className="text-lg font-bold text-gray-800">Total Amount</span>
-                      <span className="text-2xl font-bold text-green-600">{formatPrice(order.total)}</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        {formatPrice(
+                          order.subtotal - 
+                          (order.discountAmount || 0) + 
+                          (order.deliveryPrice || order.shippingCost || 0)
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>

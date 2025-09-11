@@ -144,7 +144,7 @@ export function UserProfile() {
           </div>
 
           {/* Admin section */}
-          {isAdmin() && (
+          {user && isAdmin() && (
             <>
               <div className="border-t my-2"></div>
               <div className="py-2">

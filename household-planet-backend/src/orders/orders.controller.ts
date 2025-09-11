@@ -156,6 +156,11 @@ export class OrdersController {
   @UseGuards(AuthGuard('jwt'))
   async create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
     try {
+      console.log('Order creation request:', {
+        userId: req.user?.id,
+        orderData: createOrderDto
+      });
+      
       // Check if user is authenticated
       if (req.user?.id) {
         // Authenticated user
@@ -165,7 +170,9 @@ export class OrdersController {
         return await this.ordersService.createGuestOrder(createOrderDto);
       }
     } catch (error) {
-      console.error('Order creation error:', error);
+      console.error('Order creation error:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Order DTO:', createOrderDto);
       throw error;
     }
   }
@@ -173,9 +180,12 @@ export class OrdersController {
   @Post('guest')
   async createGuestOrder(@Body() createOrderDto: CreateOrderDto) {
     try {
+      console.log('Guest order creation request:', createOrderDto);
       return await this.ordersService.createGuestOrder(createOrderDto);
     } catch (error) {
-      console.error('Guest order creation error:', error);
+      console.error('Guest order creation error:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Order DTO:', createOrderDto);
       throw error;
     }
   }

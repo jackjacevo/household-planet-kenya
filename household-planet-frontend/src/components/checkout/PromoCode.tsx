@@ -32,11 +32,25 @@ export function PromoCode({
     setError('');
     
     try {
-      // TODO: Replace with actual API call to validate promo code
-      // const response = await api.validatePromoCode(promoCode, subtotal);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          orderAmount: subtotal
+        })
+      });
       
-      // For now, show message that no promo codes are available
-      setError('No promo codes are currently available');
+      const data = await response.json();
+      
+      if (response.ok && data.valid) {
+        onPromoApplied(data.discount, promoCode.trim());
+        setPromoCode('');
+      } else {
+        setError(data.message || 'Invalid promo code');
+      }
     } catch (err) {
       setError('Failed to apply promo code. Please try again.');
     } finally {

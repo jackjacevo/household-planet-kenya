@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DeliveryLocationsService } from './delivery-locations.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 export interface DeliveryLocation {
   id: string;
@@ -14,7 +15,10 @@ export interface DeliveryLocation {
 
 @Injectable()
 export class DeliveryService {
-  constructor(private deliveryLocationsService: DeliveryLocationsService) {}
+  constructor(
+    private deliveryLocationsService: DeliveryLocationsService,
+    private prisma: PrismaService
+  ) {}
 
   private readonly fallbackLocations: DeliveryLocation[] = [
     // Tier 1 - Ksh 100-200
@@ -189,5 +193,74 @@ export class DeliveryService {
       { id: 'AFTERNOON', label: 'Afternoon Delivery', hours: '12:00 PM - 5:00 PM' },
       { id: 'EVENING', label: 'Evening Delivery', hours: '5:00 PM - 8:00 PM' },
     ];
+  }
+
+  async getAdminDeliveries() {
+    try {
+      const orders = await this.prisma.order.findMany({
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true
+            }
+          },
+          items: {
+            include: {
+              product: {
+                select: {
+                  name: true,
+                  price: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+
+      const deliveries = orders.map(order => {
+        let address = order.deliveryLocation || 'N/A';
+        if (!address || address === 'N/A') {
+          if (order.shippingAddress) {
+            try {
+              const parsed = JSON.parse(order.shippingAddress);
+              const parts = [parsed.street, parsed.town, parsed.county].filter(Boolean);
+              address = parts.length > 0 ? parts.join(', ') : order.shippingAddress;
+            } catch {
+              address = order.shippingAddress;
+            }
+          }
+        }
+
+        return {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customerName: order.user?.name || 'Unknown',
+          customerPhone: order.user?.phone || 'N/A',
+          shippingAddress: address,
+          status: order.status,
+          estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          trackingNumber: order.trackingNumber || null,
+          total: order.total || 0
+        };
+      });
+
+      return {
+        success: true,
+        data: deliveries
+      };
+    } catch (error) {
+      console.error('Error fetching admin deliveries:', error);
+      return {
+        success: false,
+        data: [],
+        error: 'Failed to fetch deliveries'
+      };
+    }
   }
 }

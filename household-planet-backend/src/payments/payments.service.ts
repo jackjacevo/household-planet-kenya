@@ -597,58 +597,101 @@ export class PaymentsService {
   }
 
   async generateReceipt(orderId: number) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: true,
-        items: { 
-          include: { 
-            product: { select: { name: true, images: true } },
-            variant: { select: { name: true } }
-          } 
-        },
-        paymentTransactions: { 
-          where: { status: 'COMPLETED' },
-          orderBy: { createdAt: 'desc' }
+    try {
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: true,
+          items: { 
+            include: { 
+              product: { select: { name: true, images: true } },
+              variant: { select: { name: true } }
+            } 
+          },
+          paymentTransactions: { 
+            where: { status: 'COMPLETED' },
+            orderBy: { createdAt: 'desc' }
+          }
         }
+      });
+
+      if (!order) {
+        throw new Error('Order not found');
       }
-    });
+      
+      if (!order.paymentTransactions || order.paymentTransactions.length === 0) {
+        // Generate receipt for any order - treat order total as paid amount
+        const syntheticPayment = {
+          provider: order.paymentMethod || 'CASH',
+          phoneNumber: order.user?.phone || 'N/A',
+          amount: order.total,
+          mpesaReceiptNumber: null,
+          checkoutRequestId: `ORDER-${order.orderNumber}`,
+          transactionDate: order.updatedAt,
+          createdAt: order.updatedAt
+        };
+        
+        return this.generateReceiptFromOrder(order, syntheticPayment);
+      }
 
-    if (!order) throw new Error('Order not found');
-    if (!order.paymentTransactions.length) throw new Error('No completed payments found');
+      const latestPayment = order.paymentTransactions[0];
+      return this.generateReceiptFromOrder(order, latestPayment);
+    } catch (error) {
+      this.logger.error(`Error generating receipt for order ${orderId}:`, error);
+      throw new Error(`Failed to generate receipt: ${error.message}`);
+    }
+  }
 
-    const latestPayment = order.paymentTransactions[0];
+  private generateReceiptFromOrder(order: any, payment: any) {
+    // Calculate subtotal from order items if not available
+    const calculatedSubtotal = order.items.reduce((sum, item) => {
+      return sum + (Number(item.price) * item.quantity);
+    }, 0);
+    
+    const subtotal = order.subtotal ? Number(order.subtotal) : calculatedSubtotal;
+    const discountAmount = Number(order.discountAmount || 0);
+    const shipping = Number(order.deliveryPrice || order.shippingCost || 0);
+    const total = Number(order.total);
     
     return {
       receiptNumber: `RCP-${order.orderNumber}-${Date.now()}`,
       orderNumber: order.orderNumber,
       date: new Date().toISOString(),
-      paymentDate: latestPayment.transactionDate || latestPayment.createdAt,
+      paymentDate: payment.transactionDate || payment.createdAt,
       customer: {
-        name: order.user.name,
-        email: order.user.email,
-        phone: order.user.phone || latestPayment.phoneNumber
+        name: order.user?.name || 'Guest Customer',
+        email: order.user?.email || 'guest@example.com',
+        phone: order.user?.phone || payment.phoneNumber || 'N/A'
       },
-      items: order.items.map(item => ({
-        name: item.product.name,
-        variant: item.variant?.name,
+      items: order.items && order.items.length > 0 ? order.items.map(item => ({
+        name: item.product?.name || 'Unknown Product',
+        variant: item.variant?.name || null,
         quantity: item.quantity,
         unitPrice: Number(item.price),
         total: Number(item.price) * item.quantity,
-        image: item.product.images
-      })),
+        image: item.product?.images || null
+      })) : [{
+        name: 'Service/Product',
+        variant: null,
+        quantity: 1,
+        unitPrice: total,
+        total: total,
+        image: null
+      }],
       payment: {
-        method: latestPayment.provider === 'MPESA' ? 'M-Pesa' : latestPayment.provider,
-        phoneNumber: latestPayment.phoneNumber,
-        amount: Number(latestPayment.amount),
-        mpesaCode: latestPayment.mpesaReceiptNumber,
-        transactionId: latestPayment.checkoutRequestId
+        method: payment.provider === 'MPESA' ? 'M-Pesa' : payment.provider,
+        phoneNumber: payment.phoneNumber || 'N/A',
+        amount: Number(payment.amount),
+        mpesaCode: payment.mpesaReceiptNumber || null,
+        transactionId: payment.checkoutRequestId || 'N/A'
       },
       totals: {
-        subtotal: Number(order.subtotal || order.total),
-        shipping: Number(order.shippingCost || 0),
-        total: Number(order.total)
+        subtotal,
+        discount: discountAmount,
+        shipping,
+        total
       },
+      promoCode: order.promoCode || null,
       company: {
         name: 'Household Planet Kenya',
         phone: '+254790227760',

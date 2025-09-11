@@ -41,7 +41,7 @@ export function useDelivery(): DeliveryInfo & {
         
         // Try to fetch from backend API first
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/delivery/locations`);
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delivery/locations`);
           if (response.ok) {
             const data = await response.json();
             const backendLocations = data.data || data;

@@ -54,7 +54,7 @@ export default function PromoCodesPage() {
   const fetchPromoCodes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/promo-codes?search=${searchTerm}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes?search=${searchTerm}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -74,8 +74,8 @@ export default function PromoCodesPage() {
     try {
       const token = localStorage.getItem('token');
       const url = editingCode 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/promo-codes/${editingCode.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/promo-codes`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/${editingCode.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes`;
       
       const method = editingCode ? 'PATCH' : 'POST';
       
@@ -111,7 +111,7 @@ export default function PromoCodesPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/promo-codes/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

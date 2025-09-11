@@ -100,8 +100,9 @@ export default function AdminOrdersPage() {
   const [returns, setReturns] = useState([]);
   const [showReturns, setShowReturns] = useState(false);
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
-  const [stkPushDialog, setStkPushDialog] = useState<{ open: boolean; orderId: number | null; phone: string }>({ open: false, orderId: null, phone: '' });
-  const [phoneInput, setPhoneInput] = useState('');
+  // STK Push temporarily disabled
+  // const [stkPushDialog, setStkPushDialog] = useState<{ open: boolean; orderId: number | null; phone: string }>({ open: false, orderId: null, phone: '' });
+  // const [phoneInput, setPhoneInput] = useState('');
 
 
 
@@ -418,11 +419,16 @@ export default function AdminOrdersPage() {
 
   const viewReceipt = async (orderId: number) => {
     try {
+      // Generate receipt for any order
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${orderId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       
-      if (!response.ok) throw new Error('Failed to generate receipt');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to generate receipt');
+      }
       
       const receiptData = await response.json();
       const receiptHTML = generateReceiptHTML(receiptData);
@@ -431,12 +437,18 @@ export default function AdminOrdersPage() {
       if (receiptWindow) {
         receiptWindow.document.write(receiptHTML);
         receiptWindow.document.close();
+      } else {
+        showToast({
+          title: 'Popup Blocked',
+          description: 'Please allow popups to view the receipt.',
+          variant: 'destructive'
+        });
       }
     } catch (error) {
       console.error('Error viewing receipt:', error);
       showToast({
         title: 'Error',
-        description: 'Failed to load receipt. Please try again.',
+        description: error.message || 'Failed to load receipt. Please try again.',
         variant: 'destructive'
       });
     }
@@ -728,6 +740,12 @@ export default function AdminOrdersPage() {
                 <span class="total-label">Subtotal</span>
                 <span class="total-value">KSh ${receipt.totals.subtotal.toLocaleString()}</span>
               </div>
+              ${receipt.totals.discount > 0 ? `
+                <div class="total-row">
+                  <span class="total-label">Discount${receipt.promoCode ? ` (${receipt.promoCode})` : ''}</span>
+                  <span class="total-value" style="color: #16a34a;">-KSh ${receipt.totals.discount.toLocaleString()}</span>
+                </div>
+              ` : ''}
               ${receipt.totals.shipping > 0 ? `
                 <div class="total-row">
                   <span class="total-label">Delivery</span>
@@ -1245,6 +1263,8 @@ export default function AdminOrdersPage() {
     `;
   };
 
+  // STK Push function temporarily disabled
+  /*
   const triggerSTKPush = async (orderId: number, phoneNumber: string) => {
     if (!phoneNumber.trim()) {
       showToast({
@@ -1296,6 +1316,7 @@ export default function AdminOrdersPage() {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
+  */
 
   const toggleOrderSelection = (orderId: number) => {
     setSelectedOrders(prev => 
@@ -1671,6 +1692,11 @@ export default function AdminOrdersPage() {
                             <div className="text-xs text-gray-500">
                               Subtotal: KSh {order.subtotal?.toLocaleString() || order.total.toLocaleString()}
                             </div>
+                            {order.promoCode && order.discountAmount > 0 && (
+                              <div className="text-xs text-green-600">
+                                Promo ({order.promoCode}): -KSh {order.discountAmount.toLocaleString()}
+                              </div>
+                            )}
                             <div className="text-xs text-gray-400">
                               Delivery: KSh {(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}
                             </div>
@@ -1678,7 +1704,12 @@ export default function AdminOrdersPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <span className="font-bold text-sm">KSh {order.total.toLocaleString()}</span>
+                            <span className="font-bold text-sm">KSh {(order.subtotal - (order.discountAmount || 0) + (order.deliveryPrice || order.shippingCost || 0)).toLocaleString()}</span>
+                            {order.promoCode && order.discountAmount > 0 && (
+                              <div className="text-xs text-green-600 sm:hidden">
+                                Promo: -KSh {order.discountAmount.toLocaleString()}
+                              </div>
+                            )}
                             {order.deliveryPrice && order.deliveryPrice !== order.shippingCost && (
                               <div className="text-xs text-gray-500 hidden sm:block">
                                 +KSh {order.deliveryPrice.toLocaleString()} delivery
@@ -1700,13 +1731,16 @@ export default function AdminOrdersPage() {
                         <TableCell>
                           <div className="flex flex-col sm:flex-row gap-1 sm:gap-1">
                             <div className="flex gap-1">
-                              <Link href={`/admin/orders/${order.id}`}>
-                                <Button variant="outline" size="sm" title="View Order Details" className="p-2">
-                                  <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                                </Button>
-                              </Link>
+                              {order.id && (
+                                <Link href={`/admin/orders/${order.id}`}>
+                                  <Button variant="outline" size="sm" title="View Order Details" className="p-2">
+                                    <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  </Button>
+                                </Link>
+                              )}
 
-                              {order.status === 'CONFIRMED' && (
+                              {/* STK Push temporarily disabled */}
+                              {/* {order.status === 'CONFIRMED' && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1721,8 +1755,8 @@ export default function AdminOrdersPage() {
                                     <Smartphone className="h-3 w-3 sm:h-4 sm:w-4" />
                                   )}
                                 </Button>
-                              )}
-                              {order.status === 'DELIVERED' && (
+                              )} */}
+                              {order.id && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1789,7 +1823,8 @@ export default function AdminOrdersPage() {
         </CardContent>
       </Card>
 
-      {/* STK Push Dialog */}
+      {/* STK Push Dialog - temporarily disabled */}
+      {/*
       <Dialog open={stkPushDialog.open} onOpenChange={(open) => {
         if (!open) {
           setStkPushDialog({ open: false, orderId: null, phone: '' });
@@ -1869,6 +1904,7 @@ export default function AdminOrdersPage() {
           </div>
         </DialogContent>
       </Dialog>
+      */}
     </div>
   );
 }

@@ -231,17 +231,18 @@ export default function AdminCategoriesPage() {
         <div className="flex gap-2">
           <Button onClick={() => { setShowForm(true); clearMessages(); }} disabled={loading}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Category
+            Add Parent Category
           </Button>
           <Button 
             onClick={() => { 
-              setFormData({ name: '', slug: '', description: '', image: '', parentId: '', isActive: true });
+              setFormData({ name: '', slug: '', description: '', image: '', parentId: '1', isActive: true });
               setEditingCategory(null);
               setShowForm(true);
               clearMessages();
             }} 
             disabled={loading}
             variant="outline"
+            className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Subcategory
@@ -277,126 +278,74 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* Category Form */}
+      {/* Category Form Modal */}
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <h3 className="text-lg font-medium mb-4">
-            {editingCategory ? 'Edit Category' : formData.parentId ? `Add Subcategory to ${categories.find(c => c.id === parseInt(formData.parentId))?.name || 'Parent'}` : 'Add Category'}
-          </h3>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
-              <input
-                type="text"
-                value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                disabled={loading}
-              />
-            </div>
-            {!formData.parentId && (
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
-                <div className="flex items-start space-x-4">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors flex-1">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                      className="hidden"
-                      id="image-upload"
-                      disabled={loading || uploading}
-                    />
-                    <label htmlFor="image-upload" className="cursor-pointer">
-                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">
-                        {uploading ? 'Uploading...' : 'Click to upload image'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
-                    </label>
-                  </div>
-                  {formData.image && (
-                    <div className="relative w-32 h-32">
-                      <Image
-                        src={formData.image}
-                        alt="Category preview"
-                        fill
-                        sizes="128px"
-                        className="object-cover rounded-md border"
-                        loading="eager"
-                        placeholder="blur"
-                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                        onLoad={() => console.log('Image loaded successfully:', formData.image)}
-                        onError={(e) => console.error('Image failed to load:', formData.image, e)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        disabled={loading || uploading}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`max-w-2xl w-full mx-4 p-6 rounded-lg shadow-lg ${
+            formData.parentId ? 'bg-blue-50 border border-blue-200' : 'bg-white'
+          }`}>
+            <h3 className={`text-lg font-medium mb-4 ${
+              formData.parentId ? 'text-blue-800' : 'text-gray-900'
+            }`}>
+              {editingCategory ? 'Edit Category' : formData.parentId ? 'Add Subcategory' : 'Add Parent Category'}
+            </h3>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={loading}
+                />
               </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
-              <select
-                value={formData.parentId}
-                onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loading}
-              >
-                <option value="">No Parent</option>
-                {categories.filter(c => c.id !== editingCategory?.id && !c.parentId).map(category => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                className="mr-2"
-                disabled={loading}
-              />
-              <label className="text-sm font-medium text-gray-700">Active</label>
-            </div>
-            <div className="md:col-span-2 flex gap-2">
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
-              </Button>
-              <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
+                <select
+                  value={formData.parentId}
+                  onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                >
+                  <option value="">No Parent</option>
+                  {categories.filter(c => c.id !== editingCategory?.id && !c.parentId).map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="mr-2"
+                  disabled={loading}
+                />
+                <label className="text-sm font-medium text-gray-700">Active</label>
+              </div>
+              <div className="md:col-span-2 flex gap-2">
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
+                </Button>
+                <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

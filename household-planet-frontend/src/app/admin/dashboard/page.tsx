@@ -70,8 +70,9 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
     
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`,
+      `${apiUrl}/api/admin/dashboard`,
       { headers: { 'Authorization': `Bearer ${token}` } }
     );
     return response.data;
@@ -445,8 +446,9 @@ export default function AdminDashboard() {
                   <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <img
                       className="h-8 w-8 sm:h-10 sm:w-10 rounded object-cover"
-                      src={product.images[0] || '/images/products/placeholder.svg'}
+                      src={(product.images && product.images.length > 0 && product.images[0] && !product.images[0].includes('[')) ? product.images[0] : '/images/products/placeholder.svg'}
                       alt={product.name}
+                      onError={(e) => { e.currentTarget.src = '/images/products/placeholder.svg'; }}
                     />
                   </div>
                   <div className="ml-3 sm:ml-4 flex-1 min-w-0">

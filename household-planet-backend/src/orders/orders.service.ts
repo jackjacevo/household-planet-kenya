@@ -5,7 +5,7 @@ import { CustomersService } from '../customers/customers.service';
 import { LoyaltyService } from '../customers/loyalty.service';
 import { ShippingService } from './shipping.service';
 import { OrderIdService } from './order-id.service';
-import { PromoCodesService } from '../promo-codes/promo-codes.service';
+// import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOrderDto, UpdateOrderStatusDto, CreateReturnDto, BulkOrderUpdateDto, OrderFilterDto, AddOrderNoteDto, SendCustomerEmailDto, ProcessReturnDto } from './dto/order.dto';
 import { OrderStatus } from '../common/enums';
@@ -44,7 +44,7 @@ export class OrdersService {
     private loyaltyService: LoyaltyService,
     private shippingService: ShippingService,
     private orderIdService: OrderIdService,
-    private promoCodesService: PromoCodesService,
+    // private promoCodesService: PromoCodesService,
     private notificationsService: NotificationsService
   ) {}
 
@@ -346,15 +346,9 @@ export class OrdersService {
       
       await Promise.all(inventoryUpdates);
 
-      // Record promo code usage if applicable
-      if (dto.promoCode && dto.discountAmount) {
-        await this.promoCodesService.recordOrderUsage(
-          dto.promoCode,
-          null, // Guest order
-          order.id,
-          dto.discountAmount,
-          subtotal
-        );
+      // Promo code recording temporarily disabled
+      if (dto.promoCode && dto.discountAmount && dto.discountAmount > 0) {
+        this.logger.log(`Promo code ${dto.promoCode} applied to guest order ${order.id} (recording disabled)`);
       }
 
       this.logger.log(`Guest order created: ${orderNumber} for ${dto.customerName} (${dto.customerPhone})`);
@@ -493,15 +487,9 @@ export class OrdersService {
       // DON'T clear cart immediately - let frontend handle it after order confirmation
       // Cart will be cleared by frontend after user sees order confirmation
 
-      // Record promo code usage if applicable
-      if (dto.promoCode && dto.discountAmount) {
-        await this.promoCodesService.recordOrderUsage(
-          dto.promoCode,
-          userId,
-          order.id,
-          dto.discountAmount,
-          subtotal
-        );
+      // Promo code recording temporarily disabled
+      if (dto.promoCode && dto.discountAmount && dto.discountAmount > 0) {
+        this.logger.log(`Promo code ${dto.promoCode} applied to user ${userId} order ${order.id} (recording disabled)`);
       }
 
       return order;

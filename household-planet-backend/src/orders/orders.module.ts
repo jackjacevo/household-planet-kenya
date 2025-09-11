@@ -8,11 +8,11 @@ import { DeliveryModule } from '../delivery/delivery.module';
 import { CustomersModule } from '../customers/customers.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ActivityModule } from '../activity/activity.module';
-import { PromoCodesModule } from '../promo-codes/promo-codes.module';
+// import { PromoCodesModule } from '../promo-codes/promo-codes.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [PrismaModule, DeliveryModule, CustomersModule, ActivityModule, PromoCodesModule, NotificationsModule],
+  imports: [PrismaModule, DeliveryModule, CustomersModule, ActivityModule, NotificationsModule],
   providers: [OrdersService, WhatsAppService, ShippingService, OrderIdService],
   controllers: [OrdersController],
   exports: [OrderIdService]

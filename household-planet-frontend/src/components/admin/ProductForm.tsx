@@ -59,6 +59,18 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     }
   });
 
+  const watchedName = watch('name');
+
+  useEffect(() => {
+    if (watchedName && !product) {
+      const slug = watchedName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      setValue('slug', slug);
+    }
+  }, [watchedName, setValue, product]);
+
   function generateSKU() {
     return 'HP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
   }
@@ -262,9 +274,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
             <select
-              {...register('brandId')}
-              value={watch('brandId') || ''}
-              onChange={(e) => setValue('brandId', e.target.value ? Number(e.target.value) : undefined)}
+              {...register('brandId', { valueAsNumber: true })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Brand</option>

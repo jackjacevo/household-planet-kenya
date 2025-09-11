@@ -71,7 +71,7 @@ export default function CartPage() {
     if (!promoCode.trim()) return;
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/promo-codes/validate`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/validate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +142,8 @@ export default function CartPage() {
   };
 
   const getFinalTotal = () => {
-    const currentDeliveryCost = deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) : 0);
+    const currentDeliveryCost = (selectedLocation || manualDeliveryCost) ? 
+      (deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) : 0)) : 0;
     return getTotalPrice() - getDiscountAmount() + currentDeliveryCost;
   };
 
@@ -479,17 +480,17 @@ export default function CartPage() {
                   </div>
                 )}
                 
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600 flex items-center">
-                    <Truck className="h-4 w-4 mr-1" />
-                    Delivery
-                  </span>
-                  <span className={`font-semibold ${
-                    deliveryCost > 0 ? 'text-gray-900' : 'text-orange-600'
-                  }`}>
-                    {deliveryCost > 0 ? formatPrice(deliveryCost) : (manualDeliveryCost ? formatPrice(parseFloat(manualDeliveryCost)) : 'Required')}
-                  </span>
-                </div>
+                {(selectedLocation || manualDeliveryCost) && (
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-600 flex items-center">
+                      <Truck className="h-4 w-4 mr-1" />
+                      Delivery
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {deliveryCost > 0 ? formatPrice(deliveryCost) : (manualDeliveryCost ? formatPrice(parseFloat(manualDeliveryCost)) : formatPrice(0))}
+                    </span>
+                  </div>
+                )}
               </div>
               
               <div className="border-t border-gray-200 pt-4 mb-6">

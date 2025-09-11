@@ -66,11 +66,7 @@ export function DeliveryLocationsTab() {
   const loadLocations = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/delivery-locations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delivery/locations`);
       
       if (response.ok) {
         const data = await response.json();

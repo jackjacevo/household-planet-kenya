@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { CreditCard, TrendingUp, AlertCircle, CheckCircle, XCircle, Plus, Search, Filter } from 'lucide-react';
 import axios from 'axios';
 import { validateOrderId, formatOrderId, extractAmountFromOrderNumber } from '@/lib/orderValidation';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/contexts/ToastContext';
 
 interface PaymentStats {
   totalTransactions: number;
@@ -48,7 +48,7 @@ interface Transaction {
 }
 
 export default function AdminPaymentsPage() {
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [stats, setStats] = useState<PaymentStats | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filters, setFilters] = useState({
@@ -109,11 +109,7 @@ export default function AdminPaymentsPage() {
       setTotalTransactions(response.data.total || response.data.length);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch transactions',
-        variant: 'destructive'
-      });
+      showToast('Failed to fetch transactions', 'error');
     } finally {
       setLoading(false);
     }
@@ -142,22 +138,14 @@ export default function AdminPaymentsPage() {
       const orderInfo = selectedTransaction.order?.orderNumber ? ` for order ${selectedTransaction.order.orderNumber}` : '';
       const customerInfo = selectedTransaction.order?.user?.name ? ` to ${selectedTransaction.order.user.name}` : '';
       
-      toast({
-        title: 'Refund Processed Successfully',
-        description: `💰 Refund of KSh ${selectedTransaction.amount.toLocaleString()}${orderInfo}${customerInfo} has been processed. Reference: ${refundNumber}`,
-        variant: 'success'
-      });
+      showToast(`💰 Refund of KSh ${selectedTransaction.amount.toLocaleString()}${orderInfo}${customerInfo} has been processed. Reference: ${refundNumber}`, 'success');
       setShowRefundDialog(false);
       setSelectedTransaction(null);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error processing refund:', error);
-      toast({
-        title: 'Refund Failed',
-        description: '❌ Failed to process refund. Please try again or contact support.',
-        variant: 'destructive'
-      });
+      showToast('❌ Failed to process refund. Please try again or contact support.', 'error');
     }
   };
 
@@ -334,40 +322,24 @@ export default function AdminPaymentsPage() {
       a.click();
       URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Invoice Generated',
-        description: `Invoice ${invoiceData.invoiceNumber} downloaded successfully`,
-        variant: 'success'
-      });
+      showToast(`Invoice ${invoiceData.invoiceNumber} downloaded successfully`, 'success');
     } catch (error) {
       console.error('Error generating invoice:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to generate invoice',
-        variant: 'destructive'
-      });
+      showToast('Failed to generate invoice', 'error');
     }
   };
 
   const recordCashPayment = async () => {
     // Validate form data
     if (!cashForm.orderId || !cashForm.amount || !cashForm.receivedBy) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields (Order ID, Amount, Received By)',
-        variant: 'destructive'
-      });
+      showToast('Please fill in all required fields (Order ID, Amount, Received By)', 'error');
       return;
     }
 
     // Validate order ID format
     const orderValidation = validateOrderId(cashForm.orderId);
     if (!orderValidation.isValid) {
-      toast({
-        title: 'Validation Error',
-        description: orderValidation.message || 'Invalid Order ID format',
-        variant: 'destructive'
-      });
+      showToast(orderValidation.message || 'Invalid Order ID format', 'error');
       return;
     }
 
@@ -378,11 +350,7 @@ export default function AdminPaymentsPage() {
 
     const amount = parseFloat(cashForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid amount',
-        variant: 'destructive'
-      });
+      showToast('Please enter a valid amount', 'error');
       return;
     }
 
@@ -411,42 +379,26 @@ export default function AdminPaymentsPage() {
       );
       
       const orderInfo = response.data.orderNumber ? ` for order ${response.data.orderNumber}` : '';
-      toast({
-        title: 'Payment Recorded',
-        description: `Cash payment recorded successfully${orderInfo}`,
-        variant: 'success'
-      });
+      showToast(`Cash payment recorded successfully${orderInfo}`, 'success');
       setCashForm({ orderId: '', amount: '', receivedBy: '', notes: '' });
       setShowCashForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error recording cash payment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to record cash payment. Please check if the order exists.',
-        variant: 'destructive'
-      });
+      showToast('Failed to record cash payment. Please check if the order exists.', 'error');
     }
   };
 
   const createPendingPayment = async () => {
     if (!pendingForm.orderId || !pendingForm.amount || !pendingForm.phoneNumber) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in Order ID, Amount, and Phone Number',
-        variant: 'destructive'
-      });
+      showToast('Please fill in Order ID, Amount, and Phone Number', 'error');
       return;
     }
 
     const amount = parseFloat(pendingForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid amount',
-        variant: 'destructive'
-      });
+      showToast('Please enter a valid amount', 'error');
       return;
     }
 
@@ -463,43 +415,27 @@ export default function AdminPaymentsPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      toast({
-        title: 'Pending Payment Created',
-        description: `⏳ Pending payment of KSh ${amount.toLocaleString()} created for tracking`,
-        variant: 'success'
-      });
+      showToast(`⏳ Pending payment of KSh ${amount.toLocaleString()} created for tracking`, 'success');
       setPendingForm({ orderId: '', amount: '', phoneNumber: '', notes: '' });
       setShowPendingForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error creating pending payment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create pending payment',
-        variant: 'destructive'
-      });
+      showToast('Failed to create pending payment', 'error');
     }
   };
 
   const recordPaybillPayment = async () => {
     // Validate form data
     if (!paybillForm.phoneNumber || !paybillForm.amount || !paybillForm.mpesaCode) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields (Phone Number, Amount, M-Pesa Code)',
-        variant: 'destructive'
-      });
+      showToast('Please fill in all required fields (Phone Number, Amount, M-Pesa Code)', 'error');
       return;
     }
 
     const amount = parseFloat(paybillForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid amount',
-        variant: 'destructive'
-      });
+      showToast('Please enter a valid amount', 'error');
       return;
     }
 
@@ -508,11 +444,7 @@ export default function AdminPaymentsPage() {
     if (paybillForm.orderId.trim()) {
       const orderValidation = validateOrderId(paybillForm.orderId);
       if (!orderValidation.isValid) {
-        toast({
-          title: 'Validation Error',
-          description: orderValidation.message || 'Invalid Order ID format',
-          variant: 'destructive'
-        });
+        showToast(orderValidation.message || 'Invalid Order ID format', 'error');
         return;
       }
       
@@ -548,22 +480,14 @@ export default function AdminPaymentsPage() {
       );
       
       const orderInfo = response.data.orderNumber ? ` for order ${response.data.orderNumber}` : '';
-      toast({
-        title: 'Payment Recorded',
-        description: `Paybill payment recorded successfully${orderInfo}`,
-        variant: 'success'
-      });
+      showToast(`Paybill payment recorded successfully${orderInfo}`, 'success');
       setPaybillForm({ phoneNumber: '', amount: '', mpesaCode: '', reference: '', notes: '', orderId: '' });
       setShowPaybillForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error recording paybill payment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to record paybill payment. Please check if the order exists.',
-        variant: 'destructive'
-      });
+      showToast('Failed to record paybill payment. Please check if the order exists.', 'error');
     }
   };
 

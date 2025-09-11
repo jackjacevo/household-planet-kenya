@@ -74,8 +74,10 @@ export class WhatsAppService {
       // Generate tracking number for WhatsApp orders
       const trackingNumber = `TRK-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`;
       const subtotal = dto.estimatedTotal || 0;
-      const shippingCost = dto.deliveryCost;
+      const shippingCost = dto.deliveryType === 'PICKUP' ? 0 : dto.deliveryCost;
       const total = subtotal + shippingCost;
+      
+      const deliveryLocation = dto.deliveryType === 'PICKUP' ? 'Store Pickup' : (dto.deliveryLocation || 'Manual Entry');
       
       const order = await this.prisma.order.create({
         data: {
@@ -88,11 +90,11 @@ export class WhatsAppService {
           shippingAddress: JSON.stringify({
             fullName: dto.customerName,
             phone: dto.customerPhone,
-            street: dto.deliveryLocation || 'Manual Entry',
-            town: dto.deliveryLocation || 'Manual Entry',
-            county: 'Manual Entry'
+            street: deliveryLocation,
+            town: deliveryLocation,
+            county: dto.deliveryType === 'PICKUP' ? 'Store Pickup' : 'Manual Entry'
           }),
-          deliveryLocation: dto.deliveryLocation || 'Manual Entry',
+          deliveryLocation,
           paymentMethod: 'CASH_ON_DELIVERY',
           status: 'PENDING',
           source: 'WHATSAPP'
@@ -102,10 +104,14 @@ export class WhatsAppService {
       // Add order note with WhatsApp details
       const emailNote = `\n📧 Customer Email: ${customerEmail}`;
       
+      const deliveryInfo = dto.deliveryType === 'PICKUP' 
+        ? '🏪 Customer will pickup from store (No delivery cost)'
+        : `🚛 Delivery Cost: KSh ${dto.deliveryCost}${dto.deliveryLocation ? `\n📍 Location: ${dto.deliveryLocation}` : ''}`;
+      
       await this.prisma.orderNote.create({
         data: {
           orderId: order.id,
-          note: `📱 WhatsApp Order Details:\n${dto.orderDetails}${emailNote}\n\n💳 Payment: ${dto.paymentMode}\n🚚 Type: ${dto.deliveryType}\n🚛 Delivery Cost: KSh ${dto.deliveryCost}${dto.deliveryLocation ? `\n📍 Location: ${dto.deliveryLocation}` : ''}${dto.notes ? `\n\n📝 Additional Notes:\n${dto.notes}` : ''}`,
+          note: `📱 WhatsApp Order Details:\n${dto.orderDetails}${emailNote}\n\n💳 Payment: ${dto.paymentMode}\n🚚 Type: ${dto.deliveryType}\n${deliveryInfo}${dto.notes ? `\n\n📝 Additional Notes:\n${dto.notes}` : ''}`,
           isInternal: false,
           createdBy: this.WHATSAPP_SYSTEM_USER
         }

@@ -1,9 +1,13 @@
 import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DeliveryLocationsService } from './delivery-locations.service';
 
 @Controller('simple-delivery')
 export class SimpleDeliveryController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private deliveryLocationsService: DeliveryLocationsService
+  ) {}
 
   @Get('track/:trackingNumber')
   async trackOrder(@Param('trackingNumber') trackingNumber: string) {
@@ -52,6 +56,39 @@ export class SimpleDeliveryController {
       };
     } catch (error) {
       throw new NotFoundException('Unable to fetch tracking information');
+    }
+  }
+
+  @Get('locations')
+  async getDeliveryLocations() {
+    try {
+      const locations = await this.deliveryLocationsService.getAllLocations();
+      return {
+        success: true,
+        data: locations
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Unable to fetch delivery locations'
+      };
+    }
+  }
+
+  @Get('locations/tier/:tier')
+  async getLocationsByTier(@Param('tier') tier: string) {
+    try {
+      const tierNumber = parseInt(tier);
+      const locations = await this.deliveryLocationsService.getLocationsByTier(tierNumber);
+      return {
+        success: true,
+        data: locations
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Unable to fetch delivery locations for tier'
+      };
     }
   }
 }

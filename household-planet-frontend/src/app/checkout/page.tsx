@@ -34,6 +34,7 @@ export default function CheckoutPage() {
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [manualDeliveryCost, setManualDeliveryCost] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{code: string, discountAmount: number} | null>(null);
 
   // Auto-select first payment method when step changes to payment
   useEffect(() => {
@@ -92,6 +93,14 @@ export default function CheckoutPage() {
           if (selectedLocation || savedManualCost) {
             setDeliveryType('DELIVERY');
           }
+        }
+        
+        // Restore promo code information
+        if (data.promoInfo) {
+          setAppliedPromo({
+            code: data.promoInfo.code,
+            discountAmount: data.promoInfo.discountAmount
+          });
         }
       } catch (error) {
         console.error('Error parsing checkout data:', error);
@@ -281,12 +290,22 @@ export default function CheckoutPage() {
         notes: formData.notes || '',
         customerName: formData.fullName?.trim() || 'Not provided',
         customerPhone: formData.phone?.trim() || 'Not provided',
-        customerEmail: formData.email?.trim() || ''
+        customerEmail: formData.email?.trim() || '',
+        // Include promo code information
+        promoCode: appliedPromo?.code || undefined,
+        discountAmount: appliedPromo?.discountAmount || undefined
       };
       
       console.log('Creating order with data:', orderData);
+      console.log('Applied promo:', appliedPromo);
       console.log('Selected delivery location:', deliveryLocations.find(loc => loc.id === selectedDeliveryLocation));
       console.log('Delivery cost:', deliveryCost);
+      console.log('Final total calculation:', {
+        subtotal: getTotalPrice(),
+        discount: getDiscountAmount(),
+        delivery: getCurrentDeliveryCost(),
+        total: getTotal()
+      });
       
       // Use different endpoints for authenticated vs guest users
       const endpoint = token && token !== 'null' && token !== 'undefined' 
@@ -391,6 +410,10 @@ export default function CheckoutPage() {
           method: selectedPaymentMethod,
           total: getTotal()
         },
+        promoInfo: appliedPromo ? {
+          code: appliedPromo.code,
+          discountAmount: appliedPromo.discountAmount
+        } : null,
         timestamp: new Date().toISOString()
       };
       
@@ -456,8 +479,10 @@ export default function CheckoutPage() {
   };
 
   const getSubtotal = () => getTotalPrice();
+  const getDiscountAmount = () => appliedPromo?.discountAmount || 0;
   const getTotal = () => {
     const subtotal = getTotalPrice();
+    const discount = getDiscountAmount();
     let finalDeliveryCost = 0;
     
     if (deliveryType === 'PICKUP') {
@@ -467,7 +492,7 @@ export default function CheckoutPage() {
       finalDeliveryCost = deliveryCost > 0 ? deliveryCost : (manualDeliveryCost ? parseFloat(manualDeliveryCost) || 0 : 0);
     }
     
-    return subtotal + finalDeliveryCost;
+    return subtotal - discount + finalDeliveryCost;
   };
   
   const getCurrentDeliveryCost = () => {
@@ -941,7 +966,7 @@ export default function CheckoutPage() {
               {/* Order Items */}
               <div className="mb-6">
                 <h3 className="font-medium mb-3">Items ({items.length})</h3>
-                <div className="space-y-3">
+                <div className="space-y-3 mb-4">
                   {items.map((item) => (
                     <div key={item.id} className="flex items-center space-x-3">
                       <div className="w-16 h-16 relative">
@@ -960,6 +985,28 @@ export default function CheckoutPage() {
                       <p className="font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
                     </div>
                   ))}
+                </div>
+                
+                {/* Order Summary in Review */}
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal:</span>
+                    <span>{formatPrice(getSubtotal())}</span>
+                  </div>
+                  {appliedPromo && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount ({appliedPromo.code}):</span>
+                      <span>-{formatPrice(getDiscountAmount())}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery:</span>
+                    <span>{formatPrice(getCurrentDeliveryCost())}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t pt-2">
+                    <span>Total:</span>
+                    <span>{formatPrice(getTotal())}</span>
+                  </div>
                 </div>
               </div>
               
@@ -1002,6 +1049,9 @@ export default function CheckoutPage() {
                     {selectedPaymentMethod === 'BANK_TRANSFER' && 'Bank Transfer'}
                     {selectedPaymentMethod === 'MPESA' && 'M-Pesa'}
                   </p>
+                  {appliedPromo && (
+                    <p><strong>Promo Code:</strong> {appliedPromo.code} (-{formatPrice(getDiscountAmount())})</p>
+                  )}
                   <p><strong>Order Total:</strong> {formatPrice(getTotal())}</p>
                 </div>
               </div>
@@ -1068,11 +1118,19 @@ export default function CheckoutPage() {
             
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>Subtotal ({items.length} items)</span>
                 <span>{formatPrice(getSubtotal())}</span>
               </div>
+              
+              {appliedPromo && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({appliedPromo.code})</span>
+                  <span>-{formatPrice(getDiscountAmount())}</span>
+                </div>
+              )}
+              
               <div className="flex justify-between">
-                <span>Delivery Cost</span>
+                <span>Delivery</span>
                 <span>{formatPrice(getCurrentDeliveryCost())}</span>
               </div>
 
@@ -1099,6 +1157,24 @@ export default function CheckoutPage() {
                 </div>
                 <p className="text-xs text-blue-600 mt-1">
                   🚚 Add {formatPrice(5000 - getTotalPrice())} more for free delivery!
+                </p>
+              </div>
+            )}
+            
+            {/* Promo Code Savings Display */}
+            {appliedPromo && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="text-green-600 mr-2">🎉</span>
+                    <span className="text-sm font-medium text-green-800">Promo Applied!</span>
+                  </div>
+                  <span className="text-sm font-semibold text-green-700">
+                    Save {formatPrice(getDiscountAmount())}
+                  </span>
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  Code: {appliedPromo.code}
                 </p>
               </div>
             )}

@@ -120,7 +120,13 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
           <div className="border-t border-gray-300 pt-2">
             <div className="flex justify-between text-lg font-bold">
               <span className="text-gray-800">TOTAL AMOUNT:</span>
-              <span className="text-green-600">{formatPrice(order.total)}</span>
+              <span className="text-green-600">
+                {formatPrice(
+                  order.subtotal - 
+                  (order.discountAmount || 0) + 
+                  (order.deliveryPrice || order.shippingCost || 0)
+                )}
+              </span>
             </div>
           </div>
         </div>

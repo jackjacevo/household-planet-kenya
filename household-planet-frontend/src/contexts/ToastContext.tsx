@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { ToastContainer, ToastProps } from '@/components/ui/Toast';
+import { ToastContainer, ToastProps, ToastItem } from '@/components/ui/Toast';
 
 interface ToastContextType {
   showToast: (toast: Omit<ToastProps, 'id' | 'onClose'>) => void;

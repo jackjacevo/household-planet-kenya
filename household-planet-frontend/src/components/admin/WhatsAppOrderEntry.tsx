@@ -29,7 +29,8 @@ export default function WhatsAppOrderEntry() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [manualDeliveryCost, setManualDeliveryCost] = useState('');
-  const { toast } = useToast();
+  const [deliveryType, setDeliveryType] = useState('');
+  const { showToast } = useToast();
 
   const {
     register,
@@ -67,7 +68,7 @@ export default function WhatsAppOrderEntry() {
     setIsSubmitting(true);
     try {
       await api.post('/api/orders/whatsapp', data);
-      toast({
+      showToast({
         title: 'Success',
         description: 'WhatsApp order created successfully',
         variant: 'success',
@@ -75,8 +76,9 @@ export default function WhatsAppOrderEntry() {
       reset();
       setSelectedLocation('');
       setManualDeliveryCost('');
+      setDeliveryType('');
     } catch (error) {
-      toast({
+      showToast({
         title: 'Error',
         description: 'Failed to create WhatsApp order',
         variant: 'destructive',
@@ -175,6 +177,15 @@ export default function WhatsAppOrderEntry() {
             </label>
             <select 
               {...register('deliveryType')}
+              onChange={(e) => {
+                setDeliveryType(e.target.value);
+                if (e.target.value === 'PICKUP') {
+                  setValue('deliveryCost', 0);
+                  setManualDeliveryCost('0');
+                  setSelectedLocation('');
+                  setValue('deliveryLocation', '');
+                }
+              }}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <option value="">Select delivery type</option>
@@ -187,111 +198,113 @@ export default function WhatsAppOrderEntry() {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Delivery Location
-            </label>
-            <select 
-              value={selectedLocation}
-              onChange={(e) => handleLocationChange(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <option value="">Select delivery location</option>
-              <option value="Nairobi CBD - Ksh 100">Nairobi CBD - Ksh 100</option>
-              <option value="Kajiado (Naekana) - Ksh 150">Kajiado (Naekana) - Ksh 150</option>
-              <option value="Kitengela (Via Shuttle) - Ksh 150">Kitengela (Via Shuttle) - Ksh 150</option>
-              <option value="Thika (Super Metrol) - Ksh 150">Thika (Super Metrol) - Ksh 150</option>
-              <option value="Juja (Via Super Metrol) - Ksh 200">Juja (Via Super Metrol) - Ksh 200</option>
-              <option value="Kikuyu Town (Super Metrol) - Ksh 200">Kikuyu Town (Super Metrol) - Ksh 200</option>
-              <option value="Pangani - Ksh 250">Pangani - Ksh 250</option>
-              <option value="Upperhill - Ksh 250">Upperhill - Ksh 250</option>
-              <option value="Bomet (Easycoach) - Ksh 300">Bomet (Easycoach) - Ksh 300</option>
-              <option value="Eastleigh - Ksh 300">Eastleigh - Ksh 300</option>
-              <option value="Hurlingham (Ngong Rd) - Rider - Ksh 300">Hurlingham (Ngong Rd) - Rider - Ksh 300</option>
-              <option value="Industrial Area - Rider - Ksh 300">Industrial Area - Rider - Ksh 300</option>
-              <option value="Kileleshwa - Ksh 300">Kileleshwa - Ksh 300</option>
-              <option value="Kilimani - Ksh 300">Kilimani - Ksh 300</option>
-              <option value="Machakos (Makos Sacco) - Ksh 300">Machakos (Makos Sacco) - Ksh 300</option>
-              <option value="Madaraka (Mombasa Rd) - Rider - Ksh 300">Madaraka (Mombasa Rd) - Rider - Ksh 300</option>
-              <option value="Makadara (Jogoo Rd) - Rider - Ksh 300">Makadara (Jogoo Rd) - Rider - Ksh 300</option>
-              <option value="Mbagathi Way (Langata Rd) - Rider - Ksh 300">Mbagathi Way (Langata Rd) - Rider - Ksh 300</option>
-              <option value="Mpaka Road - Ksh 300">Mpaka Road - Ksh 300</option>
-              <option value="Naivasha (Via NNUS) - Ksh 300">Naivasha (Via NNUS) - Ksh 300</option>
-              <option value="Nanyuki (Nanyuki Cabs) - Ksh 300">Nanyuki (Nanyuki Cabs) - Ksh 300</option>
-              <option value="Parklands - Ksh 300">Parklands - Ksh 300</option>
-              <option value="Riverside - Ksh 300">Riverside - Ksh 300</option>
-              <option value="South B - Ksh 300">South B - Ksh 300</option>
-              <option value="South C - Ksh 300">South C - Ksh 300</option>
-              <option value="Westlands - Ksh 300">Westlands - Ksh 300</option>
-              <option value="ABC (Waiyaki Way) - Rider - Ksh 350">ABC (Waiyaki Way) - Rider - Ksh 350</option>
-              <option value="Allsops, Ruaraka - Ksh 350">Allsops, Ruaraka - Ksh 350</option>
-              <option value="Bungoma (EasyCoach) - Ksh 350">Bungoma (EasyCoach) - Ksh 350</option>
-              <option value="Carnivore (Langata) - Rider - Ksh 350">Carnivore (Langata) - Rider - Ksh 350</option>
-              <option value="DCI (Kiambu Rd) - Rider - Ksh 350">DCI (Kiambu Rd) - Rider - Ksh 350</option>
-              <option value="Eldoret (North-rift Shuttle) - Ksh 350">Eldoret (North-rift Shuttle) - Ksh 350</option>
-              <option value="Embu (Using Kukena) - Ksh 350">Embu (Using Kukena) - Ksh 350</option>
-              <option value="Homa Bay (Easy Coach) - Ksh 350">Homa Bay (Easy Coach) - Ksh 350</option>
-              <option value="Imara Daima (Boda Rider) - Ksh 350">Imara Daima (Boda Rider) - Ksh 350</option>
-              <option value="Jamhuri Estate - Ksh 350">Jamhuri Estate - Ksh 350</option>
-              <option value="Kericho (Using EasyCoach) - Ksh 350">Kericho (Using EasyCoach) - Ksh 350</option>
-              <option value="Kisii (Using Easycoach) - Ksh 350">Kisii (Using Easycoach) - Ksh 350</option>
-              <option value="Kisumu (Easy Coach-United Mall) - Ksh 350">Kisumu (Easy Coach-United Mall) - Ksh 350</option>
-              <option value="Kitale (Northrift) - Ksh 350">Kitale (Northrift) - Ksh 350</option>
-              <option value="Lavington - Ksh 350">Lavington - Ksh 350</option>
-              <option value="Mombasa (Dreamline Bus) - Ksh 350">Mombasa (Dreamline Bus) - Ksh 350</option>
-              <option value="Nextgen Mall, Mombasa Road - Ksh 350">Nextgen Mall, Mombasa Road - Ksh 350</option>
-              <option value="Roasters - Ksh 350">Roasters - Ksh 350</option>
-              <option value="Rongo (Using EasyCoach) - Ksh 350">Rongo (Using EasyCoach) - Ksh 350</option>
-              <option value="Buruburu - Ksh 400">Buruburu - Ksh 400</option>
-              <option value="Donholm - Ksh 400">Donholm - Ksh 400</option>
-              <option value="Kangemi - Ksh 400">Kangemi - Ksh 400</option>
-              <option value="Kasarani - Ksh 400">Kasarani - Ksh 400</option>
-              <option value="Kitisuru - Ksh 400">Kitisuru - Ksh 400</option>
-              <option value="Lucky Summer - Ksh 400">Lucky Summer - Ksh 400</option>
-              <option value="Lumumba Drive - Ksh 400">Lumumba Drive - Ksh 400</option>
-              <option value="Muthaiga - Ksh 400">Muthaiga - Ksh 400</option>
-              <option value="Peponi Road - Ksh 400">Peponi Road - Ksh 400</option>
-              <option value="Roysambu - Ksh 400">Roysambu - Ksh 400</option>
-              <option value="Thigiri - Ksh 400">Thigiri - Ksh 400</option>
-              <option value="Village Market - Ksh 400">Village Market - Ksh 400</option>
-              <option value="Kahawa Sukari - Ksh 550">Kahawa Sukari - Ksh 550</option>
-              <option value="Kahawa Wendani - Ksh 550">Kahawa Wendani - Ksh 550</option>
-              <option value="Karen - Ksh 650">Karen - Ksh 650</option>
-              <option value="Kiambu - Ksh 650">Kiambu - Ksh 650</option>
-              <option value="JKIA - Ksh 700">JKIA - Ksh 700</option>
-              <option value="Ngong Town - Ksh 1,000">Ngong Town - Ksh 1,000</option>
-            </select>
+        {deliveryType === 'DELIVERY' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Delivery Location
+              </label>
+              <select 
+                value={selectedLocation}
+                onChange={(e) => handleLocationChange(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="">Select delivery location</option>
+                <option value="Nairobi CBD - Ksh 100">Nairobi CBD - Ksh 100</option>
+                <option value="Kajiado (Naekana) - Ksh 150">Kajiado (Naekana) - Ksh 150</option>
+                <option value="Kitengela (Via Shuttle) - Ksh 150">Kitengela (Via Shuttle) - Ksh 150</option>
+                <option value="Thika (Super Metrol) - Ksh 150">Thika (Super Metrol) - Ksh 150</option>
+                <option value="Juja (Via Super Metrol) - Ksh 200">Juja (Via Super Metrol) - Ksh 200</option>
+                <option value="Kikuyu Town (Super Metrol) - Ksh 200">Kikuyu Town (Super Metrol) - Ksh 200</option>
+                <option value="Pangani - Ksh 250">Pangani - Ksh 250</option>
+                <option value="Upperhill - Ksh 250">Upperhill - Ksh 250</option>
+                <option value="Bomet (Easycoach) - Ksh 300">Bomet (Easycoach) - Ksh 300</option>
+                <option value="Eastleigh - Ksh 300">Eastleigh - Ksh 300</option>
+                <option value="Hurlingham (Ngong Rd) - Rider - Ksh 300">Hurlingham (Ngong Rd) - Rider - Ksh 300</option>
+                <option value="Industrial Area - Rider - Ksh 300">Industrial Area - Rider - Ksh 300</option>
+                <option value="Kileleshwa - Ksh 300">Kileleshwa - Ksh 300</option>
+                <option value="Kilimani - Ksh 300">Kilimani - Ksh 300</option>
+                <option value="Machakos (Makos Sacco) - Ksh 300">Machakos (Makos Sacco) - Ksh 300</option>
+                <option value="Madaraka (Mombasa Rd) - Rider - Ksh 300">Madaraka (Mombasa Rd) - Rider - Ksh 300</option>
+                <option value="Makadara (Jogoo Rd) - Rider - Ksh 300">Makadara (Jogoo Rd) - Rider - Ksh 300</option>
+                <option value="Mbagathi Way (Langata Rd) - Rider - Ksh 300">Mbagathi Way (Langata Rd) - Rider - Ksh 300</option>
+                <option value="Mpaka Road - Ksh 300">Mpaka Road - Ksh 300</option>
+                <option value="Naivasha (Via NNUS) - Ksh 300">Naivasha (Via NNUS) - Ksh 300</option>
+                <option value="Nanyuki (Nanyuki Cabs) - Ksh 300">Nanyuki (Nanyuki Cabs) - Ksh 300</option>
+                <option value="Parklands - Ksh 300">Parklands - Ksh 300</option>
+                <option value="Riverside - Ksh 300">Riverside - Ksh 300</option>
+                <option value="South B - Ksh 300">South B - Ksh 300</option>
+                <option value="South C - Ksh 300">South C - Ksh 300</option>
+                <option value="Westlands - Ksh 300">Westlands - Ksh 300</option>
+                <option value="ABC (Waiyaki Way) - Rider - Ksh 350">ABC (Waiyaki Way) - Rider - Ksh 350</option>
+                <option value="Allsops, Ruaraka - Ksh 350">Allsops, Ruaraka - Ksh 350</option>
+                <option value="Bungoma (EasyCoach) - Ksh 350">Bungoma (EasyCoach) - Ksh 350</option>
+                <option value="Carnivore (Langata) - Rider - Ksh 350">Carnivore (Langata) - Rider - Ksh 350</option>
+                <option value="DCI (Kiambu Rd) - Rider - Ksh 350">DCI (Kiambu Rd) - Rider - Ksh 350</option>
+                <option value="Eldoret (North-rift Shuttle) - Ksh 350">Eldoret (North-rift Shuttle) - Ksh 350</option>
+                <option value="Embu (Using Kukena) - Ksh 350">Embu (Using Kukena) - Ksh 350</option>
+                <option value="Homa Bay (Easy Coach) - Ksh 350">Homa Bay (Easy Coach) - Ksh 350</option>
+                <option value="Imara Daima (Boda Rider) - Ksh 350">Imara Daima (Boda Rider) - Ksh 350</option>
+                <option value="Jamhuri Estate - Ksh 350">Jamhuri Estate - Ksh 350</option>
+                <option value="Kericho (Using EasyCoach) - Ksh 350">Kericho (Using EasyCoach) - Ksh 350</option>
+                <option value="Kisii (Using Easycoach) - Ksh 350">Kisii (Using Easycoach) - Ksh 350</option>
+                <option value="Kisumu (Easy Coach-United Mall) - Ksh 350">Kisumu (Easy Coach-United Mall) - Ksh 350</option>
+                <option value="Kitale (Northrift) - Ksh 350">Kitale (Northrift) - Ksh 350</option>
+                <option value="Lavington - Ksh 350">Lavington - Ksh 350</option>
+                <option value="Mombasa (Dreamline Bus) - Ksh 350">Mombasa (Dreamline Bus) - Ksh 350</option>
+                <option value="Nextgen Mall, Mombasa Road - Ksh 350">Nextgen Mall, Mombasa Road - Ksh 350</option>
+                <option value="Roasters - Ksh 350">Roasters - Ksh 350</option>
+                <option value="Rongo (Using EasyCoach) - Ksh 350">Rongo (Using EasyCoach) - Ksh 350</option>
+                <option value="Buruburu - Ksh 400">Buruburu - Ksh 400</option>
+                <option value="Donholm - Ksh 400">Donholm - Ksh 400</option>
+                <option value="Kangemi - Ksh 400">Kangemi - Ksh 400</option>
+                <option value="Kasarani - Ksh 400">Kasarani - Ksh 400</option>
+                <option value="Kitisuru - Ksh 400">Kitisuru - Ksh 400</option>
+                <option value="Lucky Summer - Ksh 400">Lucky Summer - Ksh 400</option>
+                <option value="Lumumba Drive - Ksh 400">Lumumba Drive - Ksh 400</option>
+                <option value="Muthaiga - Ksh 400">Muthaiga - Ksh 400</option>
+                <option value="Peponi Road - Ksh 400">Peponi Road - Ksh 400</option>
+                <option value="Roysambu - Ksh 400">Roysambu - Ksh 400</option>
+                <option value="Thigiri - Ksh 400">Thigiri - Ksh 400</option>
+                <option value="Village Market - Ksh 400">Village Market - Ksh 400</option>
+                <option value="Kahawa Sukari - Ksh 550">Kahawa Sukari - Ksh 550</option>
+                <option value="Kahawa Wendani - Ksh 550">Kahawa Wendani - Ksh 550</option>
+                <option value="Karen - Ksh 650">Karen - Ksh 650</option>
+                <option value="Kiambu - Ksh 650">Kiambu - Ksh 650</option>
+                <option value="JKIA - Ksh 700">JKIA - Ksh 700</option>
+                <option value="Ngong Town - Ksh 1,000">Ngong Town - Ksh 1,000</option>
+              </select>
+            </div>
+            
+            <div className="text-center text-sm text-gray-500">OR</div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Manual Delivery Cost (KSh) *
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter delivery cost"
+                value={manualDeliveryCost}
+                onChange={(e) => handleManualDeliveryCostChange(e.target.value)}
+                min="0"
+                step="1"
+                error={errors.deliveryCost?.message}
+              />
+            </div>
           </div>
-          
-          <div className="text-center text-sm text-gray-500">OR</div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Manual Delivery Cost (KSh) *
-            </label>
-            <Input
-              type="number"
-              placeholder="Enter delivery cost"
-              value={manualDeliveryCost}
-              onChange={(e) => handleManualDeliveryCostChange(e.target.value)}
-              min="0"
-              step="1"
-              error={errors.deliveryCost?.message}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Total Product Price
-            </label>
-            <Input
-              {...register('estimatedTotal', { valueAsNumber: true })}
-              type="number"
-              placeholder="0"
-              error={errors.estimatedTotal?.message}
-            />
-          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Total Product Price
+          </label>
+          <Input
+            {...register('estimatedTotal', { valueAsNumber: true })}
+            type="number"
+            placeholder="0"
+            error={errors.estimatedTotal?.message}
+          />
         </div>
 
         <div>
@@ -314,6 +327,7 @@ export default function WhatsAppOrderEntry() {
               reset();
               setSelectedLocation('');
               setManualDeliveryCost('');
+              setDeliveryType('');
             }}
           >
             Clear

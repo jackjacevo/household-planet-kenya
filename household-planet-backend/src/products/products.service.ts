@@ -34,7 +34,26 @@ export class ProductsService {
       if (category) {
         const categoryId = parseInt(category);
         if (!isNaN(categoryId)) {
-          where.categoryId = categoryId;
+          // Get all descendant categories recursively
+          const getAllDescendants = async (parentId: number): Promise<number[]> => {
+            const children = await this.prisma.category.findMany({
+              where: { parentId },
+              select: { id: true }
+            });
+            
+            let allDescendants = children.map(child => child.id);
+            
+            for (const child of children) {
+              const grandChildren = await getAllDescendants(child.id);
+              allDescendants = [...allDescendants, ...grandChildren];
+            }
+            
+            return allDescendants;
+          };
+          
+          const descendantIds = await getAllDescendants(categoryId);
+          const categoryIds = [categoryId, ...descendantIds];
+          where.categoryId = { in: categoryIds };
         }
       }
       
@@ -54,7 +73,7 @@ export class ProductsService {
       }
       
       if (featured !== undefined) {
-        where.isFeatured = featured;
+        where.isFeatured = featured === true || featured === 'true';
       }
       
       if (minPrice !== undefined || maxPrice !== undefined) {

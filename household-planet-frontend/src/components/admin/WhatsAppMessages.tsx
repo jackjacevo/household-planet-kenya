@@ -52,10 +52,10 @@ interface WhatsAppOrder {
 export default function WhatsAppMessages() {
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [orders, setOrders] = useState<WhatsAppOrder[]>([]);
-  const [activeTab, setActiveTab] = useState<'messages' | 'orders' | 'inquiries'>('messages');
+  const [activeTab, setActiveTab] = useState<'orders'>('orders');
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchData();
@@ -72,7 +72,7 @@ export default function WhatsAppMessages() {
       setOrders(ordersResponse.data);
       setInquiries(inquiriesResponse.data);
     } catch (error) {
-      toast({
+      showToast({
         title: 'Error',
         description: 'Failed to fetch WhatsApp data',
         variant: 'destructive',
@@ -85,14 +85,14 @@ export default function WhatsAppMessages() {
   const markAsProcessed = async (messageId: string, orderId?: number) => {
     try {
       await api.patch(`/api/orders/whatsapp/${messageId}/processed`, { orderId });
-      toast({
+      showToast({
         title: 'Success',
         description: 'Message marked as processed',
         variant: 'success',
       });
       fetchData();
     } catch (error) {
-      toast({
+      showToast({
         title: 'Error',
         description: 'Failed to update message status',
         variant: 'destructive',
@@ -147,16 +147,6 @@ export default function WhatsAppMessages() {
         
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
           <button
-            onClick={() => setActiveTab('messages')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'messages'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Pending Messages ({messages.length})
-          </button>
-          <button
             onClick={() => setActiveTab('orders')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'orders'
@@ -166,75 +156,10 @@ export default function WhatsAppMessages() {
           >
             WhatsApp Orders ({orders.length})
           </button>
-          <button
-            onClick={() => setActiveTab('inquiries')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'inquiries'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Product Inquiries ({inquiries.length})
-          </button>
         </div>
       </div>
 
       <div className="divide-y">
-        {activeTab === 'messages' && (
-          messages.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              No pending WhatsApp messages
-            </div>
-          ) : (
-            messages.map((message) => (
-              <div key={message.id} className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{message.phoneNumber}</span>
-                      {message.isOrderCandidate && (
-                        <Badge variant="warning">Potential Order</Badge>
-                      )}
-                      {message.processed && (
-                        <Badge variant="success">Processed</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
-                    </p>
-                  </div>
-                  
-                  {!message.processed && (
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => markAsProcessed(message.messageId || message.id.toString())}
-                      >
-                        Mark as Processed
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const orderDetails = message.message;
-                          const phone = message.phoneNumber;
-                          console.log('Create order for:', { phone, orderDetails });
-                        }}
-                      >
-                        Create Order
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm whitespace-pre-wrap">{message.message}</p>
-                </div>
-              </div>
-            ))
-          )
-        )}
-        
         {activeTab === 'orders' && (
           orders.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
@@ -263,7 +188,7 @@ export default function WhatsAppMessages() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                      onClick={() => window.location.href = `/admin/orders/${order.id}`}
                     >
                       View Details
                     </Button>
@@ -291,33 +216,6 @@ export default function WhatsAppMessages() {
                     <p className="text-sm text-gray-700">{order.notes[0].note}</p>
                   </div>
                 )}
-              </div>
-            ))
-          )
-        )}
-        
-        {activeTab === 'inquiries' && (
-          inquiries.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              No product inquiries found
-            </div>
-          ) : (
-            inquiries.map((inquiry) => (
-              <div key={inquiry.id} className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="font-semibold">{inquiry.properties.productName}</h3>
-                      <Badge variant="info">Product Click</Badge>
-                    </div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p><strong>SKU:</strong> {inquiry.properties.sku}</p>
-                      <p><strong>Price:</strong> {formatCurrency(inquiry.properties.productPrice)}</p>
-                      <p><strong>Session:</strong> {inquiry.sessionId}</p>
-                      <p><strong>Time:</strong> {formatDistanceToNow(new Date(inquiry.timestamp), { addSuffix: true })}</p>
-                    </div>
-                  </div>
-                </div>
               </div>
             ))
           )
