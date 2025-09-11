@@ -654,67 +654,52 @@ export class OrdersService {
   }
 
   async getOrderTracking(orderIdentifier: string) {
-    // Try to find by orderNumber first, then by ID if it's numeric
-    let order = await this.prisma.order.findUnique({
-      where: { orderNumber: orderIdentifier },
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        total: true,
-        paymentMethod: true,
-        deliveryLocation: true,
-        trackingNumber: true,
-        items: {
-          include: {
-            product: {
-              select: {
-                name: true,
-                images: true
-              }
-            },
-            variant: {
-              select: {
-                name: true
-              }
+    const selectFields = {
+      id: true,
+      orderNumber: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      total: true,
+      paymentMethod: true,
+      deliveryLocation: true,
+      trackingNumber: true,
+      items: {
+        include: {
+          product: {
+            select: {
+              name: true,
+              images: true
+            }
+          },
+          variant: {
+            select: {
+              name: true
             }
           }
         }
       }
+    };
+
+    // Try to find by orderNumber first
+    let order = await this.prisma.order.findUnique({
+      where: { orderNumber: orderIdentifier },
+      select: selectFields
     });
 
-    // If not found by orderNumber and identifier is numeric, try by ID
+    // If not found by orderNumber, try by trackingNumber
+    if (!order) {
+      order = await this.prisma.order.findFirst({
+        where: { trackingNumber: orderIdentifier },
+        select: selectFields
+      });
+    }
+
+    // If still not found and identifier is numeric, try by ID
     if (!order && /^\d+$/.test(orderIdentifier)) {
       order = await this.prisma.order.findUnique({
         where: { id: parseInt(orderIdentifier) },
-        select: {
-          id: true,
-          orderNumber: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          total: true,
-          paymentMethod: true,
-          deliveryLocation: true,
-          trackingNumber: true,
-          items: {
-            include: {
-              product: {
-                select: {
-                  name: true,
-                  images: true
-                }
-              },
-              variant: {
-                select: {
-                  name: true
-                }
-              }
-            }
-          }
-        }
+        select: selectFields
       });
     }
 

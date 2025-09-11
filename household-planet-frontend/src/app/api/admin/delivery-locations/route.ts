@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
-    const response = await fetch(`${API_BASE_URL}/admin/delivery-locations`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     const body = await request.json();
     
-    const response = await fetch(`${API_BASE_URL}/admin/delivery-locations`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -9,7 +9,7 @@ export async function GET(
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
-    const response = await fetch(`${API_BASE_URL}/admin/delivery-locations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${params.id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export async function PUT(
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     const body = await request.json();
     
-    const response = await fetch(`${API_BASE_URL}/admin/delivery-locations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${params.id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -62,7 +62,7 @@ export async function DELETE(
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
-    const response = await fetch(`${API_BASE_URL}/admin/delivery-locations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

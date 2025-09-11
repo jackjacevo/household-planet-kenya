@@ -66,14 +66,24 @@ export function DeliveryLocationsTab() {
   const loadLocations = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delivery/locations`);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/delivery-locations', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (response.ok) {
         const data = await response.json();
         setLocations(data.data || []);
+      } else {
+        console.error('Failed to load locations:', response.statusText);
+        showToast('Failed to load delivery locations', 'error');
       }
     } catch (error) {
       console.error('Failed to load delivery locations:', error);
+      showToast('Failed to load delivery locations', 'error');
     } finally {
       setLoading(false);
     }
@@ -88,12 +98,13 @@ export function DeliveryLocationsTab() {
         : '/api/admin/delivery-locations';
       
       const method = editingLocation ? 'PUT' : 'POST';
+      const token = localStorage.getItem('token');
       
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -102,6 +113,15 @@ export function DeliveryLocationsTab() {
         await loadLocations();
         resetForm();
         showToast(editingLocation ? 'Location updated successfully' : 'Location created successfully');
+        
+        // Trigger refresh for all components using delivery locations
+        if (typeof window !== 'undefined') {
+          const { eventBus, EVENTS } = require('@/lib/events');
+          eventBus.emit(EVENTS.DELIVERY_LOCATIONS_UPDATED);
+        }
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.message || 'Failed to save location', 'error');
       }
     } catch (error) {
       console.error('Failed to save location:', error);
@@ -115,16 +135,27 @@ export function DeliveryLocationsTab() {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/delivery-locations/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
       if (response.ok) {
         await loadLocations();
         showToast('Location deleted successfully');
+        
+        // Trigger refresh for all components using delivery locations
+        if (typeof window !== 'undefined') {
+          const { eventBus, EVENTS } = require('@/lib/events');
+          eventBus.emit(EVENTS.DELIVERY_LOCATIONS_UPDATED);
+        }
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.message || 'Failed to delete location', 'error');
       }
     } catch (error) {
       console.error('Failed to delete location:', error);

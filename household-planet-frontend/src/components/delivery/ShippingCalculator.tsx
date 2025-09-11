@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '@/lib/api';
 import { CurrencyDollarIcon, TruckIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { DeliveryLocationSelector } from '@/components/common/DeliveryLocationSelector';
+import { useDeliveryLocations } from '@/hooks/useDeliveryLocations';
 
 interface ShippingResult {
   cost: number;
@@ -12,6 +13,7 @@ interface ShippingResult {
 }
 
 export default function ShippingCalculator() {
+  const { getLocationByName } = useDeliveryLocations();
   const [location, setLocation] = useState('');
   const [orderValue, setOrderValue] = useState('');
   const [isExpress, setIsExpress] = useState(false);
@@ -23,12 +25,25 @@ export default function ShippingCalculator() {
 
     setLoading(true);
     try {
-      const response = await api.post('/delivery/calculate', {
-        location,
-        orderValue: parseFloat(orderValue),
-        isExpress
+      const locationData = getLocationByName(location);
+      if (!locationData) {
+        console.error('Location not found');
+        return;
+      }
+
+      const orderVal = parseFloat(orderValue);
+      let baseCost = isExpress && locationData.expressAvailable ? locationData.expressPrice || locationData.price : locationData.price;
+      
+      // Apply free shipping for orders over 5000
+      const freeShipping = orderVal >= 5000;
+      const finalCost = freeShipping ? 0 : baseCost;
+      
+      setResult({
+        cost: baseCost,
+        freeShipping,
+        bulkDiscount: 0,
+        finalCost
       });
-      setResult(response.data);
     } catch (error) {
       console.error('Error calculating shipping:', error);
     } finally {
@@ -45,12 +60,11 @@ export default function ShippingCalculator() {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Delivery Location
           </label>
-          <input
-            type="text"
+          <DeliveryLocationSelector
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g., Nairobi CBD, Karen, Westlands"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={(locationName) => setLocation(locationName)}
+            placeholder="Select delivery location"
+            className="w-full"
           />
         </div>
 

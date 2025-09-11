@@ -1,20 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
 import { MagnifyingGlassIcon, TruckIcon, ClockIcon, CurrencyDollarIcon, MapIcon } from '@heroicons/react/24/outline';
+import { useDeliveryLocations } from '@/hooks/useDeliveryLocations';
 import DeliveryMap from './DeliveryMap';
-
-interface DeliveryLocation {
-  id: string;
-  name: string;
-  tier: number;
-  price: number;
-  description?: string;
-  estimatedDays: number;
-  expressAvailable: boolean;
-  expressPrice?: number;
-}
 
 interface TierInfo {
   tier1: { range: string; count: number };
@@ -24,35 +13,18 @@ interface TierInfo {
 }
 
 export default function DeliveryLocations() {
-  const [locations, setLocations] = useState<DeliveryLocation[]>([]);
-  const [filteredLocations, setFilteredLocations] = useState<DeliveryLocation[]>([]);
+  const { locations, loading } = useDeliveryLocations();
+  const [filteredLocations, setFilteredLocations] = useState(locations);
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [locationsRes, tierInfoRes] = await Promise.all([
-          api.getDeliveryLocations(),
-          api.get('/delivery/tiers')
-        ]);
-        
-        const locationsData = locationsRes.data || [];
-        setLocations(locationsData);
-        setFilteredLocations(locationsData);
-        setTierInfo(tierInfoRes.data.data);
-      } catch (error) {
-        console.error('Error fetching delivery data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const tierInfo = {
+    tier1: { range: 'Ksh 100-200', count: locations.filter(l => l.tier === 1).length },
+    tier2: { range: 'Ksh 250-300', count: locations.filter(l => l.tier === 2).length },
+    tier3: { range: 'Ksh 350-400', count: locations.filter(l => l.tier === 3).length },
+    tier4: { range: 'Ksh 450-1000', count: locations.filter(l => l.tier === 4).length }
+  };
 
   useEffect(() => {
     let filtered = locations;
@@ -107,23 +79,21 @@ export default function DeliveryLocations() {
       </div>
 
       {/* Tier Summary */}
-      {tierInfo && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {[1, 2, 3, 4].map(tier => (
-            <div
-              key={tier}
-              className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                selectedTier === tier ? 'ring-2 ring-blue-500' : ''
-              } ${getTierColor(tier)}`}
-              onClick={() => setSelectedTier(selectedTier === tier ? null : tier)}
-            >
-              <div className="text-sm font-medium">Tier {tier}</div>
-              <div className="text-lg font-bold">{getTierRange(tier)}</div>
-              <div className="text-sm">{tierInfo[`tier${tier}` as keyof TierInfo].count} locations</div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {[1, 2, 3, 4].map(tier => (
+          <div
+            key={tier}
+            className={`p-4 rounded-lg border cursor-pointer transition-all ${
+              selectedTier === tier ? 'ring-2 ring-blue-500' : ''
+            } ${getTierColor(tier)}`}
+            onClick={() => setSelectedTier(selectedTier === tier ? null : tier)}
+          >
+            <div className="text-sm font-medium">Tier {tier}</div>
+            <div className="text-lg font-bold">{getTierRange(tier)}</div>
+            <div className="text-sm">{tierInfo[`tier${tier}` as keyof typeof tierInfo].count} locations</div>
+          </div>
+        ))}
+      </div>
 
       {/* Search and Filters */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">

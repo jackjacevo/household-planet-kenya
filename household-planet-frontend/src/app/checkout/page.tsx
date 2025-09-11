@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import { usePayment } from '@/hooks/usePayment';
-import { useDelivery } from '@/hooks/useDelivery';
+import { useDeliveryLocations } from '@/hooks/useDeliveryLocations';
+import { DeliveryLocationSelector } from '@/components/common/DeliveryLocationSelector';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PaymentMethods } from '@/components/payment/PaymentMethods';
@@ -22,7 +23,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCart();
   const { initiatePayment, retryPayment, loading } = usePayment();
-  const { calculateDeliveryCost, deliveryLocations } = useDelivery();
+  const { locations: deliveryLocations } = useDeliveryLocations();
   const [step, setStep] = useState<CheckoutStep>('account');
   const [orderId, setOrderId] = useState<number | null>(null);
   const [isGuest, setIsGuest] = useState(false);
@@ -785,60 +786,51 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">Select Delivery Location</label>
-                      <select 
+                      <DeliveryLocationSelector
                         value={selectedDeliveryLocation}
-                        onChange={(e) => {
-                          const locationId = e.target.value;
-                          setSelectedDeliveryLocation(locationId);
-                          if (locationId) {
-                            const location = deliveryLocations.find(loc => loc.id === locationId);
-                            if (location) {
-                              const originalPrice = location.price;
-                              let cost = originalPrice;
-                              // Apply free shipping if order value is above threshold
-                              if (getTotalPrice() >= 5000) {
-                                cost = 0;
-                              }
-                              setDeliveryCost(cost);
-                              setManualDeliveryCost(originalPrice.toString());
+                        onChange={(locationName, price) => {
+                          const location = deliveryLocations.find(loc => loc.name === locationName);
+                          if (location) {
+                            setSelectedDeliveryLocation(location.id);
+                            let cost = price;
+                            // Apply free shipping if order value is above threshold
+                            if (getTotalPrice() >= 5000) {
+                              cost = 0;
                             }
-                          } else {
-                            setManualDeliveryCost('');
+                            setDeliveryCost(cost);
+                            setManualDeliveryCost(price.toString());
                           }
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
-                      >
-                        <option value="">Select delivery location</option>
-                        {deliveryLocations.map((location) => (
-                          <option key={location.id} value={location.id}>
-                            {location.name} - {formatPrice(location.price)}
-                            {location.description ? ` (${location.description})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Choose your delivery location"
+                        className="w-full"
+                      />
                     </div>
                     
-                    {selectedDeliveryLocation && (
-                      <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                        <div className="text-center">
-                          <h4 className="font-semibold text-lg text-gray-800 mb-2">
-                            {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name}
-                          </h4>
-                          <p className="text-sm text-gray-600 mb-2">
-                            {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.description}
-                          </p>
-                          <p className="text-sm text-green-600 mb-3">
-                            Estimated delivery: {deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.estimatedDays} day(s)
-                          </p>
-                          <div className="text-2xl font-bold">
-                            <span className="text-orange-600">
-                              {formatPrice(deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.price || 0)}
-                            </span>
+                    {selectedDeliveryLocation && (() => {
+                      const location = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
+                      return location ? (
+                        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                          <div className="text-center">
+                            <h4 className="font-semibold text-lg text-gray-800 mb-2">
+                              {location.name}
+                            </h4>
+                            {location.description && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                {location.description}
+                              </p>
+                            )}
+                            <p className="text-sm text-green-600 mb-3">
+                              Estimated delivery: {location.estimatedDays} day(s)
+                            </p>
+                            <div className="text-2xl font-bold">
+                              <span className="text-orange-600">
+                                {formatPrice(location.price)}
+                              </span>
+                            </div>
                           </div>
-
                         </div>
-                      </div>
-                    )}
+                      ) : null;
+                    })()}
                     
                     <div className="text-center text-sm text-gray-500">OR</div>
                     
