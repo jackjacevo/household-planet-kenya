@@ -118,7 +118,7 @@ export default function ProductsPage() {
       
       const queryParams: any = {
         page: currentPage,
-        limit: 12,
+        limit: 10,
         sortBy: filters.sortBy || 'createdAt',
       };
       
@@ -446,28 +446,7 @@ export default function ProductsPage() {
                     </div>
                     
                     <div className="flex items-center space-x-2 sm:space-x-4 whitespace-nowrap">
-                      <div className="hidden sm:flex items-center bg-gray-100 rounded-xl p-1">
-                        <button
-                          onClick={() => setScrollMode('pagination')}
-                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors min-h-[32px] ${
-                            scrollMode === 'pagination'
-                              ? 'bg-white shadow-md text-orange-600'
-                              : 'text-gray-600 hover:text-orange-600'
-                          }`}
-                        >
-                          Pages
-                        </button>
-                        <button
-                          onClick={() => setScrollMode('infinite')}
-                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors min-h-[32px] ${
-                            scrollMode === 'infinite'
-                              ? 'bg-white shadow-md text-orange-600'
-                              : 'text-gray-600 hover:text-orange-600'
-                          }`}
-                        >
-                          Scroll
-                        </button>
-                      </div>
+
                       
                       <div className="flex-shrink-0">
                         <ProductSort onSortChange={(sortBy, sortOrder) => handleFilterChange({ sortBy, sortOrder })} />
@@ -533,66 +512,37 @@ export default function ProductsPage() {
                       </button>
                     </motion.div>
                   ) : (
-                    scrollMode === 'infinite' ? (
-                      <InfiniteScroll
-                        hasMore={hasMore}
-                        loading={loading}
-                        onLoadMore={loadMore}
-                      >
-                        <motion.div 
-                          className={`grid gap-4 md:gap-6 ${
-                            viewMode === 'grid' || isMobile
-                              ? 'mobile-grid md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6'
-                              : 'grid-cols-1'
-                          }`}
-                          variants={staggerContainer}
-                          initial="initial"
-                          animate="animate"
+                    <motion.div 
+                      className={`grid gap-4 md:gap-6 ${
+                        viewMode === 'grid' || isMobile
+                          ? 'grid-cols-2 md:grid-cols-5 xl:grid-cols-5'
+                          : 'grid-cols-1'
+                      }`}
+                      variants={staggerContainer}
+                      initial="initial"
+                      animate="animate"
+                    >
+                      {products.map((product, index) => (
+                        <motion.div
+                          key={product.id}
+                          variants={fadeInUp}
+                          custom={index}
                         >
-                          {products.map((product, index) => (
-                            <motion.div
-                              key={`${product.id}-${index}`}
-                              variants={fadeInUp}
-                              custom={index}
-                            >
-                              <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} priority={index < 4} />
-                            </motion.div>
-                          ))}
+                          <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} priority={index < 4} />
                         </motion.div>
-                      </InfiniteScroll>
-                    ) : (
-                      <motion.div 
-                        className={`grid gap-4 md:gap-6 ${
-                          viewMode === 'grid' || isMobile
-                            ? 'mobile-grid md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6'
-                            : 'grid-cols-1'
-                        }`}
-                        variants={staggerContainer}
-                        initial="initial"
-                        animate="animate"
-                      >
-                        {products.map((product, index) => (
-                          <motion.div
-                            key={product.id}
-                            variants={fadeInUp}
-                            custom={index}
-                          >
-                            <ProductCard product={product} viewMode={isMobile ? 'grid' : viewMode} priority={index < 4} />
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )
+                      ))}
+                    </motion.div>
                   )}
 
                   {/* Pagination */}
-                  {scrollMode === 'pagination' && totalPages > 1 && (
+                  {totalPages > 1 && (
                     <motion.div 
                       className="mt-12 flex justify-center"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.4 }}
                     >
-                      <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 shadow-lg border border-orange-100">
                         <Pagination
                           currentPage={currentPage}
                           totalPages={totalPages}

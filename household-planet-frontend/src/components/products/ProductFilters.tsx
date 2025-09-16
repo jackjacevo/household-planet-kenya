@@ -221,15 +221,12 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
       {/* Search Input - Always Visible */}
       <div className="mb-4 sm:mb-6">
         <div className="relative">
-          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-orange-500 rounded-full p-1.5 flex items-center justify-center">
-            <Search className="h-4 w-4 text-white" />
-          </div>
           <input
             type="text"
             placeholder="Search products..."
             value={filters.search}
             onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="pl-12 w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
+            className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
           />
         </div>
       </div>
