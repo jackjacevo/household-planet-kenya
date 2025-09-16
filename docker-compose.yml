@@ -1,27 +1,25 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: household_planet_db
+  frontend:
+    build:
+      context: ./household-planet-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: household_planet
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-  adminer:
-    image: adminer
-    container_name: household_planet_adminer
-    ports:
-      - "8080:8080"
+      - NEXT_PUBLIC_API_URL=http://backend:3001
     depends_on:
-      - postgres
-    restart: unless-stopped
+      - backend
 
-volumes:
-  postgres_data:
+  backend:
+    build:
+      context: ./household-planet-backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://frontend:3000

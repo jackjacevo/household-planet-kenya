@@ -1132,26 +1132,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             
-            {/* Free Shipping Progress */}
-            {deliveryType === 'DELIVERY' && getTotalPrice() < 5000 && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-blue-800">Free Shipping Progress</span>
-                  <span className="text-xs text-blue-600">
-                    {formatPrice(5000 - getTotalPrice())} to go!
-                  </span>
-                </div>
-                <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((getTotalPrice() / 5000) * 100, 100)}%` }}
-                  />
-                </div>
-                <p className="text-xs text-blue-600 mt-1">
-                  🚚 Add {formatPrice(5000 - getTotalPrice())} more for free delivery!
-                </p>
-              </div>
-            )}
+
             
             {/* Promo Code Savings Display */}
             {appliedPromo && (

@@ -350,11 +350,19 @@ export class CustomersService {
 
   async deleteCustomer(userId: number) {
     return this.prisma.$transaction(async (prisma) => {
-      // Delete related data first
-      await prisma.customerTag.deleteMany({ where: { profile: { userId } } });
-      await prisma.customerCommunication.deleteMany({ where: { profile: { userId } } });
-      await prisma.loyaltyTransaction.deleteMany({ where: { profile: { userId } } });
-      await prisma.customerProfile.deleteMany({ where: { userId } });
+      // Get profile ID first
+      const profile = await prisma.customerProfile.findUnique({
+        where: { userId },
+        select: { id: true }
+      });
+      
+      if (profile) {
+        // Delete related data first
+        await prisma.customerTag.deleteMany({ where: { profileId: profile.id } });
+        await prisma.customerCommunication.deleteMany({ where: { profileId: profile.id } });
+        await prisma.loyaltyTransaction.deleteMany({ where: { profileId: profile.id } });
+        await prisma.customerProfile.delete({ where: { userId } });
+      }
       
       // Delete user
       return prisma.user.delete({ where: { id: userId } });
@@ -362,15 +370,29 @@ export class CustomersService {
   }
 
   async bulkDeleteCustomers(customerIds: number[]) {
-    return this.prisma.$transaction(async (prisma) => {
-      // Delete related data first
-      await prisma.customerTag.deleteMany({ where: { profile: { userId: { in: customerIds } } } });
-      await prisma.customerCommunication.deleteMany({ where: { profile: { userId: { in: customerIds } } } });
-      await prisma.loyaltyTransaction.deleteMany({ where: { profile: { userId: { in: customerIds } } } });
-      await prisma.customerProfile.deleteMany({ where: { userId: { in: customerIds } } });
+    if (!customerIds || customerIds.length === 0) {
+      throw new Error('No customer IDs provided');
+    }
+
+    return await this.prisma.$transaction(async (prisma) => {
+      // Get profile IDs first
+      const profiles = await prisma.customerProfile.findMany({
+        where: { userId: { in: customerIds } },
+        select: { id: true }
+      });
+      const profileIds = profiles.map(p => p.id);
+      
+      // Delete related data first (only if profiles exist)
+      if (profileIds.length > 0) {
+        await prisma.customerTag.deleteMany({ where: { profileId: { in: profileIds } } });
+        await prisma.customerCommunication.deleteMany({ where: { profileId: { in: profileIds } } });
+        await prisma.loyaltyTransaction.deleteMany({ where: { profileId: { in: profileIds } } });
+        await prisma.customerProfile.deleteMany({ where: { userId: { in: customerIds } } });
+      }
       
       // Delete users
-      return prisma.user.deleteMany({ where: { id: { in: customerIds } } });
+      const result = await prisma.user.deleteMany({ where: { id: { in: customerIds }, role: 'CUSTOMER' } });
+      return { deleted: result.count };
     });
   }
 }

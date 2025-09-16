@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request, Query, Res, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, Res, Patch, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { OrdersService } from './orders.service';
@@ -141,6 +141,26 @@ export class OrdersController {
       throw error;
     }
   }
+
+  @Post('delete/:id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async deleteOrder(@Param('id') id: string, @Request() req) {
+    const orderId = parseInt(id, 10);
+    if (isNaN(orderId)) {
+      throw new BadRequestException('Invalid order ID');
+    }
+    return this.ordersService.deleteOrder(orderId, req.user.id);
+  }
+
+  @Post('bulk/delete')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async bulkDeleteOrders(@Body() body: { orderIds: number[] }, @Request() req) {
+    return this.ordersService.bulkDeleteOrders(body.orderIds, req.user.id);
+  }
+
+
 
   @Get(':id')
   @UseGuards(AuthGuard('jwt'))
@@ -361,7 +381,14 @@ export class OrdersController {
     return this.whatsAppService.markMessageProcessed(messageId, body.orderId);
   }
 
-
-
+  @Post(':id/reorder')
+  @UseGuards(AuthGuard('jwt'))
+  async reorderItems(@Param('id') id: string, @Request() req) {
+    const orderId = parseInt(id, 10);
+    if (isNaN(orderId)) {
+      throw new BadRequestException('Invalid order ID');
+    }
+    return this.ordersService.reorderItems(req.user.id, orderId);
+  }
 
 }

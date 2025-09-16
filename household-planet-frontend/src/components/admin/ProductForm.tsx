@@ -7,14 +7,17 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Plus, X } from 'lucide-react';
 import ImageUpload from './ImageUpload';
-import CategoryDropdown from './CategoryDropdown';
+import AdminCategoryDropdown from './AdminCategoryDropdown';
 import axios from 'axios';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   slug: z.string().min(1, 'Slug is required'),
   description: z.string().optional(),
-  shortDescription: z.string().optional(),
+  shortDescription: z.string().optional().refine(
+    (val) => !val || val.trim().split(/\s+/).filter(word => word.length > 0).length <= 28,
+    { message: 'Short description must not exceed 28 words' }
+  ),
   sku: z.string().min(1, 'SKU is required'),
   price: z.number().min(0, 'Price must be positive'),
   comparePrice: z.number().optional(),
@@ -262,7 +265,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <CategoryDropdown
+            <AdminCategoryDropdown
               categories={categories}
               value={watch('categoryId') || ''}
               onChange={(categoryId) => setValue('categoryId', categoryId)}
@@ -392,12 +395,19 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Short Description
+            <span className="text-xs text-gray-500 ml-2">
+              ({watch('shortDescription') ? watch('shortDescription').trim().split(/\s+/).filter(word => word.length > 0).length : 0}/28 words)
+            </span>
+          </label>
           <textarea
             {...register('shortDescription')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Brief product description (max 28 words)"
           />
+          {errors.shortDescription && <p className="text-red-500 text-sm mt-1">{errors.shortDescription.message}</p>}
         </div>
 
         {/* Images */}

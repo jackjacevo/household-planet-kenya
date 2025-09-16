@@ -6,7 +6,7 @@ import { FeaturedCategories } from '@/components/home/FeaturedCategories'
 import { BestSellers } from '@/components/home/BestSellers'
 import { NewArrivals } from '@/components/home/NewArrivals'
 
-import { Testimonials } from '@/components/home/Testimonials'
+
 import { InstagramFeed } from '@/components/home/InstagramFeed'
 import { StoreLocation } from '@/components/home/StoreLocation'
 import { TrustBadges } from '@/components/home/TrustBadges'
@@ -148,17 +148,6 @@ export default function HomePage() {
         <TrustBadges />
       </motion.div>
       
-      {/* Testimonials with enhanced design */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <Testimonials />
-      </motion.div>
-      
-
 
       {/* Instagram Feed */}
       <motion.div

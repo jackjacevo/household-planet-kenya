@@ -13,7 +13,7 @@ export interface ToastProps {
   onClose: (id: string) => void;
 }
 
-export const ToastItem = ({ id, variant, title, description, duration = 4000, onClose }: ToastProps) => {
+function ToastItem({ id, variant, title, description, duration = 4000, onClose }: ToastProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose(id);
@@ -93,9 +93,7 @@ export const ToastItem = ({ id, variant, title, description, duration = 4000, on
       </div>
     </motion.div>
   );
-};
-
-export default ToastItem;
+}
 
 export function ToastContainer({ toasts }: { toasts: ToastProps[] }) {
   return (
@@ -108,3 +106,6 @@ export function ToastContainer({ toasts }: { toasts: ToastProps[] }) {
     </div>
   );
 }
+
+export { ToastItem };
+export default ToastItem;

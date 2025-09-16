@@ -264,6 +264,15 @@ export default function CategoryPage() {
                         </span>
                       </div>
                       
+                      {/* Clear Category Filter Button */}
+                      <button
+                        onClick={() => window.location.href = '/products'}
+                        className="flex items-center space-x-2 px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm border border-orange-200"
+                      >
+                        <span>Clear Category</span>
+                        <X className="h-4 w-4" />
+                      </button>
+                      
                       <button
                         onClick={() => setShowFilters(!showFilters)}
                         className="lg:hidden flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"

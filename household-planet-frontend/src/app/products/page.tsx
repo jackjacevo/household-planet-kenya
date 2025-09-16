@@ -43,19 +43,25 @@ export default function ProductsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
-  const [filters, setFilters] = useState({
-    category: undefined as number | undefined,
-    brand: undefined as number | undefined,
-    search: undefined as string | undefined,
-    featured: undefined as boolean | undefined,
-    minPrice: undefined as number | undefined,
-    maxPrice: undefined as number | undefined,
-    minRating: undefined as number | undefined,
-    inStock: undefined as boolean | undefined,
-    onSale: undefined as boolean | undefined,
-    sortBy: 'createdAt',
-    sortOrder: undefined as string | undefined,
-  });
+  // Initialize filters with URL params
+  const getInitialFilters = () => {
+    const categoryParam = searchParams.get('category');
+    return {
+      category: categoryParam ? 'pending' : undefined as number | undefined | 'pending',
+      brand: undefined as number | undefined,
+      search: undefined as string | undefined,
+      featured: undefined as boolean | undefined,
+      minPrice: undefined as number | undefined,
+      maxPrice: undefined as number | undefined,
+      minRating: undefined as number | undefined,
+      inStock: undefined as boolean | undefined,
+      onSale: undefined as boolean | undefined,
+      sortBy: 'createdAt',
+      sortOrder: undefined as string | undefined,
+    };
+  };
+  
+  const [filters, setFilters] = useState(getInitialFilters());
 
   useEffect(() => {
     const checkMobile = () => {
@@ -82,23 +88,24 @@ export default function ProductsPage() {
   // Handle URL parameters
   useEffect(() => {
     const categoryParam = searchParams.get('category');
-    if (categoryParam && categories.length > 0) {
-      // Convert category slug to ID
+    if (categoryParam && categories.length > 0 && filters.category === 'pending') {
       const category = categories.find(cat => cat.slug === categoryParam);
       if (category) {
         setFilters(prev => ({ ...prev, category: category.id }));
+      } else {
+        setFilters(prev => ({ ...prev, category: undefined }));
       }
+    } else if (!categoryParam && filters.category === 'pending') {
+      setFilters(prev => ({ ...prev, category: undefined }));
     }
-  }, [searchParams, categories]);
+  }, [searchParams, categories, filters.category]);
 
+  // Fetch products when filters change (but not when category is pending)
   useEffect(() => {
-    fetchProducts(currentPage > 1 && scrollMode === 'infinite');
+    if (filters.category !== 'pending') {
+      fetchProducts(currentPage > 1 && scrollMode === 'infinite');
+    }
   }, [currentPage, filters, scrollMode]);
-
-  // Initial load
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   const fetchProducts = async (append = false, refresh = false) => {
     try {
@@ -198,6 +205,8 @@ export default function ProductsPage() {
         sortBy: 'createdAt',
         sortOrder: undefined as string | undefined,
       });
+      // Clear URL parameters
+      window.history.replaceState({}, '', '/products');
     } else {
       setFilters(prev => ({ ...prev, ...newFilters }));
     }
@@ -337,18 +346,6 @@ export default function ProductsPage() {
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      {filters.category && (
-                        <button
-                          onClick={() => {
-                            setFilters(prev => ({ ...prev, category: undefined }));
-                            setCurrentPage(1);
-                          }}
-                          className="flex items-center space-x-2 px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm border border-orange-200 ml-4"
-                        >
-                          <span>Clear Category Filter</span>
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
                       <button
                         onClick={() => setShowFilters(!showFilters)}
                         className="lg:hidden flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 min-h-[44px] text-sm sm:text-base"
@@ -363,6 +360,66 @@ export default function ProductsPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Active Filter Tags */}
+                  {(filters.category || filters.search || filters.minPrice || filters.maxPrice || filters.minRating || filters.inStock) && (
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
+                      {filters.category && (
+                        <button
+                          onClick={() => handleFilterChange({ category: undefined })}
+                          className="flex items-center space-x-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors text-xs border border-orange-200"
+                        >
+                          <span>{categories.find(cat => cat.id === filters.category)?.name || 'Category'}</span>
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      {filters.search && (
+                        <button
+                          onClick={() => handleFilterChange({ search: undefined })}
+                          className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors text-xs border border-blue-200"
+                        >
+                          <span>Search: {filters.search.length > 10 ? filters.search.substring(0, 10) + '...' : filters.search}</span>
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      {(filters.minPrice || filters.maxPrice) && (
+                        <button
+                          onClick={() => handleFilterChange({ minPrice: undefined, maxPrice: undefined })}
+                          className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors text-xs border border-green-200"
+                        >
+                          <span>Price: {filters.minPrice || 0} - {filters.maxPrice || '∞'}</span>
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      {filters.minRating && (
+                        <button
+                          onClick={() => handleFilterChange({ minRating: undefined })}
+                          className="flex items-center space-x-1 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full hover:bg-yellow-200 transition-colors text-xs border border-yellow-200"
+                        >
+                          <span>{filters.minRating}+ Stars</span>
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      {filters.inStock && (
+                        <button
+                          onClick={() => handleFilterChange({ inStock: undefined })}
+                          className="flex items-center space-x-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors text-xs border border-purple-200"
+                        >
+                          <span>In Stock</span>
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      
+                      {/* Clear All Filters Button */}
+                      <button
+                        onClick={() => handleFilterChange({})}
+                        className="flex items-center space-x-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-xs border border-red-200 font-medium"
+                      >
+                        <X className="h-4 w-4" />
+                        <span>Clear All</span>
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 flex-shrink-0">
                     <div className="hidden md:flex items-center bg-gray-100 rounded-xl p-1">
@@ -485,7 +542,7 @@ export default function ProductsPage() {
                         <motion.div 
                           className={`grid gap-4 md:gap-6 ${
                             viewMode === 'grid' || isMobile
-                              ? 'mobile-grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                              ? 'mobile-grid md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6'
                               : 'grid-cols-1'
                           }`}
                           variants={staggerContainer}
@@ -507,7 +564,7 @@ export default function ProductsPage() {
                       <motion.div 
                         className={`grid gap-4 md:gap-6 ${
                           viewMode === 'grid' || isMobile
-                            ? 'mobile-grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                            ? 'mobile-grid md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6'
                             : 'grid-cols-1'
                         }`}
                         variants={staggerContainer}

@@ -1399,6 +1399,23 @@ export class AdminService {
     });
   }
 
+  async deleteBrand(id: number) {
+    const brand = await this.prisma.brand.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } } }
+    });
+
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    if (brand._count.products > 0) {
+      throw new BadRequestException(`Cannot delete brand "${brand.name}" because it has ${brand._count.products} products. Please move or delete the products first.`);
+    }
+
+    return this.prisma.brand.delete({ where: { id } });
+  }
+
   // Enhanced Analytics Methods
   async getPerformanceMetrics() {
     const now = new Date();

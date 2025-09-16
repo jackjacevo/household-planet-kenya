@@ -422,4 +422,11 @@ export class AdminController {
   updateBrand(@Param('id', ParseIntPipe) id: number, @Body() brandData: any) {
     return this.adminService.updateBrand(id, brandData);
   }
+
+  @Delete('brands/:id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  deleteBrand(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteBrand(id);
+  }
 }

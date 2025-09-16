@@ -286,13 +286,13 @@ export default function ProductDetailPage() {
               />
             </div>
             
-            {/* Additional Product Images */}
-            <div className="grid grid-cols-5 gap-2">
-              {productImages.slice(0, 5).map((image, index) => (
+            {/* Additional Product Images - Mobile Optimized */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {productImages.slice(0, 8).map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
-                  className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-colors ${
+                  className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 bg-white rounded-lg overflow-hidden border-2 transition-colors ${
                     selectedImageIndex === index ? 'border-orange-500' : 'border-gray-200'
                   }`}
                 >
@@ -304,7 +304,6 @@ export default function ProductDetailPage() {
                   />
                 </button>
               ))}
-
             </div>
             
 
@@ -375,24 +374,24 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="flex items-center space-x-4">
+            {/* Quantity - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <label className="font-semibold text-gray-900 text-sm">Quantity:</label>
-              <div className="flex items-center border border-gray-300 rounded-lg">
+              <div className="flex items-center border border-gray-300 rounded-lg w-fit">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3 py-2 hover:bg-gray-100 transition-colors min-w-[40px]"
+                  className="px-4 py-3 hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center text-lg font-medium"
                 >
                   -
                 </button>
-                <span className="px-4 py-2 font-medium min-w-[50px] text-center">{quantity}</span>
+                <span className="px-4 py-3 font-medium min-w-[60px] text-center text-lg">{quantity}</span>
                 <button
                   onClick={() => {
                     if (quantity < currentStock) {
                       setQuantity(quantity + 1);
                     }
                   }}
-                  className="px-3 py-2 hover:bg-gray-100 transition-colors min-w-[40px]"
+                  className="px-4 py-3 hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center text-lg font-medium"
                 >
                   +
                 </button>
@@ -583,18 +582,18 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Mobile Sticky Action Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 shadow-lg safe-bottom">
-        <div className="flex space-x-3">
+      {/* Mobile Sticky Action Bar - Enhanced */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-50 shadow-lg" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             onClick={handleAddToWishlist}
-            className={`min-w-[48px] px-3 py-3 ${
+            className={`min-w-[52px] min-h-[52px] px-3 flex items-center justify-center ${
               isInWishlist(product.id.toString()) ? 'bg-red-50 text-red-600 border-red-200' : ''
             }`}
           >
             <Heart
-              className={`h-5 w-5 ${
+              className={`h-6 w-6 ${
                 isInWishlist(product.id.toString()) ? 'fill-red-600' : ''
               }`}
             />
@@ -602,7 +601,7 @@ export default function ProductDetailPage() {
           
           <Button
             onClick={handleWhatsAppOrder}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 min-h-[48px]"
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[52px] font-medium"
           >
             <MessageCircle className="h-5 w-5 mr-2" />
             <span>WhatsApp</span>
@@ -611,11 +610,21 @@ export default function ProductDetailPage() {
           <Button
             onClick={handleAddToCart}
             disabled={currentStock <= 0}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 min-h-[48px]"
+            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white min-h-[52px] font-medium disabled:opacity-50"
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
-            <span>Add to Cart</span>
+            <span>{currentStock <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
           </Button>
+        </div>
+        
+        {/* Price and Stock Info */}
+        <div className="flex items-center justify-between mt-2 text-sm">
+          <span className="font-bold text-orange-600 text-lg">{formatPrice(currentPrice)}</span>
+          <span className={`text-xs px-2 py-1 rounded-full ${
+            currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+            {currentStock > 0 ? `${currentStock} in stock` : 'Out of stock'}
+          </span>
         </div>
       </div>
     </div>

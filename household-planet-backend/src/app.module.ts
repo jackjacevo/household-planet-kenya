@@ -27,6 +27,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CleanupService } from './common/cleanup.service';
+import { WebSocketGatewayService } from './websocket/websocket.gateway';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -62,6 +63,6 @@ import { CleanupService } from './common/cleanup.service';
     PromoCodesModule,
     NotificationsModule,
   ],
-  providers: [CleanupService],
+  providers: [CleanupService, WebSocketGatewayService],
 })
 export class AppModule {}

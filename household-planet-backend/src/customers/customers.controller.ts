@@ -10,6 +10,7 @@ import { CreateCustomerTagDto, UpdateCustomerProfileDto, CustomerCommunicationDt
 import { CreateLoyaltyProgramDto, CreateLoyaltyRewardDto } from './dto/loyalty.dto';
 import { VerifyAddressDto } from './dto/address-verification.dto';
 import { BulkTagCustomersDto } from './dto/bulk-tag.dto';
+import { BulkDeleteCustomersDto } from './dto/bulk-delete.dto';
 
 @Controller('customers')
 @UseGuards(JwtAuthGuard)
@@ -184,15 +185,26 @@ export class CustomersController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
+  @Delete('bulk')
+  async bulkDeleteCustomers(@Body() data: any) {
+    console.log('Bulk delete received data:', data);
+    console.log('Customer IDs:', data.customerIds);
+    return await this.customersService.bulkDeleteCustomers(data.customerIds);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   @Delete(':id')
   async deleteCustomer(@Param('id') userId: string) {
+    console.log('Single delete called with userId:', userId);
     return this.customersService.deleteCustomer(+userId);
   }
 
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  @Delete('bulk')
-  async bulkDeleteCustomers(@Body() data: { customerIds: number[] }) {
-    return this.customersService.bulkDeleteCustomers(data.customerIds);
+  @Post('bulk-test')
+  async testBulkEndpoint(@Body() data: any) {
+    console.log('Test endpoint reached with data:', data);
+    return { success: true, data };
   }
 }

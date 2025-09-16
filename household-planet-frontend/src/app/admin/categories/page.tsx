@@ -336,6 +336,52 @@ export default function AdminCategoriesPage() {
                 />
                 <label className="text-sm font-medium text-gray-700">Active</label>
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  disabled={loading}
+                />
+              </div>
+              {!formData.parentId && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
+                  <div className="flex items-center gap-4">
+                    {formData.image && (
+                      <div className="relative">
+                        <img src={formData.image} alt="Category" className="w-16 h-16 object-cover rounded-lg" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={uploading || loading}
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {uploading ? 'Uploading...' : 'Upload Image'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="md:col-span-2 flex gap-2">
                 <Button type="submit" disabled={loading}>
                   {loading ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}

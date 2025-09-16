@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/Textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle, Smartphone } from 'lucide-react';
+import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle, Smartphone, Trash2 } from 'lucide-react';
 
 const WhatsAppIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -93,13 +93,13 @@ export default function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
-  const [bulkAction, setBulkAction] = useState('');
-  const [showBulkDialog, setShowBulkDialog] = useState(false);
-  const [bulkNotes, setBulkNotes] = useState('');
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 0 });
   const [returns, setReturns] = useState([]);
   const [showReturns, setShowReturns] = useState(false);
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
   // STK Push temporarily disabled
   // const [stkPushDialog, setStkPushDialog] = useState<{ open: boolean; orderId: number | null; phone: string }>({ open: false, orderId: null, phone: '' });
   // const [phoneInput, setPhoneInput] = useState('');
@@ -291,47 +291,72 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedOrders.length === 0) return;
-
+  const handleBulkDelete = async () => {
+    // Filter orders that can be deleted (only PENDING and CANCELLED)
+    const deletableOrders = orders.filter(order => 
+      selectedOrders.includes(order.id) && ['PENDING', 'CANCELLED'].includes(order.status)
+    );
+    
+    const nonDeletableCount = selectedOrders.length - deletableOrders.length;
+    
+    if (nonDeletableCount > 0) {
+      showToast({
+        title: 'Some orders cannot be deleted',
+        description: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.`,
+        variant: 'destructive'
+      });
+    }
+    
+    if (deletableOrders.length === 0) {
+      showToast({
+        title: 'No orders to delete',
+        description: 'Only pending or cancelled orders can be deleted.',
+        variant: 'destructive'
+      });
+      setShowBulkDeleteDialog(false);
+      return;
+    }
+    
+    setBulkDeleting(true);
+    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/status`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/delete`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({
-          orderIds: selectedOrders,
-          status: bulkAction,
-          notes: bulkNotes
-        }),
+        body: JSON.stringify({ orderIds: deletableOrders.map(order => order.id) }),
       });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
+      const result = await response.json();
+      setOrders(prev => prev.filter(o => !selectedOrders.includes(o.id)));
       setSelectedOrders([]);
-      setBulkAction('');
-      setBulkNotes('');
-      setShowBulkDialog(false);
+      setShowBulkDeleteDialog(false);
       refetchOrders();
       refetchStats();
       showToast({
         title: 'Success!',
-        description: `Bulk action completed for ${selectedOrders.length} orders`,
+        description: `${result.deletedCount} orders deleted successfully`,
         variant: 'success'
       });
     } catch (error) {
-      console.error('Error performing bulk action:', error);
+      console.error('Error deleting orders:', error);
       showToast({
         title: 'Error',
-        description: 'Failed to perform bulk action. Please try again.',
+        description: 'Failed to delete orders. Please try again.',
         variant: 'destructive'
       });
+    } finally {
+      setBulkDeleting(false);
     }
   };
+
+
 
   const generateShippingLabel = async (orderId: number) => {
     const loadingKey = `shipping-${orderId}`;
@@ -1318,6 +1343,68 @@ export default function AdminOrdersPage() {
   };
   */
 
+  const confirmDeleteOrder = (orderId: number) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    if (!['PENDING', 'CANCELLED'].includes(order.status)) {
+      showToast({
+        title: 'Cannot Delete Order',
+        description: 'Only pending or cancelled orders can be deleted.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setDeleteDialog({ open: true, order });
+  };
+
+  const deleteOrder = async () => {
+    if (!deleteDialog.order) return;
+
+    const orderId = deleteDialog.order.id;
+    const loadingKey = `delete-${orderId}`;
+    setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/delete/${orderId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      showToast({
+        title: 'Success!',
+        description: `Order ${deleteDialog.order.orderNumber} deleted successfully!`,
+        variant: 'success'
+      });
+      
+      setDeleteDialog({ open: false, order: null });
+      
+      // Remove the deleted order from the local state immediately
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      
+      // Also refetch to ensure consistency
+      refetchOrders();
+      refetchStats();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      showToast({
+        title: 'Error',
+        description: `Failed to delete order: ${error.message}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
   const toggleOrderSelection = (orderId: number) => {
     setSelectedOrders(prev => 
       prev.includes(orderId) 
@@ -1357,46 +1444,16 @@ export default function AdminOrdersPage() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
+
           {selectedOrders.length > 0 && (
-            <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                  Bulk Actions ({selectedOrders.length})
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Bulk Update Orders</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Select value={bulkAction} onValueChange={setBulkAction}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select action" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CONFIRMED">Mark as Confirmed</SelectItem>
-                      <SelectItem value="PROCESSING">Mark as Processing</SelectItem>
-                      <SelectItem value="SHIPPED">Mark as Shipped</SelectItem>
-                      <SelectItem value="DELIVERED">Mark as Delivered</SelectItem>
-                      <SelectItem value="CANCELLED">Mark as Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Textarea
-                    placeholder="Add notes (optional)"
-                    value={bulkNotes}
-                    onChange={(e) => setBulkNotes(e.target.value)}
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setShowBulkDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleBulkAction}>
-                      Update Orders
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full sm:w-auto bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+              onClick={() => setShowBulkDeleteDialog(true)}
+            >
+              Delete Selected ({selectedOrders.length})
+            </Button>
           )}
           <Button 
             variant="outline" 
@@ -1487,7 +1544,7 @@ export default function AdminOrdersPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search orders..."
+                placeholder="Search by order number, customer name, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 text-sm"
@@ -1767,6 +1824,22 @@ export default function AdminOrdersPage() {
                                   <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
                               )}
+                              {['PENDING', 'CANCELLED'].includes(order.status) && user?.role === 'ADMIN' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => confirmDeleteOrder(order.id)}
+                                  disabled={actionLoading[`delete-${order.id}`]}
+                                  title="Delete Order"
+                                  className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 p-2"
+                                >
+                                  {actionLoading[`delete-${order.id}`] ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-red-600"></div>
+                                  ) : (
+                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  )}
+                                </Button>
+                              )}
                             </div>
                             <Select
                               value={order.status}
@@ -1823,88 +1896,89 @@ export default function AdminOrdersPage() {
         </CardContent>
       </Card>
 
-      {/* STK Push Dialog - temporarily disabled */}
-      {/*
-      <Dialog open={stkPushDialog.open} onOpenChange={(open) => {
-        if (!open) {
-          setStkPushDialog({ open: false, orderId: null, phone: '' });
-          setPhoneInput('');
-        }
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => {
+        if (!open) setDeleteDialog({ open: false, order: null });
       }}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send M-Pesa STK Push</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Order
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-3">
-                Send M-Pesa payment prompt to customer's phone
-              </p>
-              
-              {stkPushDialog.phone ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Smartphone className="h-4 w-4 text-green-600" />
-                    <span className="font-medium text-green-800">{stkPushDialog.phone || 'No phone'}</span>
-                  </div>
-                  <p className="text-xs text-green-600 mt-1">
-                    ✅ Phone number available - ready to send payment prompt
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="h-4 w-4 text-orange-600" />
-                    <span className="font-medium text-orange-800">No phone number on file</span>
-                  </div>
-                  <p className="text-xs text-orange-600 mt-1">
-                    Please enter customer's phone number below
-                  </p>
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Phone Number</label>
-                <Input
-                  type="tel"
-                  placeholder="254700000000 or 0700000000"
-                  value={phoneInput || stkPushDialog.phone}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {stkPushDialog.phone ? 'Edit number above or use existing number' : 'Enter Kenyan mobile number (Safaricom, Airtel, Telkom)'}
-                </p>
-              </div>
-            </div>
-            
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete order <span className="font-semibold text-gray-900">{deleteDialog.order?.orderNumber}</span>? This action cannot be undone.
+            </p>
             <div className="flex justify-end space-x-2">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  setStkPushDialog({ open: false, orderId: null, phone: '' });
-                  setPhoneInput('');
-                }}
+                onClick={() => setDeleteDialog({ open: false, order: null })}
               >
                 Cancel
               </Button>
               <Button 
-                onClick={() => {
-                  const phoneToUse = phoneInput || stkPushDialog.phone;
-                  if (stkPushDialog.orderId) {
-                    triggerSTKPush(stkPushDialog.orderId, phoneToUse);
-                  }
-                }}
-                disabled={actionLoading[`stk-${stkPushDialog.orderId}`]}
-                className="bg-green-600 hover:bg-green-700"
+                onClick={deleteOrder}
+                disabled={actionLoading[`delete-${deleteDialog.order?.id}`]}
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
-                {actionLoading[`stk-${stkPushDialog.orderId}`] ? 'Sending...' : 'Send STK Push'}
+                {actionLoading[`delete-${deleteDialog.order?.id}`] ? 'Deleting...' : 'Delete Order'}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-      */}
+
+
+      <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-5 w-5" />
+              Delete Orders
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              {(() => {
+                const deletableCount = orders.filter(order => 
+                  selectedOrders.includes(order.id) && ['PENDING', 'CANCELLED'].includes(order.status)
+                ).length;
+                const nonDeletableCount = selectedOrders.length - deletableCount;
+                
+                return (
+                  <>
+                    <p className="text-gray-800 font-medium">
+                      Are you sure you want to delete <span className="font-bold text-red-600">{deletableCount}</span> selected order{deletableCount > 1 ? 's' : ''}?
+                    </p>
+                    {nonDeletableCount > 0 && (
+                      <p className="text-orange-600 text-sm mt-1">
+                        {nonDeletableCount} order{nonDeletableCount > 1 ? 's' : ''} with other status will be skipped.
+                      </p>
+                    )}
+                    <p className="text-red-600 text-sm mt-2 font-semibold">
+                      This action cannot be undone.
+                    </p>
+                  </>
+                );
+              })()}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowBulkDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white font-medium"
+              >
+                {bulkDeleting ? 'Deleting...' : 'Yes, Delete Orders'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

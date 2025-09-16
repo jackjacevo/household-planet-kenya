@@ -84,20 +84,31 @@ export default function OrdersPage() {
     }
   };
 
-  const reorderItems = async (orderId: number) => {
+  const downloadInvoice = async (orderId: number, orderNumber: string) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/reorder`, {
-        method: 'POST',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/invoice`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      alert('Items added to cart!');
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${orderNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Invoice not available for this order');
+      }
     } catch (error) {
-      console.error('Error reordering:', error);
+      console.error('Error downloading invoice:', error);
+      alert('Failed to download invoice');
     }
   };
-
-
 
   const filteredOrders = orders.filter((order: any) => {
     const matchesSearch = order?.orderNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) || false;
@@ -333,18 +344,11 @@ export default function OrdersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => reorderItems(order.id)}
+                        onClick={() => downloadInvoice(order.id, order.orderNumber)}
                       >
-                        <Package className="h-4 w-4 mr-1" />
-                        Reorder
+                        <Download className="h-4 w-4 mr-1" />
+                        Invoice
                       </Button>
-                      
-                      <Link href={`/account/invoices/${order.id}`}>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-1" />
-                          Invoice
-                        </Button>
-                      </Link>
                       
                       <Link href={`/account/returns?orderId=${order.id}`}>
                         <Button variant="outline" size="sm">

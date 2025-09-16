@@ -5,6 +5,7 @@ import { CustomersService } from '../customers/customers.service';
 import { LoyaltyService } from '../customers/loyalty.service';
 import { ShippingService } from './shipping.service';
 import { OrderIdService } from './order-id.service';
+import { ActivityService } from '../activity/activity.service';
 // import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOrderDto, UpdateOrderStatusDto, CreateReturnDto, BulkOrderUpdateDto, OrderFilterDto, AddOrderNoteDto, SendCustomerEmailDto, ProcessReturnDto } from './dto/order.dto';
@@ -44,6 +45,7 @@ export class OrdersService {
     private loyaltyService: LoyaltyService,
     private shippingService: ShippingService,
     private orderIdService: OrderIdService,
+    private activityService: ActivityService,
     // private promoCodesService: PromoCodesService,
     private notificationsService: NotificationsService
   ) {}
@@ -54,7 +56,12 @@ export class OrdersService {
       
       if (filters?.status) where.status = filters.status;
       if (filters?.customerEmail) {
-        where.user = { email: { contains: filters.customerEmail } };
+        where.OR = [
+          { orderNumber: { contains: filters.customerEmail } },
+          { user: { name: { contains: filters.customerEmail } } },
+          { user: { phone: { contains: filters.customerEmail } } },
+          { user: { email: { contains: filters.customerEmail } } }
+        ];
       }
       if (filters?.orderNumber) {
         where.orderNumber = { contains: filters.orderNumber };
@@ -263,9 +270,12 @@ export class OrdersService {
     let shippingCost = 0;
     let deliveryLocation = null;
     
+    this.logger.debug(`Guest order - dto.deliveryPrice: ${dto.deliveryPrice}, dto.deliveryLocationId: ${dto.deliveryLocationId}`);
+    
     if (dto.deliveryPrice !== undefined && dto.deliveryPrice >= 0) {
       // Use manual delivery price if provided
       shippingCost = dto.deliveryPrice;
+      this.logger.debug(`Using manual delivery price: ${shippingCost}`);
     } else if (dto.deliveryLocationId) {
       // Get the specific delivery location and use its price
       const locations = await this.deliveryService.getAllLocations();
@@ -273,17 +283,23 @@ export class OrdersService {
       
       if (deliveryLocation) {
         shippingCost = deliveryLocation.price;
+        this.logger.debug(`Found delivery location: ${deliveryLocation.name}, price: ${shippingCost}`);
         
         // Apply free shipping ONLY if order value is above threshold
         if (subtotal >= this.FREE_SHIPPING_THRESHOLD) {
           shippingCost = 0;
+          this.logger.debug(`Free shipping applied - subtotal ${subtotal} >= threshold ${this.FREE_SHIPPING_THRESHOLD}`);
         }
       } else {
+        this.logger.error(`Invalid delivery location ID: ${dto.deliveryLocationId}`);
         throw new BadRequestException('Invalid delivery location selected');
       }
     } else {
       shippingCost = subtotal >= this.FREE_SHIPPING_THRESHOLD ? 0 : this.DEFAULT_SHIPPING_COST;
+      this.logger.debug(`Using default shipping cost: ${shippingCost}`);
     }
+    
+    this.logger.debug(`Final shipping cost calculated: ${shippingCost}`);
     
     const total = subtotal + shippingCost;
 
@@ -972,14 +988,20 @@ export class OrdersService {
       throw new NotFoundException('Order not found or not eligible for invoice');
     }
 
-    // In a real implementation, you would generate a PDF here
-    // For now, return mock PDF data
-    const mockPdf = Buffer.from('Mock PDF content for invoice');
+    const invoiceHtml = this.generateInvoiceHtml(order);
+    const mockPdf = Buffer.from(invoiceHtml, 'utf8');
     
     return {
       orderNumber: order.orderNumber,
       pdf: mockPdf
     };
+  }
+
+  private generateInvoiceHtml(order: any): string {
+    const shippingAddress = JSON.parse(order.shippingAddress || '{}');
+    const customerName = order.user?.name || shippingAddress.fullName || 'Guest Customer';
+    
+    return `<!DOCTYPE html><html><head><title>Invoice - ${order.orderNumber}</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#333}.header{border-bottom:2px solid #f97316;padding-bottom:20px;margin-bottom:30px}.company-name{font-size:28px;font-weight:bold;color:#f97316;margin-bottom:5px}.invoice-title{font-size:24px;font-weight:bold;margin-bottom:10px}.invoice-details{display:flex;justify-content:space-between;margin-bottom:30px}.customer-info,.invoice-info{width:48%}.section-title{font-size:16px;font-weight:bold;margin-bottom:10px;color:#374151}.items-table{width:100%;border-collapse:collapse;margin-bottom:30px}.items-table th,.items-table td{padding:12px;text-align:left;border-bottom:1px solid #e5e7eb}.items-table th{background-color:#f9fafb;font-weight:bold}.total-section{margin-left:auto;width:300px}.total-row{display:flex;justify-content:space-between;padding:8px 0}.total-final{border-top:2px solid #374151;font-weight:bold;font-size:18px}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280}</style></head><body><div class="header"><div class="company-name">Household Planet Kenya</div><div>Your trusted partner for household essentials</div></div><div class="invoice-title">INVOICE</div><div class="invoice-details"><div class="customer-info"><div class="section-title">Bill To:</div><div><strong>${customerName}</strong></div></div><div class="invoice-info"><div class="section-title">Invoice Details:</div><div><strong>Invoice #:</strong> ${order.orderNumber}</div><div><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div><div><strong>Status:</strong> ${order.status}</div></div></div><table class="items-table"><thead><tr><th>Item</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${order.items.map(item => `<tr><td><strong>${item.product.name}</strong></td><td>${item.quantity}</td><td>KSh ${item.price.toLocaleString()}</td><td>KSh ${item.total.toLocaleString()}</td></tr>`).join('')}</tbody></table><div class="total-section"><div class="total-row"><span>Subtotal:</span><span>KSh ${order.subtotal.toLocaleString()}</span></div><div class="total-row"><span>Delivery Cost:</span><span>KSh ${(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</span></div><div class="total-row total-final"><span>Total Amount:</span><span>KSh ${order.total.toLocaleString()}</span></div></div><div class="footer"><p>Thank you for your business!</p><p>Household Planet Kenya | Email: householdplanet819@gmail.com | Phone: +254 790 227 760</p></div></body></html>`;
   }
 
   async generateBulkInvoices(userId: number, orderIds: string[]) {
@@ -1259,6 +1281,137 @@ export class OrdersService {
       });
 
       return updatedReturn;
+    });
+  }
+
+  async reorderItems(userId: number, orderId: number) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      include: { items: { include: { product: true, variant: true } } }
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    // Add items to cart instead of creating new order
+    const cartItems = [];
+    for (const item of order.items) {
+      try {
+        const cartItem = await this.prisma.cart.upsert({
+          where: {
+            userId_productId_variantId: {
+              userId,
+              productId: item.productId,
+              variantId: item.variantId || null
+            }
+          },
+          update: {
+            quantity: { increment: item.quantity }
+          },
+          create: {
+            userId,
+            productId: item.productId,
+            variantId: item.variantId || null,
+            quantity: item.quantity
+          }
+        });
+        cartItems.push(cartItem);
+      } catch (error) {
+        this.logger.warn(`Failed to add item ${item.productId} to cart: ${error.message}`);
+      }
+    }
+
+    return { success: true, itemsAdded: cartItems.length };
+  }
+
+  async deleteOrder(orderId: number, userId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: { select: { name: true } },
+        items: { include: { variant: true } },
+        statusHistory: true,
+        notes: true,
+        communications: true,
+        paymentTransactions: true,
+        returnRequests: { include: { items: true } }
+      }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Only allow deletion of PENDING or CANCELLED orders
+    if (!['PENDING', 'CANCELLED'].includes(order.status)) {
+      throw new BadRequestException('Can only delete pending or cancelled orders');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // Delete order items first
+      await tx.orderItem.deleteMany({ where: { orderId } });
+      
+      // Delete the order
+      await tx.order.delete({ where: { id: orderId } });
+
+      this.logger.log(`Order ${order.orderNumber} deleted successfully`);
+      
+      return { success: true, message: `Order ${order.orderNumber} deleted successfully` };
+    }).then(async (result) => {
+      // Log activity after successful deletion
+      try {
+        await this.activityService.logActivity(
+          userId,
+          'DELETE_ORDER',
+          {
+            orderNumber: order.orderNumber,
+            orderId: orderId,
+            customerName: order.user?.name || 'Guest Customer',
+            total: order.total,
+            status: order.status
+          },
+          'ORDER',
+          orderId
+        );
+      } catch (error) {
+        this.logger.error('Failed to log deletion activity:', error);
+      }
+      return result;
+    });
+  }
+
+  async bulkDeleteOrders(orderIds: number[], userId: number) {
+    const orders = await this.prisma.order.findMany({
+      where: { 
+        id: { in: orderIds },
+        status: { in: ['PENDING', 'CANCELLED'] }
+      },
+      select: { id: true, orderNumber: true, status: true }
+    });
+
+    if (orders.length === 0) {
+      throw new BadRequestException('No eligible orders found for deletion');
+    }
+
+    const eligibleIds = orders.map(o => o.id);
+    
+    return this.prisma.$transaction(async (tx) => {
+      await tx.orderItem.deleteMany({ where: { orderId: { in: eligibleIds } } });
+      await tx.order.deleteMany({ where: { id: { in: eligibleIds } } });
+      
+      this.logger.log(`Bulk deleted ${eligibleIds.length} orders`);
+      return { success: true, deletedCount: eligibleIds.length };
+    }).then(async (result) => {
+      try {
+        await this.activityService.logActivity(
+          userId,
+          'BULK_DELETE_ORDERS',
+          { deletedCount: result.deletedCount, orderIds: eligibleIds },
+          'ORDER'
+        );
+      } catch (error) {
+        this.logger.error('Failed to log bulk deletion activity:', error);
+      }
+      return result;
     });
   }
 }

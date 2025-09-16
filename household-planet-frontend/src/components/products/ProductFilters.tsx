@@ -209,10 +209,10 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
           {activeFiltersCount > 0 && (
             <button
               onClick={resetFilters}
-              className="text-xs sm:text-sm text-gray-500 hover:text-red-600 flex items-center space-x-1 min-h-[44px] px-2"
+              className="flex items-center space-x-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-xs border border-red-200 min-h-[44px]"
             >
               <X className="h-4 w-4" />
-              <span className="hidden sm:inline">Clear All</span>
+              <span>Clear All</span>
             </button>
           )}
         </div>
@@ -235,18 +235,29 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
       </div>
 
       <FilterSection
-        title="Category"
+        title={`Category ${filters.category ? '(1)' : ''}`}
         isExpanded={expandedSections.category}
         onToggle={() => toggleSection('category')}
       >
-        <div className="relative z-[100] overflow-visible">
+        <div className="relative" style={{ zIndex: 1000 }}>
           {categories.length > 0 ? (
-            <CategoryDropdown
-              categories={categories}
-              value={filters.category || ''}
-              onChange={(categoryId) => handleFilterChange('category', categoryId)}
-              placeholder="All Categories"
-            />
+            <div className="space-y-2">
+              <CategoryDropdown
+                categories={categories}
+                value={filters.category || ''}
+                onChange={(categoryId) => handleFilterChange('category', categoryId)}
+                placeholder="All Categories"
+              />
+              {filters.category && (
+                <button
+                  onClick={() => handleFilterChange('category', undefined)}
+                  className="flex items-center space-x-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-xs border border-orange-200"
+                >
+                  <X className="h-3 w-3" />
+                  <span>Clear category</span>
+                </button>
+              )}
+            </div>
           ) : (
             <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-xl">
               Loading categories...
@@ -260,7 +271,7 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
         isExpanded={expandedSections.brand}
         onToggle={() => toggleSection('brand')}
       >
-        <div className="relative z-[99] overflow-visible">
+        <div className="relative" style={{ zIndex: 999 }}>
           <select
             value={filters.brand || ''}
             onChange={(e) => {
@@ -280,7 +291,23 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
       </FilterSection>
 
       <div className="border-b border-gray-100 pb-3 sm:pb-4 mb-3 sm:mb-4">
-        <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Price Range</h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+            Price Range {(filters.minPrice || filters.maxPrice) ? '(1)' : ''}
+          </h4>
+          {(filters.minPrice || filters.maxPrice) && (
+            <button
+              onClick={() => {
+                handleFilterChange('minPrice', undefined);
+                handleFilterChange('maxPrice', undefined);
+              }}
+              className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs border border-green-200"
+            >
+              <X className="h-3 w-3" />
+              <span>Clear</span>
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <input
             type="number"
@@ -300,7 +327,20 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
       </div>
 
       <div className="border-b border-gray-100 pb-3 sm:pb-4 mb-3 sm:mb-4">
-        <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Minimum Rating</h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+            Minimum Rating {filters.minRating ? '(1)' : ''}
+          </h4>
+          {filters.minRating && (
+            <button
+              onClick={() => handleFilterChange('minRating', undefined)}
+              className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs border border-yellow-200"
+            >
+              <X className="h-3 w-3" />
+              <span>Clear</span>
+            </button>
+          )}
+        </div>
         <select
           value={filters.minRating || ''}
           onChange={(e) => handleFilterChange('minRating', e.target.value ? Number(e.target.value) : undefined)}
@@ -331,18 +371,7 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
         </label>
       </FilterSection>
 
-      {activeFiltersCount > 0 && (
-        <div className="border-t border-orange-100 pt-6 mt-6">
-          <Button 
-            onClick={resetFilters} 
-            variant="outline" 
-            className="w-full hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Reset All Filters
-          </Button>
-        </div>
-      )}
+
     </div>
   );
 }
