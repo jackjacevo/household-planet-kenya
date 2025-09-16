@@ -205,28 +205,97 @@ export default function OrderConfirmationPage() {
     return `HP${Date.now().toString().slice(-8)}`;
   };
 
-  const shareOrder = (platform: string) => {
+  const shareOrder = async (platform: string) => {
     const url = window.location.href;
     const text = `I just placed an order at Household Planet Kenya! Order #${order?.orderNumber}`;
     
+    // Use native Web Share API if available (mobile devices)
+    if (platform === 'native' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Order - Household Planet Kenya',
+          text: text,
+          url: url
+        });
+        return;
+      } catch (error) {
+        console.log('Share cancelled or failed');
+        return;
+      }
+    }
+    
     switch (platform) {
       case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
         break;
       case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
         break;
       case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`);
+        // Use WhatsApp URL scheme for mobile, web for desktop
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.location.href = `whatsapp://send?text=${encodeURIComponent(text + ' ' + url)}`;
+        } else {
+          window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+        }
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        }).catch(() => {
+          alert('Failed to copy link');
+        });
         break;
       default:
-        navigator.clipboard.writeText(url);
-        alert('Link copied to clipboard!');
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        }).catch(() => {
+          alert('Failed to copy link');
+        });
     }
   };
 
-  const downloadReceipt = () => {
-    window.print();
+  const downloadReceipt = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers: any = {};
+      
+      // Add auth header if token exists and is valid
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      console.log('Downloading receipt for order:', order.id);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${order.id}/invoice`, {
+        headers
+      });
+      
+      console.log('Receipt API response status:', response.status);
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        console.log('Receipt blob size:', blob.size);
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receipt-${order.orderNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        console.log('Receipt downloaded successfully');
+      } else {
+        const errorText = await response.text();
+        console.error('Receipt API error:', response.status, errorText);
+        alert('Unable to download receipt. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+      alert('Unable to download receipt. Please try again later.');
+    }
   };
 
 
@@ -402,39 +471,42 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 -mt-4">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 -mt-4">
 
         {/* Quick Actions Bar */}
-        <div className="bg-white rounded-xl shadow-lg p-4 mb-8 border border-green-100">
-          <div className="flex flex-wrap gap-3 justify-center">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-8 border border-green-100">
+          <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
             <Button 
               onClick={() => router.push(`/track-order/${trackingNumber}`)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-xs sm:text-sm"
+              size="sm"
             >
-              <Package className="h-4 w-4 mr-2" />
-              Track Order
+              <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Track
             </Button>
             <Button 
               variant="outline"
               onClick={downloadReceipt}
-              className="border-green-300 text-green-700 hover:bg-green-50"
+              className="border-green-300 text-green-700 hover:bg-green-50 text-xs sm:text-sm"
+              size="sm"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Receipt
             </Button>
             <Button 
               variant="outline"
-              onClick={() => shareOrder('whatsapp')}
-              className="border-green-300 text-green-700 hover:bg-green-50"
+              onClick={() => shareOrder('native')}
+              className="border-green-300 text-green-700 hover:bg-green-50 text-xs sm:text-sm"
+              size="sm"
             >
-              <MessageCircle className="h-4 w-4 mr-2" />
+              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Share
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Order Tracking Progress */}
             <OrderTrackingProgress
               orderId={order.id}
@@ -444,26 +516,26 @@ export default function OrderConfirmationPage() {
             />
 
             {/* Order Details */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-green-100">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <ShoppingBag className="h-5 w-5 mr-2 text-green-600" />
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 border border-green-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold flex items-center mb-2 sm:mb-0">
+                  <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
                   Order Details
                 </h2>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Order #{order.orderNumber}</p>
-                  <p className="text-sm text-gray-500">Tracking: {trackingNumber}</p>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs sm:text-sm text-gray-500">#{order.orderNumber}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">Track: {trackingNumber}</p>
                 </div>
               </div>
             
               {/* Customer & Payment Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
-                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-                    <User className="h-4 w-4 mr-2 text-blue-600" />
-                    Customer Information
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 rounded-lg border border-blue-100">
+                  <h3 className="font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-blue-600" />
+                    Customer Info
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     <p><span className="text-gray-600">Name:</span> 
                       <span className="font-medium">
                         {orderCompletionData?.customerInfo?.name || 
@@ -505,12 +577,12 @@ export default function OrderConfirmationPage() {
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
-                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-                    <CreditCard className="h-4 w-4 mr-2 text-green-600" />
-                    Payment Information
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg border border-green-100">
+                  <h3 className="font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-green-600" />
+                    Payment Info
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     <p><span className="text-gray-600">Method:</span> 
                       <span className="font-medium ml-1">
                         {order.paymentMethod === 'MPESA' && '📱 M-Pesa'}
@@ -535,15 +607,15 @@ export default function OrderConfirmationPage() {
 
               {/* Items Ordered */}
               <div>
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <Package className="h-4 w-4 mr-2 text-green-600" />
-                  Items Ordered ({order.items?.length || 0})
+                <h3 className="font-semibold mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
+                  <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-green-600" />
+                  Items ({order.items?.length || 0})
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {order.items.map((item, index) => (
-                    <div key={item.id} className="group hover:shadow-md transition-all duration-200 p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-20 h-20 relative flex-shrink-0">
+                    <div key={item.id} className="group hover:shadow-md transition-all duration-200 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 relative flex-shrink-0">
                           <Image
                             src={getImageUrl((() => {
                               const images = item.product.images;
@@ -566,15 +638,15 @@ export default function OrderConfirmationPage() {
                             className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-200"
                           />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800 group-hover:text-green-600 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-800 group-hover:text-green-600 transition-colors text-sm sm:text-base truncate">
                             {item.product.name}
                           </h4>
-                          <div className="flex items-center space-x-4 mt-2">
+                          <div className="flex flex-wrap items-center gap-2 mt-1 sm:mt-2">
                             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                               Qty: {item.quantity}
                             </span>
-                            <span className="text-sm text-gray-600">
+                            <span className="text-xs sm:text-sm text-gray-600">
                               {formatPrice(item.price)} each
                             </span>
                           </div>
@@ -589,13 +661,9 @@ export default function OrderConfirmationPage() {
                             <p className="text-xs text-gray-400 mt-1">SKU: {item.product.sku}</p>
                           )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-green-600">{formatPrice(item.total)}</p>
-                          <p className="text-xs text-gray-500">{item.quantity} × {formatPrice(item.price)}</p>
-                          <button className="mt-2 text-xs text-blue-600 hover:text-blue-800 flex items-center">
-                            <Heart className="h-3 w-3 mr-1" />
-                            Add to Wishlist
-                          </button>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-lg sm:text-xl font-bold text-green-600">{formatPrice(item.total)}</p>
+                          <p className="text-xs text-gray-500 hidden sm:block">{item.quantity} × {formatPrice(item.price)}</p>
                         </div>
                       </div>
                     </div>
@@ -605,13 +673,13 @@ export default function OrderConfirmationPage() {
           </div>
 
             {/* Delivery Information */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-green-100">
-              <h2 className="text-xl font-semibold mb-6 flex items-center">
-                <Truck className="h-5 w-5 mr-2 text-green-600" />
-                Delivery Information
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 border border-green-100">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center">
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
+                Delivery Info
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
                 {order.deliveryLocation && (
                   <div className="bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-lg border border-orange-100">
                     <h3 className="font-medium mb-3 flex items-center">
@@ -733,17 +801,17 @@ export default function OrderConfirmationPage() {
 
           <div>
             {/* Order Summary Sidebar */}
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-4 border border-green-100">
-              <h2 className="text-xl font-semibold mb-6 flex items-center">
-                <CreditCard className="h-5 w-5 mr-2 text-green-600" />
-                Order Summary
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 sticky top-4 border border-green-100">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
+                Summary
               </h2>
               
               {/* Order Total Breakdown */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg mb-6 border border-green-100">
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal ({order.items?.length || 0} items)</span>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 border border-green-100">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-gray-600">Subtotal ({order.items?.length || 0})</span>
                     <span className="font-medium">{formatPrice(order.subtotal)}</span>
                   </div>
                   {order.promoCode && order.discountAmount && order.discountAmount > 0 && (
@@ -756,10 +824,10 @@ export default function OrderConfirmationPage() {
                     <span className="text-gray-600">Delivery Cost</span>
                     <span className="font-medium">{formatPrice(order.deliveryPrice || order.shippingCost || 0)}</span>
                   </div>
-                  <div className="border-t border-green-200 pt-3">
+                  <div className="border-t border-green-200 pt-2 sm:pt-3">
                     <div className="flex justify-between">
-                      <span className="text-lg font-bold text-gray-800">Total Amount</span>
-                      <span className="text-2xl font-bold text-green-600">
+                      <span className="text-sm sm:text-lg font-bold text-gray-800">Total</span>
+                      <span className="text-lg sm:text-2xl font-bold text-green-600">
                         {formatPrice(
                           order.subtotal - 
                           (order.discountAmount || 0) + 
@@ -774,42 +842,44 @@ export default function OrderConfirmationPage() {
 
 
               {/* Action Buttons */}
-              <div className="space-y-3 mb-6">
+              <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                 <Button 
                   onClick={() => router.push(`/track-order/${trackingNumber}`)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  size="lg"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-sm"
+                  size="sm"
                 >
-                  <Package className="h-4 w-4 mr-2" />
-                  Track Your Order
+                  <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  Track Order
                 </Button>
                 
                 <Button 
                   variant="outline"
                   onClick={() => router.push('/account/orders')}
-                  className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                  className="w-full border-green-300 text-green-700 hover:bg-green-50 text-sm"
+                  size="sm"
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View All Orders
+                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  All Orders
                 </Button>
                 
                 <Button 
                   variant="outline"
                   onClick={() => router.push('/products')}
-                  className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                  className="w-full border-orange-300 text-orange-700 hover:bg-orange-50 text-sm"
+                  size="sm"
                 >
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  Continue Shopping
+                  <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  Shop More
                 </Button>
               </div>
 
               {/* Customer Support */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
-                <h3 className="font-semibold mb-3 text-gray-800 flex items-center">
-                  <Phone className="h-4 w-4 mr-2 text-blue-600" />
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 rounded-lg border border-blue-100">
+                <h3 className="font-semibold mb-2 sm:mb-3 text-gray-800 flex items-center text-sm sm:text-base">
+                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-blue-600" />
                   Need Help?
                 </h3>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                   <a href="tel:+254790227760" className="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
                     <Phone className="h-3 w-3 mr-2" />
                     +254790 227 760
@@ -825,30 +895,13 @@ export default function OrderConfirmationPage() {
                 </div>
               </div>
               
-              {/* Rating Prompt */}
-              <div className="mt-6 p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-100">
-                <h3 className="font-semibold mb-2 text-gray-800 flex items-center">
-                  <Star className="h-4 w-4 mr-2 text-yellow-600" />
-                  Rate Your Experience
-                </h3>
-                <p className="text-sm text-gray-600 mb-3">Help other customers by sharing your experience!</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-                  onClick={() => router.push('/account/orders')}
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Leave a Review
-                </Button>
-              </div>
+
             </div>
           </div>
         </div>
       </div>
       
-      {/* A4 Receipt for Printing */}
-      <A4Receipt order={order} trackingNumber={trackingNumber} />
+
     </div>
   );
 }

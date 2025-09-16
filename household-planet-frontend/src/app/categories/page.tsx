@@ -132,7 +132,7 @@ export default function CategoriesPage() {
             
             {/* Search Bar */}
             <div className="max-w-md mx-auto relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-4 top-2.5 text-gray-400 w-5 h-5 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search categories..."

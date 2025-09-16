@@ -28,7 +28,9 @@ import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CleanupService } from './common/cleanup.service';
 import { WebSocketGatewayService } from './websocket/websocket.gateway';
+import { HealthController } from './health/health.controller';
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,

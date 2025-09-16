@@ -65,7 +65,7 @@ export default function TrackOrderPage() {
                   className="pl-12 text-lg"
                   required
                 />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-4 top-2.5 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
               <p className="text-sm text-gray-500 mt-2">
                 You can find your tracking number in your order confirmation email or receipt

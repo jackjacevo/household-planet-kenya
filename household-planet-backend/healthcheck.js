@@ -1,14 +1,14 @@
 const http = require('http');
 
 const options = {
-  host: 'localhost',
+  hostname: 'localhost',
   port: process.env.PORT || 3001,
-  path: '/health',
-  timeout: 2000,
+  path: '/api/health',
+  method: 'GET',
+  timeout: 5000
 };
 
-const request = http.request(options, (res) => {
-  console.log(`STATUS: ${res.statusCode}`);
+const req = http.request(options, (res) => {
   if (res.statusCode === 200) {
     process.exit(0);
   } else {
@@ -16,9 +16,13 @@ const request = http.request(options, (res) => {
   }
 });
 
-request.on('error', (err) => {
-  console.log('ERROR:', err);
+req.on('error', () => {
   process.exit(1);
 });
 
-request.end();
+req.on('timeout', () => {
+  req.destroy();
+  process.exit(1);
+});
+
+req.end();

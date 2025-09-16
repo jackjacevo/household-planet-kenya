@@ -237,7 +237,6 @@ export class OrdersController {
     return this.ordersService.createReturn(req.user.id, createReturnDto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get(':id/invoice')
   async getInvoice(
     @Request() req,
@@ -246,14 +245,26 @@ export class OrdersController {
     @Res() res: Response
   ) {
     try {
-      const invoice = await this.ordersService.generateInvoice(req.user.id, orderId);
+      let invoice;
+      
+      // Check if user is authenticated
+      if (req.user && req.user.id) {
+        invoice = await this.ordersService.generateInvoice(req.user.id, orderId);
+      } else {
+        // Try to generate guest invoice
+        const orderIdNum = parseInt(orderId, 10);
+        if (isNaN(orderIdNum)) {
+          throw new BadRequestException('Invalid order ID');
+        }
+        invoice = await this.ordersService.generateGuestInvoice(orderIdNum);
+      }
       
       res.setHeader('Content-Type', 'application/pdf');
       
       if (preview === 'true') {
         res.setHeader('Content-Disposition', 'inline');
       } else {
-        res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoice.orderNumber}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="receipt-${invoice.orderNumber}.pdf"`);
       }
       
       return res.send(invoice.pdf);

@@ -10,19 +10,13 @@ export function PersistentDataSync() {
 
   useEffect(() => {
     if (user) {
-      // User is authenticated - sync local data to backend, then sync backend to local
+      // User is authenticated - only sync backend data to local state
       const syncOnAuth = async () => {
         try {
-          const { syncWithBackend: syncCart, syncLocalToBackend: syncLocalCart } = useCart.getState();
-          const { syncWithBackend: syncWishlist, syncLocalToBackend: syncLocalWishlist } = useWishlist.getState();
+          const { syncWithBackend: syncCart } = useCart.getState();
+          const { syncWithBackend: syncWishlist } = useWishlist.getState();
           
-          // First sync local data to backend
-          await Promise.all([
-            syncLocalCart(),
-            syncLocalWishlist()
-          ]);
-          
-          // Then sync backend data to local state
+          // Only sync backend data to local state (don't sync local to backend)
           await Promise.all([
             syncCart(),
             syncWishlist()

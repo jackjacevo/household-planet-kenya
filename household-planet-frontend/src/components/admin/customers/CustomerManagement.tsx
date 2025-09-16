@@ -144,7 +144,7 @@ export default function CustomerManagement() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center space-x-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5 pointer-events-none" />
             <input
               type="text"
               placeholder="Search customers by name, email, or phone..."

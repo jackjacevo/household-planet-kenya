@@ -30,31 +30,31 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
                        'N/A';
   
   return (
-    <div className="hidden print:block w-full max-w-[210mm] mx-auto bg-white text-black font-sans" style={{ pageBreakAfter: 'avoid', pageBreakInside: 'avoid' }}>
-      <div className="p-4 text-xs leading-tight">
-        {/* Compact Header */}
+    <div className="hidden print:block w-full max-w-[210mm] mx-auto bg-white text-black font-sans" style={{ pageBreakAfter: 'avoid', pageBreakInside: 'avoid', minHeight: '297mm', maxHeight: '297mm', overflow: 'hidden' }}>
+      <div className="p-3 text-xs leading-tight" style={{ pageBreakInside: 'avoid' }}>
+        {/* Header */}
         <div className="text-center mb-4 pb-3 border-b-2 border-green-600">
-          <h1 className="text-xl font-bold text-green-600 mb-1">HOUSEHOLD PLANET KENYA</h1>
-          <p className="text-xs text-gray-600 mb-1">Your Premier Home & Living Store</p>
-          <div className="text-xs text-gray-500">
+          <h1 className="text-xl font-bold text-green-600 mb-2">HOUSEHOLD PLANET KENYA</h1>
+          <p className="text-sm text-gray-600 mb-2">Your Premier Home & Living Store</p>
+          <div className="text-sm text-gray-500">
             📞 +254790 227 760 • 📧 householdplanet819@gmail.com
           </div>
         </div>
 
-        {/* Order & Customer Info - Single Row */}
+        {/* Order & Customer Info */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="border border-gray-300 p-2 rounded">
-            <h3 className="font-bold text-xs text-blue-800 mb-1">ORDER DETAILS</h3>
-            <div className="text-xs space-y-0.5">
+          <div className="border border-gray-300 p-3 rounded">
+            <h3 className="font-bold text-sm text-blue-800 mb-2">ORDER DETAILS</h3>
+            <div className="text-sm space-y-1">
               <p><span className="text-gray-600">Receipt #:</span> <span className="font-bold">{order.orderNumber}</span></p>
               <p><span className="text-gray-600">Date:</span> {orderDate}</p>
               <p><span className="text-gray-600">Tracking:</span> {trackingNumber}</p>
             </div>
           </div>
           
-          <div className="border border-gray-300 p-2 rounded">
-            <h3 className="font-bold text-xs text-green-800 mb-1">CUSTOMER INFO</h3>
-            <div className="text-xs space-y-0.5">
+          <div className="border border-gray-300 p-3 rounded">
+            <h3 className="font-bold text-sm text-green-800 mb-2">CUSTOMER INFO</h3>
+            <div className="text-sm space-y-1">
               <p><span className="text-gray-600">Name:</span> {customerName}</p>
               <p><span className="text-gray-600">Phone:</span> {customerPhone}</p>
               <p><span className="text-gray-600">Location:</span> {typeof order.deliveryLocation === 'string' ? order.deliveryLocation : order.deliveryLocation?.name || 'N/A'}</p>
@@ -62,9 +62,9 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
           </div>
         </div>
 
-        {/* Compact Items Table */}
+        {/* Items Table */}
         <div className="mb-4">
-          <h3 className="font-bold text-xs text-gray-800 mb-2 bg-gray-100 p-1 rounded">ORDER ITEMS ({order.items?.length || 0})</h3>
+          <h3 className="font-bold text-sm text-gray-800 mb-2 bg-gray-100 p-2 rounded">ORDER ITEMS ({order.items?.length || 0})</h3>
           
           <div className="border border-gray-200 rounded">
             <div className="bg-gray-50 border-b border-gray-200">
@@ -77,7 +77,7 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
             </div>
             
             {order.items.map((item, index) => (
-              <div key={item.id} className={`grid grid-cols-12 gap-1 p-1 text-xs ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+              <div key={item.id} className={`grid grid-cols-12 gap-1 p-0.5 text-xs ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                 <div className="col-span-6">
                   <div className="font-medium text-gray-800 leading-tight">{item.product.name}</div>
                   {item.variant && (
@@ -93,11 +93,13 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
               </div>
             ))}
           </div>
+          
+
         </div>
 
-        {/* Compact Totals */}
-        <div className="bg-gray-50 p-2 rounded border mb-4">
-          <div className="space-y-1 text-xs">
+        {/* Totals */}
+        <div className="bg-gray-50 p-3 rounded border mb-4">
+          <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Subtotal ({order.items?.length || 0} items):</span>
               <span className="font-medium">{formatPrice(order.subtotal)}</span>
@@ -127,11 +129,11 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
           </div>
         </div>
 
-        {/* Payment & Delivery Info - Single Row */}
+        {/* Payment & Delivery Info */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="border border-gray-300 p-2 rounded">
-            <h3 className="font-bold text-xs text-orange-800 mb-1">PAYMENT</h3>
-            <div className="text-xs space-y-0.5">
+          <div className="border border-gray-300 p-3 rounded">
+            <h3 className="font-bold text-sm text-orange-800 mb-2">PAYMENT</h3>
+            <div className="text-sm space-y-1">
               <p><span className="text-gray-600">Method:</span> {
                 order.paymentMethod === 'MPESA' ? 'M-Pesa' :
                 order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Cash on Delivery' :
@@ -139,25 +141,24 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
                 order.paymentMethod === 'BANK_TRANSFER' ? 'Bank Transfer' :
                 order.paymentMethod || 'N/A'
               }</p>
-              <p><span className="text-gray-600">Status:</span> <span className="font-medium">{order.paymentStatus || 'PENDING'}</span></p>
             </div>
           </div>
           
-          <div className="border border-gray-300 p-2 rounded">
-            <h3 className="font-bold text-xs text-purple-800 mb-1">DELIVERY</h3>
-            <div className="text-xs space-y-0.5">
+          <div className="border border-gray-300 p-3 rounded">
+            <h3 className="font-bold text-sm text-purple-800 mb-2">DELIVERY</h3>
+            <div className="text-sm space-y-1">
               <p><span className="text-gray-600">Status:</span> {order.status || 'PENDING'}</p>
               <p><span className="text-gray-600">Est. Delivery:</span> {new Date(Date.now() + (3 * 24 * 60 * 60 * 1000)).toLocaleDateString('en-GB')}</p>
             </div>
           </div>
         </div>
 
-        {/* Compact Footer */}
-        <div className="text-center border-t border-gray-300 pt-3">
-          <h3 className="text-sm font-bold text-gray-800 mb-1">Thank You for Your Order!</h3>
-          <p className="text-xs text-gray-600 mb-2">We appreciate your business and trust in Household Planet Kenya</p>
+        {/* Footer */}
+        <div className="text-center border-t border-gray-300 pt-3 mt-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-2">Thank You for Your Order!</h3>
+          <p className="text-sm text-gray-600 mb-3">We appreciate your business and trust in Household Planet Kenya</p>
           
-          <div className="grid grid-cols-3 gap-2 text-xs text-gray-600 mb-2">
+          <div className="grid grid-cols-3 gap-3 text-sm text-gray-600 mb-2">
             <div>
               <p className="font-medium">Customer Support</p>
               <p>+254790 227 760</p>
@@ -172,7 +173,7 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
             </div>
           </div>
           
-          <p className="text-xs text-gray-500">Generated on {currentDate} • Keep this receipt for your records</p>
+          <p className="text-sm text-gray-500">Generated on {currentDate} • Keep this receipt for your records</p>
         </div>
       </div>
     </div>

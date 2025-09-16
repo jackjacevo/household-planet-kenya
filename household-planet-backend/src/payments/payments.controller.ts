@@ -176,9 +176,18 @@ export class PaymentsController {
   }
 
   @Get('receipt/:orderId')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
-  async generateReceipt(@Param('orderId') orderId: string) {
-    return this.paymentsService.generateReceipt(parseInt(orderId));
+  async generateReceipt(@Param('orderId') orderId: string, @Request() req?) {
+    try {
+      const orderIdNum = parseInt(orderId, 10);
+      if (isNaN(orderIdNum)) {
+        throw new BadRequestException('Invalid order ID');
+      }
+      
+      const receipt = await this.paymentsService.generateReceipt(orderIdNum);
+      return receipt;
+    } catch (error) {
+      console.error('Receipt generation error:', error);
+      throw new BadRequestException('Unable to generate receipt');
+    }
   }
 }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend API Test</title>
+</head>
+<body>
+    <h1>Testing Frontend API Connection</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing API connection...</p>';
+            
+            try {
+                console.log('Testing delivery locations API from frontend...');
+                
+                const response = await fetch('http://localhost:3001/api/simple-delivery/locations', {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Response data:', data);
+                    
+                    resultsDiv.innerHTML = `
+                        <h2>✅ API Connection Successful!</h2>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Success:</strong> ${data.success}</p>
+                        <p><strong>Locations Found:</strong> ${data.data ? data.data.length : 0}</p>
+                        <h3>First 5 Locations:</h3>
+                        <ul>
+                            ${data.data ? data.data.slice(0, 5).map(loc => 
+                                `<li>${loc.name} - Tier ${loc.tier} - KSh ${loc.price}</li>`
+                            ).join('') : ''}
+                        </ul>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <h2>❌ API Error</h2>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Status Text:</strong> ${response.statusText}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                resultsDiv.innerHTML = `
+                    <h2>❌ Connection Error</h2>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>This could be due to:</p>
+                    <ul>
+                        <li>Backend server not running on port 3001</li>
+                        <li>CORS issues</li>
+                        <li>Network connectivity problems</li>
+                    </ul>
+                `;
+            }
+        }
+        
+        // Test immediately when page loads
+        testAPI();
+    </script>
+</body>
+</html>

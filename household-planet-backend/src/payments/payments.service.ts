@@ -663,6 +663,7 @@ export class PaymentsService {
         email: order.user?.email || 'guest@example.com',
         phone: order.user?.phone || payment.phoneNumber || 'N/A'
       },
+      deliveryLocation: order.deliveryLocation || 'Not specified',
       items: order.items && order.items.length > 0 ? order.items.map(item => ({
         name: item.product?.name || 'Unknown Product',
         variant: item.variant?.name || null,

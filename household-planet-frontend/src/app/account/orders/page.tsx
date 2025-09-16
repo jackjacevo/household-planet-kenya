@@ -111,8 +111,29 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter((order: any) => {
-    const matchesSearch = order?.orderNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) || false;
+    if (!searchTerm) {
+      const matchesStatus = statusFilter === 'ALL' || order?.status === statusFilter;
+      return matchesStatus;
+    }
+
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Search by order number
+    const matchesOrderNumber = order?.orderNumber?.toLowerCase()?.includes(searchLower) || false;
+    
+    // Search by product names
+    const matchesProductName = order?.items?.some((item: any) => 
+      item?.product?.name?.toLowerCase()?.includes(searchLower)
+    ) || false;
+    
+    // Search by order amount
+    const orderTotal = order?.total || 0;
+    const matchesAmount = orderTotal.toString().includes(searchTerm) || 
+                         formatPrice(orderTotal).toLowerCase().includes(searchLower);
+    
+    const matchesSearch = matchesOrderNumber || matchesProductName || matchesAmount;
     const matchesStatus = statusFilter === 'ALL' || order?.status === statusFilter;
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -151,10 +172,10 @@ export default function OrdersPage() {
               </select>
             )}
             <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Search className="absolute left-3 top-2.5 text-gray-400 h-4 w-4 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search orders..."
+                placeholder="Search by order #, product name, or amount..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white"
@@ -227,10 +248,9 @@ export default function OrdersPage() {
                       </span>
                       <span className="font-semibold text-sm sm:text-base">{formatPrice(order.total)}</span>
                     </div>
-                    {order.paymentStatus && (
+                    {order.paymentStatus && order.paymentStatus !== 'PENDING' && (
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' :
-                        order.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
                       }`}>
                         Payment: {order.paymentStatus}
@@ -350,12 +370,13 @@ export default function OrdersPage() {
                         Invoice
                       </Button>
                       
-                      <Link href={`/account/returns?orderId=${order.id}`}>
+                      {/* Return button hidden */}
+                      {/* <Link href={`/account/returns?orderId=${order.id}`}>
                         <Button variant="outline" size="sm">
                           <RotateCcw className="h-4 w-4 mr-1" />
                           Return
                         </Button>
-                      </Link>
+                      </Link> */}
                     </>
                   )}
                   

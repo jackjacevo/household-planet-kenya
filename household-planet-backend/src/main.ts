@@ -99,8 +99,12 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   
   // Enhanced CORS configuration
-  const { corsConfig } = await import('./common/config/cors.config');
-  app.enableCors(corsConfig);
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma'],
+  });
   
   // Enable CORS for static files
   app.use('/uploads', (req, res, next) => {

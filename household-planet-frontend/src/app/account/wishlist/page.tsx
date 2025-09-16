@@ -6,24 +6,42 @@ import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/imageUtils';
 import { toastMessages } from '@/lib/toast-messages';
 import { Heart, ShoppingCart, Bell, BellOff, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function AccountWishlistPage() {
-  const { items, removeFromWishlist } = useWishlist();
+  const { items, removeFromWishlist, syncWithBackend } = useWishlist();
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const [notifications, setNotifications] = useState<{[key: string]: boolean}>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load notification preferences
-    const savedNotifications = localStorage.getItem('wishlist-notifications');
-    if (savedNotifications) {
-      setNotifications(JSON.parse(savedNotifications));
-    }
-  }, []);
+    const initializeWishlist = async () => {
+      try {
+        // Load notification preferences
+        const savedNotifications = localStorage.getItem('wishlist-notifications');
+        if (savedNotifications) {
+          setNotifications(JSON.parse(savedNotifications));
+        }
+        
+        // Sync with backend if user is authenticated
+        const token = localStorage.getItem('token');
+        if (token) {
+          await syncWithBackend();
+        }
+      } catch (error) {
+        console.error('Error initializing wishlist:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeWishlist();
+  }, [syncWithBackend]);
 
   const handleNotificationToggle = (productId: string) => {
     const newNotifications = {
@@ -48,6 +66,17 @@ export default function AccountWishlistPage() {
       showToast(toastMessages.cart.alreadyExists(item.name));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your wishlist...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -77,13 +106,13 @@ export default function AccountWishlistPage() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {items.map((item) => (
+          {items.filter(item => item && item.id && item.name).map((item) => (
             <div key={item.id} className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative">
-                <Link href={`/products/${item.slug}`}>
+                <Link href={`/products/${item.slug || item.id}`}>
                   <div className="aspect-square relative">
                     <img
-                      src={item.images?.[0] || '/images/products/placeholder.svg'}
+                      src={getImageUrl(item.images?.[0])}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -141,7 +170,7 @@ export default function AccountWishlistPage() {
               </div>
 
               <div className="p-4">
-                <Link href={`/products/${item.slug}`}>
+                <Link href={`/products/${item.slug || item.id}`}>
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-orange-600 transition-colors">
                     {item.name}
                   </h3>
@@ -198,7 +227,7 @@ export default function AccountWishlistPage() {
                       Remove
                     </Button>
                     
-                    <Link href={`/products/${item.slug}`} className="flex-1">
+                    <Link href={`/products/${item.slug || item.id}`} className="flex-1">
                       <Button variant="outline" className="w-full" size="sm">
                         View Details
                       </Button>

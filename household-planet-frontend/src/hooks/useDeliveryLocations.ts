@@ -39,12 +39,16 @@ export function useDeliveryLocations() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delivery/locations?t=${Date.now()}`);
+      const timestamp = Date.now();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/simple-delivery/locations?t=${timestamp}`, {
+        cache: 'no-store'
+      });
       
       if (response.ok) {
         const data = await response.json();
         setLocations(data.data || []);
-        setLastUpdated(Date.now());
+        setLastUpdated(timestamp);
+        console.log('Delivery locations updated:', data.data?.length || 0, 'locations');
       } else {
         setError('Failed to load delivery locations');
       }

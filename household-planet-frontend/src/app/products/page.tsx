@@ -258,7 +258,7 @@ export default function ProductsPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
       <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
         {/* Breadcrumbs */}
-        <div className="px-4 pt-4">
+        <div className="px-3 sm:px-4 pt-3 sm:pt-4">
           <div className="container mx-auto max-w-7xl">
             <Breadcrumbs
               items={[
@@ -269,11 +269,11 @@ export default function ProductsPage() {
         </div>
         
         {/* Header Section */}
-        <section className="py-6 px-4">
+        <section className="py-3 sm:py-6 px-3 sm:px-4">
           <div className="container mx-auto max-w-7xl">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-800">All Products</h1>
-              <p className="text-gray-600 hidden md:block">Discover our complete collection</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">All Products</h1>
+              <p className="text-gray-600 hidden md:block text-sm sm:text-base">Discover our complete collection</p>
             </div>
           </div>
         </section>
@@ -312,9 +312,9 @@ export default function ProductsPage() {
         )}
 
         {/* Main Content */}
-        <section className="px-4 pb-16">
+        <section className="px-3 sm:px-4 pb-8 sm:pb-16">
           <div className="container mx-auto max-w-7xl">
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
               {/* Desktop Sidebar Filters */}
               <motion.aside 
                 className="hidden lg:block lg:w-80"
@@ -331,7 +331,7 @@ export default function ProductsPage() {
             <main className="flex-1">
               {/* Controls Bar */}
               <motion.div 
-                className="bg-white rounded-2xl p-3 sm:p-4 mb-6 sm:mb-8 shadow-lg border border-gray-100"
+                className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg border border-gray-100"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -513,9 +513,9 @@ export default function ProductsPage() {
                     </motion.div>
                   ) : (
                     <motion.div 
-                      className={`grid gap-4 md:gap-6 ${
+                      className={`grid gap-3 sm:gap-4 md:gap-6 ${
                         viewMode === 'grid' || isMobile
-                          ? 'grid-cols-2 md:grid-cols-5 xl:grid-cols-5'
+                          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
                           : 'grid-cols-1'
                       }`}
                       variants={staggerContainer}

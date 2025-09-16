@@ -51,18 +51,18 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center mb-6">
-        <Package className="h-6 w-6 text-blue-600 mr-3" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center mb-4 sm:mb-6">
+        <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Inventory Management</h2>
-          <p className="text-sm text-gray-600">Configure stock tracking and inventory settings</p>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Inventory Management</h2>
+          <p className="text-xs sm:text-sm text-gray-600">Configure stock tracking and inventory settings</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Low Stock Threshold
           </label>
           <Input
@@ -70,12 +70,13 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
             value={formData.lowStockThreshold || ''}
             onChange={(e) => handleChange('lowStockThreshold', parseInt(e.target.value))}
             placeholder="10"
+            className="text-sm"
           />
           <p className="text-xs text-gray-500 mt-1">Alert when stock falls below this number</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Maximum Order Quantity
           </label>
           <Input
@@ -83,18 +84,19 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
             value={formData.maxOrderQuantity || ''}
             onChange={(e) => handleChange('maxOrderQuantity', parseInt(e.target.value))}
             placeholder="100"
+            className="text-sm"
           />
           <p className="text-xs text-gray-500 mt-1">Maximum quantity per order item</p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900">Track Stock</h4>
-            <p className="text-sm text-gray-500">Enable inventory tracking for products</p>
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-900">Track Stock</h4>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Enable inventory tracking for products</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
               checked={formData.trackStock || false}
@@ -105,12 +107,12 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900">Auto-approve Reviews</h4>
-            <p className="text-sm text-gray-500">Automatically approve customer reviews</p>
+        <div className="flex items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-900">Auto-approve Reviews</h4>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Automatically approve customer reviews</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
               checked={formData.autoApproveReviews || false}
@@ -121,12 +123,12 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900">Allow Backorders</h4>
-            <p className="text-sm text-gray-500">Allow orders when products are out of stock</p>
+        <div className="flex items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-900">Allow Backorders</h4>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Allow orders when products are out of stock</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
               checked={formData.allowBackorders || false}
@@ -137,12 +139,12 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900">Show Out of Stock Products</h4>
-            <p className="text-sm text-gray-500">Display products that are out of stock</p>
+        <div className="flex items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-900">Show Out of Stock Products</h4>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Display products that are out of stock</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
               checked={formData.showOutOfStock || false}
@@ -154,11 +156,11 @@ export function InventorySettingsTab({ settings, onSettingsChange }: InventorySe
         </div>
       </div>
 
-      <div className="flex justify-end pt-6 border-t">
+      <div className="flex justify-center sm:justify-end pt-4 sm:pt-6 border-t">
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center"
+          className="flex items-center w-full sm:w-auto justify-center"
         >
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Saving...' : 'Save Changes'}

@@ -77,6 +77,108 @@ export function MobileProductGrid({
     <div className={`w-full ${className}`}>
       {/* Mobile Grid */}
       <motion.div
-        className=\"mobile-grid gap-3 px-4\"
+        className="mobile-grid gap-3 px-4"
         variants={containerVariants}
-        initial=\"hidden\"\n        animate=\"visible\"\n      >\n        {visibleProducts.map((product, index) => (\n          <motion.div\n            key={`${product.id}-${index}`}\n            variants={itemVariants}\n            className=\"w-full\"\n          >\n            <ProductCard \n              product={product} \n              viewMode=\"grid\" \n              compact={window.innerWidth <= 480}\n            />\n          </motion.div>\n        ))}\n      </motion.div>\n\n      {/* Load More Button - Only show if not using infinite scroll */}\n      {!onLoadMore && visibleProducts.length < products.length && (\n        <div className=\"flex justify-center mt-6 px-4\">\n          <button\n            onClick={loadMoreProducts}\n            className=\"bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-medium transition-colors duration-200 min-h-touch\"\n          >\n            Load More Products\n          </button>\n        </div>\n      )}\n\n      {/* Infinite Scroll Trigger */}\n      {onLoadMore && hasMore && (\n        <div ref={observerRef} className=\"h-20 flex items-center justify-center\">\n          {loading && (\n            <div className=\"flex items-center space-x-2 text-gray-600\">\n              <div className=\"w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin\" />\n              <span className=\"text-sm\">Loading more products...</span>\n            </div>\n          )}\n        </div>\n      )}\n\n      {/* Empty State */}\n      {products.length === 0 && !loading && (\n        <div className=\"text-center py-12 px-4\">\n          <div className=\"w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center\">\n            <svg className=\"w-10 h-10 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n              <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4\" />\n            </svg>\n          </div>\n          <h3 className=\"text-lg font-semibold text-gray-900 mb-2\">No Products Found</h3>\n          <p className=\"text-gray-600 mb-6\">Try adjusting your search or filters</p>\n        </div>\n      )}\n\n      {/* Loading State */}\n      {loading && products.length === 0 && (\n        <div className=\"mobile-grid gap-3 px-4\">\n          {[...Array(6)].map((_, index) => (\n            <div key={index} className=\"bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden animate-pulse\">\n              <div className=\"w-full h-48 bg-gray-200\" />\n              <div className=\"p-3 space-y-2\">\n                <div className=\"h-4 bg-gray-200 rounded\" />\n                <div className=\"h-3 bg-gray-200 rounded w-2/3\" />\n                <div className=\"h-4 bg-gray-200 rounded w-1/2\" />\n              </div>\n            </div>\n          ))}\n        </div>\n      )}\n    </div>\n  );\n}\n\n// Hook for mobile-specific product grid behavior\nexport function useMobileProductGrid(products: Product[]) {\n  const [isMobile, setIsMobile] = useState(false);\n  const [gridColumns, setGridColumns] = useState(2);\n\n  useEffect(() => {\n    const checkMobile = () => {\n      const width = window.innerWidth;\n      setIsMobile(width <= 768);\n      \n      // Adjust grid columns based on screen size\n      if (width <= 480) {\n        setGridColumns(2);\n      } else if (width <= 768) {\n        setGridColumns(2);\n      } else if (width <= 1024) {\n        setGridColumns(3);\n      } else {\n        setGridColumns(4);\n      }\n    };\n\n    checkMobile();\n    window.addEventListener('resize', checkMobile);\n    return () => window.removeEventListener('resize', checkMobile);\n  }, []);\n\n  return { isMobile, gridColumns };\n}
+        initial="hidden"
+        animate="visible"
+      >
+        {visibleProducts.map((product, index) => (
+          <motion.div
+            key={`${product.id}-${index}`}
+            variants={itemVariants}
+            className="w-full"
+          >
+            <ProductCard 
+              product={product} 
+              viewMode="grid" 
+              compact={typeof window !== 'undefined' && window.innerWidth <= 480}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Load More Button - Only show if not using infinite scroll */}
+      {!onLoadMore && visibleProducts.length < products.length && (
+        <div className="flex justify-center mt-6 px-4">
+          <button
+            onClick={loadMoreProducts}
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-medium transition-colors duration-200 min-h-touch"
+          >
+            Load More Products
+          </button>
+        </div>
+      )}
+
+      {/* Infinite Scroll Trigger */}
+      {onLoadMore && hasMore && (
+        <div ref={observerRef} className="h-20 flex items-center justify-center">
+          {loading && (
+            <div className="flex items-center space-x-2 text-gray-600">
+              <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm">Loading more products...</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {products.length === 0 && !loading && (
+        <div className="text-center py-12 px-4">
+          <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Found</h3>
+          <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && products.length === 0 && (
+        <div className="mobile-grid gap-3 px-4">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+              <div className="w-full h-48 bg-gray-200" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-gray-200 rounded" />
+                <div className="h-3 bg-gray-200 rounded w-2/3" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Hook for mobile-specific product grid behavior
+export function useMobileProductGrid(products: Product[]) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [gridColumns, setGridColumns] = useState(2);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+      
+      // Adjust grid columns based on screen size
+      if (width <= 480) {
+        setGridColumns(2);
+      } else if (width <= 768) {
+        setGridColumns(2);
+      } else if (width <= 1024) {
+        setGridColumns(3);
+      } else {
+        setGridColumns(4);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return { isMobile, gridColumns };
+}

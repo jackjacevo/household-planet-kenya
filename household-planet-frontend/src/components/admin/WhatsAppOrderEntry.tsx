@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-
+import { useDeliveryLocations } from '@/hooks/useDeliveryLocations';
 import { useToast } from '@/hooks/useToast';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/utils';
 
 const whatsappOrderSchema = z.object({
   customerPhone: z.string().min(10, 'Phone number is required'),
@@ -30,6 +31,7 @@ export default function WhatsAppOrderEntry() {
   const [selectedLocation, setSelectedLocation] = useState('');
   const [manualDeliveryCost, setManualDeliveryCost] = useState('');
   const [deliveryType, setDeliveryType] = useState('');
+  const { locations: deliveryLocations, loading: locationsLoading } = useDeliveryLocations();
   const { showToast } = useToast();
 
   const {
@@ -42,18 +44,19 @@ export default function WhatsAppOrderEntry() {
     resolver: zodResolver(whatsappOrderSchema),
   });
 
-  const handleLocationChange = (locationValue: string) => {
-    setSelectedLocation(locationValue);
-    if (locationValue) {
-      // Extract price from location value
-      const priceMatch = locationValue.match(/Ksh (\d+(?:,\d+)?)/); 
-      if (priceMatch) {
-        const price = parseInt(priceMatch[1].replace(',', ''));
-        setValue('deliveryCost', price);
-        setManualDeliveryCost(price.toString());
+  const handleLocationChange = (locationId: string) => {
+    setSelectedLocation(locationId);
+    if (locationId) {
+      // Find the location by ID and get its price
+      const location = deliveryLocations.find(loc => loc.id === locationId);
+      if (location) {
+        setValue('deliveryCost', location.price);
+        setManualDeliveryCost(location.price.toString());
+        setValue('deliveryLocation', location.name);
       }
+    } else {
+      setValue('deliveryLocation', '');
     }
-    setValue('deliveryLocation', locationValue);
   };
 
   const handleManualDeliveryCostChange = (value: string) => {
@@ -208,71 +211,15 @@ export default function WhatsAppOrderEntry() {
                 value={selectedLocation}
                 onChange={(e) => handleLocationChange(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                disabled={locationsLoading}
               >
-                <option value="">Select delivery location</option>
-                <option value="Nairobi CBD - Ksh 100">Nairobi CBD - Ksh 100</option>
-                <option value="Kajiado (Naekana) - Ksh 150">Kajiado (Naekana) - Ksh 150</option>
-                <option value="Kitengela (Via Shuttle) - Ksh 150">Kitengela (Via Shuttle) - Ksh 150</option>
-                <option value="Thika (Super Metrol) - Ksh 150">Thika (Super Metrol) - Ksh 150</option>
-                <option value="Juja (Via Super Metrol) - Ksh 200">Juja (Via Super Metrol) - Ksh 200</option>
-                <option value="Kikuyu Town (Super Metrol) - Ksh 200">Kikuyu Town (Super Metrol) - Ksh 200</option>
-                <option value="Pangani - Ksh 250">Pangani - Ksh 250</option>
-                <option value="Upperhill - Ksh 250">Upperhill - Ksh 250</option>
-                <option value="Bomet (Easycoach) - Ksh 300">Bomet (Easycoach) - Ksh 300</option>
-                <option value="Eastleigh - Ksh 300">Eastleigh - Ksh 300</option>
-                <option value="Hurlingham (Ngong Rd) - Rider - Ksh 300">Hurlingham (Ngong Rd) - Rider - Ksh 300</option>
-                <option value="Industrial Area - Rider - Ksh 300">Industrial Area - Rider - Ksh 300</option>
-                <option value="Kileleshwa - Ksh 300">Kileleshwa - Ksh 300</option>
-                <option value="Kilimani - Ksh 300">Kilimani - Ksh 300</option>
-                <option value="Machakos (Makos Sacco) - Ksh 300">Machakos (Makos Sacco) - Ksh 300</option>
-                <option value="Madaraka (Mombasa Rd) - Rider - Ksh 300">Madaraka (Mombasa Rd) - Rider - Ksh 300</option>
-                <option value="Makadara (Jogoo Rd) - Rider - Ksh 300">Makadara (Jogoo Rd) - Rider - Ksh 300</option>
-                <option value="Mbagathi Way (Langata Rd) - Rider - Ksh 300">Mbagathi Way (Langata Rd) - Rider - Ksh 300</option>
-                <option value="Mpaka Road - Ksh 300">Mpaka Road - Ksh 300</option>
-                <option value="Naivasha (Via NNUS) - Ksh 300">Naivasha (Via NNUS) - Ksh 300</option>
-                <option value="Nanyuki (Nanyuki Cabs) - Ksh 300">Nanyuki (Nanyuki Cabs) - Ksh 300</option>
-                <option value="Parklands - Ksh 300">Parklands - Ksh 300</option>
-                <option value="Riverside - Ksh 300">Riverside - Ksh 300</option>
-                <option value="South B - Ksh 300">South B - Ksh 300</option>
-                <option value="South C - Ksh 300">South C - Ksh 300</option>
-                <option value="Westlands - Ksh 300">Westlands - Ksh 300</option>
-                <option value="ABC (Waiyaki Way) - Rider - Ksh 350">ABC (Waiyaki Way) - Rider - Ksh 350</option>
-                <option value="Allsops, Ruaraka - Ksh 350">Allsops, Ruaraka - Ksh 350</option>
-                <option value="Bungoma (EasyCoach) - Ksh 350">Bungoma (EasyCoach) - Ksh 350</option>
-                <option value="Carnivore (Langata) - Rider - Ksh 350">Carnivore (Langata) - Rider - Ksh 350</option>
-                <option value="DCI (Kiambu Rd) - Rider - Ksh 350">DCI (Kiambu Rd) - Rider - Ksh 350</option>
-                <option value="Eldoret (North-rift Shuttle) - Ksh 350">Eldoret (North-rift Shuttle) - Ksh 350</option>
-                <option value="Embu (Using Kukena) - Ksh 350">Embu (Using Kukena) - Ksh 350</option>
-                <option value="Homa Bay (Easy Coach) - Ksh 350">Homa Bay (Easy Coach) - Ksh 350</option>
-                <option value="Imara Daima (Boda Rider) - Ksh 350">Imara Daima (Boda Rider) - Ksh 350</option>
-                <option value="Jamhuri Estate - Ksh 350">Jamhuri Estate - Ksh 350</option>
-                <option value="Kericho (Using EasyCoach) - Ksh 350">Kericho (Using EasyCoach) - Ksh 350</option>
-                <option value="Kisii (Using Easycoach) - Ksh 350">Kisii (Using Easycoach) - Ksh 350</option>
-                <option value="Kisumu (Easy Coach-United Mall) - Ksh 350">Kisumu (Easy Coach-United Mall) - Ksh 350</option>
-                <option value="Kitale (Northrift) - Ksh 350">Kitale (Northrift) - Ksh 350</option>
-                <option value="Lavington - Ksh 350">Lavington - Ksh 350</option>
-                <option value="Mombasa (Dreamline Bus) - Ksh 350">Mombasa (Dreamline Bus) - Ksh 350</option>
-                <option value="Nextgen Mall, Mombasa Road - Ksh 350">Nextgen Mall, Mombasa Road - Ksh 350</option>
-                <option value="Roasters - Ksh 350">Roasters - Ksh 350</option>
-                <option value="Rongo (Using EasyCoach) - Ksh 350">Rongo (Using EasyCoach) - Ksh 350</option>
-                <option value="Buruburu - Ksh 400">Buruburu - Ksh 400</option>
-                <option value="Donholm - Ksh 400">Donholm - Ksh 400</option>
-                <option value="Kangemi - Ksh 400">Kangemi - Ksh 400</option>
-                <option value="Kasarani - Ksh 400">Kasarani - Ksh 400</option>
-                <option value="Kitisuru - Ksh 400">Kitisuru - Ksh 400</option>
-                <option value="Lucky Summer - Ksh 400">Lucky Summer - Ksh 400</option>
-                <option value="Lumumba Drive - Ksh 400">Lumumba Drive - Ksh 400</option>
-                <option value="Muthaiga - Ksh 400">Muthaiga - Ksh 400</option>
-                <option value="Peponi Road - Ksh 400">Peponi Road - Ksh 400</option>
-                <option value="Roysambu - Ksh 400">Roysambu - Ksh 400</option>
-                <option value="Thigiri - Ksh 400">Thigiri - Ksh 400</option>
-                <option value="Village Market - Ksh 400">Village Market - Ksh 400</option>
-                <option value="Kahawa Sukari - Ksh 550">Kahawa Sukari - Ksh 550</option>
-                <option value="Kahawa Wendani - Ksh 550">Kahawa Wendani - Ksh 550</option>
-                <option value="Karen - Ksh 650">Karen - Ksh 650</option>
-                <option value="Kiambu - Ksh 650">Kiambu - Ksh 650</option>
-                <option value="JKIA - Ksh 700">JKIA - Ksh 700</option>
-                <option value="Ngong Town - Ksh 1,000">Ngong Town - Ksh 1,000</option>
+                <option value="">{locationsLoading ? 'Loading locations...' : 'Select delivery location'}</option>
+                {deliveryLocations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name} - {formatPrice(location.price)}
+                    {location.estimatedDays && ` (${location.estimatedDays} days)`}
+                  </option>
+                ))}
               </select>
             </div>
             

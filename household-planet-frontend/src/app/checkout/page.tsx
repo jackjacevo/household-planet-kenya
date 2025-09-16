@@ -552,20 +552,21 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8 pb-20 md:pb-8">
-      <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Checkout</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-8 pb-20 md:pb-8">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-8">
+        <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">Checkout</h1>
         <Button
           variant="outline"
           onClick={() => router.push('/cart')}
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+          size="sm"
         >
-          ← Back to Cart
+          ← Cart
         </Button>
       </div>
       
       {/* Progress Indicator */}
-      <div className="mb-6 md:mb-8">
+      <div className="mb-4 sm:mb-6 md:mb-8">
         <div className="hidden md:flex items-center justify-between">
           {steps.map((stepItem, index) => {
             const Icon = stepItem.icon;
@@ -611,7 +612,7 @@ export default function CheckoutPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
         <div className="lg:col-span-2 order-2 lg:order-1">
           {/* Account Step */}
           {step === 'account' && (
@@ -778,81 +779,92 @@ export default function CheckoutPage() {
                 </div>
               </div>
               
-              {/* Delivery Location - only show if delivery is selected */}
+              {/* Delivery Location - show selected location from cart */}
               {deliveryType === 'DELIVERY' && (
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-3">Delivery Location</h3>
                   
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Select Delivery Location</label>
-                      <DeliveryLocationSelector
-                        value={selectedDeliveryLocation}
-                        onChange={(locationName, price) => {
-                          const location = deliveryLocations.find(loc => loc.name === locationName);
-                          if (location) {
-                            setSelectedDeliveryLocation(location.id);
-                            let cost = price;
-                            // Apply free shipping if order value is above threshold
-                            if (getTotalPrice() >= 5000) {
-                              cost = 0;
-                            }
-                            setDeliveryCost(cost);
-                            setManualDeliveryCost(price.toString());
-                          }
-                        }}
-                        placeholder="Choose your delivery location"
-                        className="w-full"
-                      />
-                    </div>
-                    
-                    {selectedDeliveryLocation && (() => {
-                      const location = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
-                      return location ? (
-                        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                          <div className="text-center">
-                            <h4 className="font-semibold text-lg text-gray-800 mb-2">
-                              {location.name}
+                    {selectedDeliveryLocation ? (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-lg text-gray-800">
+                              {(() => {
+                                const location = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
+                                return location ? location.name : 'Selected Location';
+                              })()} ✅
                             </h4>
-                            {location.description && (
-                              <p className="text-sm text-gray-600 mb-2">
-                                {location.description}
-                              </p>
-                            )}
-                            <p className="text-sm text-green-600 mb-3">
-                              Estimated delivery: {location.estimatedDays} day(s)
+                            {(() => {
+                              const location = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
+                              return location && location.description ? (
+                                <p className="text-sm text-gray-600 mb-1">
+                                  {location.description}
+                                </p>
+                              ) : null;
+                            })()}
+                            <p className="text-sm text-green-600">
+                              Estimated delivery: {(() => {
+                                const location = deliveryLocations.find(loc => loc.id === selectedDeliveryLocation);
+                                return location ? `${location.estimatedDays} day(s)` : '1-2 days';
+                              })()} 
                             </p>
-                            <div className="text-2xl font-bold">
-                              <span className="text-orange-600">
-                                {formatPrice(location.price)}
-                              </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-orange-600">
+                              {formatPrice(deliveryCost)}
                             </div>
+                            <button
+                              onClick={() => router.push('/cart')}
+                              className="text-sm text-blue-600 hover:text-blue-800 underline mt-1"
+                            >
+                              Change location
+                            </button>
                           </div>
                         </div>
-                      ) : null;
-                    })()}
-                    
-                    <div className="text-center text-sm text-gray-500">OR</div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Manual Delivery Cost (KSh)</label>
-                      <Input
-                        type="number"
-                        placeholder="Enter delivery cost"
-                        value={manualDeliveryCost}
-                        onChange={(e) => {
-                          setManualDeliveryCost(e.target.value);
-                          const cost = parseFloat(e.target.value) || 0;
-                          setDeliveryCost(cost);
-                          setSelectedDeliveryLocation('');
-                        }}
-                        min="0"
-                        step="1"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Use this if your location is not listed above
-                      </p>
-                    </div>
+                      </div>
+                    ) : manualDeliveryCost ? (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-lg text-gray-800">
+                              Custom Delivery Location ✅
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              Manual delivery cost set
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-orange-600">
+                              {formatPrice(parseFloat(manualDeliveryCost))}
+                            </div>
+                            <button
+                              onClick={() => router.push('/cart')}
+                              className="text-sm text-blue-600 hover:text-blue-800 underline mt-1"
+                            >
+                              Change cost
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="text-center">
+                          <h4 className="font-semibold text-lg text-gray-800 mb-2">
+                            ⚠️ No Delivery Location Selected
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-3">
+                            Please go back to your cart to select a delivery location
+                          </p>
+                          <button
+                            onClick={() => router.push('/cart')}
+                            className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                          >
+                            Go to Cart
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -884,7 +896,10 @@ export default function CheckoutPage() {
                   className="flex-1"
                   size="lg"
                 >
-                  Continue to Payment
+                  {deliveryType === 'DELIVERY' && !selectedDeliveryLocation && !manualDeliveryCost 
+                    ? 'Select Delivery Location' 
+                    : 'Continue to Payment'
+                  }
                 </Button>
               </div>
             </div>
@@ -1032,7 +1047,7 @@ export default function CheckoutPage() {
                     <p><strong>Location:</strong> 
                       {selectedDeliveryLocation 
                         ? `${deliveryLocations.find(loc => loc.id === selectedDeliveryLocation)?.name} (${formatPrice(deliveryCost)})`
-                        : manualDeliveryCost ? `Custom location (${formatPrice(deliveryCost)})` : 'Not specified'
+                        : manualDeliveryCost ? `Custom location (${formatPrice(parseFloat(manualDeliveryCost))})` : 'Not specified'
                       }
                     </p>
                   )}
@@ -1072,8 +1087,8 @@ export default function CheckoutPage() {
         </div>
         
         <div className="order-1 lg:order-2">
-          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 lg:sticky lg:top-4">
-            <h2 className="text-lg md:text-xl font-semibold mb-4">Order Summary</h2>
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 lg:sticky lg:top-4">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4">Order Summary</h2>
             
             <div className="space-y-3 mb-4">
               {items.map((item) => (

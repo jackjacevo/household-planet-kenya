@@ -307,6 +307,10 @@ export const useCart = create<CartStore>()(
         const state = get();
         return state.items.reduce((total, item) => total + item.quantity, 0);
       },
+      
+      clearOnLogout: () => {
+        set({ items: [], savedForLater: [], cartData: null, isLoading: false });
+      },
     }),
     {
       name: 'cart-storage',

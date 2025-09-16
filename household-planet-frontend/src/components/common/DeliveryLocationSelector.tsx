@@ -30,14 +30,19 @@ export function DeliveryLocationSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Listen for location updates
+  // Listen for location updates and force refresh
   useEffect(() => {
     const { eventBus, EVENTS } = require('@/lib/events');
     const handleLocationUpdate = () => {
+      console.log('DeliveryLocationSelector: Received location update event');
       reload();
     };
 
     eventBus.on(EVENTS.DELIVERY_LOCATIONS_UPDATED, handleLocationUpdate);
+    
+    // Also reload when component mounts to ensure fresh data
+    reload();
+    
     return () => eventBus.off(EVENTS.DELIVERY_LOCATIONS_UPDATED, handleLocationUpdate);
   }, [reload]);
 
@@ -48,6 +53,7 @@ export function DeliveryLocationSelector({
   const selectedLocation = locations.find(loc => loc.name === value);
 
   const handleSelect = (location: any) => {
+    console.log('Selected delivery location:', location.name, 'Price:', location.price);
     onChange(location.name, location.price);
     setIsOpen(false);
     setSearchTerm('');

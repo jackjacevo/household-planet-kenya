@@ -16,7 +16,7 @@ import { getImageUrl } from '@/lib/imageUtils';
 export default function CartPage() {
   const router = useRouter();
   const { items, savedForLater, updateQuantity, removeFromCart, saveForLater, moveToCart, getTotalPrice, cartData, isLoading } = useCart();
-  const { calculateDeliveryCost, deliveryLocations } = useDelivery();
+  const { calculateDeliveryCost, deliveryLocations, loading: locationsLoading, error: locationsError } = useDelivery();
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string, discount: number, discountAmount?: number} | null>(null);
   const [selectedLocation, setSelectedLocation] = useState('');
@@ -29,6 +29,16 @@ export default function CartPage() {
   React.useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Debug delivery locations
+  React.useEffect(() => {
+    console.log('Cart page - Delivery locations:', {
+      count: deliveryLocations.length,
+      loading: locationsLoading,
+      error: locationsError,
+      locations: deliveryLocations.slice(0, 3) // Show first 3 for debugging
+    });
+  }, [deliveryLocations, locationsLoading, locationsError]);
 
   // Sync cart on component mount (only once)
   React.useEffect(() => {
@@ -384,18 +394,26 @@ export default function CartPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900">
               <Truck className="h-5 w-5 mr-2 text-blue-600" />
-              Delivery Options
+              Delivery Location
             </h3>
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                📍 Select your delivery location here. This will be used during checkout.
+              </p>
+            </div>
             
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">📍 Select Location</label>
+                <label className="block text-sm font-medium mb-3 text-gray-700">📍 Select Delivery Location *</label>
                 <select
                   value={selectedLocation}
                   onChange={(e) => handleLocationChange(e.target.value)}
                   className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                  disabled={deliveryLocations.length === 0}
                 >
-                  <option value="">Choose your delivery location</option>
+                  <option value="">
+                    {deliveryLocations.length === 0 ? 'Loading locations...' : 'Choose your delivery location'}
+                  </option>
                   {deliveryLocations.map((location) => (
                     <option key={location.id} value={location.id}>
                       {location.name} - {formatPrice(location.price)}
@@ -403,6 +421,21 @@ export default function CartPage() {
                     </option>
                   ))}
                 </select>
+                {deliveryLocations.length === 0 && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+                    ⚠️ Loading delivery locations... If this persists, please refresh the page or contact support.
+                    {locationsError && (
+                      <div className="mt-1 text-red-600">
+                        Error: {locationsError}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {deliveryLocations.length > 0 && (
+                  <div className="mt-1 text-xs text-green-600">
+                    ✅ {deliveryLocations.length} locations loaded
+                  </div>
+                )}
                 {selectedLocation && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     {(() => {
@@ -433,7 +466,7 @@ export default function CartPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">💰 Manual Delivery Cost (KSh)</label>
+                <label className="block text-sm font-medium mb-3 text-gray-700">💰 Custom Delivery Cost (KSh)</label>
                 <Input
                   type="number"
                   placeholder="Enter custom delivery cost"
@@ -443,7 +476,7 @@ export default function CartPage() {
                   step="1"
                   className="border-gray-200 focus:border-orange-500 p-3"
                 />
-                <p className="text-xs text-gray-500 mt-1">* Required for checkout</p>
+                <p className="text-xs text-gray-500 mt-1">* Use this if your location is not listed above</p>
               </div>
               
               {selectedLocation && (() => {
@@ -536,7 +569,7 @@ export default function CartPage() {
                     router.push('/checkout');
                   }}
                 >
-                  {isLoading ? '⏳ Loading...' : (deliveryCost === 0 && !manualDeliveryCost ? '⚠️ Add Delivery Cost' : '🛒 Proceed to Checkout')}
+                  {isLoading ? '⏳ Loading...' : (deliveryCost === 0 && !manualDeliveryCost ? '⚠️ Select Delivery Location' : '🛒 Proceed to Checkout')}
                 </Button>
                 
                 <Link href="/products">
@@ -545,6 +578,15 @@ export default function CartPage() {
                   </Button>
                 </Link>
               </div>
+              
+              {/* Delivery Location Reminder */}
+              {!selectedLocation && !manualDeliveryCost && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-700 text-center">
+                    ⚠️ Please select a delivery location above to proceed
+                  </p>
+                </div>
+              )}
               
               {/* Trust Indicators */}
               <div className="mt-6 pt-4 border-t border-gray-100">

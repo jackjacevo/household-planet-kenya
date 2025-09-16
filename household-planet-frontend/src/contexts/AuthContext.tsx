@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { api } from '@/lib/api'
+import { useCart } from '@/hooks/useCart'
+import { useWishlist } from '@/hooks/useWishlist'
 
 interface User {
   id: number
@@ -83,6 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
+      // Clear any existing user data first
+      localStorage.removeItem('cart-storage')
+      localStorage.removeItem('wishlist-storage')
+      localStorage.removeItem('guestCart')
+      localStorage.removeItem('checkoutData')
+      useCart.getState().clearOnLogout()
+      useWishlist.getState().clearOnLogout()
+      
       const response = await api.login(email, password) as any
       const token = response.accessToken || response.access_token
       localStorage.setItem('token', token)
@@ -108,6 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('cart-storage')
+    localStorage.removeItem('wishlist-storage')
+    localStorage.removeItem('guestCart')
+    localStorage.removeItem('checkoutData')
+    
+    // Clear cart and wishlist state
+    useCart.getState().clearOnLogout()
+    useWishlist.getState().clearOnLogout()
+    
     setUser(null)
   }
 

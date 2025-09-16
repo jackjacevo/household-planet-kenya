@@ -38,6 +38,11 @@ export function getImageUrl(imagePath: string | null | undefined): string {
   // Get API URL from environment
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+  // Handle category images with proper endpoint
+  if (cleanPath.includes('category-') && cleanPath.includes('.jpeg')) {
+    return `${apiUrl}/uploads/categories/${cleanPath.split('/').pop()}`;
+  }
+
   // If it starts with /uploads/, prepend the API URL
   if (cleanPath.startsWith('/uploads/')) {
     return `${apiUrl}${cleanPath}`;

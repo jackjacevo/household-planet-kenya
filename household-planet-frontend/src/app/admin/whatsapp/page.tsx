@@ -10,12 +10,12 @@ export default function WhatsAppPage() {
     <div className="px-4 sm:px-6 lg:px-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">WhatsApp Management</h1>
-        <p className="text-gray-600">Manage WhatsApp messages and orders</p>
+        <p className="text-gray-600">Manage WhatsApp orders</p>
       </div>
 
       <Tabs defaultValue="messages" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="messages">Messages & Orders</TabsTrigger>
+          <TabsTrigger value="messages">WhatsApp Orders</TabsTrigger>
           <TabsTrigger value="entry">Create Order</TabsTrigger>
         </TabsList>
 

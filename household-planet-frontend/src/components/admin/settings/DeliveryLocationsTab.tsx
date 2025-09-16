@@ -118,6 +118,11 @@ export function DeliveryLocationsTab() {
         if (typeof window !== 'undefined') {
           const { eventBus, EVENTS } = require('@/lib/events');
           eventBus.emit(EVENTS.DELIVERY_LOCATIONS_UPDATED);
+          
+          // Force refresh of all delivery location selectors
+          setTimeout(() => {
+            eventBus.emit(EVENTS.DELIVERY_LOCATIONS_UPDATED);
+          }, 100);
         }
       } else {
         const errorData = await response.json();
@@ -152,6 +157,11 @@ export function DeliveryLocationsTab() {
         if (typeof window !== 'undefined') {
           const { eventBus, EVENTS } = require('@/lib/events');
           eventBus.emit(EVENTS.DELIVERY_LOCATIONS_UPDATED);
+          
+          // Force refresh of all delivery location selectors
+          setTimeout(() => {
+            eventBus.emit(EVENTS.DELIVERY_LOCATIONS_UPDATED);
+          }, 100);
         }
       } else {
         const errorData = await response.json();
@@ -206,39 +216,39 @@ export function DeliveryLocationsTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-48 sm:h-64">
+        <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h3 className="text-lg font-medium text-gray-900">Delivery Locations</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">Delivery Locations</h3>
+          <p className="text-xs sm:text-sm text-gray-500">
             Manage delivery locations and pricing for your store
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="flex items-center">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setShowForm(true)} className="flex items-center justify-center w-full sm:w-auto">
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
           Add Location
         </Button>
       </div>
 
       {/* Tier Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[1, 2, 3, 4].map(tier => (
-          <div key={tier} className="bg-white border rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-900">Tier {tier}</p>
-                <p className="text-xs text-gray-500">{TIER_RANGES[tier as keyof typeof TIER_RANGES]}</p>
+          <div key={tier} className="bg-white border rounded-lg p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-900">Tier {tier}</p>
+                <p className="text-xs text-gray-500 truncate">{TIER_RANGES[tier as keyof typeof TIER_RANGES]}</p>
               </div>
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${TIER_COLORS[tier as keyof typeof TIER_COLORS]}`}>
-                {tierCounts[tier] || 0} locations
+              <span className={`px-2 py-1 text-xs font-medium rounded-full self-start sm:self-auto ${TIER_COLORS[tier as keyof typeof TIER_COLORS]}`}>
+                {tierCounts[tier] || 0}
               </span>
             </div>
           </div>
@@ -246,22 +256,22 @@ export function DeliveryLocationsTab() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-2.5 h-3 w-3 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
             <Input
               placeholder="Search locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-9 sm:pl-10 text-sm"
             />
           </div>
         </div>
         <select
           value={selectedTier || ''}
           onChange={(e) => setSelectedTier(e.target.value ? parseInt(e.target.value) : null)}
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All Tiers</option>
           <option value="1">Tier 1</option>
@@ -273,26 +283,89 @@ export function DeliveryLocationsTab() {
 
       {/* Locations List */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="block sm:hidden">
+          {filteredLocations.map((location) => (
+            <div key={location.id} className="border-b border-gray-200 p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center flex-1 min-w-0">
+                  <MapPin className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">{location.name}</h4>
+                    {location.description && (
+                      <p className="text-xs text-gray-500 truncate">{location.description}</p>
+                    )}
+                  </div>
+                </div>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ml-2 ${TIER_COLORS[location.tier as keyof typeof TIER_COLORS]}`}>
+                  T{location.tier}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 mb-3">
+                <div className="flex items-center">
+                  <DollarSign className="h-3 w-3 text-gray-400 mr-1" />
+                  Ksh {location.price}
+                </div>
+                <div className="flex items-center">
+                  <Clock className="h-3 w-3 text-gray-400 mr-1" />
+                  {location.estimatedDays}d
+                </div>
+                <div className="flex items-center col-span-2">
+                  {location.expressAvailable ? (
+                    <>
+                      <Zap className="h-3 w-3 text-green-500 mr-1" />
+                      <span className="text-green-600">Express: Ksh {location.expressPrice}</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">No express</span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(location)}
+                  className="text-xs px-2 py-1"
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(location.id!)}
+                  className="text-red-600 hover:text-red-700 text-xs px-2 py-1"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Location
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tier
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Delivery Time
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Express
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -300,7 +373,7 @@ export function DeliveryLocationsTab() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredLocations.map((location) => (
                 <tr key={location.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="flex items-center">
                         <MapPin className="h-4 w-4 text-gray-400 mr-2" />
@@ -315,24 +388,24 @@ export function DeliveryLocationsTab() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${TIER_COLORS[location.tier as keyof typeof TIER_COLORS]}`}>
                       Tier {location.tier}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900">
                       <DollarSign className="h-4 w-4 text-gray-400 mr-1" />
                       Ksh {location.price}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900">
                       <Clock className="h-4 w-4 text-gray-400 mr-1" />
                       {location.estimatedDays} day{location.estimatedDays !== 1 ? 's' : ''}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                     {location.expressAvailable ? (
                       <div className="flex items-center text-sm text-green-600">
                         <Zap className="h-4 w-4 mr-1" />
@@ -342,7 +415,7 @@ export function DeliveryLocationsTab() {
                       <span className="text-sm text-gray-400">Not available</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
                       <Button
                         variant="outline"
@@ -368,10 +441,10 @@ export function DeliveryLocationsTab() {
         </div>
 
         {filteredLocations.length === 0 && (
-          <div className="text-center py-12">
-            <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No locations found</h3>
-            <p className="text-gray-500">
+          <div className="text-center py-8 sm:py-12">
+            <MapPin className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No locations found</h3>
+            <p className="text-sm sm:text-base text-gray-500 px-4">
               {searchTerm || selectedTier ? 'Try adjusting your filters' : 'Add your first delivery location to get started'}
             </p>
           </div>
@@ -380,20 +453,20 @@ export function DeliveryLocationsTab() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">
                 {editingLocation ? 'Edit Location' : 'Add New Location'}
               </h3>
               <Button variant="outline" size="sm" onClick={resetForm}>
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Location Name
                 </label>
                 <Input
@@ -404,15 +477,15 @@ export function DeliveryLocationsTab() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Tier
                   </label>
                   <select
                     value={formData.tier}
                     onChange={(e) => setFormData({ ...formData, tier: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value={1}>Tier 1</option>
                     <option value={2}>Tier 2</option>
@@ -422,7 +495,7 @@ export function DeliveryLocationsTab() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Price (Ksh)
                   </label>
                   <Input
@@ -436,7 +509,7 @@ export function DeliveryLocationsTab() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Description (Optional)
                 </label>
                 <Input
@@ -447,7 +520,7 @@ export function DeliveryLocationsTab() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Estimated Delivery Days
                 </label>
                 <Input
@@ -467,12 +540,12 @@ export function DeliveryLocationsTab() {
                     onChange={(e) => setFormData({ ...formData, expressAvailable: e.target.checked })}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Express delivery available</span>
+                  <span className="ml-2 text-xs sm:text-sm text-gray-700">Express delivery available</span>
                 </label>
 
                 {formData.expressAvailable && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                       Express Price (Ksh)
                     </label>
                     <Input
@@ -485,12 +558,12 @@ export function DeliveryLocationsTab() {
                 )}
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button type="button" variant="outline" onClick={resetForm}>
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-3 sm:pt-4">
+                <Button type="button" variant="outline" onClick={resetForm} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex items-center">
-                  <Save className="h-4 w-4 mr-2" />
+                <Button type="submit" className="flex items-center justify-center w-full sm:w-auto">
+                  <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                   {editingLocation ? 'Update' : 'Create'}
                 </Button>
               </div>

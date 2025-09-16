@@ -456,7 +456,7 @@ export default function AdminProductsPage() {
       <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
         <div className="grid grid-cols-1 gap-3 sm:gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-2.5 text-gray-400 h-4 w-4 pointer-events-none" />
             <input
               type="text"
               placeholder="Search products..."

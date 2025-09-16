@@ -21,7 +21,8 @@ import {
   Mail, 
   Phone, 
   Send,
-  Plus
+  Plus,
+  FileText
 } from 'lucide-react';
 
 const WhatsAppIcon = () => (
@@ -274,6 +275,504 @@ export default function OrderDetailsPage() {
     }
   };
 
+  const viewReceipt = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${params.id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to generate receipt');
+      }
+      
+      const receiptData = await response.json();
+      await generatePDFReceipt(receiptData);
+    } catch (error) {
+      console.error('Error viewing receipt:', error);
+      alert(error.message || 'Failed to load receipt. Please try again.');
+    }
+  };
+
+  const generatePDFReceipt = async (receipt: any) => {
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const element = document.createElement('div');
+      
+      // Get customer info from order data - check all possible sources
+      const customerName = receipt.customer?.name || 
+                          receipt.customerName || 
+                          receipt.user?.name || 
+                          receipt.shippingAddress?.fullName || 
+                          'Valued Customer';
+      
+      const customerPhone = receipt.customer?.phone || 
+                           receipt.customerPhone || 
+                           receipt.user?.phone || 
+                           receipt.shippingAddress?.phone || 
+                           (receipt.source === 'ADMIN' || receipt.createdBy === 'admin' ? '+254790227760' : null) ||
+                           'Not provided';
+      
+      const deliveryLocation = receipt.deliveryLocation || 'Not specified';
+      
+      const orderDate = receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+      
+      element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; max-width: 210mm; margin: 0 auto; padding: 20mm; background: white; color: black; font-size: 12px; line-height: 1.4;">
+          <!-- Header -->
+          <div style="text-center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #16a34a;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #16a34a; margin-bottom: 8px;">HOUSEHOLD PLANET KENYA</h1>
+            <p style="margin: 0; font-size: 14px; color: #666; margin-bottom: 8px;">Your Premier Home & Living Store</p>
+            <div style="font-size: 12px; color: #888;">
+              📞 +254790 227 760 • 📧 householdplanet819@gmail.com
+            </div>
+          </div>
+
+          <!-- Order & Customer Info -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #1e40af;">ORDER DETAILS</h3>
+              <div style="font-size: 12px;">
+                <p style="margin: 5px 0;"><span style="color: #666;">Receipt #:</span> <strong>${receipt.receiptNumber || receipt.orderNumber}</strong></p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Date:</span> ${orderDate}</p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Status:</span> ${receipt.status || 'CONFIRMED'}</p>
+              </div>
+            </div>
+            
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #16a34a;">CUSTOMER INFO</h3>
+              <div style="font-size: 12px;">
+                <p style="margin: 5px 0;"><span style="color: #666;">Name:</span> ${customerName}</p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Phone:</span> ${customerPhone}</p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Location:</span> ${deliveryLocation}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #374151; background: #f3f4f6; padding: 8px; border-radius: 5px;">ORDER ITEMS (${receipt.items?.length || 0})</h3>
+            
+            <div style="border: 1px solid #d1d5db; border-radius: 5px; overflow: hidden;">
+              <div style="background: #f9fafb; border-bottom: 1px solid #d1d5db; padding: 8px;">
+                <div style="display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; gap: 10px; font-weight: bold; font-size: 11px; color: #374151;">
+                  <div>PRODUCT</div>
+                  <div style="text-align: center;">QTY</div>
+                  <div style="text-align: right;">PRICE</div>
+                  <div style="text-align: right;">TOTAL</div>
+                </div>
+              </div>
+              
+              ${receipt.items?.map((item: any, index: number) => `
+                <div style="display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; gap: 10px; padding: 8px; font-size: 11px; ${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'} border-bottom: 1px solid #e5e7eb;">
+                  <div>
+                    <div style="font-weight: bold; color: #374151; margin-bottom: 2px;">${item.name}</div>
+                    ${item.variant ? `<div style="color: #6b7280; font-size: 10px;">${item.variant.name || ''}</div>` : ''}
+                  </div>
+                  <div style="text-align: center; font-weight: bold;">${item.quantity}</div>
+                  <div style="text-align: right;">KSh ${item.price?.toLocaleString() || '0'}</div>
+                  <div style="text-align: right; font-weight: bold;">KSh ${item.total?.toLocaleString() || '0'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Totals -->
+          <div style="background: #f9fafb; padding: 15px; border-radius: 5px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+            <div style="font-size: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Subtotal (${receipt.items?.length || 0} items):</span>
+                <span style="font-weight: bold;">KSh ${receipt.totals?.subtotal?.toLocaleString() || '0'}</span>
+              </div>
+              ${receipt.totals?.discount > 0 ? `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #16a34a;">
+                  <span>Discount${receipt.promoCode ? ` (${receipt.promoCode})` : ''}:</span>
+                  <span style="font-weight: bold;">-KSh ${receipt.totals.discount.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Delivery Fee:</span>
+                <span style="font-weight: bold;">KSh ${receipt.totals?.shipping?.toLocaleString() || '0'}</span>
+              </div>
+              <div style="border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold;">
+                  <span>TOTAL AMOUNT:</span>
+                  <span style="color: #16a34a;">KSh ${receipt.totals?.total?.toLocaleString() || '0'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Info -->
+          ${receipt.payment ? `
+            <div style="background: #ecfdf5; border: 1px solid #bbf7d0; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 20px;">
+              <div style="font-weight: bold; color: #16a34a; margin-bottom: 8px; font-size: 14px;">M-PESA PAYMENT</div>
+              <div style="margin-bottom: 4px;">${receipt.payment.phoneNumber || customerPhone}</div>
+              ${receipt.payment.mpesaCode ? `<div style="font-weight: bold; color: #16a34a; font-size: 16px; margin: 8px 0;">${receipt.payment.mpesaCode}</div>` : ''}
+              <div style="font-size: 10px; color: #666;">Transaction ID: ${receipt.payment.transactionId || 'N/A'}</div>
+            </div>
+          ` : ''}
+
+          <!-- Footer -->
+          <div style="text-align: center; border-top: 1px solid #d1d5db; padding-top: 15px; margin-top: 30px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: bold; color: #374151;">Thank You for Your Order!</h3>
+            <p style="margin: 0 0 15px 0; font-size: 12px; color: #6b7280;">We appreciate your business and trust in Household Planet Kenya</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 11px; color: #6b7280; margin-bottom: 10px;">
+              <div>
+                <p style="margin: 0; font-weight: bold;">Customer Support</p>
+                <p style="margin: 0;">+254790 227 760</p>
+              </div>
+              <div>
+                <p style="margin: 0; font-weight: bold;">Email Support</p>
+                <p style="margin: 0;">householdplanet819@gmail.com</p>
+              </div>
+              <div>
+                <p style="margin: 0; font-weight: bold;">Business Hours</p>
+                <p style="margin: 0;">Mon-Fri: 8AM-6PM</p>
+              </div>
+            </div>
+            
+            <p style="margin: 0; font-size: 10px; color: #9ca3af;">Generated on ${new Date().toLocaleDateString('en-GB')} • Keep this receipt for your records</p>
+          </div>
+        </div>
+      `;
+      
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `receipt-${receipt.receiptNumber || receipt.orderNumber || 'order'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF receipt. Please try again.');
+    }
+  };
+
+  const generateReceiptHTML = (receipt: any) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${receipt.receiptNumber}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8fafc;
+            padding: 20px;
+            color: #1e293b;
+          }
+          .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          }
+          .header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+          }
+          .company-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+          .receipt-title {
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          .content {
+            padding: 24px 20px;
+          }
+          .receipt-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          .meta-item {
+            text-align: center;
+          }
+          .meta-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+          }
+          .meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+          }
+          .customer-section {
+            margin-bottom: 24px;
+          }
+          .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+          }
+          .customer-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+          }
+          .customer-phone {
+            font-size: 14px;
+            color: #64748b;
+          }
+          .items-section {
+            margin-bottom: 24px;
+          }
+          .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+          }
+          .item:last-child {
+            border-bottom: none;
+          }
+          .item-details {
+            flex: 1;
+          }
+          .item-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 2px;
+          }
+          .item-qty {
+            font-size: 12px;
+            color: #64748b;
+          }
+          .item-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+          }
+          .totals-section {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          }
+          .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 16px;
+          }
+          .total-label {
+            color: #64748b;
+            font-size: 14px;
+          }
+          .total-value {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+          }
+          .payment-section {
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+          }
+          .payment-method {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+          }
+          .mpesa-logo {
+            width: 24px;
+            height: 24px;
+            background: #16a34a;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 8px;
+          }
+          .payment-details {
+            text-align: center;
+          }
+          .transaction-id {
+            font-family: 'Courier New', monospace;
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #475569;
+            margin-top: 8px;
+          }
+          .footer {
+            text-align: center;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+          }
+          .thank-you {
+            font-size: 14px;
+            color: #16a34a;
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+          .footer-note {
+            font-size: 11px;
+            color: #94a3b8;
+          }
+          @media print {
+            body { background: white !important; padding: 0 !important; }
+            .receipt-container { 
+              box-shadow: none !important; 
+              max-width: none !important;
+              margin: 0 !important;
+            }
+            button { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          <div class="header">
+            <div class="company-name">Household Planet Kenya</div>
+            <div class="receipt-title">Payment Receipt</div>
+          </div>
+          
+          <div style="padding: 16px 20px; background: white; border-bottom: 1px solid #e2e8f0; text-align: center; display: flex; gap: 12px; justify-content: center;">
+            <button onclick="window.print()" style="background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500;">🖨️ Print</button>
+            <button onclick="downloadReceipt()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500;">📄 Download</button>
+          </div>
+          
+          <div class="content">
+            <div class="receipt-meta">
+              <div class="meta-item">
+                <div class="meta-label">Receipt</div>
+                <div class="meta-value">#${receipt.receiptNumber}</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Order</div>
+                <div class="meta-value">#${receipt.orderNumber}</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Date</div>
+                <div class="meta-value">${new Date(receipt.paymentDate).toLocaleDateString('en-GB')}</div>
+              </div>
+            </div>
+            
+            <div class="customer-section">
+              <div class="section-title">Customer</div>
+              <div class="customer-name">${receipt.customer.name}</div>
+              <div class="customer-phone">${receipt.customer.phone}</div>
+            </div>
+            
+            <div class="items-section">
+              <div class="section-title">Items</div>
+              ${receipt.items.map((item: any) => `
+                <div class="item">
+                  <div class="item-details">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-qty">Qty: ${item.quantity}</div>
+                  </div>
+                  <div class="item-price">KSh ${item.total.toLocaleString()}</div>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="totals-section">
+              <div class="total-row">
+                <span class="total-label">Subtotal</span>
+                <span class="total-value">KSh ${receipt.totals.subtotal.toLocaleString()}</span>
+              </div>
+              ${receipt.totals.discount > 0 ? `
+                <div class="total-row">
+                  <span class="total-label">Discount${receipt.promoCode ? ` (${receipt.promoCode})` : ''}</span>
+                  <span class="total-value" style="color: #16a34a;">-KSh ${receipt.totals.discount.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              ${receipt.totals.shipping > 0 ? `
+                <div class="total-row">
+                  <span class="total-label">Delivery</span>
+                  <span class="total-value">KSh ${receipt.totals.shipping.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              <div class="total-row">
+                <span class="total-label">Total Paid</span>
+                <span class="total-value">KSh ${receipt.totals.total.toLocaleString()}</span>
+              </div>
+            </div>
+            
+            <div class="payment-section">
+              <div class="payment-method">
+                <div class="mpesa-logo">M</div>
+                <span style="font-weight: 600; color: #16a34a;">M-Pesa Payment</span>
+              </div>
+              <div class="payment-details">
+                <div style="font-size: 14px; color: #475569; margin-bottom: 4px;">${receipt.payment.phoneNumber}</div>
+                ${receipt.payment.mpesaCode ? `<div style="font-weight: 600; color: #16a34a; font-size: 16px; margin-bottom: 8px;">${receipt.payment.mpesaCode}</div>` : ''}
+                <div class="transaction-id">ID: ${receipt.payment.transactionId}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <div class="thank-you">Thank you for your purchase!</div>
+            <div class="footer-note">Keep this receipt for your records</div>
+          </div>
+        </div>
+        
+        <script>
+          function downloadReceipt() {
+            const receiptContent = document.querySelector('.receipt-container').outerHTML;
+            const styles = document.querySelector('style').innerHTML;
+            const printHTML = '<!DOCTYPE html><html><head><title>Receipt - ${receipt.receiptNumber}</title><meta charset="UTF-8"><style>' + styles + '.receipt-container { margin: 20px auto; } button { display: none !important; }</style></head><body>' + receiptContent + '</body></html>';
+            
+            const blob = new Blob([printHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'receipt-${receipt.receiptNumber}.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+  };
+
 
 
   if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
@@ -376,6 +875,16 @@ export default function OrderDetailsPage() {
               )}
               {shippingLoading ? 'Generating...' : 'Generate Shipping Label'}
             </Button>
+            {order.status === 'DELIVERED' && (
+              <Button
+                variant="outline"
+                onClick={viewReceipt}
+                className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Download Receipt
+              </Button>
+            )}
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Send Email to Customer</DialogTitle>

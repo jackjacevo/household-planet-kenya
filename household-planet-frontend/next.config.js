@@ -28,13 +28,12 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '3001',
-        pathname: '/uploads/**',
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: 'backend',
         port: '3001',
-        pathname: '/api/**',
+        pathname: '/uploads/**',
       },
     ],
   },
@@ -54,6 +53,15 @@ const nextConfig = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, 'src'),
     };
+    
+    // Handle jsPDF and canvg dependencies
+    if (!isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        'canvas': 'canvas',
+        'jsdom': 'jsdom'
+      });
+    }
     
     return config;
   },
@@ -186,15 +194,7 @@ const nextConfig = {
     ];
   },
   
-  // Rewrites for backend uploads
-  async rewrites() {
-    return [
-      {
-        source: '/uploads/:path*',
-        destination: 'http://localhost:3001/uploads/:path*',
-      },
-    ];
-  },
+
   
   // Output optimization
   output: 'standalone',

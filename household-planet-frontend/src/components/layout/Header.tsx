@@ -51,11 +51,13 @@ export function Header() {
   return (
     <>
       {/* Top Bar - Now sticky and visible */}
-      <div className="sticky top-0 z-50 bg-green-800 text-white py-2 px-4 text-sm w-full">
+      <div className="sticky top-0 z-50 bg-green-800 text-white py-1 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm w-full">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex flex-col sm:flex-row sm:space-x-4">
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-0.5 sm:space-y-0">
             <span className="flex items-center">
-              <Mail className="h-3 w-3 mr-1" /> householdplanet819@gmail.com
+              <Mail className="h-3 w-3 mr-1" /> 
+              <span className="hidden sm:inline">householdplanet819@gmail.com</span>
+              <span className="sm:hidden">Email us</span>
             </span>
             <span className="flex items-center">
               <Phone className="h-3 w-3 mr-1" /> +254790 227 760
@@ -69,10 +71,10 @@ export function Header() {
       </div>
 
       {/* Main Header */}
-      <header className={`sticky top-[42px] z-40 bg-white w-full transition-all duration-300 ${
+      <header className={`sticky top-[34px] sm:top-[42px] z-40 bg-white w-full transition-all duration-300 ${
         mounted && isScrolled ? 'shadow-md' : 'shadow-sm'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 md:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center mr-2 sm:mr-4 md:mr-8 flex-shrink-0">
@@ -120,7 +122,7 @@ export function Header() {
           </div>
 
           {/* Icons */}
-          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="p-1.5 sm:p-2 text-gray-700 hover:text-green-600 transition lg:hidden"
@@ -178,7 +180,7 @@ export function Header() {
 
         {/* Mobile Search */}
         {isSearchOpen && (
-          <div className="lg:hidden border-t bg-white p-4 animate-slide-down">
+          <div className="lg:hidden border-t bg-white p-3 sm:p-4 animate-slide-down">
             <SearchAutocomplete onSelect={handleSearchSelect} />
           </div>
         )}

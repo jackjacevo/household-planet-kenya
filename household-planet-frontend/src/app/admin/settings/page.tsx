@@ -65,7 +65,7 @@ const TABS = [
   { id: 'seo', label: 'SEO', icon: Search },
   { id: 'security', label: 'Security', icon: Lock },
   { id: 'email', label: 'Email', icon: Mail },
-  { id: 'social', label: 'Social Media', icon: Share2 },
+  { id: 'social', label: 'Social', icon: Share2 },
 ];
 
 export default function AdminSettingsPage() {
@@ -190,9 +190,9 @@ export default function AdminSettingsPage() {
   const renderTabContent = () => {
     if (loading) {
       return (
-        <div className="flex flex-col items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-500">Loading settings...</p>
+        <div className="flex flex-col items-center justify-center h-48 sm:h-64">
+          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-sm sm:text-base text-gray-500">Loading settings...</p>
         </div>
       );
     }
@@ -228,52 +228,35 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
-            <p className="mt-2 text-sm text-gray-700">
-              Configure your store settings and preferences.
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button
-              onClick={handleExport}
-              variant="outline"
-              className="flex items-center"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImport}
-                className="hidden"
-              />
-              <span className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </span>
-            </label>
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              className="flex items-center text-red-600 hover:text-red-700"
-              disabled={saving}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-          </div>
+    <div className="px-3 sm:px-6 lg:px-8">
+      <div className="mb-6 sm:mb-8">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">System Settings</h1>
+          <p className="mt-1 sm:mt-2 text-sm text-gray-700">
+            Configure your store settings and preferences.
+          </p>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-8">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+      <div className="border-b border-gray-200 mb-6 sm:mb-8">
+        {/* Mobile Dropdown */}
+        <div className="block sm:hidden mb-4">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {TABS.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        {/* Desktop Tabs */}
+        <nav className="-mb-px hidden sm:flex space-x-8">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -296,7 +279,7 @@ export default function AdminSettingsPage() {
 
       {/* Tab Content */}
       <div className="bg-white shadow rounded-lg">
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {renderTabContent()}
         </div>
       </div>

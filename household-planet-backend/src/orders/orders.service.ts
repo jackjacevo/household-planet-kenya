@@ -12,6 +12,7 @@ import { CreateOrderDto, UpdateOrderStatusDto, CreateReturnDto, BulkOrderUpdateD
 import { OrderStatus } from '../common/enums';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import * as puppeteer from 'puppeteer';
 
 @Injectable()
 export class OrdersService {
@@ -970,8 +971,7 @@ export class OrdersService {
     const order = await this.prisma.order.findFirst({
       where: {
         id: orderIdNum,
-        userId,
-        status: 'DELIVERED'
+        userId
       },
       include: {
         items: {
@@ -985,23 +985,405 @@ export class OrdersService {
     });
 
     if (!order) {
-      throw new NotFoundException('Order not found or not eligible for invoice');
+      throw new NotFoundException('Order not found');
     }
 
     const invoiceHtml = this.generateInvoiceHtml(order);
-    const mockPdf = Buffer.from(invoiceHtml, 'utf8');
+    const pdf = await this.generatePdfFromHtml(invoiceHtml);
     
     return {
       orderNumber: order.orderNumber,
-      pdf: mockPdf
+      pdf
+    };
+  }
+
+  async generateGuestInvoice(orderId: number) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId: null
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+            variant: true
+          }
+        },
+        user: true
+      }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Guest order not found');
+    }
+
+    const invoiceHtml = this.generateInvoiceHtml(order);
+    const pdf = await this.generatePdfFromHtml(invoiceHtml);
+    
+    return {
+      orderNumber: order.orderNumber,
+      pdf
     };
   }
 
   private generateInvoiceHtml(order: any): string {
     const shippingAddress = JSON.parse(order.shippingAddress || '{}');
     const customerName = order.user?.name || shippingAddress.fullName || 'Guest Customer';
+    const customerPhone = order.user?.phone || shippingAddress.phone || 'N/A';
+    const hasPromoCode = order.promoCode && order.discountAmount > 0;
+    const currentDate = new Date().toLocaleDateString('en-GB');
+    const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB') : currentDate;
+    const trackingNumber = order.trackingNumber || `HP${Date.now().toString().slice(-8)}`;
     
-    return `<!DOCTYPE html><html><head><title>Invoice - ${order.orderNumber}</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#333}.header{border-bottom:2px solid #f97316;padding-bottom:20px;margin-bottom:30px}.company-name{font-size:28px;font-weight:bold;color:#f97316;margin-bottom:5px}.invoice-title{font-size:24px;font-weight:bold;margin-bottom:10px}.invoice-details{display:flex;justify-content:space-between;margin-bottom:30px}.customer-info,.invoice-info{width:48%}.section-title{font-size:16px;font-weight:bold;margin-bottom:10px;color:#374151}.items-table{width:100%;border-collapse:collapse;margin-bottom:30px}.items-table th,.items-table td{padding:12px;text-align:left;border-bottom:1px solid #e5e7eb}.items-table th{background-color:#f9fafb;font-weight:bold}.total-section{margin-left:auto;width:300px}.total-row{display:flex;justify-content:space-between;padding:8px 0}.total-final{border-top:2px solid #374151;font-weight:bold;font-size:18px}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280}</style></head><body><div class="header"><div class="company-name">Household Planet Kenya</div><div>Your trusted partner for household essentials</div></div><div class="invoice-title">INVOICE</div><div class="invoice-details"><div class="customer-info"><div class="section-title">Bill To:</div><div><strong>${customerName}</strong></div></div><div class="invoice-info"><div class="section-title">Invoice Details:</div><div><strong>Invoice #:</strong> ${order.orderNumber}</div><div><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div><div><strong>Status:</strong> ${order.status}</div></div></div><table class="items-table"><thead><tr><th>Item</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${order.items.map(item => `<tr><td><strong>${item.product.name}</strong></td><td>${item.quantity}</td><td>KSh ${item.price.toLocaleString()}</td><td>KSh ${item.total.toLocaleString()}</td></tr>`).join('')}</tbody></table><div class="total-section"><div class="total-row"><span>Subtotal:</span><span>KSh ${order.subtotal.toLocaleString()}</span></div><div class="total-row"><span>Delivery Cost:</span><span>KSh ${(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</span></div><div class="total-row total-final"><span>Total Amount:</span><span>KSh ${order.total.toLocaleString()}</span></div></div><div class="footer"><p>Thank you for your business!</p><p>Household Planet Kenya | Email: householdplanet819@gmail.com | Phone: +254 790 227 760</p></div></body></html>`;
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Receipt - ${order.orderNumber}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 12px;
+      color: #000;
+      font-size: 12px;
+      line-height: 1.4;
+      background: white;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #16a34a;
+    }
+    .company-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #16a34a;
+      margin-bottom: 8px;
+    }
+    .company-tagline {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .company-contact {
+      font-size: 14px;
+      color: #666;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .info-box {
+      border: 1px solid #d1d5db;
+      padding: 12px;
+      border-radius: 4px;
+    }
+    .info-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+    .order-title { color: #1e40af; }
+    .customer-title { color: #16a34a; }
+    .payment-title { color: #ea580c; }
+    .delivery-title { color: #7c3aed; }
+    .info-row {
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .info-label {
+      color: #666;
+      display: inline-block;
+      width: 60px;
+    }
+    .info-value {
+      font-weight: 500;
+    }
+    .items-section {
+      margin-bottom: 16px;
+    }
+    .items-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 8px;
+      background: #f3f4f6;
+      padding: 8px;
+      border-radius: 4px;
+      color: #374151;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .items-table th {
+      background: #f9fafb;
+      padding: 4px;
+      font-weight: bold;
+      font-size: 12px;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .items-table td {
+      padding: 2px;
+      font-size: 12px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .item-name {
+      font-weight: 500;
+      color: #374151;
+      line-height: 1.3;
+    }
+    .item-variant {
+      color: #666;
+      font-size: 12px;
+    }
+    .totals-section {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .total-final {
+      border-top: 1px solid #d1d5db;
+      padding-top: 4px;
+      font-weight: bold;
+      color: #16a34a;
+    }
+    .discount-row {
+      color: #16a34a;
+    }
+    .footer {
+      text-align: center;
+      border-top: 1px solid #d1d5db;
+      padding-top: 12px;
+      margin-top: 24px;
+    }
+    .footer-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .footer-message {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .footer-contact {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .footer-contact div {
+      text-align: center;
+    }
+    .footer-contact .contact-title {
+      font-weight: 500;
+    }
+    .footer-generated {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="company-name">HOUSEHOLD PLANET KENYA</div>
+    <div class="company-tagline">Your Premier Home & Living Store</div>
+    <div class="company-contact">📞 +254790 227 760 • 📧 householdplanet819@gmail.com</div>
+  </div>
+
+  <!-- Order & Customer Info -->
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-title order-title">ORDER DETAILS</div>
+      <div class="info-row">
+        <span class="info-label">Receipt #:</span>
+        <span class="info-value">${order.orderNumber}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date:</span>
+        <span class="info-value">${orderDate}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Tracking:</span>
+        <span class="info-value">${trackingNumber}</span>
+      </div>
+    </div>
+    
+    <div class="info-box">
+      <div class="info-title customer-title">CUSTOMER INFO</div>
+      <div class="info-row">
+        <span class="info-label">Name:</span>
+        <span class="info-value">${customerName}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Phone:</span>
+        <span class="info-value">${customerPhone}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Location:</span>
+        <span class="info-value">${order.deliveryLocation || 'N/A'}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <div class="items-section">
+    <div class="items-title">ORDER ITEMS (${order.items?.length || 0})</div>
+    
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 50%;">PRODUCT</th>
+          <th style="width: 16.66%; text-align: center;">QTY</th>
+          <th style="width: 16.66%; text-align: right;">PRICE</th>
+          <th style="width: 16.66%; text-align: right;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${order.items.map((item, index) => `
+          <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'}">
+            <td>
+              <div class="item-name">${item.product.name}</div>
+              ${item.variant ? `<div class="item-variant">${item.variant.size ? item.variant.size : ''}${item.variant.color ? ' • ' + item.variant.color : ''}</div>` : ''}
+            </td>
+            <td style="text-align: center; font-weight: 500;">${item.quantity}</td>
+            <td style="text-align: right;">KSh ${Number(item.price).toLocaleString()}</td>
+            <td style="text-align: right; font-weight: bold;">KSh ${Number(item.total).toLocaleString()}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Totals -->
+  <div class="totals-section">
+    <div class="total-row">
+      <span>Subtotal (${order.items?.length || 0} items):</span>
+      <span>KSh ${Number(order.subtotal).toLocaleString()}</span>
+    </div>
+    ${hasPromoCode ? `
+    <div class="total-row discount-row">
+      <span>Discount (${order.promoCode}):</span>
+      <span>-KSh ${Number(order.discountAmount).toLocaleString()}</span>
+    </div>
+    ` : ''}
+    <div class="total-row">
+      <span>Delivery Fee:</span>
+      <span>KSh ${Number(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}</span>
+    </div>
+    <div class="total-row total-final">
+      <span>TOTAL AMOUNT:</span>
+      <span>KSh ${Number(order.total).toLocaleString()}</span>
+    </div>
+  </div>
+
+  <!-- Payment & Delivery Info -->
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-title payment-title">PAYMENT</div>
+      <div class="info-row">
+        <span class="info-label">Method:</span>
+        <span class="info-value">${
+          order.paymentMethod === 'MPESA' ? 'M-Pesa' :
+          order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Cash on Delivery' :
+          order.paymentMethod === 'CARD' ? 'Card Payment' :
+          order.paymentMethod === 'BANK_TRANSFER' ? 'Bank Transfer' :
+          order.paymentMethod || 'N/A'
+        }</span>
+      </div>
+    </div>
+    
+    <div class="info-box">
+      <div class="info-title delivery-title">DELIVERY</div>
+      <div class="info-row">
+        <span class="info-label">Status:</span>
+        <span class="info-value">${order.status || 'PENDING'}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Est. Delivery:</span>
+        <span class="info-value">${new Date(Date.now() + (3 * 24 * 60 * 60 * 1000)).toLocaleDateString('en-GB')}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-title">Thank You for Your Order!</div>
+    <div class="footer-message">We appreciate your business and trust in Household Planet Kenya</div>
+    
+    <div class="footer-contact">
+      <div>
+        <div class="contact-title">Customer Support</div>
+        <div>+254790 227 760</div>
+      </div>
+      <div>
+        <div class="contact-title">Track Order</div>
+        <div>${trackingNumber}</div>
+      </div>
+      <div>
+        <div class="contact-title">Email Support</div>
+        <div>householdplanet819@gmail.com</div>
+      </div>
+    </div>
+    
+    <div class="footer-generated">Generated on ${currentDate} • Keep this receipt for your records</div>
+  </div>
+</body>
+</html>`;
+  }
+
+  private async generatePdfFromHtml(html: string): Promise<Buffer> {
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20px',
+          right: '20px',
+          bottom: '20px',
+          left: '20px'
+        }
+      });
+      
+      return Buffer.from(pdf);
+    } catch (error) {
+      this.logger.error('Error generating PDF:', error);
+      throw new BadRequestException('Failed to generate PDF');
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
+    }
   }
 
   async generateBulkInvoices(userId: number, orderIds: string[]) {
@@ -1011,12 +1393,20 @@ export class OrdersService {
       return num;
     });
     
-    // Validate orders belong to user and are eligible
     const orders = await this.prisma.order.findMany({
       where: {
         id: { in: orderIdNums },
         userId,
         status: 'DELIVERED'
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+            variant: true
+          }
+        },
+        user: true
       }
     });
     
@@ -1024,8 +1414,16 @@ export class OrdersService {
       throw new BadRequestException('Some orders are not eligible for invoice generation');
     }
     
-    const mockZip = Buffer.from('Mock ZIP content with multiple invoices');
-    return mockZip;
+    const AdmZip = require('adm-zip');
+    const zip = new AdmZip();
+    
+    for (const order of orders) {
+      const invoiceHtml = this.generateInvoiceHtml(order);
+      const pdf = await this.generatePdfFromHtml(invoiceHtml);
+      zip.addFile(`invoice-${order.orderNumber}.pdf`, pdf);
+    }
+    
+    return zip.toBuffer();
   }
 
   async bulkUpdateOrders(dto: BulkOrderUpdateDto, userId?: string) {

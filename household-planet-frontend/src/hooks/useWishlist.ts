@@ -119,6 +119,10 @@ export const useWishlist = create<WishlistStore>()(
         }
         await get().syncWithBackend();
       },
+      
+      clearOnLogout: () => {
+        set({ items: [], wishlistData: null, isLoading: false });
+      },
     }),
     {
       name: 'wishlist-storage',

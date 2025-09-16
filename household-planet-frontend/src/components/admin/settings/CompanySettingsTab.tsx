@@ -78,18 +78,18 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center mb-6">
-        <Building2 className="h-6 w-6 text-blue-600 mr-3" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center mb-4 sm:mb-6">
+        <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Company Information</h2>
-          <p className="text-sm text-gray-600">Manage your company details and contact information</p>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Company Information</h2>
+          <p className="text-xs sm:text-sm text-gray-600">Manage your company details and contact information</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Site Name *
           </label>
           <Input
@@ -100,7 +100,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Company Name *
           </label>
           <Input
@@ -111,7 +111,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Contact Email *
           </label>
           <Input
@@ -123,7 +123,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Contact Phone *
           </label>
           <Input
@@ -134,13 +134,13 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Currency
           </label>
           <select
             value={formData.currency || 'KSh'}
             onChange={(e) => handleChange('currency', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="KSh">Kenyan Shilling (KSh)</option>
             <option value="USD">US Dollar ($)</option>
@@ -150,13 +150,13 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Timezone
           </label>
           <select
             value={formData.timezone || 'Africa/Nairobi'}
             onChange={(e) => handleChange('timezone', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="Africa/Nairobi">Africa/Nairobi</option>
             <option value="UTC">UTC</option>
@@ -166,7 +166,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             City
           </label>
           <Input
@@ -177,7 +177,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Country
           </label>
           <Input
@@ -188,7 +188,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Postal Code
           </label>
           <Input
@@ -199,7 +199,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Business Hours
           </label>
           <Input
@@ -211,36 +211,36 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
           Site Description
         </label>
         <textarea
           value={formData.siteDescription || ''}
           onChange={(e) => handleChange('siteDescription', e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Brief description of your business"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
           Address
         </label>
         <textarea
           value={formData.address || ''}
           onChange={(e) => handleChange('address', e.target.value)}
           rows={2}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Full business address"
         />
       </div>
 
-      <div className="flex justify-end pt-6 border-t">
+      <div className="flex justify-center sm:justify-end pt-4 sm:pt-6 border-t">
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center"
+          className="flex items-center w-full sm:w-auto justify-center"
         >
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Saving...' : 'Save Changes'}

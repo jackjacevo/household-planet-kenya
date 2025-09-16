@@ -74,25 +74,25 @@ export function NotificationSettingsTab({ settings, onSettingsChange }: Notifica
     { key: 'emailNotifications', label: 'Email Notifications', description: 'Receive email notifications for orders and updates' },
     { key: 'smsNotifications', label: 'SMS Notifications', description: 'Send SMS notifications to customers' },
     { key: 'whatsappNotifications', label: 'WhatsApp Notifications', description: 'Send WhatsApp messages to customers' },
-    { key: 'orderConfirmationEmail', label: 'Order Confirmation Emails', description: 'Send confirmation emails for new orders' },
+    { key: 'orderConfirmationEmail', label: 'Order Confirmation', description: 'Send confirmation emails for new orders' },
     { key: 'orderStatusUpdates', label: 'Order Status Updates', description: 'Notify customers of order status changes' },
     { key: 'lowStockAlerts', label: 'Low Stock Alerts', description: 'Alert when products are running low' },
-    { key: 'newCustomerNotifications', label: 'New Customer Notifications', description: 'Notify when new customers register' },
+    { key: 'newCustomerNotifications', label: 'New Customer Alerts', description: 'Notify when new customers register' },
     { key: 'dailySalesReport', label: 'Daily Sales Report', description: 'Receive daily sales summary emails' },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center mb-6">
-        <Bell className="h-6 w-6 text-blue-600 mr-3" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center mb-4 sm:mb-6">
+        <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Notification Settings</h2>
-          <p className="text-sm text-gray-600">Configure how and when notifications are sent</p>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Notification Settings</h2>
+          <p className="text-xs sm:text-sm text-gray-600">Configure how and when notifications are sent</p>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
           Notification Email Address
         </label>
         <Input
@@ -100,18 +100,19 @@ export function NotificationSettingsTab({ settings, onSettingsChange }: Notifica
           value={formData.notificationEmail || ''}
           onChange={(e) => handleChange('notificationEmail', e.target.value)}
           placeholder="admin@company.com"
+          className="text-sm"
         />
         <p className="text-xs text-gray-500 mt-1">Email address to receive admin notifications</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {toggleOptions.map((option) => (
-          <div key={option.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div>
-              <h4 className="text-sm font-medium text-gray-900">{option.label}</h4>
-              <p className="text-sm text-gray-500">{option.description}</p>
+          <div key={option.key} className="flex items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-900 leading-tight">{option.label}</h4>
+              <p className="text-xs text-gray-500 mt-1 leading-tight">{option.description}</p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
               <input
                 type="checkbox"
                 checked={formData[option.key as keyof NotificationSettings] as boolean || false}
@@ -124,11 +125,11 @@ export function NotificationSettingsTab({ settings, onSettingsChange }: Notifica
         ))}
       </div>
 
-      <div className="flex justify-end pt-6 border-t">
+      <div className="flex justify-center sm:justify-end pt-4 sm:pt-6 border-t">
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center"
+          className="flex items-center w-full sm:w-auto justify-center"
         >
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Saving...' : 'Save Changes'}

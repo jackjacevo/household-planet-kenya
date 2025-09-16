@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/Textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle, Smartphone, Trash2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 const WhatsAppIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -444,8 +445,6 @@ export default function AdminOrdersPage() {
 
   const viewReceipt = async (orderId: number) => {
     try {
-      // Generate receipt for any order
-      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${orderId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -456,24 +455,176 @@ export default function AdminOrdersPage() {
       }
       
       const receiptData = await response.json();
-      const receiptHTML = generateReceiptHTML(receiptData);
-      
-      const receiptWindow = window.open('', '_blank', 'width=500,height=700,scrollbars=yes');
-      if (receiptWindow) {
-        receiptWindow.document.write(receiptHTML);
-        receiptWindow.document.close();
-      } else {
-        showToast({
-          title: 'Popup Blocked',
-          description: 'Please allow popups to view the receipt.',
-          variant: 'destructive'
-        });
-      }
+      await generatePDFReceipt(receiptData);
     } catch (error) {
       console.error('Error viewing receipt:', error);
       showToast({
         title: 'Error',
         description: error.message || 'Failed to load receipt. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const generatePDFReceipt = async (receipt: any) => {
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const element = document.createElement('div');
+      
+      // Get customer info from order data - check all possible sources
+      const customerName = receipt.customer?.name || 
+                          receipt.customerName || 
+                          receipt.user?.name || 
+                          receipt.shippingAddress?.fullName || 
+                          'Valued Customer';
+      
+      const customerPhone = receipt.customer?.phone || 
+                           receipt.customerPhone || 
+                           receipt.user?.phone || 
+                           receipt.shippingAddress?.phone || 
+                           (receipt.source === 'ADMIN' || receipt.createdBy === 'admin' ? '+254790227760' : null) ||
+                           'Not provided';
+      
+      const deliveryLocation = receipt.deliveryLocation || 'Not specified';
+      
+      const orderDate = receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+      
+      element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; max-width: 210mm; margin: 0 auto; padding: 20mm; background: white; color: black; font-size: 12px; line-height: 1.4;">
+          <!-- Header -->
+          <div style="text-center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #16a34a;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #16a34a; margin-bottom: 8px;">HOUSEHOLD PLANET KENYA</h1>
+            <p style="margin: 0; font-size: 14px; color: #666; margin-bottom: 8px;">Your Premier Home & Living Store</p>
+            <div style="font-size: 12px; color: #888;">
+              📞 +254790 227 760 • 📧 householdplanet819@gmail.com
+            </div>
+          </div>
+
+          <!-- Order & Customer Info -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #1e40af;">ORDER DETAILS</h3>
+              <div style="font-size: 12px;">
+                <p style="margin: 5px 0;"><span style="color: #666;">Receipt #:</span> <strong>${receipt.receiptNumber || receipt.orderNumber}</strong></p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Date:</span> ${orderDate}</p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Status:</span> ${receipt.status || 'CONFIRMED'}</p>
+              </div>
+            </div>
+            
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+              <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #16a34a;">CUSTOMER INFO</h3>
+              <div style="font-size: 12px;">
+                <p style="margin: 5px 0;"><span style="color: #666;">Name:</span> ${customerName}</p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Phone:</span> ${customerPhone}</p>
+                <p style="margin: 5px 0;"><span style="color: #666;">Location:</span> ${deliveryLocation}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #374151; background: #f3f4f6; padding: 8px; border-radius: 5px;">ORDER ITEMS (${receipt.items?.length || 0})</h3>
+            
+            <div style="border: 1px solid #d1d5db; border-radius: 5px; overflow: hidden;">
+              <div style="background: #f9fafb; border-bottom: 1px solid #d1d5db; padding: 8px;">
+                <div style="display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; gap: 10px; font-weight: bold; font-size: 11px; color: #374151;">
+                  <div>PRODUCT</div>
+                  <div style="text-align: center;">QTY</div>
+                  <div style="text-align: right;">PRICE</div>
+                  <div style="text-align: right;">TOTAL</div>
+                </div>
+              </div>
+              
+              ${receipt.items?.map((item: any, index: number) => `
+                <div style="display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; gap: 10px; padding: 8px; font-size: 11px; ${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'} border-bottom: 1px solid #e5e7eb;">
+                  <div>
+                    <div style="font-weight: bold; color: #374151; margin-bottom: 2px;">${item.name}</div>
+                    ${item.variant ? `<div style="color: #6b7280; font-size: 10px;">${item.variant.name || ''}</div>` : ''}
+                  </div>
+                  <div style="text-align: center; font-weight: bold;">${item.quantity}</div>
+                  <div style="text-align: right;">KSh ${item.price?.toLocaleString() || '0'}</div>
+                  <div style="text-align: right; font-weight: bold;">KSh ${item.total?.toLocaleString() || '0'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Totals -->
+          <div style="background: #f9fafb; padding: 15px; border-radius: 5px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+            <div style="font-size: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Subtotal (${receipt.items?.length || 0} items):</span>
+                <span style="font-weight: bold;">KSh ${receipt.totals?.subtotal?.toLocaleString() || '0'}</span>
+              </div>
+              ${receipt.totals?.discount > 0 ? `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #16a34a;">
+                  <span>Discount${receipt.promoCode ? ` (${receipt.promoCode})` : ''}:</span>
+                  <span style="font-weight: bold;">-KSh ${receipt.totals.discount.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Delivery Fee:</span>
+                <span style="font-weight: bold;">KSh ${receipt.totals?.shipping?.toLocaleString() || '0'}</span>
+              </div>
+              <div style="border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold;">
+                  <span>TOTAL AMOUNT:</span>
+                  <span style="color: #16a34a;">KSh ${receipt.totals?.total?.toLocaleString() || '0'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Info -->
+          ${receipt.payment ? `
+            <div style="background: #ecfdf5; border: 1px solid #bbf7d0; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 20px;">
+              <div style="font-weight: bold; color: #16a34a; margin-bottom: 8px; font-size: 14px;">M-PESA PAYMENT</div>
+              <div style="margin-bottom: 4px;">${receipt.payment.phoneNumber || customerPhone}</div>
+              ${receipt.payment.mpesaCode ? `<div style="font-weight: bold; color: #16a34a; font-size: 16px; margin: 8px 0;">${receipt.payment.mpesaCode}</div>` : ''}
+              <div style="font-size: 10px; color: #666;">Transaction ID: ${receipt.payment.transactionId || 'N/A'}</div>
+            </div>
+          ` : ''}
+
+          <!-- Footer -->
+          <div style="text-align: center; border-top: 1px solid #d1d5db; padding-top: 15px; margin-top: 30px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: bold; color: #374151;">Thank You for Your Order!</h3>
+            <p style="margin: 0 0 15px 0; font-size: 12px; color: #6b7280;">We appreciate your business and trust in Household Planet Kenya</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 11px; color: #6b7280; margin-bottom: 10px;">
+              <div>
+                <p style="margin: 0; font-weight: bold;">Customer Support</p>
+                <p style="margin: 0;">+254790 227 760</p>
+              </div>
+              <div>
+                <p style="margin: 0; font-weight: bold;">Email Support</p>
+                <p style="margin: 0;">householdplanet819@gmail.com</p>
+              </div>
+              <div>
+                <p style="margin: 0; font-weight: bold;">Business Hours</p>
+                <p style="margin: 0;">Mon-Fri: 8AM-6PM</p>
+              </div>
+            </div>
+            
+            <p style="margin: 0; font-size: 10px; color: #9ca3af;">Generated on ${new Date().toLocaleDateString('en-GB')} • Keep this receipt for your records</p>
+          </div>
+        </div>
+      `;
+      
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `receipt-${receipt.receiptNumber || receipt.orderNumber || 'order'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showToast({
+        title: 'Error',
+        description: 'Failed to generate PDF receipt. Please try again.',
         variant: 'destructive'
       });
     }
@@ -1542,7 +1693,7 @@ export default function AdminOrdersPage() {
         <CardContent className="pt-4 sm:pt-6">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-2.5 text-gray-400 h-4 w-4 pointer-events-none" />
               <Input
                 placeholder="Search by order number, customer name, or phone..."
                 value={searchTerm}
@@ -1813,7 +1964,7 @@ export default function AdminOrdersPage() {
                                   )}
                                 </Button>
                               )} */}
-                              {order.id && (
+                              {order.id && order.status === 'DELIVERED' && (
                                 <Button
                                   variant="outline"
                                   size="sm"
