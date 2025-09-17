@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 
 FROM base AS deps
-RUN npm ci --only=production --cache /tmp/.npm
+RUN npm ci --cache /tmp/.npm
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
