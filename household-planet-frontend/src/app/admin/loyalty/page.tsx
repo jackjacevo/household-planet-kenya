@@ -47,7 +47,7 @@ export default function AdminLoyaltyPage() {
     }
   };
 
-  const createReward = async (rewardData) => {
+  const createReward = async (rewardData: any) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/loyalty/rewards`, {
@@ -68,7 +68,7 @@ export default function AdminLoyaltyPage() {
     }
   };
 
-  const adjustPoints = async (userId, points, reason) => {
+  const adjustPoints = async (userId: number, points: number, reason: string) => {
     try {
       const token = localStorage.getItem('token');
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/loyalty/adjust-points`, {
@@ -155,7 +155,7 @@ export default function AdminLoyaltyPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {rewards.map((reward) => (
+              {rewards.map((reward: any) => (
                 <div key={reward.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -196,7 +196,7 @@ export default function AdminLoyaltyPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {customers.slice(0, 10).map((customer) => (
+              {customers.slice(0, 10).map((customer: any) => (
                 <div key={customer.id} className="flex justify-between items-center py-3 border-b last:border-b-0">
                   <div>
                     <p className="font-medium">{customer.name}</p>

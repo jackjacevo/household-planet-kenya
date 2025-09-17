@@ -82,7 +82,7 @@ export default function AdminDashboard() {
     queryKey: ['dashboardStats'],
     queryFn: fetchDashboardStats,
     refetchInterval: 30000,
-    retry: (failureCount, error) => {
+    retry: (failureCount, error: any) => {
       if (error?.response?.status === 401) {
         localStorage.removeItem('token');
         window.location.href = '/login';
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {(stats.recentOrders || []).slice(0, 5).map((order) => (
+            {(stats.recentOrders || []).slice(0, 5).map((order: any) => (
               <div key={order.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -440,7 +440,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {(stats.topProducts || []).map((product) => (
+            {(stats.topProducts || []).map((product: any) => (
               <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center">
                   <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
@@ -476,7 +476,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {stats.salesByCounty?.slice(0, 5).map((county, index) => (
+            {stats.salesByCounty?.slice(0, 5).map((county: any, index: number) => (
               <div key={county.county} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
                       <div 
                         className="bg-indigo-600 h-2 rounded-full" 
                         style={{ 
-                          width: `${Math.min(100, (county.revenue / Math.max(...(stats.salesByCounty?.map(c => c.revenue) || [1]))) * 100)}%` 
+                          width: `${Math.min(100, (county.revenue / Math.max(...(stats.salesByCounty?.map((c: any) => c.revenue) || [1]))) * 100)}%` 
                         }}
                       ></div>
                     </div>

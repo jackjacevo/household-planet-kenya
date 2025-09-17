@@ -23,7 +23,7 @@ interface Customer {
     status: string;
     createdAt: string;
     items: Array<{
-      product: { name: string };
+      product: { name: string; images?: string };
       quantity: number;
       price: number;
     }>;

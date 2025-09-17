@@ -4,12 +4,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
-    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -29,13 +30,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     const body = await request.json();
     
-    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -57,12 +59,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
-    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delivery-locations/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

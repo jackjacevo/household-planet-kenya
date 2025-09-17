@@ -95,7 +95,7 @@ export default function InventoryPage() {
             </div>
           </div>
           <div className="mt-4">
-            <Button onClick={handleRefresh} variant="outline" loading={refreshing}>
+            <Button onClick={handleRefresh} variant="outline" disabled={refreshing}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
@@ -116,7 +116,7 @@ export default function InventoryPage() {
             Monitor stock levels and manage inventory alerts.
           </p>
         </div>
-        <Button onClick={handleRefresh} className="flex items-center" loading={refreshing}>
+        <Button onClick={handleRefresh} className="flex items-center" disabled={refreshing}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>

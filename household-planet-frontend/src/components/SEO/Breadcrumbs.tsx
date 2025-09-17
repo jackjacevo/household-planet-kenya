@@ -1,39 +1,40 @@
-import Link from 'next/link'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link';
+import { ChevronRight, Home } from 'lucide-react';
 
 interface BreadcrumbItem {
-  label: string
-  href?: string
+  name: string;
+  url: string;
 }
 
 interface BreadcrumbsProps {
-  items: BreadcrumbItem[]
+  items: BreadcrumbItem[];
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
-    <nav className="flex" aria-label="Breadcrumb">
-      <ol className="inline-flex items-center space-x-1 md:space-x-3">
-        {items.map((item, index) => (
-          <li key={index} className="inline-flex items-center">
-            {index > 0 && (
-              <ChevronRightIcon className="w-4 h-4 text-gray-400 mx-1" />
-            )}
-            {item.href ? (
-              <Link
-                href={item.href}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <span className="text-sm font-medium text-gray-500">
-                {item.label}
-              </span>
-            )}
-          </li>
-        ))}
-      </ol>
+    <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+      <Link 
+        href="/" 
+        className="flex items-center hover:text-orange-600 transition-colors"
+      >
+        <Home className="h-4 w-4" />
+      </Link>
+      
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center space-x-2">
+          <ChevronRight className="h-4 w-4 text-gray-400" />
+          {index === items.length - 1 ? (
+            <span className="text-gray-900 font-medium">{item.name}</span>
+          ) : (
+            <Link 
+              href={item.url}
+              className="hover:text-orange-600 transition-colors"
+            >
+              {item.name}
+            </Link>
+          )}
+        </div>
+      ))}
     </nav>
-  )
+  );
 }

@@ -130,7 +130,7 @@ try {
   console.log('');
   console.log('📋 Next steps:');
   console.log('  1. Restart your frontend development server');
-  console.log('  2. Go to http://localhost:3000/cart');
+  console.log('  2. Go to http://localhost:3001/cart');
   console.log('  3. Check browser console for debug messages');
   console.log('  4. The delivery locations should now load properly');
 } catch (error) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ShoppingCart, User, Search, Menu, X, Phone, Mail, MapPin, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,6 +21,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout, loading } = useAuth();
 
   const { getTotalItems } = useCart();
@@ -103,17 +104,23 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex space-x-8 ml-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`font-medium hover:text-green-600 transition ${
-                  item.href === '/' ? 'text-green-800' : 'text-gray-700'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || 
+                (item.href === '/products' && pathname.startsWith('/products')) ||
+                (item.href === '/categories' && pathname.startsWith('/categories'));
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`font-medium hover:text-green-600 transition ${
+                    isActive ? 'text-green-800 border-b-2 border-green-600 pb-1' : 'text-gray-700'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Search Bar - Desktop */}
@@ -201,16 +208,26 @@ export function Header() {
           </button>
         </div>
         <nav className="p-3">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center px-3 py-3 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || 
+              (item.href === '/products' && pathname.startsWith('/products')) ||
+              (item.href === '/categories' && pathname.startsWith('/categories'));
+            
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center px-3 py-3 rounded-lg transition-colors text-sm font-medium ${
+                  isActive 
+                    ? 'bg-green-100 text-green-700 border-l-4 border-green-600' 
+                    : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
           <div className="mt-4 pt-3 border-t space-y-1">
             {mounted && (loading ? (
               <div className="flex items-center py-3">

@@ -201,7 +201,7 @@ export default function OrdersPage() {
           </div>
         ) : filteredOrders && filteredOrders.length > 0 ? (
           <div className="space-y-4">
-            {filteredOrders.filter(order => order && order.id && order.orderNumber).map((order: any) => (
+            {filteredOrders.filter((order: any) => order && order.id && order.orderNumber).map((order: any) => (
               <div key={order.id} className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
                 <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-start sm:justify-between mb-3 sm:mb-4">
                   <div className="flex-1">
@@ -268,7 +268,7 @@ export default function OrdersPage() {
 
                 <div className="space-y-3 mb-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {order.items && order.items.length > 0 ? order.items.slice(0, 3).filter(item => item && item.product).map((item: any) => (
+                    {order.items && order.items.length > 0 ? order.items.slice(0, 3).filter((item: any) => item && item.product).map((item: any) => (
                       <div key={item.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
                         <div className="w-12 h-12 relative">
                           <img
