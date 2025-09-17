@@ -1,9 +1,15 @@
 version: '3.8'
 
+networks:
+  app-network:
+    driver: bridge
+
 services:
   postgres:
     image: postgres:15-alpine
     restart: unless-stopped
+    networks:
+      - app-network
     environment:
       POSTGRES_DB: household_planet
       POSTGRES_USER: ${POSTGRES_USER:-household_user}
@@ -23,6 +29,8 @@ services:
       context: ./household-planet-backend
       dockerfile: Dockerfile.prod
     restart: unless-stopped
+    networks:
+      - app-network
     environment:
       NODE_ENV: production
       PORT: 3001
@@ -49,6 +57,8 @@ services:
       context: ./household-planet-frontend
       dockerfile: Dockerfile.prod
     restart: unless-stopped
+    networks:
+      - app-network
     environment:
       NEXT_PUBLIC_API_URL: http://158.220.99.195:3001
     depends_on:
