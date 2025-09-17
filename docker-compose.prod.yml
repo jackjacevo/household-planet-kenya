@@ -50,7 +50,7 @@ services:
       dockerfile: Dockerfile.prod
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_API_URL: http://158.220.99.195:3001
     depends_on:
       - backend
     ports:
