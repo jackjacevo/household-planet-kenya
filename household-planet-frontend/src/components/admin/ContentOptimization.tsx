@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Image, Link, Star, TrendingUp } from 'lucide-react';
-import SeoOptimizer from '@/components/seo/SeoOptimizer';
+import SeoOptimizer from '@/components/SEO/SeoOptimizer';
 import SearchAnalytics from '@/components/search/SearchAnalytics';
 
 export default function ContentOptimization() {

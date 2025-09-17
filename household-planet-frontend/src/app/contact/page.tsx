@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
-import SEOHead from '@/components/seo/SEOHead';
-import Breadcrumbs from '@/components/seo/Breadcrumbs';
+import SEOHead from '@/components/SEO/SEOHead';
+import Breadcrumbs from '@/components/SEO/Breadcrumbs';
 import { generateOrganizationSchema } from '@/lib/seo';
 import { Phone, Mail, MapPin, Clock, MessageCircle, Headphones, Navigation, ShoppingCart, Truck, Package } from 'lucide-react';
 import ContactMap from '@/components/ui/ContactMap';
