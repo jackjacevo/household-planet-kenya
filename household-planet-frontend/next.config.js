@@ -178,6 +178,18 @@ const nextConfig = {
       },
     ];
   },
+  // API Proxy for production deployment
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: process.env.NODE_ENV === 'production' 
+          ? 'http://backend:3001/api/:path*'  // Docker container name
+          : 'http://localhost:3001/api/:path*', // Local development
+      },
+    ];
+  },
+  
   // Redirects for SEO
   async redirects() {
     return [
