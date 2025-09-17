@@ -1,6 +1,6 @@
 FROM node:20-alpine AS base
 WORKDIR /app
-# Force rebuild v2
+# Force rebuild v3 - clear cache
 COPY package*.json ./
 
 FROM base AS deps
