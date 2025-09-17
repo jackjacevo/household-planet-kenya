@@ -1,0 +1,83 @@
+# Dokploy Configuration for Single Domain Setup
+# This configuration sets up both frontend and backend behind a single domain
+# with Next.js handling the API proxy
+
+version: '3.8'
+
+networks:
+  household-planet:
+    driver: bridge
+
+services:
+  # Backend Service (Internal only)
+  household-planet-backend:
+    build:
+      context: ./household-planet-backend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      # CORS should allow the frontend container
+      CORS_ORIGIN: http://household-planet-frontend:3000
+      BASE_URL: http://household-planet-backend:3001
+      # M-Pesa Configuration
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
+      MPESA_PASSKEY: ${MPESA_PASSKEY}
+      MPESA_BASE_URL: https://api.safaricom.co.ke
+      MPESA_CALLBACK_URL: https://householdplanet.co.ke/api/payments/mpesa/callback
+    volumes:
+      - uploads_data:/app/uploads
+    # No external port exposure - only accessible via frontend proxy
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service (Public facing)
+  household-planet-frontend:
+    build:
+      context: ./household-planet-frontend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      NODE_ENV: production
+      # API calls go through the same domain (proxy)
+      NEXT_PUBLIC_API_URL: https://householdplanet.co.ke
+      NEXT_PUBLIC_SITE_URL: https://householdplanet.co.ke
+      NEXT_PUBLIC_ENVIRONMENT: production
+    depends_on:
+      household-planet-backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    labels:
+      # Dokploy labels for domain routing
+      - "traefik.enable=true"
+      - "traefik.http.routers.household-planet.rule=Host(`householdplanet.co.ke`)"
+      - "traefik.http.routers.household-planet.tls=true"
+      - "traefik.http.routers.household-planet.tls.certresolver=letsencrypt"
+      - "traefik.http.services.household-planet.loadbalancer.server.port=3000"
+
+volumes:
+  uploads_data:
+    driver: local
+
+# Environment variables needed:
+# DATABASE_URL=postgresql://username:password@host:5432/database
+# JWT_SECRET=your-super-secure-jwt-secret
+# MPESA_CONSUMER_KEY=your-mpesa-consumer-key
+# MPESA_CONSUMER_SECRET=your-mpesa-consumer-secret
+# MPESA_PASSKEY=your-mpesa-passkey

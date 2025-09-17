@@ -60,7 +60,9 @@ services:
     networks:
       - app-network
     environment:
-      NEXT_PUBLIC_API_URL: http://158.220.99.195:3001
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://householdplanet.co.ke
+      NEXT_PUBLIC_SITE_URL: https://householdplanet.co.ke
     depends_on:
       - backend
     ports:

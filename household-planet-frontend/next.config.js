@@ -163,7 +163,7 @@ const nextConfig = {
       {
         source: '/api/:path*',
         destination: process.env.NODE_ENV === 'production' 
-          ? 'http://backend:3001/api/:path*'  // Docker container name
+          ? 'http://household-planet-backend:3001/api/:path*'  // Docker container name
           : 'http://localhost:3001/api/:path*', // Local development
       },
     ];
