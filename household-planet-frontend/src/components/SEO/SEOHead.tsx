@@ -8,7 +8,7 @@ interface SEOHeadProps {
   canonical?: string
 }
 
-export default function SEOHead({ 
+export function SEOHead({ 
   title = 'Household Planet Kenya',
   description = 'Quality household items delivered across Kenya',
   keywords = 'household, kenya, delivery, home, kitchen',
@@ -28,3 +28,5 @@ export default function SEOHead({
     </Head>
   )
 }
+
+export default SEOHead
