@@ -1,16 +1,30 @@
-import { MetaTags } from './MetaTags'
-import { StructuredData } from './StructuredData'
-import { SEOConfig } from '@/lib/seo'
+import Head from 'next/head'
 
-interface SEOHeadProps extends SEOConfig {
-  structuredData?: object | object[]
+interface SEOHeadProps {
+  title?: string
+  description?: string
+  keywords?: string
+  ogImage?: string
+  canonical?: string
 }
 
-export function SEOHead({ structuredData, ...seoConfig }: SEOHeadProps) {
+export default function SEOHead({ 
+  title = 'Household Planet Kenya',
+  description = 'Quality household items delivered across Kenya',
+  keywords = 'household, kenya, delivery, home, kitchen',
+  ogImage = '/images/og-image.jpg',
+  canonical
+}: SEOHeadProps) {
   return (
-    <>
-      <MetaTags {...seoConfig} />
-      {structuredData && <StructuredData data={structuredData} />}
-    </>
+    <Head>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta name="keywords" content={keywords} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={ogImage} />
+      <meta name="twitter:card" content="summary_large_image" />
+      {canonical && <link rel="canonical" href={canonical} />}
+    </Head>
   )
 }

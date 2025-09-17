@@ -1,52 +1,39 @@
-'use client'
-
 import Link from 'next/link'
-import { ChevronRight, Home } from 'lucide-react'
-import { StructuredData } from './StructuredData'
-import { generateBreadcrumbSchema } from '@/lib/seo'
+import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 interface BreadcrumbItem {
-  name: string
-  url: string
+  label: string
+  href?: string
 }
 
 interface BreadcrumbsProps {
   items: BreadcrumbItem[]
-  className?: string
 }
 
-export function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
-  const allItems = [{ name: 'Home', url: '/' }, ...items]
-  const schema = generateBreadcrumbSchema(allItems)
-
+export default function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
-    <>
-      <StructuredData data={schema} />
-      <nav className={`flex items-center space-x-2 text-sm ${className}`} aria-label="Breadcrumb">
-        <ol className="flex items-center space-x-2">
-          {allItems.map((item, index) => (
-            <li key={item.url} className="flex items-center">
-              {index > 0 && (
-                <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />
-              )}
-              {index === allItems.length - 1 ? (
-                <span className="text-gray-600 font-medium flex items-center">
-                  {index === 0 && <Home className="h-4 w-4 mr-1" />}
-                  {item.name}
-                </span>
-              ) : (
-                <Link
-                  href={item.url}
-                  className="text-orange-600 hover:text-orange-700 transition-colors flex items-center"
-                >
-                  {index === 0 && <Home className="h-4 w-4 mr-1" />}
-                  {item.name}
-                </Link>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
-    </>
+    <nav className="flex" aria-label="Breadcrumb">
+      <ol className="inline-flex items-center space-x-1 md:space-x-3">
+        {items.map((item, index) => (
+          <li key={index} className="inline-flex items-center">
+            {index > 0 && (
+              <ChevronRightIcon className="w-4 h-4 text-gray-400 mx-1" />
+            )}
+            {item.href ? (
+              <Link
+                href={item.href}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <span className="text-sm font-medium text-gray-500">
+                {item.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
   )
 }
