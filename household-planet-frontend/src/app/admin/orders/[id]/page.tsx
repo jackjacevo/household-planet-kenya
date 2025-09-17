@@ -1344,19 +1344,23 @@ export default function OrderDetailsPage() {
                   return (
                     <>
                       {phone && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={`tel:${phone}`}>
-                            <Phone className="h-4 w-4 mr-1" />
-                            Call Customer
-                          </a>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => window.open(`tel:${phone}`, '_self')}
+                        >
+                          <Phone className="h-4 w-4 mr-1" />
+                          Call Customer
                         </Button>
                       )}
                       {email && !email.endsWith('@whatsapp.temp') && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={`mailto:${email}`}>
-                            <Mail className="h-4 w-4 mr-1" />
-                            Email
-                          </a>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => window.open(`mailto:${email}`, '_self')}
+                        >
+                          <Mail className="h-4 w-4 mr-1" />
+                          Email
                         </Button>
                       )}
                     </>

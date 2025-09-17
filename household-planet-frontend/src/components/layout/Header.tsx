@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart, User, Search, Menu, X, Phone, Mail, MapPin, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,8 +20,8 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [pathname, setPathname] = useState('');
   const router = useRouter();
-  const pathname = usePathname();
   const { user, logout, loading } = useAuth();
 
   const { getTotalItems } = useCart();
@@ -29,6 +29,7 @@ export function Header() {
 
   useEffect(() => {
     setMounted(true);
+    setPathname(window.location.pathname);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -105,9 +106,9 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex space-x-8 ml-8">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || 
+              const isActive = mounted && pathname && (pathname === item.href || 
                 (item.href === '/products' && pathname.startsWith('/products')) ||
-                (item.href === '/categories' && pathname.startsWith('/categories'));
+                (item.href === '/categories' && pathname.startsWith('/categories')));
               
               return (
                 <Link
@@ -209,9 +210,9 @@ export function Header() {
         </div>
         <nav className="p-3">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive = mounted && pathname && (pathname === item.href || 
               (item.href === '/products' && pathname.startsWith('/products')) ||
-              (item.href === '/categories' && pathname.startsWith('/categories'));
+              (item.href === '/categories' && pathname.startsWith('/categories')));
             
             return (
               <Link

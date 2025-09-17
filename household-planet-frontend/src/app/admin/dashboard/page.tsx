@@ -17,7 +17,9 @@ import {
   Activity,
   Clock,
   Star,
-  Boxes
+  Boxes,
+  Bell,
+  ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
@@ -184,7 +186,7 @@ export default function AdminDashboard() {
     {
       name: 'Pending Orders',
       value: stats.overview.pendingOrders,
-      icon: Calendar,
+      icon: Bell,
     },
     {
       name: 'Low Stock Alerts',
@@ -237,6 +239,41 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* New Orders Alert */}
+      {stats.overview.pendingOrders > 0 && (
+        <div className="mb-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg border border-orange-300">
+          <div className="px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="p-2 bg-white bg-opacity-20 rounded-full">
+                    <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-white animate-bounce" />
+                  </div>
+                </div>
+                <div className="ml-3 sm:ml-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-white">
+                    {stats.overview.pendingOrders} New Order{stats.overview.pendingOrders !== 1 ? 's' : ''} Pending
+                  </h3>
+                  <p className="text-sm text-orange-100">
+                    {stats.overview.pendingOrders === 1 ? 'You have a new order' : `You have ${stats.overview.pendingOrders} new orders`} waiting for processing
+                  </p>
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                <button 
+                  onClick={() => window.location.href = '/admin/orders'}
+                  className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+                >
+                  <span className="hidden sm:inline">View Orders</span>
+                  <span className="sm:hidden">View</span>
+                  <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">

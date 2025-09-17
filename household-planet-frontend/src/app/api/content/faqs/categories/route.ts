@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/content/faqs/categories`, {
+    const response = await fetch(`${apiUrl}/api/content/faqs/categories`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

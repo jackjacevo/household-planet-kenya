@@ -319,6 +319,10 @@ export default function CheckoutPage() {
       
       const response = await axios.post(endpoint, orderData, { headers });
       console.log('Order creation response:', response.data);
+      
+      // Dispatch event to update pending orders badge
+      window.dispatchEvent(new CustomEvent('orderCreated', { detail: { orderId: response.data.id } }));
+      
       return response.data.id;
     } catch (error) {
       console.error('Error creating order:', error);

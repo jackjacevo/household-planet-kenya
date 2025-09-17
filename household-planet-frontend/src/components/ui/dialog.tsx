@@ -56,8 +56,11 @@ const DialogTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HT
 );
 DialogTitle.displayName = 'DialogTitle';
 
-const DialogTrigger = ({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) => (
-  <>{children}</>
-);
+const DialogTrigger = ({ children, asChild, ...props }: { children: React.ReactNode; asChild?: boolean; [key: string]: any }) => {
+  if (asChild) {
+    return React.cloneElement(children as React.ReactElement, props);
+  }
+  return <>{children}</>;
+};
 
 export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger };

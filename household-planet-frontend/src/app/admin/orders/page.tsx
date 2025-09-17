@@ -278,6 +278,11 @@ export default function AdminOrdersPage() {
         variant: 'success'
       });
       
+      // Dispatch event to update pending orders badge
+      window.dispatchEvent(new CustomEvent('orderStatusChanged', { 
+        detail: { orderId, newStatus: status, oldStatus: orders.find(o => o.id === orderId)?.status } 
+      }));
+      
       refetchOrders();
       refetchStats();
     } catch (error) {

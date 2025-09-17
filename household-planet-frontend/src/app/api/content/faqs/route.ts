@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const url = new URL(`${apiUrl}/content/faqs`);
+    const url = new URL(`${apiUrl}/api/content/faqs`);
     
     if (category) {
       url.searchParams.set('category', category);
