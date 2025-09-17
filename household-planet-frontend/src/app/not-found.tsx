@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { HomeIcon, MagnifyingGlassIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
-import { SEOHead } from '@/components/seo/SEOHead'
+import SEOHead from '@/components/seo/SEOHead'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 
 export default function NotFound() {

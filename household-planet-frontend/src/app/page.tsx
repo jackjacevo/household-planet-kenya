@@ -12,7 +12,7 @@ import { StoreLocation } from '@/components/home/StoreLocation'
 import { TrustBadges } from '@/components/home/TrustBadges'
 
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
-import { SEOHead } from '@/components/seo/SEOHead'
+import SEOHead from '@/components/seo/SEOHead'
 import { InternalLinks } from '@/components/seo/InternalLinks'
 import { SocialMediaIcons } from '@/components/layout/SocialMediaIcons'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
