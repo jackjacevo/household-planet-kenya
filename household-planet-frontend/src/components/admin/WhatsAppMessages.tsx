@@ -68,9 +68,9 @@ export default function WhatsAppMessages() {
         api.get('/api/orders/whatsapp/orders'),
         api.get('/api/analytics/whatsapp-inquiries')
       ]);
-      setMessages(messagesResponse.data);
-      setOrders(ordersResponse.data);
-      setInquiries(inquiriesResponse.data);
+      setMessages(messagesResponse.data as WhatsAppMessage[]);
+      setOrders(ordersResponse.data as WhatsAppOrder[]);
+      setInquiries(inquiriesResponse.data as any[]);
     } catch (error) {
       showToast({
         title: 'Error',
@@ -178,7 +178,7 @@ export default function WhatsAppMessages() {
                       <Badge variant="info">WhatsApp</Badge>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p><strong>Customer:</strong> {order.user.name} ({order.user.phone})</p>
+                      <p><strong>Customer:</strong> {(order as any).user.name} ({(order as any).user.phone})</p>
                       <p><strong>Total:</strong> {formatCurrency(order.total)}</p>
                       <p><strong>Date:</strong> {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}</p>
                     </div>

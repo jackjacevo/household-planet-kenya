@@ -68,7 +68,7 @@ export default function CustomerManagement() {
     if (!selectedCustomer?.customerProfile || !newTag.trim()) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${selectedCustomer.customerProfile.id}/tags`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${selectedCustomer.id}/tags`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function CustomerManagement() {
     if (!selectedCustomer?.customerProfile) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${selectedCustomer.customerProfile.id}/tags/${encodeURIComponent(tag)}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${selectedCustomer.id}/tags/${encodeURIComponent(tag)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -110,7 +110,7 @@ export default function CustomerManagement() {
     if (!selectedCustomer?.customerProfile) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${selectedCustomer.customerProfile.id}/communications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${selectedCustomer.id}/communications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

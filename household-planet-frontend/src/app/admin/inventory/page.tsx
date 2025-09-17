@@ -43,7 +43,7 @@ export default function InventoryPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inventory/alerts`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setAlerts(response.data);
+      setAlerts((response as any).data);
     } catch (error: any) {
       console.error('Error fetching inventory alerts:', error);
       if (error.response?.status === 401) {

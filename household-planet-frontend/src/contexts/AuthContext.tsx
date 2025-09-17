@@ -36,6 +36,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+export { AuthContext }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -90,8 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('wishlist-storage')
       localStorage.removeItem('guestCart')
       localStorage.removeItem('checkoutData')
-      useCart.getState().clearOnLogout()
-      useWishlist.getState().clearOnLogout()
+      // useCart.getState().clearOnLogout()
+      // useWishlist.getState().clearOnLogout()
       
       const response = await api.login(email, password) as any
       const token = response.accessToken || response.access_token
@@ -124,8 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('checkoutData')
     
     // Clear cart and wishlist state
-    useCart.getState().clearOnLogout()
-    useWishlist.getState().clearOnLogout()
+    // useCart.getState().clearOnLogout()
+    // useWishlist.getState().clearOnLogout()
     
     setUser(null)
   }

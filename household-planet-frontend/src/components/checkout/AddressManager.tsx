@@ -48,7 +48,7 @@ export function AddressManager({
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setAddresses(response.data);
+      setAddresses((response as any).data);
     } catch (error) {
       console.error('Error loading addresses:', error);
     }
@@ -70,7 +70,7 @@ export function AddressManager({
         isDefault: addresses.length === 0 || formData.isDefault,
       };
 
-      let response;
+      let response: any;
       if (editingId) {
         response = await axios.put(
           `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses/${editingId}`,
@@ -86,10 +86,10 @@ export function AddressManager({
           addressData,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
-        setAddresses([...addresses, response.data]);
+        setAddresses([...addresses, (response as any).data]);
       }
 
-      onAddressSelect(response.data);
+      onAddressSelect((response as any).data);
       resetForm();
     } catch (error) {
       console.error('Error saving address:', error);

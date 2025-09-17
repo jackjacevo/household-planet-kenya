@@ -8,7 +8,7 @@ interface STKPushButtonProps {
   orderId: number;
   orderStatus: string;
   paymentStatus?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   fullWidth?: boolean;
   onSuccess?: () => void;

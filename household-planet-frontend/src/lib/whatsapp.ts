@@ -16,7 +16,7 @@ export function generateProductWhatsAppMessage(product: Product): string {
 • *${product.name}*
 • Price: Ksh ${product.price.toLocaleString()}${product.comparePrice ? ` (Was Ksh ${product.comparePrice.toLocaleString()})` : ''}
 • SKU: ${product.sku || 'N/A'}
-${product.brand ? `• Brand: ${product.brand.name}
+${product.brandId ? `• Brand ID: ${product.brandId}
 ` : ''}${product.category ? `• Category: ${product.category.name}
 ` : ''}• Description: ${product.shortDescription || product.description || 'No description available'}
 

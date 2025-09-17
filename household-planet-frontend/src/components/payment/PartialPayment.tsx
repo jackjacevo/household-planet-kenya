@@ -46,7 +46,7 @@ export default function PartialPayment({
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      if (response.data.success) {
+      if ((response as any).data.success) {
         alert('Partial payment initiated successfully');
         onPaymentSuccess();
       }

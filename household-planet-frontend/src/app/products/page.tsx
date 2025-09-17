@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ProductCard } from '@/components/products/ProductCard';
@@ -29,7 +29,7 @@ const staggerContainer = {
   }
 };
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,7 @@ export default function ProductsPage() {
     const loadCategories = async () => {
       try {
         const response = await api.getCategories();
-        setCategories(response);
+        setCategories(response as any[]);
       } catch (error) {
         console.error('Error loading categories:', error);
       }
@@ -156,12 +156,12 @@ export default function ProductsPage() {
       const response = await api.getProducts(queryParams) as any;
       console.log('API Response:', response);
       
-      const newProducts = response.data || response || [];
+      const newProducts = (response as any).data || response || [];
       console.log('Processed products:', newProducts);
       if (append && scrollMode === 'infinite') {
-        setProducts(prev => [...prev, ...newProducts]);
+        setProducts(prev => [...prev, ...newProducts] as any[]);
       } else {
-        setProducts(newProducts);
+        setProducts(newProducts as any[]);
       }
       
       setTotalPages(response.pagination?.totalPages || response.meta?.totalPages || 1);
@@ -170,7 +170,7 @@ export default function ProductsPage() {
       console.error('Error fetching products:', error);
       setError('Failed to load products. Please try again.');
       if (!append) {
-        setProducts([]);
+        setProducts([] as any[]);
       }
     } finally {
       setLoading(false);
@@ -560,5 +560,22 @@ export default function ProductsPage() {
       </PullToRefresh>
       </div>
     </>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-full p-4 mb-4 inline-block">
+            <div className="h-8 w-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading products...</p>
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

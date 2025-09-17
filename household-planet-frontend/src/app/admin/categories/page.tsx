@@ -60,7 +60,7 @@ export default function AdminCategoriesPage() {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCategories(response.data);
+      setCategories((response as any).data);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to fetch categories');
       console.error('Error fetching categories:', error);
@@ -210,8 +210,8 @@ export default function AdminCategoriesPage() {
       );
       
 
-      console.log('Setting image URL:', response.data.imageUrl);
-      setFormData(prev => ({ ...prev, image: response.data.imageUrl }));
+      console.log('Setting image URL:', (response as any).data.imageUrl);
+      setFormData(prev => ({ ...prev, image: (response as any).data.imageUrl }));
       setSuccess('Image uploaded successfully');
     } catch (error: any) {
       console.error('Upload error:', error);

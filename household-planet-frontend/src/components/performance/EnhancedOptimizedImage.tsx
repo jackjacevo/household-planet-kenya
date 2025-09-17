@@ -57,7 +57,7 @@ export default function EnhancedOptimizedImage({
     const detectFormat = async () => {
       // Check AVIF support
       const avifSupported = await new Promise<boolean>(resolve => {
-        const avif = new Image();
+        const avif = document.createElement('img');
         avif.onload = () => resolve(avif.height === 2);
         avif.onerror = () => resolve(false);
         avif.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=';
@@ -70,7 +70,7 @@ export default function EnhancedOptimizedImage({
 
       // Check WebP support
       const webpSupported = await new Promise<boolean>(resolve => {
-        const webp = new Image();
+        const webp = document.createElement('img');
         webp.onload = () => resolve(webp.height === 2);
         webp.onerror = () => resolve(false);
         webp.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
@@ -97,7 +97,7 @@ export default function EnhancedOptimizedImage({
       width: optimalDimensions.width,
       height: optimalDimensions.height,
       quality,
-      format: supportedFormat
+      format: supportedFormat === 'avif' ? 'webp' : supportedFormat
     });
     setOptimizedSrc(optimized);
   }, [src, width, height, quality, mobileOptimized, supportedFormat, optimalDimensions.width, optimalDimensions.height]);

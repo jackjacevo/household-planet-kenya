@@ -289,7 +289,7 @@ export default function AdminOrdersPage() {
       console.error('Error updating order status:', error);
       showToast({
         title: 'Error',
-        description: `Failed to update order status: ${error.message}`,
+        description: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
         variant: 'destructive'
       });
     } finally {
@@ -393,7 +393,7 @@ export default function AdminOrdersPage() {
       console.error('Error generating shipping label:', error);
       showToast({
         title: 'Error',
-        description: `Failed to generate shipping label: ${error.message}`,
+        description: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
         variant: 'destructive'
       });
     } finally {
@@ -465,7 +465,7 @@ export default function AdminOrdersPage() {
       console.error('Error viewing receipt:', error);
       showToast({
         title: 'Error',
-        description: error.message || 'Failed to load receipt. Please try again.',
+        description: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.',
         variant: 'destructive'
       });
     }
@@ -473,7 +473,7 @@ export default function AdminOrdersPage() {
 
   const generatePDFReceipt = async (receipt: any) => {
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
+      const html2pdf = (await import('html2pdf.js' as any)).default;
       const element = document.createElement('div');
       
       // Get customer info from order data - check all possible sources
@@ -1008,7 +1008,7 @@ export default function AdminOrdersPage() {
       console.error('Error generating statement:', error);
       showToast({
         title: 'Error',
-        description: `Failed to generate statement: ${error.message}`,
+        description: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
         variant: 'destructive'
       });
     }
@@ -1033,9 +1033,9 @@ export default function AdminOrdersPage() {
     }, {} as Record<string, number>);
 
     const topCustomers = orders
-      .filter(order => order.user?.name)
+      .filter(order => (order as any).user?.name)
       .reduce((acc, order) => {
-        const customerName = order.user!.name;
+        const customerName = (order as any).user!.name;
         if (!acc[customerName]) {
           acc[customerName] = { count: 0, total: 0 };
         }
@@ -1405,7 +1405,7 @@ export default function AdminOrdersPage() {
                 ${orders.slice(0, 20).map(order => `
                   <tr>
                     <td><strong>${order.orderNumber}</strong></td>
-                    <td>${order.user?.name || 'Guest Customer'}</td>
+                    <td>${(order as any).user?.name || 'Guest Customer'}</td>
                     <td><span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span></td>
                     <td><strong>KSh ${order.total.toLocaleString()}</strong></td>
                     <td>${new Date(order.createdAt).toLocaleDateString('en-GB')}</td>
@@ -1490,7 +1490,7 @@ export default function AdminOrdersPage() {
       console.error('Error sending STK push:', error);
       showToast({
         title: '❌ STK Push Failed',
-        description: `Failed to send payment prompt: ${error.message}`,
+        description: `Failed to send payment prompt: ${(error as Error).message}`,
         variant: 'destructive'
       });
     } finally {
@@ -1553,7 +1553,7 @@ export default function AdminOrdersPage() {
       console.error('Error deleting order:', error);
       showToast({
         title: 'Error',
-        description: `Failed to delete order: ${error.message}`,
+        description: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
         variant: 'destructive'
       });
     } finally {
@@ -1777,8 +1777,8 @@ export default function AdminOrdersPage() {
                     <TableCell>{returnReq.order.orderNumber}</TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{returnReq.order.user?.name || 'Guest Customer'}</div>
-                        <div className="text-sm text-gray-500">{returnReq.order.user?.email || 'Guest Order'}</div>
+                        <div className="font-medium">{(returnReq.order as any).user?.name || 'Guest Customer'}</div>
+                        <div className="text-sm text-gray-500">{(returnReq.order as any).user?.email || 'Guest Order'}</div>
                       </div>
                     </TableCell>
                     <TableCell>{returnReq.reason}</TableCell>
@@ -1874,12 +1874,12 @@ export default function AdminOrdersPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium text-sm">{order.user?.name || 'Guest Customer'}</div>
+                            <div className="font-medium text-sm">{(order as any).user?.name || 'Guest Customer'}</div>
                             <div className="text-xs text-blue-600 font-medium">
-                              {order.user?.email?.endsWith('@whatsapp.temp') ? 'WhatsApp User' : order.user?.email || 'Guest Order'}
+                              {(order as any).user?.email?.endsWith('@whatsapp.temp') ? 'WhatsApp User' : (order as any).user?.email || 'Guest Order'}
                             </div>
-                            {order.user?.phone && (
-                              <div className="text-xs text-gray-500 hidden sm:block">{order.user.phone}</div>
+                            {(order as any).user?.phone && (
+                              <div className="text-xs text-gray-500 hidden sm:block">{(order as any).user.phone}</div>
                             )}
                           </div>
                         </TableCell>
@@ -1905,9 +1905,9 @@ export default function AdminOrdersPage() {
                             <div className="text-xs text-gray-500">
                               Subtotal: KSh {order.subtotal?.toLocaleString() || order.total.toLocaleString()}
                             </div>
-                            {order.promoCode && order.discountAmount > 0 && (
+                            {(order as any).promoCode && (order as any).discountAmount > 0 && (
                               <div className="text-xs text-green-600">
-                                Promo ({order.promoCode}): -KSh {order.discountAmount.toLocaleString()}
+                                Promo ({(order as any).promoCode}): -KSh {(order as any).discountAmount.toLocaleString()}
                               </div>
                             )}
                             <div className="text-xs text-gray-400">
@@ -1917,10 +1917,10 @@ export default function AdminOrdersPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <span className="font-bold text-sm">KSh {(order.subtotal - (order.discountAmount || 0) + (order.deliveryPrice || order.shippingCost || 0)).toLocaleString()}</span>
-                            {order.promoCode && order.discountAmount > 0 && (
+                            <span className="font-bold text-sm">KSh {((order.subtotal || order.total) - ((order as any).discountAmount || 0) + (order.deliveryPrice || order.shippingCost || 0)).toLocaleString()}</span>
+                            {(order as any).promoCode && (order as any).discountAmount > 0 && (
                               <div className="text-xs text-green-600 sm:hidden">
-                                Promo: -KSh {order.discountAmount.toLocaleString()}
+                                Promo: -KSh {(order as any).discountAmount.toLocaleString()}
                               </div>
                             )}
                             {order.deliveryPrice && order.deliveryPrice !== order.shippingCost && (
@@ -1934,7 +1934,7 @@ export default function AdminOrdersPage() {
                           <div>
                             <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
                             <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
-                            {order.updatedAt !== order.createdAt && (
+                            {order.updatedAt && order.updatedAt !== order.createdAt && (
                               <div className="text-xs text-gray-400">
                                 Updated: {new Date(order.updatedAt).toLocaleDateString()}
                               </div>
@@ -1957,7 +1957,7 @@ export default function AdminOrdersPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: order.user?.phone || '' })}
+                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: (order as any).user?.phone || '' })}
                                   disabled={actionLoading[`stk-${order.id}`]}
                                   title="Send M-Pesa STK Push"
                                   className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 p-2"
@@ -2006,7 +2006,7 @@ export default function AdminOrdersPage() {
                               <SelectTrigger className="w-full sm:w-32 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="z-50">
+                              <SelectContent>
                                 <SelectItem value="PENDING">Pending</SelectItem>
                                 <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                                 <SelectItem value="PROCESSING">Processing</SelectItem>

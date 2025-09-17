@@ -50,7 +50,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const [tagInput, setTagInput] = useState('');
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch, reset } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as any,
     defaultValues: {
       sku: product?.sku || generateSKU(),
       stock: product?.stock || 0,
@@ -110,7 +110,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCategories(response.data);
+      setCategories((response as any).data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -122,7 +122,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBrands(response.data);
+      setBrands((response as any).data);
     } catch (error) {
       console.error('Error fetching brands:', error);
     }
@@ -188,7 +188,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-6">{product ? 'Edit Product' : 'Add Product'}</h2>
       
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(handleFormSubmit as any)} className="space-y-6">
         {/* Debug info */}
         {Object.keys(errors).length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -398,7 +398,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Short Description
             <span className="text-xs text-gray-500 ml-2">
-              ({watch('shortDescription') ? watch('shortDescription').trim().split(/\s+/).filter(word => word.length > 0).length : 0}/28 words)
+              ({watch('shortDescription') ? watch('shortDescription')?.trim().split(/\s+/).filter(word => word.length > 0).length : 0}/28 words)
             </span>
           </label>
           <textarea

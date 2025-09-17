@@ -109,7 +109,7 @@ export class PWAManager {
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(
           process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
-        )
+        ) as any
       });
       
       return subscription;
@@ -128,10 +128,10 @@ export class PWAManager {
       badge: payload.badge || '/icons/icon-72x72.png',
       tag: payload.tag,
       data: payload.data,
-      actions: payload.actions,
+      // actions: payload.actions,
       requireInteraction: payload.requireInteraction,
       silent: payload.silent,
-      vibrate: payload.vibrate || [200, 100, 200]
+      // vibrate: payload.vibrate || [200, 100, 200]
     };
 
     await this.registration.showNotification(payload.title, options);
@@ -147,7 +147,7 @@ export class PWAManager {
 
     // Register background sync
     if ('sync' in this.registration) {
-      await this.registration.sync.register('cart-sync');
+      await (this.registration as any).sync?.register('cart-sync');
     }
   }
 
@@ -200,8 +200,8 @@ export class PWAManager {
     try {
       // Trigger background sync for any pending data
       if ('sync' in this.registration) {
-        await this.registration.sync.register('background-sync');
-        await this.registration.sync.register('cart-sync');
+        await (this.registration as any).sync?.register('background-sync');
+        await (this.registration as any).sync?.register('cart-sync');
       }
     } catch (error) {
       console.error('Background sync failed:', error);

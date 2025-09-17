@@ -237,8 +237,8 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
             {product.name}
           </h3>
         </Link>
-        {product.brand && (
-          <p className="text-xs text-gray-500 mt-1">{product.brand.name}</p>
+        {product.brandId && (
+          <p className="text-xs text-gray-500 mt-1">Brand ID: {product.brandId}</p>
         )}
 
         <div className="hidden sm:block mt-2">

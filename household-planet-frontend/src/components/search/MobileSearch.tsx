@@ -74,8 +74,8 @@ export function MobileSearch({ isOpen, onClose, placeholder = 'Search products..
   const searchProducts = async (searchQuery: string) => {
     setLoading(true);
     try {
-      const response = await api.searchProducts(searchQuery, { limit: 12 });
-      setResults(response.data || []);
+      const response = await api.searchProducts(searchQuery);
+      setResults((response as any).data || []);
     } catch (error) {
       console.error('Search error:', error);
       setResults([]);
@@ -268,3 +268,5 @@ export function MobileSearch({ isOpen, onClose, placeholder = 'Search products..
     </AnimatePresence>
   );
 }
+
+export default MobileSearch;

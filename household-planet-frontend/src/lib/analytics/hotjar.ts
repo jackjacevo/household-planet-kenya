@@ -16,7 +16,7 @@ export const initHotjar = () => {
   const j = '.hotjar.com'
   
   h.hj = h.hj || function(...args: any[]) {
-    (h.hj.q = h.hj.q || []).push(args)
+    ((h.hj as any).q = (h.hj as any).q || []).push(args)
   }
   
   h._hjSettings = { hjid: ANALYTICS_CONFIG.HOTJAR_ID, hjsv: ANALYTICS_CONFIG.HOTJAR_VERSION }

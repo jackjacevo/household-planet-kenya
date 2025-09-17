@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     try {
       const response = await api.get<{ user: User }>(apiEndpoints.user.profile);
-      setUser(response.data?.user || null);
+      setUser((response as any).data?.user || null);
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
@@ -65,9 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
     
-    if (response.data?.token) {
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
+    if ((response as any).data?.token) {
+      localStorage.setItem('token', (response as any).data.token);
+      setUser((response as any).data.user);
       
       // Sync local cart and wishlist with backend
       const { syncLocalToBackend: syncCart } = useCart.getState();
@@ -92,9 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }) => {
     const response = await api.post<{ user: User; token: string }>(apiEndpoints.auth.register, data);
     
-    if (response.data?.token) {
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
+    if ((response as any).data?.token) {
+      localStorage.setItem('token', (response as any).data.token);
+      setUser((response as any).data.user);
       
       // Sync local cart and wishlist with backend
       const { syncLocalToBackend: syncCart } = useCart.getState();
@@ -124,8 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (data: Partial<User>) => {
     const response = await api.put<{ user: User }>(apiEndpoints.user.profile, data);
-    if (response.data?.user) {
-      setUser(response.data.user);
+    if ((response as any).data?.user) {
+      setUser((response as any).data.user);
     }
   };
 

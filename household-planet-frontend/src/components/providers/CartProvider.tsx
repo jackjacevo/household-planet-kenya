@@ -67,7 +67,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     
     try {
       const response = await api.get<{ items: CartItem[] }>(apiEndpoints.cart.get);
-      setItems(response.data?.items || []);
+      setItems((response as any).data?.items || []);
     } catch (error) {
       console.error('Failed to refresh cart:', error);
     } finally {
@@ -78,8 +78,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = async (productId: string, variantId?: string, quantity = 1) => {
     if (user) {
       await api.post('/api/cart', {
-        productId: parseInt(productId),
-        variantId: variantId ? parseInt(variantId) : undefined,
+        productId: typeof productId === 'string' ? parseInt(productId) : productId,
+        variantId: variantId ? (typeof variantId === 'string' ? parseInt(variantId) : variantId) : undefined,
         quantity,
       });
       await refreshCart();
@@ -87,8 +87,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Handle guest cart
       const newItem: CartItem = {
         id: Date.now().toString(),
-        productId,
-        variantId,
+        productId: typeof productId === 'string' ? parseInt(productId) : productId,
+        variantId: variantId ? (typeof variantId === 'string' ? parseInt(variantId) : variantId) : undefined,
         quantity,
         product: {} as any, // Will be populated when cart is synced
       };

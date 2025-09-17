@@ -44,7 +44,7 @@ export function VariantSelector({ variants, onVariantChange }: VariantSelectorPr
             {sizes.map((size) => (
               <button
                 key={size}
-                onClick={() => setSelectedSize(size === selectedSize ? '' : size)}
+                onClick={() => setSelectedSize(size === selectedSize ? '' : size || '')}
                 className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   selectedSize === size
                     ? 'border-orange-500 bg-orange-50 text-orange-700'
@@ -66,7 +66,7 @@ export function VariantSelector({ variants, onVariantChange }: VariantSelectorPr
             {colors.map((color) => (
               <button
                 key={color}
-                onClick={() => setSelectedColor(color === selectedColor ? '' : color)}
+                onClick={() => setSelectedColor(color === selectedColor ? '' : color || '')}
                 className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   selectedColor === color
                     ? 'border-orange-500 bg-orange-50 text-orange-700'
@@ -88,7 +88,7 @@ export function VariantSelector({ variants, onVariantChange }: VariantSelectorPr
             {materials.map((material) => (
               <button
                 key={material}
-                onClick={() => setSelectedMaterial(material === selectedMaterial ? '' : material)}
+                onClick={() => setSelectedMaterial(material === selectedMaterial ? '' : material || '')}
                 className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   selectedMaterial === material
                     ? 'border-orange-500 bg-orange-50 text-orange-700'

@@ -184,7 +184,7 @@ export default function CheckoutPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      const user = response.data;
+      const user = (response as any).data;
       
       // Auto-fill user information, prioritizing existing form data
       const userData = {
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/addresses`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setSavedAddresses(response.data);
+      setSavedAddresses((response as any).data);
     } catch (error) {
       console.error('Error loading addresses:', error);
     }
@@ -236,8 +236,8 @@ export default function CheckoutPage() {
         },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setSavedAddresses([...savedAddresses, response.data]);
-      setSelectedAddressId(response.data.id);
+      setSavedAddresses([...savedAddresses, (response as any).data]);
+      setSelectedAddressId((response as any).data.id);
       setShowAddressForm(false);
     } catch (error) {
       console.error('Error saving address:', error);
@@ -318,18 +318,18 @@ export default function CheckoutPage() {
         : {};
       
       const response = await axios.post(endpoint, orderData, { headers });
-      console.log('Order creation response:', response.data);
+      console.log('Order creation response:', (response as any).data);
       
       // Dispatch event to update pending orders badge
-      window.dispatchEvent(new CustomEvent('orderCreated', { detail: { orderId: response.data.id } }));
+      window.dispatchEvent(new CustomEvent('orderCreated', { detail: { orderId: (response as any).data.id } }));
       
-      return response.data.id;
-    } catch (error) {
+      return (response as any).data.id;
+    } catch (error: any) {
       console.error('Error creating order:', error);
       if (error.response) {
-        console.error('Response data:', error.response.data);
+        console.error('Response data:', error.response?.data);
         console.error('Response status:', error.response.status);
-        console.error('Validation errors:', error.response.data.message);
+        console.error('Validation errors:', error.response?.data?.message);
       }
       throw error;
     }
@@ -434,7 +434,7 @@ export default function CheckoutPage() {
       router.push(`/order-confirmation/${newOrderId}`);
     } catch (error) {
       console.error('Order error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Order failed. Please try again.';
+      const errorMessage = (error as any).response?.data?.message || (error as Error).message || 'Order failed. Please try again.';
       alert(errorMessage);
     }
   };

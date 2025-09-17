@@ -74,7 +74,7 @@ export default function CategoryManager({ onCategoryChange }: CategoryManagerPro
         `${process.env.NEXT_PUBLIC_API_URL}/admin/categories`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCategories(response.data);
+      setCategories((response as any).data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
@@ -281,7 +281,7 @@ export default function CategoryManager({ onCategoryChange }: CategoryManagerPro
                     e.stopPropagation();
                     handleDelete(category);
                   }}
-                  disabled={category._count?.products && category._count.products > 0}
+                  disabled={Boolean(category._count?.products && category._count.products > 0)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

@@ -54,7 +54,7 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
   const [previewMode, setPreviewMode] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as any,
     defaultValues: product || {
       isActive: true,
       isFeatured: false,
@@ -95,7 +95,7 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCategories(response.data);
+      setCategories((response as any).data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -107,7 +107,7 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBrands(response.data);
+      setBrands((response as any).data);
     } catch (error) {
       console.error('Error fetching brands:', error);
     }
@@ -135,9 +135,9 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setValue('seoTitle', response.data.seoTitle);
-      setValue('seoDescription', response.data.seoDescription);
-      setValue('metaKeywords', response.data.metaKeywords);
+      setValue('seoTitle', (response as any).data.seoTitle);
+      setValue('seoDescription', (response as any).data.seoDescription);
+      setValue('metaKeywords', (response as any).data.metaKeywords);
     } catch (error) {
       console.error('Error generating SEO suggestions:', error);
     }
@@ -214,7 +214,7 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
+      <form onSubmit={handleSubmit(handleFormSubmit as any)}>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-8">

@@ -34,7 +34,7 @@ export default function AdminDeliveryPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      const deliveries = response.data.data || response.data;
+      const deliveries = (response as any).data.data || (response as any).data;
       setDeliveries(deliveries);
     } catch (error) {
       console.error('Error fetching deliveries:', error);
@@ -45,7 +45,7 @@ export default function AdminDeliveryPage() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
-        const orders = response.data.orders || response.data;
+        const orders = (response as any).data.orders || (response as any).data;
         const mappedDeliveries = orders.map((order: any) => {
           let address = order.deliveryLocation || 'N/A';
           if (!address || address === 'N/A') {
@@ -63,8 +63,8 @@ export default function AdminDeliveryPage() {
           return {
             id: order.id,
             orderNumber: order.orderNumber,
-            customerName: order.user?.name || order.customerName || 'Unknown',
-            customerPhone: order.user?.phone || order.customerPhone || 'N/A',
+            customerName: (order as any).user?.name || order.customerName || 'Unknown',
+            customerPhone: (order as any).user?.phone || order.customerPhone || 'N/A',
             shippingAddress: address,
             status: order.status,
             estimatedDelivery: order.estimatedDelivery || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),

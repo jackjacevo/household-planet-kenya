@@ -89,12 +89,12 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
       const response = await api.get(`/reviews/product/${productId}?${params}`);
       
       if (pageNum === 1) {
-        setReviews(response.data.data);
+        setReviews((response as any).data.data);
       } else {
-        setReviews(prev => [...prev, ...response.data.data]);
+        setReviews(prev => [...prev, ...(response as any).data.data]);
       }
       
-      setHasMore(response.data.meta.page < response.data.meta.totalPages);
+      setHasMore((response as any).data.meta.page < (response as any).data.meta.totalPages);
       setPage(pageNum);
     } catch (error) {
       console.error('Error loading reviews:', error);
@@ -106,7 +106,7 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
   const loadStats = async () => {
     try {
       const response = await api.get(`/reviews/product/${productId}/stats`);
-      setStats(response.data);
+      setStats((response as any).data);
     } catch (error) {
       console.error('Error loading review stats:', error);
     }
@@ -128,9 +128,7 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
         formData.append(`images`, image);
       });
 
-      await api.post('/reviews', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await api.post('/reviews', formData);
 
       // Reset form and reload reviews
       setNewReview({

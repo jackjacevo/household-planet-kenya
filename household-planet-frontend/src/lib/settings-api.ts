@@ -170,8 +170,8 @@ export const settingsApi = {
       const params = category ? { category } : {};
       console.log('Fetching settings with params:', params);
       const response = await api.get('/api/admin/settings', { params });
-      console.log('Settings response:', response.data);
-      return response.data;
+      console.log('Settings response:', (response as any).data);
+      return (response as any).data;
     } catch (error) {
       console.error('Settings API error:', error);
       // Return empty object if API fails
@@ -182,90 +182,90 @@ export const settingsApi = {
   // Get public settings (no auth required)
   getPublicSettings: async (): Promise<SettingsResponse> => {
     const response = await api.get('/api/admin/settings/public');
-    return response.data;
+    return (response as any).data;
   },
 
   // Get specific setting
   getSetting: async (category: string, key: string): Promise<Setting> => {
     const response = await api.get(`/api/admin/settings/${category}/${key}`);
-    return response.data;
+    return (response as any).data;
   },
 
   // Update multiple settings
   updateSettings: async (data: UpdateSettingsRequest) => {
     const response = await api.put('/api/admin/settings', data);
-    return response.data;
+    return (response as any).data;
   },
 
   // Update single setting
   updateSetting: async (data: UpdateSettingRequest) => {
     const response = await api.put('/api/admin/settings/single', data);
-    return response.data;
+    return (response as any).data;
   },
 
   // Category-specific updates
   updateCompanySettings: async (data: CompanySettings) => {
     const response = await api.put('/api/admin/settings/company', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updatePaymentSettings: async (data: PaymentSettings) => {
     const response = await api.put('/api/admin/settings/payment', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateNotificationSettings: async (data: NotificationSettings) => {
     const response = await api.put('/api/admin/settings/notification', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateInventorySettings: async (data: InventorySettings) => {
     const response = await api.put('/api/admin/settings/inventory', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateSEOSettings: async (data: SEOSettings) => {
     const response = await api.put('/api/admin/settings/seo', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateSecuritySettings: async (data: SecuritySettings) => {
     const response = await api.put('/api/admin/settings/security', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateEmailSettings: async (data: EmailSettings) => {
     const response = await api.put('/api/admin/settings/email', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateSocialMediaSettings: async (data: SocialMediaSettings) => {
     const response = await api.put('/api/admin/settings/social', data);
-    return response.data;
+    return (response as any).data;
   },
 
   updateDeliverySettings: async (data: DeliverySettings) => {
     const response = await api.put('/api/admin/settings/delivery', data);
-    return response.data;
+    return (response as any).data;
   },
 
   // Reset settings to defaults
   resetToDefaults: async (category?: string) => {
     const params = category ? { category } : {};
     const response = await api.post('/api/admin/settings/reset', {}, { params });
-    return response.data;
+    return (response as any).data;
   },
 
   // Export settings
   exportSettings: async (category?: string) => {
     const params = category ? { category } : {};
     const response = await api.get('/api/admin/settings/export', { params });
-    return response.data;
+    return (response as any).data;
   },
 
   // Import settings
   importSettings: async (settingsData: any) => {
     const response = await api.post('/api/admin/settings/import', settingsData);
-    return response.data;
+    return (response as any).data;
   },
 };

@@ -45,7 +45,7 @@ export function SearchAutocomplete({ onSelect }: SearchAutocompleteProps) {
       setLoading(true);
       try {
         const response = await api.get(`/api/products?search=${encodeURIComponent(query)}&limit=12`);
-        setResults(response.data?.data || response.data || []);
+        setResults((response as any).data?.data || (response as any).data || []);
         setIsOpen(true);
       } catch (error) {
         console.error('Search error:', error);

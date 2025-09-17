@@ -62,7 +62,7 @@ export default function AdminManagementPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       // Filter to only show ADMIN users
-      setStaff(response.data.filter((member: Staff) => member.role === 'ADMIN'));
+      setStaff((response as any).data.filter((member: Staff) => member.role === 'ADMIN'));
     } catch (error) {
       console.error('Error fetching staff:', error);
     } finally {
@@ -109,7 +109,7 @@ export default function AdminManagementPage() {
     if (!editingStaff) return;
     try {
       const token = localStorage.getItem('token');
-      const updateData = { ...formData };
+      const updateData: any = { ...formData };
       if (!updateData.password) {
         delete updateData.password;
       }

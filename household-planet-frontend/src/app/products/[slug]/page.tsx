@@ -53,7 +53,7 @@ export default function ProductDetailPage() {
         setLoading(true);
         setError(null);
         
-        const response = await api.getProductBySlug(slug);
+        const response = await api.getProductBySlug(slug) as Product;
         setProduct(response);
         
         if (response.variants && response.variants.length > 0) {
@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
     try {
       setReviewsLoading(true);
       const response = await api.getProductReviews(productId);
-      setReviews(response.data || []);
+      setReviews((response as any).data || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
@@ -96,7 +96,7 @@ export default function ProductDetailPage() {
       
       // Show success message
       showToast({
-        variant: 'default',
+        variant: 'success',
         title: 'Review Submitted! ⭐',
         description: 'Thank you for your feedback. Your review has been posted.',
       });
@@ -114,7 +114,7 @@ export default function ProductDetailPage() {
       showToast({
         variant: 'destructive',
         title: 'Review Failed ❌',
-        description: error.message || 'Failed to submit review. Please try again.',
+        description: (error as Error).message || 'Failed to submit review. Please try again.',
       });
       
       throw error;
@@ -190,7 +190,7 @@ export default function ProductDetailPage() {
       variantId: selectedVariant?.id,
       quantity,
       product,
-      variant: selectedVariant,
+      variant: selectedVariant || undefined,
     });
     
     if (wasAdded) {

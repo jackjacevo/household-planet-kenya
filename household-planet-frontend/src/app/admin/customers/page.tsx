@@ -66,7 +66,7 @@ export default function CustomersPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/search?q=${encodeURIComponent(searchQuery)}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setCustomers(response.data);
+      setCustomers((response as any).data);
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
@@ -176,7 +176,7 @@ export default function CustomersPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}/details`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setSelectedCustomer(response.data);
+      setSelectedCustomer((response as any).data);
     } catch (error) {
       console.error('Error fetching customer details:', error);
       alert('Failed to load customer details');

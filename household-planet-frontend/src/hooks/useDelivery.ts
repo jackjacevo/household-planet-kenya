@@ -49,7 +49,7 @@ export function useDelivery() {
         console.error('❌ Failed to fetch delivery locations:', err);
         
         if (mounted) {
-          setError(err.message);
+          setError((err as Error).message);
           
           const fallbackLocations = [
             { id: '1', name: 'Nairobi CBD', tier: 1, price: 100, description: 'Orders within CBD only', estimatedDays: 1, expressAvailable: true, expressPrice: 200 },

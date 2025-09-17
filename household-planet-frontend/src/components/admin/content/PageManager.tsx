@@ -185,7 +185,7 @@ export default function PageManager() {
                 <Switch
                   id="isPublished"
                   checked={formData.isPublished}
-                  onCheckedChange={(checked) => setFormData({...formData, isPublished: checked})}
+                  onChange={(e) => setFormData({...formData, isPublished: e.target.checked})}
                 />
                 <Label htmlFor="isPublished">Published</Label>
               </div>

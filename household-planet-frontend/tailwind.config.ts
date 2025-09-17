@@ -227,13 +227,13 @@ const config: Config = {
     },
   },
   plugins: [
-    function({ addUtilities, theme }) {
-      const textShadowUtilities = Object.entries(theme('textShadow')).reduce((acc, [key, value]) => {
+    function({ addUtilities, theme }: any) {
+      const textShadowUtilities = Object.entries(theme('textShadow')).reduce((acc: any, [key, value]) => {
         acc[`.text-shadow-${key}`] = {
           textShadow: value,
         };
         return acc;
-      }, {});
+      }, {} as any);
       addUtilities(textShadowUtilities);
     },
   ],

@@ -80,7 +80,7 @@ export function usePayment() {
         }
       );
 
-      return response.data;
+      return (response as any).data;
     } catch (err: any) {
       console.error('Payment initiation error details:', {
         status: err.response?.status,
@@ -109,7 +109,7 @@ export function usePayment() {
           headers: { 'Authorization': `Bearer ${token}` },
         }
       );
-      return response.data;
+      return (response as any).data;
     } catch (err) {
       console.error('Error checking payment status:', err);
       return null;
@@ -131,7 +131,7 @@ export function usePayment() {
           headers: { 'Authorization': `Bearer ${token}` },
         }
       );
-      return response.data;
+      return (response as any).data;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Retry failed';
       setError(errorMessage);

@@ -70,7 +70,7 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
     const fetchFilterOptions = async () => {
       try {
         const categoriesRes = await api.getCategoryHierarchy();
-        const apiCategories = Array.isArray(categoriesRes) ? categoriesRes : (categoriesRes?.data || []);
+        const apiCategories = Array.isArray(categoriesRes) ? categoriesRes : ((categoriesRes as any)?.data || []);
         setCategories(apiCategories);
         
         try {
@@ -148,7 +148,7 @@ export function ProductFilters({ onFilterChange, initialFilters }: ProductFilter
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section as keyof typeof prev]
     }));
   };
 

@@ -53,7 +53,7 @@ export default function LowStockManager() {
     try {
       setLoading(true);
       const response = await api.get(`/products/inventory/low-stock?threshold=${globalThreshold}`);
-      setLowStockItems(response.data);
+      setLowStockItems((response as any).data);
     } catch (error) {
       console.error('Error loading low stock items:', error);
     } finally {
@@ -192,11 +192,11 @@ export default function LowStockManager() {
         {urgencyOrder.map(urgency => {
           const count = groupedItems[urgency]?.length || 0;
           return (
-            <div key={urgency} className={`p-4 rounded-lg border-l-4 ${urgencyColors[urgency]}`}>
+            <div key={urgency} className={`p-4 rounded-lg border-l-4 ${urgencyColors[urgency as keyof typeof urgencyColors]}`}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    {urgencyLabels[urgency]}
+                    {urgencyLabels[urgency as keyof typeof urgencyLabels]}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">{count}</p>
                 </div>
@@ -226,9 +226,9 @@ export default function LowStockManager() {
 
             return (
               <div key={urgency} className="bg-white rounded-lg border">
-                <div className={`px-6 py-4 border-b border-gray-200 ${urgencyColors[urgency]}`}>
+                <div className={`px-6 py-4 border-b border-gray-200 ${urgencyColors[urgency as keyof typeof urgencyColors]}`}>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {urgencyLabels[urgency]} ({items.length})
+                    {urgencyLabels[urgency as keyof typeof urgencyLabels]} ({items.length})
                   </h3>
                 </div>
                 

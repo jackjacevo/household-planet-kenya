@@ -40,7 +40,7 @@ export interface Product {
     length: number;
     width: number;
     height: number;
-  } | null;
+  };
   images: string[];
   images360?: string[];
   videos?: string[];

@@ -84,7 +84,7 @@ export default function AdvancedProductAnalytics() {
         }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([(response as any).data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `product-analytics-${period}-${new Date().toISOString().split('T')[0]}.xlsx`);

@@ -83,8 +83,8 @@ export default function OrderConfirmationPage() {
               headers: { 'Authorization': `Bearer ${token}` },
             }
           );
-          setOrder(response.data);
-          setTrackingNumber(response.data.trackingNumber || generateTrackingNumber());
+          setOrder((response as any).data);
+          setTrackingNumber((response as any).data.trackingNumber || generateTrackingNumber());
           
           // Clear cart after successful order confirmation
           const orderCreated = localStorage.getItem('orderCreated');
@@ -120,15 +120,15 @@ export default function OrderConfirmationPage() {
           
           // Transform guest order data to match expected format
           const guestOrder = {
-            ...response.data,
+            ...(response as any).data,
             user: null,
-            customerName: response.data.customerInfo?.name,
-            customerPhone: response.data.customerInfo?.phone,
-            customerEmail: response.data.customerInfo?.email,
+            customerName: (response as any).data.customerInfo?.name,
+            customerPhone: (response as any).data.customerInfo?.phone,
+            customerEmail: (response as any).data.customerInfo?.email,
             shippingAddress: {
-              fullName: response.data.customerInfo?.name,
-              phone: response.data.customerInfo?.phone,
-              email: response.data.customerInfo?.email
+              fullName: (response as any).data.customerInfo?.name,
+              phone: (response as any).data.customerInfo?.phone,
+              email: (response as any).data.customerInfo?.email
             }
           };
           
@@ -257,6 +257,11 @@ export default function OrderConfirmationPage() {
   };
 
   const downloadReceipt = async () => {
+    if (!order) {
+      alert('Order information not available');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       const headers: any = {};
@@ -509,7 +514,7 @@ export default function OrderConfirmationPage() {
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Order Tracking Progress */}
             <OrderTrackingProgress
-              orderId={order.id}
+              orderId={Number(order.id)}
               orderNumber={order.orderNumber}
               currentStatus={order.status}
               trackingNumber={trackingNumber}
@@ -541,8 +546,8 @@ export default function OrderConfirmationPage() {
                         {orderCompletionData?.customerInfo?.name || 
                          order.customerName || 
                          order.shippingAddress?.fullName || 
-                         order.user?.name || 
-                         order.user?.fullName || 'Not provided'}
+                         (order as any).user?.name || 
+                         (order as any).user?.fullName || 'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Phone:</span> 
@@ -550,13 +555,13 @@ export default function OrderConfirmationPage() {
                         {(orderCompletionData?.customerInfo?.phone && orderCompletionData.customerInfo.phone !== 'Not provided') ? orderCompletionData.customerInfo.phone :
                          (order.customerPhone && order.customerPhone !== 'Not provided') ? order.customerPhone :
                          (order.shippingAddress?.phone && order.shippingAddress.phone !== 'Not provided') ? order.shippingAddress.phone :
-                         (order.user?.phone && order.user.phone !== 'Not provided') ? order.user.phone : 'Not provided'}
+                         ((order as any).user?.phone && (order as any).user.phone !== 'Not provided') ? (order as any).user.phone : 'Not provided'}
                       </span>
                     </p>
-                    {(orderCompletionData?.customerInfo?.email || order.customerEmail || order.user?.email) && (
+                    {(orderCompletionData?.customerInfo?.email || order.customerEmail || (order as any).user?.email) && (
                       <p><span className="text-gray-600">Email:</span> 
                         <span className="font-medium">
-                          {orderCompletionData?.customerInfo?.email || order.customerEmail || order.user?.email}
+                          {orderCompletionData?.customerInfo?.email || order.customerEmail || (order as any).user?.email}
                         </span>
                       </p>
                     )}
@@ -687,7 +692,11 @@ export default function OrderConfirmationPage() {
                       Delivery Location
                     </h3>
                     <div className="space-y-2">
-                      <p className="font-semibold text-gray-800">{order.deliveryLocation}</p>
+                      <p className="font-semibold text-gray-800">
+                        {typeof order.deliveryLocation === 'string' 
+                          ? order.deliveryLocation 
+                          : order.deliveryLocation?.name || 'N/A'}
+                      </p>
                       <p className="text-sm text-gray-600">
                         Delivery Cost: <span className="font-medium text-orange-600">{formatPrice(order.deliveryPrice || order.shippingCost || 0)}</span>
                       </p>
@@ -814,10 +823,10 @@ export default function OrderConfirmationPage() {
                     <span className="text-gray-600">Subtotal ({order.items?.length || 0})</span>
                     <span className="font-medium">{formatPrice(order.subtotal)}</span>
                   </div>
-                  {order.promoCode && order.discountAmount && order.discountAmount > 0 && (
+                  {(order as any).promoCode && (order as any).discountAmount && (order as any).discountAmount > 0 && (
                     <div className="flex justify-between text-sm bg-green-50 -mx-2 px-2 py-1 rounded">
-                      <span className="text-green-700 font-medium">Promo Discount ({order.promoCode})</span>
-                      <span className="font-medium text-green-600">-{formatPrice(order.discountAmount)}</span>
+                      <span className="text-green-700 font-medium">Promo Discount ({(order as any).promoCode})</span>
+                      <span className="font-medium text-green-600">-{formatPrice((order as any).discountAmount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
@@ -830,7 +839,7 @@ export default function OrderConfirmationPage() {
                       <span className="text-lg sm:text-2xl font-bold text-green-600">
                         {formatPrice(
                           order.subtotal - 
-                          (order.discountAmount || 0) + 
+                          ((order as any).discountAmount || 0) + 
                           (order.deliveryPrice || order.shippingCost || 0)
                         )}
                       </span>

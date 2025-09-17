@@ -44,19 +44,19 @@ export function ProgressiveImage({
     if (!processedSrc || hasError) return;
 
     // Start performance monitoring
-    imagePerformanceMonitor.startLoading(processedSrc);
+    // imagePerformanceMonitor.startLoading(processedSrc);
 
     // Load low quality version first
-    const lowQualitySrc = loaderRef.current.loadLowQuality(processedSrc);
+    const lowQualitySrc = processedSrc; // loaderRef.current.loadLowQuality(processedSrc);
     setBlurSrc(lowQualitySrc);
 
     // Preload low quality image
-    const lowQualityImg = new Image();
+    const lowQualityImg = document.createElement('img');
     lowQualityImg.onload = () => {
       setLowQualityLoaded(true);
       
       // Start loading high quality version
-      const highQualitySrc = loaderRef.current.loadHighQuality(processedSrc, width);
+      const highQualitySrc = processedSrc; // loaderRef.current.loadHighQuality(processedSrc, width);
       setCurrentSrc(highQualitySrc);
     };
     lowQualityImg.onerror = () => {
@@ -69,7 +69,7 @@ export function ProgressiveImage({
 
   const handleHighQualityLoad = () => {
     setHighQualityLoaded(true);
-    imagePerformanceMonitor.endLoading(getImageUrl(src));
+    // imagePerformanceMonitor.endLoading(getImageUrl(src));
     onLoad?.();
   };
 

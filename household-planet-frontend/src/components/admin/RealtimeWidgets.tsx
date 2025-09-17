@@ -178,16 +178,19 @@ interface ActivityFeedProps {
       type: string;
       message: string;
       timestamp: string;
+      amount?: number;
     }>;
     newReviews: Array<{
       type: string;
       message: string;
       timestamp: string;
+      amount?: number;
     }>;
     lowStockAlerts: Array<{
       type: string;
       message: string;
       timestamp: string;
+      amount?: number;
     }>;
   };
 }

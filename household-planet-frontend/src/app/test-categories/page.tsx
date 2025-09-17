@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 
 export default function TestCategoriesPage() {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -14,10 +14,10 @@ export default function TestCategoriesPage() {
         console.log('Fetching categories...');
         const data = await api.getCategoryHierarchy();
         console.log('Categories response:', data);
-        setCategories(data || []);
+        setCategories((data as any[]) || []);
       } catch (error) {
         console.error('Error fetching categories:', error);
-        setError(error.message);
+        setError((error as Error).message);
       } finally {
         setLoading(false);
       }

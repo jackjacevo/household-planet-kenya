@@ -51,7 +51,7 @@ export function SimpleLineChart() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=monthly`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      return response.data;
+      return (response as any).data;
     },
     refetchInterval: 60000,
     retry: 2
@@ -143,7 +143,7 @@ export function SimplePieChart() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/popular?period=monthly`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      return response.data;
+      return (response as any).data;
     },
     refetchInterval: 60000,
     retry: 2
@@ -218,7 +218,7 @@ export function SimpleBarChart() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=monthly`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      return response.data;
+      return (response as any).data;
     },
     refetchInterval: 60000,
     retry: 2

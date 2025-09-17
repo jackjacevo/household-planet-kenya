@@ -25,7 +25,7 @@ export default function PaymentRetry({ orderId, onRetrySuccess }: PaymentRetryPr
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      if (response.data.success) {
+      if ((response as any).data.success) {
         alert('Payment retry initiated successfully');
         onRetrySuccess();
       }

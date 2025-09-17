@@ -15,7 +15,7 @@ export default function OfflinePage() {
     const loadCachedData = async () => {
       try {
         const products = await getCachedProducts();
-        setCachedProducts(products.slice(0, 6)); // Show first 6 cached products
+        setCachedProducts((products as any[]).slice(0, 6)); // Show first 6 cached products
       } catch (error) {
         console.error('Failed to load cached products:', error);
       } finally {

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const token = crypto.randomBytes(32).toString('hex');
     
     // Set secure cookie
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.set('csrf-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

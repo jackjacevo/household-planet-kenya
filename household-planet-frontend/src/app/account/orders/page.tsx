@@ -320,10 +320,10 @@ export default function OrdersPage() {
                         <span className="text-gray-500">Subtotal:</span>
                         <p className="font-medium">{formatPrice(order.subtotal)}</p>
                       </div>
-                      {order.promoCode && order.discountAmount > 0 && (
+                      {(order as any).promoCode && (order as any).discountAmount > 0 && (
                         <div>
-                          <span className="text-gray-500">Promo ({order.promoCode}):</span>
-                          <p className="font-medium text-green-600">-{formatPrice(order.discountAmount)}</p>
+                          <span className="text-gray-500">Promo ({(order as any).promoCode}):</span>
+                          <p className="font-medium text-green-600">-{formatPrice((order as any).discountAmount)}</p>
                         </div>
                       )}
                       <div>
@@ -336,7 +336,7 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <span className="text-gray-500">Total:</span>
-                        <p className="font-bold text-lg">{formatPrice(order.subtotal - (order.discountAmount || 0) + (order.deliveryPrice || order.shippingCost || 0))}</p>
+                        <p className="font-bold text-lg">{formatPrice(order.subtotal - ((order as any).discountAmount || 0) + (order.deliveryPrice || order.shippingCost || 0))}</p>
                       </div>
                     </div>
                   </div>

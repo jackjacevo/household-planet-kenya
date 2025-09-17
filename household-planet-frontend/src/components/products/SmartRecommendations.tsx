@@ -77,8 +77,8 @@ export default function SmartRecommendations({
       } else if (userId || sessionId) {
         // Get personalized recommendations based on recently viewed
         const recentlyViewed = await api.get(`/products/recently-viewed?limit=5`);
-        if (recentlyViewed.data.length > 0) {
-          const lastViewedProduct = recentlyViewed.data[0].product;
+        if ((recentlyViewed as any).data.length > 0) {
+          const lastViewedProduct = ((recentlyViewed as any).data as any[])[0].product;
           endpoint = `/products/${lastViewedProduct.id}/recommendations?type=RELATED&limit=${limit}`;
         } else {
           // Fallback to trending products
@@ -90,7 +90,7 @@ export default function SmartRecommendations({
       }
 
       const response = await api.get(endpoint);
-      setProducts(Array.isArray(response.data) ? response.data : response.data.products || []);
+      setProducts(Array.isArray((response as any).data) ? (response as any).data : (response as any).data.products || []);
     } catch (error) {
       console.error('Error loading recommendations:', error);
       setProducts([]);

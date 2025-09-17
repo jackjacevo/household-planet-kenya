@@ -106,7 +106,7 @@ export default function CartPage() {
         setPromoCode('');
       } else {
         const error = await response.json();
-        setPromoError(error.message || 'Invalid promo code');
+        setPromoError((error as Error).message || 'Invalid promo code');
       }
     } catch (error) {
       setPromoError('Failed to validate promo code');

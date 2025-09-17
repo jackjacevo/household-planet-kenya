@@ -88,13 +88,13 @@ export default function ImageUpload({
         }
       );
       
-      console.log('Upload response:', response.data);
+      console.log('Upload response:', (response as any).data);
       
-      if (response.data.success && response.data.images) {
-        onImagesChange([...images, ...response.data.images]);
+      if ((response as any).data.success && (response as any).data.images) {
+        onImagesChange([...images, ...(response as any).data.images]);
         setUploadStatus({ 
           type: 'success', 
-          message: response.data.message || `Successfully uploaded ${response.data.images.length} image(s)` 
+          message: (response as any).data.message || `Successfully uploaded ${(response as any).data.images.length} image(s)` 
         });
         
         // Clear success message after 3 seconds
@@ -115,7 +115,7 @@ export default function ImageUpload({
       } else if (error.response?.status === 413) {
         errorMessage = 'Files are too large. Maximum size is 5MB per image.';
       } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+        errorMessage = error.response?.data?.message;
       } else if (error.message) {
         errorMessage = error.message;
       }

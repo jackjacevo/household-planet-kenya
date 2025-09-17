@@ -62,7 +62,7 @@ export default function TrackOrderPage() {
             deliveryLocation: data.order?.deliveryLocation || '',
             createdAt: data.order?.createdAt || new Date().toISOString(),
             items: data.order?.items || [],
-            statusHistory: data.statusHistory?.map(h => ({
+            statusHistory: data.statusHistory?.map((h: any) => ({
               status: h.status,
               notes: h.description || h.notes || '',
               createdAt: h.date || h.createdAt || new Date().toISOString()

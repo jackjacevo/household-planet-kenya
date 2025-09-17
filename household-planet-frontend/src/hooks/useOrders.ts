@@ -31,7 +31,7 @@ export const useOrders = (autoFetch: boolean = true) => {
     setIsLoading(true);
     try {
       const response = await api.get('/orders/my-orders');
-      setOrders(response.data);
+      setOrders((response as any).data);
     } catch (error: any) {
       console.error('Failed to fetch orders:', error);
       // Don't throw error for admin routes to prevent breaking admin dashboard
@@ -50,7 +50,7 @@ export const useOrders = (autoFetch: boolean = true) => {
       if (autoFetch && !isAdminRoute) {
         await fetchOrders();
       }
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.error('Failed to create order:', error);
       throw error;
@@ -62,7 +62,7 @@ export const useOrders = (autoFetch: boolean = true) => {
   const trackOrder = async (orderNumber: string) => {
     try {
       const response = await api.get(`/orders/track/${orderNumber}`);
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.error('Failed to track order:', error);
       throw error;
@@ -81,7 +81,7 @@ export const useOrders = (autoFetch: boolean = true) => {
       if (autoFetch && !isAdminRoute) {
         await fetchOrders();
       }
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.error('Failed to request return:', error);
       throw error;

@@ -19,8 +19,8 @@ const whatsappOrderSchema = z.object({
   deliveryLocation: z.string().optional(),
   deliveryCost: z.number().min(0, 'Delivery cost is required'),
   estimatedTotal: z.number().min(0).optional(),
-  paymentMode: z.enum(['CASH', 'PAYBILL', 'BANK'], { required_error: 'Payment mode is required' }),
-  deliveryType: z.enum(['PICKUP', 'DELIVERY'], { required_error: 'Delivery type is required' }),
+  paymentMode: z.enum(['CASH', 'PAYBILL', 'BANK'], { message: 'Payment mode is required' }),
+  deliveryType: z.enum(['PICKUP', 'DELIVERY'], { message: 'Delivery type is required' }),
   notes: z.string().optional(),
 });
 
@@ -109,8 +109,10 @@ export default function WhatsAppOrderEntry() {
             <Input
               {...register('customerPhone')}
               placeholder="+254712345678"
-              error={errors.customerPhone?.message}
             />
+            {errors.customerPhone && (
+              <p className="text-sm text-red-600 mt-1">{errors.customerPhone.message}</p>
+            )}
           </div>
 
           <div>
@@ -120,8 +122,10 @@ export default function WhatsAppOrderEntry() {
             <Input
               {...register('customerName')}
               placeholder="John Doe"
-              error={errors.customerName?.message}
             />
+            {errors.customerName && (
+              <p className="text-sm text-red-600 mt-1">{errors.customerName.message}</p>
+            )}
           </div>
         </div>
 
@@ -133,8 +137,10 @@ export default function WhatsAppOrderEntry() {
             {...register('customerEmail')}
             type="email"
             placeholder="customer@gmail.com"
-            error={errors.customerEmail?.message}
           />
+          {errors.customerEmail && (
+            <p className="text-sm text-red-600 mt-1">{errors.customerEmail.message}</p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             If provided, this email will be used instead of the temporary WhatsApp email
           </p>
@@ -236,8 +242,10 @@ export default function WhatsAppOrderEntry() {
                 onChange={(e) => handleManualDeliveryCostChange(e.target.value)}
                 min="0"
                 step="1"
-                error={errors.deliveryCost?.message}
               />
+              {errors.deliveryCost && (
+                <p className="text-sm text-red-600 mt-1">{errors.deliveryCost.message}</p>
+              )}
             </div>
           </div>
         )}
@@ -250,8 +258,10 @@ export default function WhatsAppOrderEntry() {
             {...register('estimatedTotal', { valueAsNumber: true })}
             type="number"
             placeholder="0"
-            error={errors.estimatedTotal?.message}
           />
+          {errors.estimatedTotal && (
+            <p className="text-sm text-red-600 mt-1">{errors.estimatedTotal.message}</p>
+          )}
         </div>
 
         <div>
@@ -281,7 +291,7 @@ export default function WhatsAppOrderEntry() {
           </Button>
           <Button
             type="submit"
-            loading={isSubmitting}
+            disabled={isSubmitting}
           >
             Create Order
           </Button>

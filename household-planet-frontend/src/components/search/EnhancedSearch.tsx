@@ -80,7 +80,7 @@ export default function EnhancedSearch() {
       setIsLoading(true);
       try {
         const response = await api.get(`/api/products?search=${encodeURIComponent(query)}&limit=15`);
-        setResults(response.data?.data || response.data || []);
+        setResults((response as any).data?.data || (response as any).data || []);
         setIsOpen(true);
       } catch (error) {
         console.error('Search error:', error);
@@ -100,8 +100,8 @@ export default function EnhancedSearch() {
         api.get('/categories'),
         api.get('/brands')
       ]);
-      setCategories(categoriesRes.data);
-      setBrands(brandsRes.data);
+      setCategories(categoriesRes.data as Category[]);
+      setBrands(brandsRes.data as Brand[]);
     } catch (error) {
       console.error('Error loading filter data:', error);
     }

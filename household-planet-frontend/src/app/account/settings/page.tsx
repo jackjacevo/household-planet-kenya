@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { User, Camera, Lock, Bell, Shield, Trash2 } from 'lucide-react';
-import Image from 'next/image';
+import { User, Lock, Bell, Shield, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user, updateProfile, updateUser, logout } = useAuth();
@@ -134,7 +133,7 @@ export default function SettingsPage() {
         alert('Password changed successfully!');
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to change password');
+        alert((error as Error).message || 'Failed to change password');
       }
     } catch (error) {
       console.error('Error changing password:', error);
@@ -144,40 +143,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const formData = new FormData();
-    formData.append('avatar', file);
-    setLoading(true);
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/avatar`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setProfileData(prev => ({ ...prev, avatar: updatedUser.avatar }));
-        if (user?.id) {
-          updateUser({ ...user, avatar: updatedUser.avatar });
-        }
-        alert('Profile photo updated successfully!');
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to upload photo');
-      }
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      alert('Failed to upload photo');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleNotificationUpdate = async () => {
     setLoading(true);
@@ -196,7 +162,7 @@ export default function SettingsPage() {
         alert('Notification preferences updated!');
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to update notifications');
+        alert((error as Error).message || 'Failed to update notifications');
       }
     } catch (error) {
       console.error('Error updating notifications:', error);
@@ -223,7 +189,7 @@ export default function SettingsPage() {
         alert('Privacy settings updated!');
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to update privacy settings');
+        alert((error as Error).message || 'Failed to update privacy settings');
       }
     } catch (error) {
       console.error('Error updating privacy:', error);
@@ -251,7 +217,7 @@ export default function SettingsPage() {
         logout();
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to delete account');
+        alert((error as Error).message || 'Failed to delete account');
       }
     } catch (error) {
       console.error('Error deleting account:', error);
@@ -297,35 +263,12 @@ export default function SettingsPage() {
           {activeTab === 'profile' && (
             <form onSubmit={handleProfileUpdate} className="space-y-6">
               <div className="flex items-center space-x-6">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
-                    {profileData.avatar ? (
-                      <Image
-                        src={profileData.avatar}
-                        alt="Profile"
-                        width={96}
-                        height={96}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                        {profileData.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <label className="absolute bottom-0 right-0 bg-orange-500 text-white w-8 h-8 rounded-full cursor-pointer hover:bg-orange-600 flex items-center justify-center">
-                    <Camera className="h-4 w-4" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                    />
-                  </label>
+                <div className="w-24 h-24 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-bold">
+                  {profileData.name ? profileData.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2) : 'U'}
                 </div>
                 <div>
                   <h3 className="text-lg font-medium">Profile Photo</h3>
-                  <p className="text-sm text-gray-500">Upload a new profile photo</p>
+                  <p className="text-sm text-gray-500">Your initials are displayed as your profile photo</p>
                 </div>
               </div>
 

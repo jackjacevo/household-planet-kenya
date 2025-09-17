@@ -80,7 +80,7 @@ export default function GoogleMap({
         if (document.head.contains(script)) {
           document.head.removeChild(script);
         }
-        delete window.initMap;
+        (window as any).initMap = undefined;
       };
     };
 

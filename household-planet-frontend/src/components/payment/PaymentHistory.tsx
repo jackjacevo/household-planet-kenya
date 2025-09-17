@@ -34,7 +34,7 @@ export function PaymentHistory() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/payments/history`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setTransactions(response.data);
+      setTransactions((response as any).data);
     } catch (error) {
       console.error('Error fetching payment history:', error);
     } finally {

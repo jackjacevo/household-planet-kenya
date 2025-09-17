@@ -36,7 +36,7 @@ export function useImageOptimization() {
       if (connection) {
         connection.removeEventListener('change', updateCapabilities);
       }
-      lazyLoader.disconnect();
+      // lazyLoader.disconnect();
     };
   }, [lazyLoader]);
 
@@ -47,8 +47,8 @@ export function useImageOptimization() {
     targetWidth?: number
   ) => {
     const processedSrc = getImageUrl(src);
-    const config = getOptimalImageConfig(originalWidth, originalHeight, targetWidth, capabilities);
-    const optimizedSrc = createOptimizedImageUrl(processedSrc, config);
+    const config = getOptimalImageConfig(originalWidth, originalHeight);
+    const optimizedSrc = createOptimizedImageUrl(processedSrc);
     const sizes = generateResponsiveSizes(config.width || targetWidth || originalWidth);
 
     return {
@@ -61,26 +61,18 @@ export function useImageOptimization() {
     };
   }, [capabilities]);
 
-  const preloadImages = useCallback((images: Array<{ src: string; config?: Partial<ImageConfig> }>) => {
+  const preloadImages = useCallback((images: string[]) => {
     preloadCriticalImages(images);
   }, []);
 
   const enableLazyLoading = useCallback((element: HTMLElement) => {
-    lazyLoader.observe(element);
+    // lazyLoader.observe(element);
   }, [lazyLoader]);
 
   const getAdaptiveQuality = useCallback(() => {
-    switch (capabilities.connectionSpeed) {
-      case 'fast':
-        return capabilities.viewportWidth <= 768 ? 80 : 90;
-      case 'medium':
-        return capabilities.viewportWidth <= 768 ? 70 : 80;
-      case 'slow':
-        return capabilities.viewportWidth <= 768 ? 55 : 65;
-      default:
-        return 75;
-    }
-  }, [capabilities]);
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1024;
+    return viewportWidth <= 768 ? 70 : 80;
+  }, []);
 
   const shouldUseWebP = useCallback(() => {
     return capabilities.supportsWebP;

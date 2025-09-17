@@ -249,7 +249,7 @@ export const useCart = create<CartStore>()(
           }
           
           const response = await api.get('/api/cart');
-          const cartData = response.data as any;
+          const cartData = (response as any).data as any;
           const backendItems = (cartData.items || []).map((item: any) => ({
             id: item.id.toString(), // Use actual cart item ID from backend
             productId: item.productId,

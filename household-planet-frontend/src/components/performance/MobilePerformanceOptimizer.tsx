@@ -210,8 +210,8 @@ export const trackMobilePerformance = () => {
   const observer = new PerformanceObserver((list) => {
     list.getEntries().forEach((entry) => {
       // Send to analytics
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'web_vitals', {
+      if (typeof (window as any).gtag !== 'undefined') {
+        (window as any).gtag('event', 'web_vitals', {
           event_category: 'Performance',
           event_label: entry.name,
           value: Math.round(entry.startTime),

@@ -222,7 +222,7 @@ export default function BannerManager() {
                 <Switch
                   id="isActive"
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
+                  onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
                 />
                 <Label htmlFor="isActive">Active</Label>
               </div>

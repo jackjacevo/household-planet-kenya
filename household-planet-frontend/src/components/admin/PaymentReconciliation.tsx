@@ -40,7 +40,7 @@ export default function PaymentReconciliation() {
         }
       );
 
-      const transactions = response.data;
+      const transactions = (response as any).data;
       const reconciliation = {
         totalTransactions: transactions.length,
         totalAmount: transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0),
@@ -71,7 +71,7 @@ export default function PaymentReconciliation() {
 
       const csvContent = [
         'Date,Order,Customer,Amount,Status,Provider,Receipt',
-        ...response.data.map((t: any) => [
+        ...(response as any).data.map((t: any) => [
           new Date(t.createdAt).toLocaleDateString(),
           t.order?.orderNumber || 'N/A',
           t.order?.user?.name || 'N/A',

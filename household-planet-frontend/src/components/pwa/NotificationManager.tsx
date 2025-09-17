@@ -44,7 +44,7 @@ export function NotificationManager({ children }: NotificationManagerProps) {
             }
           }
         } catch (error) {
-          console.error('Notification setup failed:', error.message);
+          console.error('Notification setup failed:', (error as Error).message);
         }
       };
 
@@ -83,12 +83,8 @@ export function NotificationManager({ children }: NotificationManagerProps) {
         setTimeout(() => {
           showNotification('Welcome to Household Planet Kenya!', {
             body: 'Thanks for installing our app. Enjoy shopping!',
-            tag: 'welcome',
-            actions: [
-              { action: 'shop', title: 'Start Shopping' },
-              { action: 'close', title: 'Close' }
-            ]
-          });
+            tag: 'welcome'
+          } as any);
         }, 5000);
       }
     };

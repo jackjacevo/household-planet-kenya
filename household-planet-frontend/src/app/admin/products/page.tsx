@@ -67,7 +67,7 @@ export default function AdminProductsPage() {
       ]);
       setCategories(categoriesRes.data || []);
       setBrands(brandsRes.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching filter options:', error);
     }
   };
@@ -92,10 +92,10 @@ export default function AdminProductsPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      console.log('Products response:', response.data);
-      setProducts(response.data.data || []);
-      setMeta(response.data.meta || { total: 0, totalPages: 0 });
-    } catch (error) {
+      console.log('Products response:', (response as any).data);
+      setProducts((response as any).data.data || []);
+      setMeta((response as any).data.meta || { total: 0, totalPages: 0 });
+    } catch (error: any) {
       console.error('Error fetching products:', error);
       if (error.response?.status === 401) {
         showToast({
@@ -150,7 +150,7 @@ export default function AdminProductsPage() {
         }
       );
       
-      console.log('Product creation response:', response.data);
+      console.log('Product creation response:', (response as any).data);
       await fetchProducts();
       setShowForm(false);
       setEditingProduct(null);
@@ -159,7 +159,7 @@ export default function AdminProductsPage() {
         description: `Product "${productData.name}" created successfully`,
         variant: 'success'
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating product:', error);
       if (error.response?.status === 401) {
         showToast({
@@ -239,7 +239,7 @@ export default function AdminProductsPage() {
         }
       );
       
-      console.log('AdminProductsPage: Product update response:', response.data);
+      console.log('AdminProductsPage: Product update response:', (response as any).data);
       console.log('AdminProductsPage: Update successful, refreshing products...');
       
       await fetchProducts();
@@ -252,7 +252,7 @@ export default function AdminProductsPage() {
         description: `Product "${productData.name}" updated successfully`,
         variant: 'success'
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('AdminProductsPage: Error updating product:', error);
       console.error('AdminProductsPage: Error details:', {
         message: error.message,
@@ -310,7 +310,7 @@ export default function AdminProductsPage() {
         description: `Product "${productName}" deleted successfully`,
         variant: 'success'
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting product:', error);
       if (error.response?.status === 401) {
         showToast({

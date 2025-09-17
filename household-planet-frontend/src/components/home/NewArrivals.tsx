@@ -41,9 +41,9 @@ export function NewArrivals() {
       } catch (error) {
         console.error('Failed to fetch new arrivals:', error);
         showToast({
-          type: 'error',
           title: 'Error',
-          message: 'Failed to load new arrivals'
+          description: 'Failed to load new arrivals',
+          variant: 'destructive'
         });
         setProducts([]);
       } finally {

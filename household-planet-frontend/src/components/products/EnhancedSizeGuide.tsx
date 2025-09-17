@@ -83,7 +83,7 @@ export function EnhancedSizeGuide({ category, productType }: SizeGuideProps) {
   const [activeTab, setActiveTab] = useState(0);
 
   const categoryData = sizeCharts[category];
-  const tips = measurementTips[category] || [];
+  const tips = measurementTips[category as keyof typeof measurementTips] || [];
 
   if (!categoryData) return null;
 
@@ -183,7 +183,7 @@ export function EnhancedSizeGuide({ category, productType }: SizeGuideProps) {
                       <h4 className="font-semibold text-blue-900">Measurement Tips</h4>
                     </div>
                     <ul className="space-y-2">
-                      {tips.map((tip, index) => (
+                      {tips.map((tip: string, index: number) => (
                         <li key={index} className="text-sm text-blue-800 flex items-start">
                           <span className="text-blue-600 mr-2">•</span>
                           {tip}

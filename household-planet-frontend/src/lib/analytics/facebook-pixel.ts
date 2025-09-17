@@ -14,17 +14,17 @@ export const initFacebookPixel = () => {
   const b = document
   const e = 'script'
   
-  if (f.fbq) return
+  if (typeof f.fbq === 'function') return;
   
   const n = f.fbq = function(...args: any[]) {
-    n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args)
-  }
+    (n as any).callMethod ? (n as any).callMethod.apply(n, args) : (n as any).queue.push(args)
+  } as any
   
   if (!f._fbq) f._fbq = n
-  n.push = n
-  n.loaded = true
-  n.version = '2.0'
-  n.queue = []
+  (n as any).push = n
+  n['loaded'] = true
+  n['version'] = '2.0' as any
+  (n as any).queue = []
   
   const t = b.createElement(e) as HTMLScriptElement
   t.async = true

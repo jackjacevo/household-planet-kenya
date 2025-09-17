@@ -21,7 +21,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   // Preload next/previous images for better UX
   useState(() => {
     if (images.length > 1) {
-      const imagesToPreload = images.slice(0, 3).map(src => ({ src }));
+      const imagesToPreload = images.slice(0, 3);
       preloadImages(imagesToPreload);
     }
   });
@@ -141,3 +141,5 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     </>
   );
 }
+
+export default ImageGallery;

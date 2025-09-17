@@ -8,7 +8,7 @@ import {
   Download, 
   Zap, 
   Shield,
-  Sync,
+  RefreshCw,
   Eye
 } from 'lucide-react';
 import { usePWA } from '@/hooks/usePWA';
@@ -56,8 +56,8 @@ export function PWAFeatures() {
       color: notificationPermission === 'granted' ? 'green' : 'orange'
     },
     {
-      icon: Sync,
-      title: 'Background Sync',
+      icon: RefreshCw,
+      title: 'Background RefreshCw',
       description: 'Auto-sync cart updates',
       status: 'active',
       color: 'green'

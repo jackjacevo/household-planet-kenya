@@ -4,10 +4,10 @@ import { useToast } from '@/contexts/ToastContext'
 import { Button } from './Button'
 
 export function NotificationDemo() {
-  const { toast } = useToast()
+  const { showToast } = useToast()
 
   const showSuccess = () => {
-    toast({
+    showToast({
       title: 'Success!',
       description: 'Your action was completed successfully.',
       variant: 'success'
@@ -15,7 +15,7 @@ export function NotificationDemo() {
   }
 
   const showError = () => {
-    toast({
+    showToast({
       title: 'Error occurred',
       description: 'Something went wrong. Please try again.',
       variant: 'destructive'
@@ -23,10 +23,10 @@ export function NotificationDemo() {
   }
 
   const showInfo = () => {
-    toast({
+    showToast({
       title: 'Information',
       description: 'This is an informational message.',
-      variant: 'default'
+      variant: 'info'
     })
   }
 

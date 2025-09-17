@@ -29,7 +29,7 @@ export default function PaymentAnalytics() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/analytics?period=${period}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setAnalytics(response.data);
+      setAnalytics((response as any).data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {

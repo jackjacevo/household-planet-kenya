@@ -55,10 +55,8 @@ export default function RecentlyViewedProducts({
     try {
       setLoading(true);
       const sessionId = getSessionId();
-      const response = await api.get(`/products/recently-viewed?limit=${limit}`, {
-        headers: sessionId ? { 'x-session-id': sessionId } : {}
-      });
-      setRecentItems(response.data);
+      const response = await api.get(`/products/recently-viewed?limit=${limit}`);
+      setRecentItems((response as any).data);
     } catch (error) {
       console.error('Error loading recently viewed:', error);
       setRecentItems([]);

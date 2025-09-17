@@ -182,3 +182,5 @@ export function useMobileProductGrid(products: Product[]) {
 
   return { isMobile, gridColumns };
 }
+
+export default MobileProductGrid;

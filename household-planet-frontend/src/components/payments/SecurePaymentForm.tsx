@@ -98,7 +98,7 @@ export default function SecurePaymentForm({
       const result = await processPayment(token, data.cvv);
       onPaymentSuccess(result);
     } catch (error) {
-      onPaymentError(error instanceof Error ? error.message : 'Payment failed');
+      onPaymentError(error instanceof Error ? (error as Error).message : 'Payment failed');
     } finally {
       setIsProcessing(false);
     }

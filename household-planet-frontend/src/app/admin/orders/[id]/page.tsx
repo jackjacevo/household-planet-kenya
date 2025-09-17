@@ -269,7 +269,7 @@ export default function OrderDetailsPage() {
       fetchOrderDetails();
     } catch (error) {
       console.error('Error generating shipping label:', error);
-      alert(`Failed to generate shipping label: ${error.message}`);
+      alert(`Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`);
     } finally {
       setShippingLoading(false);
     }
@@ -290,13 +290,13 @@ export default function OrderDetailsPage() {
       await generatePDFReceipt(receiptData);
     } catch (error) {
       console.error('Error viewing receipt:', error);
-      alert(error.message || 'Failed to load receipt. Please try again.');
+      alert((error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.');
     }
   };
 
   const generatePDFReceipt = async (receipt: any) => {
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
+      const html2pdf = (await import('html2pdf.js' as any)).default;
       const element = document.createElement('div');
       
       // Get customer info from order data - check all possible sources
@@ -1234,7 +1234,7 @@ export default function OrderDetailsPage() {
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Customer Name</label>
                   <p className="font-medium text-gray-900">{(() => {
-                    if (order.user?.name) return order.user.name;
+                    if ((order as any).user?.name) return (order as any).user.name;
                     try {
                       const shippingAddr = JSON.parse(order.shippingAddress || '{}');
                       return shippingAddr.fullName || 'Guest Customer';
@@ -1248,7 +1248,7 @@ export default function OrderDetailsPage() {
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email Address</label>
                   <p className="text-sm font-medium text-blue-600">
                     {(() => {
-                      const userEmail = order.user?.email;
+                      const userEmail = (order as any).user?.email;
                       if (userEmail?.endsWith('@whatsapp.temp')) {
                         return (
                           <span className="flex items-center">
@@ -1286,7 +1286,7 @@ export default function OrderDetailsPage() {
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
                   {(() => {
-                    const userPhone = order.user?.phone;
+                    const userPhone = (order as any).user?.phone;
                     if (userPhone) {
                       return (
                         <div className="flex items-center space-x-2">
@@ -1295,11 +1295,7 @@ export default function OrderDetailsPage() {
                               {userPhone}
                             </a>
                           </p>
-                          {order.user.phoneVerified && (
-                            <Badge className="bg-green-100 text-green-800 text-xs">
-                              ✓ Verified
-                            </Badge>
-                          )}
+
                         </div>
                       );
                     }
@@ -1329,8 +1325,8 @@ export default function OrderDetailsPage() {
               
               <div className="flex space-x-2 pt-2 border-t">
                 {(() => {
-                  let phone = order.user?.phone;
-                  let email = order.user?.email;
+                  let phone = (order as any).user?.phone;
+                  let email = (order as any).user?.email;
                   
                   // Get contact info from shipping address for guest orders
                   if (!phone || !email) {
@@ -1396,9 +1392,9 @@ export default function OrderDetailsPage() {
                     <div>
                       <h4 className="font-medium mb-2">Shipping Address</h4>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>Name:</strong> {order.user?.name || address.fullName}</p>
-                        {order.user?.phone && <p><strong>Phone:</strong> {order.user.phone}</p>}
-                        {order.user?.email && <p><strong>Email:</strong> {order.user.email}</p>}
+                        <p><strong>Name:</strong> {(order as any).user?.name || address.fullName}</p>
+                        {(order as any).user?.phone && <p><strong>Phone:</strong> {(order as any).user.phone}</p>}
+                        {(order as any).user?.email && <p><strong>Email:</strong> {(order as any).user.email}</p>}
                         <p><strong>Address:</strong> {address.street}, {address.town}, {address.county}</p>
                       </div>
                     </div>
@@ -1457,10 +1453,10 @@ export default function OrderDetailsPage() {
                   <span>Subtotal:</span>
                   <span>KSh {order.subtotal.toLocaleString()}</span>
                 </div>
-                {order.promoCode && order.discountAmount && order.discountAmount > 0 && (
+                {(order as any).promoCode && (order as any).discountAmount && (order as any).discountAmount > 0 && (
                   <div className="flex justify-between text-sm bg-green-100 -mx-1 px-2 py-1 rounded">
-                    <span className="text-green-700 font-medium">Promo Discount ({order.promoCode})</span>
-                    <span className="font-medium text-green-600">-KSh {order.discountAmount.toLocaleString()}</span>
+                    <span className="text-green-700 font-medium">Promo Discount ({(order as any).promoCode})</span>
+                    <span className="font-medium text-green-600">-KSh {(order as any).discountAmount.toLocaleString()}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">

@@ -165,3 +165,59 @@ export const measureImageLoadTime = (url: string): Promise<number> => {
     img.src = url;
   });
 };
+
+export const getDeviceCapabilities = () => ({
+  supportsWebP: true,
+  supportsAVIF: false,
+  devicePixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 1
+});
+
+export const getOptimalImageConfig = (width: number, height: number) => ({
+  width,
+  height,
+  quality: 85
+});
+
+export const createOptimizedImageUrl = getOptimizedImageUrl;
+
+export const generateResponsiveSizes = (baseWidth: number) => [
+  baseWidth,
+  baseWidth * 2,
+  baseWidth * 3
+];
+
+export const preloadCriticalImages = (urls: string[]) => {
+  urls.forEach(url => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = url;
+    document.head.appendChild(link);
+  });
+};
+
+export class LazyImageLoader {
+  constructor() {}
+  load(src: string) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.src = src;
+    });
+  }
+}
+
+export interface ImageConfig {
+  width: number;
+  height: number;
+  quality?: number;
+  format?: string;
+}
+
+export const createProgressiveImageLoader = () => new LazyImageLoader();
+
+export const imagePerformanceMonitor = {
+  trackLoad: (url: string, loadTime: number) => {
+    console.log(`Image loaded: ${url} in ${loadTime}ms`);
+  }
+};

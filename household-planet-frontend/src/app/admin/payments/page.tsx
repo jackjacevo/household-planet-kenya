@@ -86,7 +86,7 @@ export default function AdminPaymentsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/stats`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setStats(response.data);
+      setStats((response as any).data);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -105,11 +105,11 @@ export default function AdminPaymentsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/transactions?${params}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setTransactions(response.data.transactions || response.data);
-      setTotalTransactions(response.data.total || response.data.length);
+      setTransactions((response as any).data.transactions || (response as any).data);
+      setTotalTransactions((response as any).data.total || (response as any).data.length);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      showToast('Failed to fetch transactions', 'error');
+      showToast({ title: 'Error', description: 'Failed to fetch transactions', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -136,16 +136,16 @@ export default function AdminPaymentsPage() {
       
       const refundNumber = `REF-${selectedTransaction.id}-${Date.now()}`;
       const orderInfo = selectedTransaction.order?.orderNumber ? ` for order ${selectedTransaction.order.orderNumber}` : '';
-      const customerInfo = selectedTransaction.order?.user?.name ? ` to ${selectedTransaction.order.user.name}` : '';
+      const customerInfo = selectedTransaction.order?.user?.name ? ` to ${(selectedTransaction.order as any).user.name}` : '';
       
-      showToast(`💰 Refund of KSh ${selectedTransaction.amount.toLocaleString()}${orderInfo}${customerInfo} has been processed. Reference: ${refundNumber}`, 'success');
+      showToast({ title: 'Success', description: `💰 Refund of KSh ${selectedTransaction.amount.toLocaleString()}${orderInfo}${customerInfo} has been processed. Reference: ${refundNumber}`, variant: 'success' });
       setShowRefundDialog(false);
       setSelectedTransaction(null);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error processing refund:', error);
-      showToast('❌ Failed to process refund. Please try again or contact support.', 'error');
+      showToast({ title: 'Error', description: '❌ Failed to process refund. Please try again or contact support.', variant: 'destructive' });
     }
   };
 
@@ -270,7 +270,7 @@ export default function AdminPaymentsPage() {
               <div class="section-title">Customer Information</div>
               <div><strong>Name:</strong> ${transaction.order?.user?.name || 'N/A'}</div>
               <div><strong>Email:</strong> ${transaction.order?.user?.email || 'N/A'}</div>
-              <div><strong>Phone:</strong> ${transaction.order?.user?.phone || transaction.phoneNumber || 'N/A'}</div>
+              <div><strong>Phone:</strong> ${(transaction.order?.user as any)?.phone || transaction.phoneNumber || 'N/A'}</div>
               <div><strong>Order:</strong> ${transaction.order?.orderNumber || 'Manual Entry'}</div>
             </div>
           </div>
@@ -322,24 +322,24 @@ export default function AdminPaymentsPage() {
       a.click();
       URL.revokeObjectURL(url);
 
-      showToast(`Invoice ${invoiceData.invoiceNumber} downloaded successfully`, 'success');
+      showToast({ title: 'Success', description: `Invoice ${invoiceData.invoiceNumber} downloaded successfully`, variant: 'success' });
     } catch (error) {
       console.error('Error generating invoice:', error);
-      showToast('Failed to generate invoice', 'error');
+      showToast({ title: 'Error', description: 'Failed to generate invoice', variant: 'destructive' });
     }
   };
 
   const recordCashPayment = async () => {
     // Validate form data
     if (!cashForm.orderId || !cashForm.amount || !cashForm.receivedBy) {
-      showToast('Please fill in all required fields (Order ID, Amount, Received By)', 'error');
+      showToast({ title: 'Error', description: 'Please fill in all required fields (Order ID, Amount, Received By)', variant: 'destructive' });
       return;
     }
 
     // Validate order ID format
     const orderValidation = validateOrderId(cashForm.orderId);
     if (!orderValidation.isValid) {
-      showToast(orderValidation.message || 'Invalid Order ID format', 'error');
+      showToast({ title: 'Error', description: orderValidation.message || 'Invalid Order ID format', variant: 'destructive' });
       return;
     }
 
@@ -350,7 +350,7 @@ export default function AdminPaymentsPage() {
 
     const amount = parseFloat(cashForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      showToast('Please enter a valid amount', 'error');
+      showToast({ title: 'Error', description: 'Please enter a valid amount', variant: 'destructive' });
       return;
     }
 
@@ -378,27 +378,27 @@ export default function AdminPaymentsPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      const orderInfo = response.data.orderNumber ? ` for order ${response.data.orderNumber}` : '';
-      showToast(`Cash payment recorded successfully${orderInfo}`, 'success');
+      const orderInfo = (response as any).data.orderNumber ? ` for order ${(response as any).data.orderNumber}` : '';
+      showToast({ title: 'Success', description: `Cash payment recorded successfully${orderInfo}`, variant: 'success' });
       setCashForm({ orderId: '', amount: '', receivedBy: '', notes: '' });
       setShowCashForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error recording cash payment:', error);
-      showToast('Failed to record cash payment. Please check if the order exists.', 'error');
+      showToast({ title: 'Error', description: 'Failed to record cash payment. Please check if the order exists.', variant: 'destructive' });
     }
   };
 
   const createPendingPayment = async () => {
     if (!pendingForm.orderId || !pendingForm.amount || !pendingForm.phoneNumber) {
-      showToast('Please fill in Order ID, Amount, and Phone Number', 'error');
+      showToast({ title: 'Error', description: 'Please fill in Order ID, Amount, and Phone Number', variant: 'destructive' });
       return;
     }
 
     const amount = parseFloat(pendingForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      showToast('Please enter a valid amount', 'error');
+      showToast({ title: 'Error', description: 'Please enter a valid amount', variant: 'destructive' });
       return;
     }
 
@@ -415,27 +415,27 @@ export default function AdminPaymentsPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      showToast(`⏳ Pending payment of KSh ${amount.toLocaleString()} created for tracking`, 'success');
+      showToast({ title: 'Success', description: `⏳ Pending payment of KSh ${amount.toLocaleString()} created for tracking`, variant: 'success' });
       setPendingForm({ orderId: '', amount: '', phoneNumber: '', notes: '' });
       setShowPendingForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error creating pending payment:', error);
-      showToast('Failed to create pending payment', 'error');
+      showToast({ title: 'Error', description: 'Failed to create pending payment', variant: 'destructive' });
     }
   };
 
   const recordPaybillPayment = async () => {
     // Validate form data
     if (!paybillForm.phoneNumber || !paybillForm.amount || !paybillForm.mpesaCode) {
-      showToast('Please fill in all required fields (Phone Number, Amount, M-Pesa Code)', 'error');
+      showToast({ title: 'Error', description: 'Please fill in all required fields (Phone Number, Amount, M-Pesa Code)', variant: 'destructive' });
       return;
     }
 
     const amount = parseFloat(paybillForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      showToast('Please enter a valid amount', 'error');
+      showToast({ title: 'Error', description: 'Please enter a valid amount', variant: 'destructive' });
       return;
     }
 
@@ -444,7 +444,7 @@ export default function AdminPaymentsPage() {
     if (paybillForm.orderId.trim()) {
       const orderValidation = validateOrderId(paybillForm.orderId);
       if (!orderValidation.isValid) {
-        showToast(orderValidation.message || 'Invalid Order ID format', 'error');
+        showToast({ title: 'Error', description: orderValidation.message || 'Invalid Order ID format', variant: 'destructive' });
         return;
       }
       
@@ -479,15 +479,15 @@ export default function AdminPaymentsPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      const orderInfo = response.data.orderNumber ? ` for order ${response.data.orderNumber}` : '';
-      showToast(`Paybill payment recorded successfully${orderInfo}`, 'success');
+      const orderInfo = (response as any).data.orderNumber ? ` for order ${(response as any).data.orderNumber}` : '';
+      showToast({ title: 'Success', description: `Paybill payment recorded successfully${orderInfo}`, variant: 'success' });
       setPaybillForm({ phoneNumber: '', amount: '', mpesaCode: '', reference: '', notes: '', orderId: '' });
       setShowPaybillForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error recording paybill payment:', error);
-      showToast('Failed to record paybill payment. Please check if the order exists.', 'error');
+      showToast({ title: 'Error', description: 'Failed to record paybill payment. Please check if the order exists.', variant: 'destructive' });
     }
   };
 
@@ -854,7 +854,7 @@ export default function AdminPaymentsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div>
                           <div className="font-medium">{transaction.order?.user?.name || 'N/A'}</div>
-                          <div className="text-gray-500">{transaction.order?.user?.phone || transaction.phoneNumber || 'N/A'}</div>
+                          <div className="text-gray-500">{(transaction.order?.user as any)?.phone || transaction.phoneNumber || 'N/A'}</div>
                           {transaction.cashReceivedBy && (
                             <div className="text-xs text-blue-600">Received by: {transaction.cashReceivedBy}</div>
                           )}
@@ -1043,7 +1043,7 @@ export default function AdminPaymentsPage() {
                   <label className="text-sm font-medium text-gray-600">Customer</label>
                   <p className="text-sm">{viewTransaction.order?.user?.name || 'N/A'}</p>
                   <p className="text-xs text-gray-500">{viewTransaction.order?.user?.email || 'N/A'}</p>
-                  <p className="text-xs text-gray-500">{viewTransaction.order?.user?.phone || viewTransaction.phoneNumber || 'N/A'}</p>
+                  <p className="text-xs text-gray-500">{(viewTransaction.order?.user as any)?.phone || viewTransaction.phoneNumber || 'N/A'}</p>
                 </div>
                 {viewTransaction.mpesaReceiptNumber && (
                   <div>

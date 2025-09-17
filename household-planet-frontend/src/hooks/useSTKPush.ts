@@ -27,7 +27,7 @@ export const useSTKPush = ({ onSuccess, onError }: UseSTKPushProps = {}) => {
     let phone = phoneNumber;
     
     if (!phone) {
-      phone = prompt('Enter M-Pesa phone number (e.g., 254700000000 or 0700000000):');
+      phone = prompt('Enter M-Pesa phone number (e.g., 254700000000 or 0700000000):') ?? undefined;
       if (!phone) return;
     }
 

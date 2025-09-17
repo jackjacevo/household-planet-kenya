@@ -240,3 +240,5 @@ export function MobileCheckoutForm({ onSubmit, loading = false }: MobileCheckout
     </div>
   );
 }
+
+export default MobileCheckoutForm;

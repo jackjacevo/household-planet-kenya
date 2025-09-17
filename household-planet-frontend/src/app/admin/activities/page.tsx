@@ -68,8 +68,8 @@ export default function AdminActivitiesPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      setActivities(response.data.data || []);
-      setPagination(prev => ({ ...prev, ...(response.data.meta || {}) }));
+      setActivities((response as any).data.data || []);
+      setPagination(prev => ({ ...prev, ...((response as any).data.meta || {}) }));
     } catch (error) {
       console.error('Error fetching activities:', error);
       setActivities([]);
@@ -87,7 +87,7 @@ export default function AdminActivitiesPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/activities/stats`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setStats(response.data);
+      setStats((response as any).data);
     } catch (error) {
       console.error('Error fetching activity stats:', error);
       setStats({

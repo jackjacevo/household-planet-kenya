@@ -86,7 +86,7 @@ export default function AdminLayout({
       `${apiUrl}/api/admin/dashboard`,
       { headers: { 'Authorization': `Bearer ${token}` } }
     );
-    return response.data?.overview?.pendingOrders || 0;
+    return (response as any).data?.overview?.pendingOrders || 0;
   };
 
   const { data: pendingOrdersCount = 0 } = useQuery({

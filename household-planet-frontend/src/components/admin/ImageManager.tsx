@@ -53,7 +53,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
       );
       
       // Handle the response format from the backend
-      const uploadedImages = response.data.images || [];
+      const uploadedImages = (response as any).data.images || [];
       const newImages = [...images, ...uploadedImages];
       onImagesChange(newImages);
     } catch (error) {
@@ -101,7 +101,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
       );
 
       const newImages = [...images];
-      newImages[selectedImageIndex] = response.data.imageUrl;
+      newImages[selectedImageIndex] = (response as any).data.imageUrl;
       onImagesChange(newImages);
       setCropMode(false);
       setSelectedImageIndex(null);
@@ -121,7 +121,7 @@ export default function ImageManager({ images, onImagesChange, productId, maxIma
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      onImagesChange(response.data.images);
+      onImagesChange((response as any).data.images);
     } catch (error) {
       console.error('Error optimizing images:', error);
     }

@@ -87,7 +87,7 @@ export default function VariantManager({ productId, variants, onVariantsChange }
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        onVariantsChange([...variants, response.data]);
+        onVariantsChange([...variants, (response as any).data]);
       }
       
       resetForm();

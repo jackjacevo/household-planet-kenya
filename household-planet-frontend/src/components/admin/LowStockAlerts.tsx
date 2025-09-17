@@ -32,7 +32,7 @@ export function LowStockAlerts() {
     try {
       setLoading(true);
       const response = await api.getLowStockAlerts() as any;
-      setAlerts(response.data || []);
+      setAlerts((response as any).data || []);
     } catch (error) {
       console.error('Error fetching low stock alerts:', error);
       setAlerts([]);

@@ -7,7 +7,7 @@ export interface NotificationData {
   badge?: string;
   tag?: string;
   data?: any;
-  actions?: NotificationAction[];
+  actions?: Array<{action: string; title: string}>;
 }
 
 export class NotificationManager {
@@ -28,8 +28,8 @@ export class NotificationManager {
       badge: data.badge || '/icons/badge-72x72.png',
       tag: data.tag,
       data: data.data,
-      actions: data.actions,
-      vibrate: [100, 50, 100],
+      // actions: data.actions,
+      // vibrate: [100, 50, 100],
       requireInteraction: true
     });
   }
@@ -100,7 +100,7 @@ export class NotificationManager {
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(
           process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
-        )
+        ) as any
       });
 
       // Send subscription to server

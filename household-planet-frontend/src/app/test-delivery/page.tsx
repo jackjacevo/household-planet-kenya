@@ -42,7 +42,7 @@ export default function TestDeliveryPage() {
       } catch (error) {
         setApiTest({
           success: false,
-          error: error.message
+          error: (error as Error).message
         });
       } finally {
         setApiLoading(false);

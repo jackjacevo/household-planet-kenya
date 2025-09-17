@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 const nextConfig = {
-  // Simplified configuration to fix webpack issues
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@heroicons/react'],
-  },
+
   
   // Server external packages
   serverExternalPackages: ['sharp'],
@@ -38,32 +35,14 @@ const nextConfig = {
     ],
   },
   
-  // Webpack configuration
-  webpack: (config, { dev, isServer }) => {
-    // Fix module resolution issues
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-    
-    // Ensure proper alias resolution
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, 'src'),
-    };
-    
-    // Handle jsPDF and canvg dependencies
-    if (!isServer) {
-      config.externals = config.externals || [];
-      config.externals.push({
-        'canvas': 'canvas',
-        'jsdom': 'jsdom'
-      });
-    }
-    
-    return config;
+  // Experimental features
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@heroicons/react'],
+    turbo: {
+      resolveAlias: {
+        '@': './src',
+      },
+    },
   },
   // Performance & Security Headers
   async headers() {

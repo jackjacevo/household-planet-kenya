@@ -98,8 +98,8 @@ export const useWishlist = create<WishlistStore>()(
       syncWithBackend: async () => {
         try {
           const response = await api.get('/api/wishlist');
-          const wishlistData = response.data;
-          const backendItems = (wishlistData.items || response.data).map((item: any) => item.product || item);
+          const wishlistData = (response as any).data;
+          const backendItems = (wishlistData.items || (response as any).data).map((item: any) => item.product || item);
           set({ items: backendItems, wishlistData });
         } catch (error) {
           console.error('Failed to sync wishlist:', error);

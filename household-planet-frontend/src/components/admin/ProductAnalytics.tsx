@@ -35,7 +35,7 @@ export default function ProductAnalytics({ productId, categoryId }: ProductAnaly
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/analytics?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setAnalytics(response.data);
+      setAnalytics((response as any).data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setAnalytics({ views: [], sales: [], revenue: [] });

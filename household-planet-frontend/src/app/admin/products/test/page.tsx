@@ -7,7 +7,7 @@ import axios from 'axios';
 export default function AdminProductsTestPage() {
   const [status, setStatus] = useState('');
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const testAPI = async () => {
@@ -38,7 +38,7 @@ export default function AdminProductsTestPage() {
       setStatus(prev => prev + '\n✅ Categories API working');
 
       setStatus(prev => prev + '\n🎉 All tests passed!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Test error:', error);
       setStatus(prev => prev + `\n❌ Error: ${error.response?.data?.message || error.message}`);
     } finally {
@@ -56,7 +56,7 @@ export default function AdminProductsTestPage() {
         description: 'This is a test product created from the admin panel',
         sku: 'TEST-' + Date.now(),
         price: 1000,
-        categoryId: categories[0]?.id || 1,
+        categoryId: (categories[0] as any)?.id || 1,
         isActive: true,
         isFeatured: false,
         images: [],
@@ -69,9 +69,9 @@ export default function AdminProductsTestPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setStatus(prev => prev + `\n✅ Created test product: ${response.data.name}`);
+      setStatus(prev => prev + `\n✅ Created test product: ${(response as any).data.name}`);
       testAPI(); // Refresh the products list
-    } catch (error) {
+    } catch (error: any) {
       setStatus(prev => prev + `\n❌ Failed to create product: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);

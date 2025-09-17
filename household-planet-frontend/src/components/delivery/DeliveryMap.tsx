@@ -27,7 +27,7 @@ export default function DeliveryMap() {
     const fetchLocations = async () => {
       try {
         const response = await api.getDeliveryLocations();
-        const locationsData = response.data || [];
+        const locationsData = (response as any).data || [];
         
         // Add sample coordinates for major Kenyan cities
         const locationsWithCoords = locationsData.map((location: DeliveryLocation) => ({

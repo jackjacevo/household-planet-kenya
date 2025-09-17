@@ -157,7 +157,7 @@ export const LazyAdminPanel = withCodeSplitting(
 // Route-based code splitting
 export const LazyRoutes = {
   Products: withCodeSplitting(() => import('@/app/products/page')),
-  ProductDetail: withCodeSplitting(() => import('@/app/products/[id]/page')),
+  ProductDetail: withCodeSplitting(() => import('@/app/products/[slug]/page')),
   Cart: withCodeSplitting(() => import('@/app/cart/page')),
   Checkout: withCodeSplitting(() => import('@/app/checkout/page')),
   Profile: withCodeSplitting(() => import('@/app/profile/page')),

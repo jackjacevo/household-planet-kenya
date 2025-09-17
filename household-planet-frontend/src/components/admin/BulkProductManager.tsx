@@ -42,12 +42,10 @@ export default function BulkProductManager() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await api.post('/products/import/csv', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await api.post('/products/import/csv', formData);
 
       // Start polling for job status
-      pollJobStatus(response.data.jobId);
+      pollJobStatus((response as any).data.jobId);
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload file');
@@ -60,7 +58,7 @@ export default function BulkProductManager() {
     const poll = async () => {
       try {
         const response = await api.get(`/products/import/status/${jobId}`);
-        const job = response.data;
+        const job = (response as any).data;
         
         setImportJobs(prev => {
           const existing = prev.find(j => j.id === jobId);
@@ -85,12 +83,10 @@ export default function BulkProductManager() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const response = await api.get('/products/export/csv', {
-        responseType: 'blob'
-      });
+      const response = await api.get('/products/export/csv');
 
       // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([(response as any).data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `products-${new Date().toISOString().split('T')[0]}.csv`);

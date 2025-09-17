@@ -14,19 +14,18 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
   
   // Get customer info from multiple sources
   const customerName = order.customerName || 
-                      order.user?.name || 
-                      (order.user?.firstName && order.user?.lastName ? `${order.user.firstName} ${order.user.lastName}` : '') ||
+                      (order as any).user?.name || 
+                      ((order as any).user?.firstName && (order as any).user?.lastName ? `${(order as any).user.firstName} ${(order as any).user.lastName}` : '') ||
                       (order.shippingAddress && typeof order.shippingAddress === 'object' ? order.shippingAddress.fullName : null) || 
                       'Valued Customer';
   
   const customerPhone = order.customerPhone || 
-                       order.user?.phone || 
+                       (order as any).user?.phone || 
                        (order.shippingAddress && typeof order.shippingAddress === 'object' ? order.shippingAddress.phone : null) || 
                        'N/A';
   
   const customerEmail = order.customerEmail || 
-                       order.user?.email || 
-                       (order.shippingAddress && typeof order.shippingAddress === 'object' ? order.shippingAddress.email : null) || 
+                       (order as any).user?.email || 
                        'N/A';
   
   return (
@@ -104,10 +103,10 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
               <span>Subtotal ({order.items?.length || 0} items):</span>
               <span className="font-medium">{formatPrice(order.subtotal)}</span>
             </div>
-            {order.promoCode && order.discountAmount && order.discountAmount > 0 && (
+            {(order as any).promoCode && (order as any).discountAmount && (order as any).discountAmount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Discount ({order.promoCode}):</span>
-                <span className="font-medium">-{formatPrice(order.discountAmount)}</span>
+                <span>Discount ({(order as any).promoCode}):</span>
+                <span className="font-medium">-{formatPrice((order as any).discountAmount)}</span>
               </div>
             )}
             <div className="flex justify-between">
@@ -120,7 +119,7 @@ export default function A4Receipt({ order, trackingNumber }: A4ReceiptProps) {
                 <span className="text-green-600">
                   {formatPrice(
                     order.subtotal - 
-                    (order.discountAmount || 0) + 
+                    ((order as any).discountAmount || 0) + 
                     (order.deliveryPrice || order.shippingCost || 0)
                   )}
                 </span>

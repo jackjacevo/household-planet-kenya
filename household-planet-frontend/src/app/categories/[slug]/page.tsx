@@ -103,14 +103,15 @@ export default function CategoryPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      const { category, ...otherFilters } = filters;
       const response = await api.getProducts({
         page: currentPage,
         limit: 12,
         category: slug,
-        ...filters,
+        ...otherFilters,
       }) as any;
       
-      setProducts(response.data || []);
+      setProducts((response as any).data || []);
       setTotalPages(response.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -149,7 +150,7 @@ export default function CategoryPage() {
         position: index + 1,
         name: product.name,
         url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product.slug}`,
-        image: product.images?.[0]?.url,
+        image: product.images?.[0],
         offers: {
           '@type': 'Offer',
           price: product.price,

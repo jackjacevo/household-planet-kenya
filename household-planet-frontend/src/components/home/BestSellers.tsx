@@ -43,9 +43,9 @@ export function BestSellers() {
       } catch (error) {
         console.error('Failed to fetch products:', error);
         showToast({
-          type: 'error',
           title: 'Error',
-          message: 'Failed to load featured products'
+          description: 'Failed to load featured products',
+          variant: 'destructive'
         });
         setProducts([]);
       } finally {

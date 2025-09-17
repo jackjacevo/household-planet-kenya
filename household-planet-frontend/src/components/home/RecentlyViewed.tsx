@@ -41,8 +41,8 @@ export function RecentlyViewed() {
             const response = await api.getProducts({ limit: 6, featured: true });
             if (response && Array.isArray(response)) {
               setProducts(response);
-            } else if (response?.data && Array.isArray(response.data)) {
-              setProducts(response.data);
+            } else if ((response as any)?.data && Array.isArray((response as any).data)) {
+              setProducts((response as any).data);
             }
           } catch (error) {
             console.debug('Could not fetch products');

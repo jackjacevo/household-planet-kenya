@@ -149,7 +149,7 @@ export function usePWA() {
         });
         
         // Register background sync
-        await registration.sync.register('cart-sync');
+        await (registration as any).sync?.register('cart-sync');
         return true;
       } catch (error) {
         console.error('Background sync registration failed:', error);
@@ -194,7 +194,7 @@ export function usePWA() {
         return registration.showNotification(title, {
           icon: '/icons/icon-192x192.png',
           badge: '/icons/icon-72x72.png',
-          vibrate: [200, 100, 200],
+          // vibrate: [200, 100, 200],
           ...options
         });
       }

@@ -91,7 +91,7 @@ export function SizeGuide({ category }: SizeGuideProps) {
                         <th className="text-left py-3 px-4 font-semibold">Size</th>
                         <th className="text-left py-3 px-4 font-semibold">Dimensions</th>
                         <th className="text-left py-3 px-4 font-semibold">
-                          {guide.measurements[0].capacity ? 'Capacity' : 'Note'}
+                          {(guide.measurements[0] as any).capacity ? 'Capacity' : 'Note'}
                         </th>
                       </tr>
                     </thead>
@@ -101,7 +101,7 @@ export function SizeGuide({ category }: SizeGuideProps) {
                           <td className="py-3 px-4 font-medium">{measurement.size}</td>
                           <td className="py-3 px-4">{measurement.dimensions}</td>
                           <td className="py-3 px-4">
-                            {measurement.capacity || measurement.note}
+                            {(measurement as any).capacity || (measurement as any).note}
                           </td>
                         </tr>
                       ))}

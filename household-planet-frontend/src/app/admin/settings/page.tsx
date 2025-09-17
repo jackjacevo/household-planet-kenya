@@ -126,7 +126,7 @@ export default function AdminSettingsPage() {
       }
       
       console.log('Loaded settings:', data);
-      setSettings(data || {});
+      setSettings(data as SettingsResponse || {});
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error('Failed to load settings');

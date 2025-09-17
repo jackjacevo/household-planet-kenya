@@ -53,9 +53,9 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
       });
       
       if (format === 'excel') {
-        downloadExcel(response.data, 'products.xlsx');
+        downloadExcel((response as any).data, 'products.xlsx');
       } else {
-        const csvContent = convertToCSV(response.data);
+        const csvContent = convertToCSV((response as any).data);
         downloadCSV(csvContent, 'products.csv');
       }
     } catch (error) {

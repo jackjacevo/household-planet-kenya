@@ -37,7 +37,7 @@ export default function StockOverview({ className = '' }: StockOverviewProps) {
       );
       
       // Filter products that are actually low stock or out of stock
-      const lowStock = response.data.data?.filter((product: any) => 
+      const lowStock = (response as any).data.data?.filter((product: any) => 
         product.trackStock && (product.stock === 0 || product.stock <= product.lowStockThreshold)
       ) || [];
       

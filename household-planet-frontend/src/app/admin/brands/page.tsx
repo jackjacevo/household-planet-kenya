@@ -41,7 +41,7 @@ export default function AdminBrandsPage() {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBrands(response.data);
+      setBrands((response as any).data);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to fetch brands');
       console.error('Error fetching brands:', error);

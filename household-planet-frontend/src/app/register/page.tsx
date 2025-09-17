@@ -74,10 +74,10 @@ export default function RegisterPage() {
       })
       
       // Registration successful, redirect to login with success message
-      router.push('/login?message=' + encodeURIComponent(response?.message || 'Registration successful! Please check your email to verify your account.'))
+      router.push('/login?message=' + encodeURIComponent((response as any)?.message || 'Registration successful! Please check your email to verify your account.'))
     } catch (err: any) {
       setError('root', {
-        message: err.message || 'Registration failed. Please try again or contact support.'
+        message: err?.message || 'Registration failed. Please try again or contact support.'
       })
     } finally {
       setLoading(false)
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                   <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <AlertCircle className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-red-700 text-sm font-medium">{errors.root.message}</p>
+                  <p className="text-red-700 text-sm font-medium">{errors.root?.message}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -220,7 +220,7 @@ export default function RegisterPage() {
                     className="text-red-600 text-sm flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg"
                   >
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    {errors.firstName.message}
+                    {errors.firstName?.message}
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -261,7 +261,7 @@ export default function RegisterPage() {
                     className="text-red-600 text-sm flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg"
                   >
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    {errors.lastName.message}
+                    {errors.lastName?.message}
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -288,7 +288,7 @@ export default function RegisterPage() {
                   className="text-red-600 text-sm flex items-center gap-1"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {errors.email.message}
+                  {errors.email?.message}
                 </motion.p>
               )}
             </div>
@@ -314,7 +314,7 @@ export default function RegisterPage() {
                   className="text-red-600 text-sm flex items-center gap-1"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {errors.phone.message}
+                  {errors.phone?.message}
                 </motion.p>
               )}
             </div>
@@ -386,7 +386,7 @@ export default function RegisterPage() {
                   className="text-red-600 text-sm flex items-center gap-1"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {errors.password.message}
+                  {errors.password?.message}
                 </motion.p>
               )}
             </div>
@@ -419,7 +419,7 @@ export default function RegisterPage() {
                   className="text-red-600 text-sm flex items-center gap-1"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {errors.confirmPassword.message}
+                  {errors.confirmPassword?.message}
                 </motion.p>
               )}
             </div>

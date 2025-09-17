@@ -57,7 +57,7 @@ export default function CustomerDetailsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${params.id}/details`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setCustomer(response.data);
+      setCustomer((response as any).data);
     } catch (error) {
       console.error('Error fetching customer details:', error);
     } finally {

@@ -19,7 +19,7 @@ export class BackgroundSyncManager {
 
       // Register background sync
       const registration = await navigator.serviceWorker.ready;
-      await registration.sync.register('background-sync');
+      await (registration as any).sync?.register('background-sync');
     } catch (error) {
       console.error('Background sync registration failed:', error);
       // Fallback: try immediate sync

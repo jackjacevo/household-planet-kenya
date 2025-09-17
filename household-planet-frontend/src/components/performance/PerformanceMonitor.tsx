@@ -71,8 +71,8 @@ export function PerformanceMonitor({
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
         if (navigation) {
           updateMetric('ttfb', navigation.responseStart - navigation.requestStart);
-          updateMetric('domContentLoaded', navigation.domContentLoadedEventEnd - navigation.navigationStart);
-          updateMetric('loadComplete', navigation.loadEventEnd - navigation.navigationStart);
+          updateMetric('domContentLoaded', navigation.domContentLoadedEventEnd - navigation.fetchStart);
+          updateMetric('loadComplete', navigation.loadEventEnd - navigation.fetchStart);
         }
       };
 
