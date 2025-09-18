@@ -26,10 +26,10 @@ services:
       # CORS should allow the frontend container and public domain
       CORS_ORIGIN: https://householdplanet.co.ke
       BASE_URL: http://household-planet-backend:3001
-      # M-Pesa Configuration
-      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
-      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
-      MPESA_PASSKEY: ${MPESA_PASSKEY}
+      # M-Pesa Configuration (commented out for now)
+      # MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
+      # MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
+      # MPESA_PASSKEY: ${MPESA_PASSKEY}
       MPESA_BASE_URL: https://api.safaricom.co.ke
       MPESA_CALLBACK_URL: https://householdplanet.co.ke/api/payments/mpesa/callback
     volumes:
