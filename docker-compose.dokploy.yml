@@ -32,7 +32,6 @@ services:
     build:
       context: ./household-planet-backend
       dockerfile: Dockerfile.prod
-      no_cache: true
     restart: unless-stopped
     networks:
       - household-planet
