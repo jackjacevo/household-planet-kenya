@@ -23,11 +23,17 @@ services:
         # Copy backend files
         RUN cp -r /tmp/source/household-planet-backend/* .
         
-        # Install dependencies
-        RUN npm ci --only=production
+        # Install all dependencies (needed for build)
+        RUN npm ci
+        
+        # Build the application
+        RUN npm run build
         
         # Generate Prisma client
         RUN npx prisma generate
+        
+        # Remove dev dependencies
+        RUN npm prune --production
         
         # Create uploads directory
         RUN mkdir -p uploads
