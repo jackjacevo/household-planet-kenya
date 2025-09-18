@@ -95,8 +95,15 @@ async function bootstrap() {
     validateCustomDecorators: true,
   }));
   
-  // Health check endpoint (before global prefix)
+  // Set global API prefix
+  app.setGlobalPrefix('api');
+  
+  // Health check endpoint (after global prefix)
   app.getHttpAdapter().get('/health', (req: any, res: any) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
+  app.getHttpAdapter().get('/api/health', (req: any, res: any) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
   
@@ -106,8 +113,10 @@ async function bootstrap() {
     res.status(200).json({ cors: 'working', origin: req.headers.origin });
   });
   
-  // Set global API prefix
-  app.setGlobalPrefix('api');
+  app.getHttpAdapter().get('/api/cors-test', (req: any, res: any) => {
+    res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' ? 'https://householdplanetkenya.co.ke' : 'http://localhost:3000');
+    res.status(200).json({ cors: 'working', origin: req.headers.origin });
+  });
   
   // Enhanced CORS configuration
   app.enableCors({
