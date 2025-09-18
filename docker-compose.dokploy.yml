@@ -13,7 +13,6 @@ services:
       - household-planet
     environment:
       POSTGRES_DB: household_planet
-      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -23,7 +22,7 @@ services:
       -c log_destination=stderr
       -c logging_collector=on
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d household_planet"]
       interval: 10s
       timeout: 5s
       retries: 5
