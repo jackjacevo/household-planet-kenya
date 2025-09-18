@@ -62,6 +62,7 @@ services:
       - "3001"
     volumes:
       - uploads_data:/app/uploads
+      - database_data:/app
     healthcheck:
       test: ["CMD", "sh", "-c", "ps aux | grep '[n]ode' || exit 1"]
       interval: 30s
@@ -144,4 +145,6 @@ services:
 
 volumes:
   uploads_data:
+    driver: local
+  database_data:
     driver: local
