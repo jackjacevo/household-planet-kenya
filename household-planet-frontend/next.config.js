@@ -23,8 +23,8 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.householdplanetkenya.co.ke',
-        pathname: '/uploads/**',
+        hostname: 'householdplanetkenya.co.ke',
+        pathname: '/api/uploads/**',
       },
       {
         protocol: 'http',
@@ -149,7 +149,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: process.env.NODE_ENV === 'production' 
-              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com https://householdplanetkenya.co.ke https://api.householdplanetkenya.co.ke; font-src 'self'; connect-src 'self' https://api.householdplanetkenya.co.ke https://*.householdplanetkenya.co.ke wss://api.householdplanetkenya.co.ke; frame-src 'self' https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com https://householdplanetkenya.co.ke; font-src 'self'; connect-src 'self' https://householdplanetkenya.co.ke wss://householdplanetkenya.co.ke; frame-src 'self' https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
               : "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com http://localhost:3001; font-src 'self'; connect-src 'self' http://localhost:3001 ws://localhost:3001; frame-src 'self' https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
           },
         ],

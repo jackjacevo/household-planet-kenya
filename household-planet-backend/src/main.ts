@@ -103,41 +103,73 @@ async function bootstrap() {
   // Set global API prefix
   app.setGlobalPrefix('api');
   
-  // Health check endpoint (after global prefix)
+  // Health check endpoints for Dokploy
   app.getHttpAdapter().get('/health', (req: any, res: any) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      cors_origin: process.env.CORS_ORIGIN
+    });
   });
   
   app.getHttpAdapter().get('/api/health', (req: any, res: any) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      cors_origin: process.env.CORS_ORIGIN
+    });
   });
   
-  // CORS test endpoint
+  // API communication test endpoints
   app.getHttpAdapter().get('/cors-test', (req: any, res: any) => {
-    res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' ? 'https://householdplanetkenya.co.ke' : 'http://localhost:3000');
-    res.status(200).json({ cors: 'working', origin: req.headers.origin });
+    res.status(200).json({ 
+      cors: 'working', 
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      cors_origin: process.env.CORS_ORIGIN
+    });
   });
   
   app.getHttpAdapter().get('/api/cors-test', (req: any, res: any) => {
-    res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' ? 'https://householdplanetkenya.co.ke' : 'http://localhost:3000');
-    res.status(200).json({ cors: 'working', origin: req.headers.origin });
+    res.status(200).json({ 
+      cors: 'working', 
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      cors_origin: process.env.CORS_ORIGIN
+    });
   });
   
-  // Enhanced CORS configuration
+  // Enhanced CORS configuration for Dokploy
+  const corsOrigins = process.env.NODE_ENV === 'production' 
+    ? [
+        'https://householdplanetkenya.co.ke',
+        'https://www.householdplanetkenya.co.ke',
+        process.env.CORS_ORIGIN
+      ].filter(Boolean)
+    : [process.env.CORS_ORIGIN || 'http://localhost:3000'];
+    
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke']
-      : process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma', 'X-Requested-With'],
     preflightContinue: false,
     optionsSuccessStatus: 204
   });
   
-  // Enable CORS for static files
+  // Enable CORS for static files with proper origin handling
   app.use('/uploads', (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    const allowedOrigins = corsOrigins;
+    const origin = req.headers.origin;
+    
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.header('Access-Control-Allow-Origin', origin || '*');
+    }
+    
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');

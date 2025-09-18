@@ -43,6 +43,7 @@ services:
       JWT_EXPIRES_IN: 7d
       CORS_ORIGIN: https://householdplanetkenya.co.ke
       BASE_URL: http://backend:3001
+      FRONTEND_URL: https://householdplanetkenya.co.ke
       MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
       MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
       MPESA_PASSKEY: ${MPESA_PASSKEY}
