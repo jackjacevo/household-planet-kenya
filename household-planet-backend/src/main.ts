@@ -106,7 +106,7 @@ async function bootstrap() {
   // Enhanced CORS configuration
   app.enableCors({
     origin: process.env.NODE_ENV === 'production' 
-      ? [process.env.CORS_ORIGIN || 'https://householdplanet.co.ke', 'http://household-planet-frontend:3000']
+      ? [process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke', 'http://household-planet-frontend:3000']
       : process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
