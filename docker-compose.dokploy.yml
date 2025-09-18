@@ -10,12 +10,15 @@ services:
     build:
       context: .
       dockerfile_inline: |
-        FROM node:18-alpine
+        FROM node:20-alpine
         WORKDIR /app
         
-        # Install git and download source (cache bust: 2025-01-18-18:10)
+        # Force cache invalidation
+        RUN echo "Build timestamp: $(date)" > /tmp/build-info
+        
+        # Install git and download source (cache bust: 2025-01-18-18:15)
         RUN apk add --no-cache git
-        RUN git clone https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
         
         # Copy backend files
         RUN cp -r /tmp/source/household-planet-backend/* .
@@ -70,12 +73,15 @@ services:
     build:
       context: .
       dockerfile_inline: |
-        FROM node:18-alpine AS builder
+        FROM node:20-alpine AS builder
         WORKDIR /app
         
-        # Install git and download source (cache bust: 2025-01-18-18:10)
+        # Force cache invalidation
+        RUN echo "Build timestamp: $(date)" > /tmp/build-info
+        
+        # Install git and download source (cache bust: 2025-01-18-18:15)
         RUN apk add --no-cache git
-        RUN git clone https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
         
         # Copy frontend files
         RUN cp -r /tmp/source/household-planet-frontend/* .
@@ -97,7 +103,7 @@ services:
         
         RUN npm run build
         
-        FROM node:18-alpine AS runner
+        FROM node:20-alpine AS runner
         WORKDIR /app
         
         ENV NODE_ENV=production
