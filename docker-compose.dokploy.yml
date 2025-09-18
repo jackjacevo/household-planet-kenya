@@ -1,7 +1,5 @@
 # Dokploy Docker Compose configuration
-# Uses inline Dockerfiles to avoid context path issues
-
-version: '3.8'
+# Uses existing Dockerfiles from subdirectories
 
 networks:
   household-planet:
@@ -15,17 +13,33 @@ services:
         FROM node:18-alpine
         WORKDIR /app
         
-        # Copy backend files
-        COPY household-planet-backend/package*.json ./
-        RUN npm ci --only=production
+        # Copy all files first to see what's available
+        COPY . /tmp/source
         
-        COPY household-planet-backend/ ./
+        # List contents to debug
+        RUN ls -la /tmp/source/
+        
+        # Find and copy backend files
+        RUN if [ -d "/tmp/source/household-planet-backend" ]; then \
+              cp -r /tmp/source/household-planet-backend/* . && \
+              echo "Backend files copied successfully"; \
+            else \
+              echo "Backend directory not found, listing available directories:" && \
+              find /tmp/source -type d -name "*backend*" -o -name "*household*" && \
+              exit 1; \
+            fi
+        
+        # Install dependencies
+        RUN npm ci --only=production
         
         # Generate Prisma client
         RUN npx prisma generate
         
         # Create uploads directory
         RUN mkdir -p uploads
+        
+        # Clean up
+        RUN rm -rf /tmp/source
         
         EXPOSE 3001
         
@@ -68,11 +82,24 @@ services:
         FROM node:18-alpine AS builder
         WORKDIR /app
         
-        # Copy frontend files
-        COPY household-planet-frontend/package*.json ./
-        RUN npm ci
+        # Copy all files first to see what's available
+        COPY . /tmp/source
         
-        COPY household-planet-frontend/ ./
+        # List contents to debug
+        RUN ls -la /tmp/source/
+        
+        # Find and copy frontend files
+        RUN if [ -d "/tmp/source/household-planet-frontend" ]; then \
+              cp -r /tmp/source/household-planet-frontend/* . && \
+              echo "Frontend files copied successfully"; \
+            else \
+              echo "Frontend directory not found, listing available directories:" && \
+              find /tmp/source -type d -name "*frontend*" -o -name "*household*" && \
+              exit 1; \
+            fi
+        
+        # Install dependencies
+        RUN npm ci
         
         # Build args
         ARG NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
