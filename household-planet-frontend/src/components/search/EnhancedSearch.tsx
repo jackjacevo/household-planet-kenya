@@ -170,11 +170,11 @@ export default function EnhancedSearch() {
     
     // If it starts with /uploads, prepend the API base URL
     if (firstImage.startsWith('/uploads')) {
-      return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${firstImage}`;
+      return `${process.env.NEXT_PUBLIC_API_URL || '/api'}${firstImage}`;
     }
     
     // Otherwise, assume it's a relative path and prepend /uploads
-    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/uploads/${firstImage}`;
+    return `${process.env.NEXT_PUBLIC_API_URL || '/api'}/uploads/${firstImage}`;
   };
 
   return (

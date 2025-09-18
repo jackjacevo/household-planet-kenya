@@ -81,7 +81,7 @@ export default function AdminLayout({
     const token = localStorage.getItem('token');
     if (!token) return 0;
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
     const response = await axios.get(
       `${apiUrl}/api/admin/dashboard`,
       { headers: { 'Authorization': `Bearer ${token}` } }

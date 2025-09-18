@@ -7,7 +7,7 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const serverUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
     
     this.socket = io(serverUrl, {
       transports: ['websocket', 'polling'],

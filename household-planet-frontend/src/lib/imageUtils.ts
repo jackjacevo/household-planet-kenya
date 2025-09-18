@@ -36,7 +36,7 @@ export function getImageUrl(imagePath: string | null | undefined): string {
   }
 
   // Get API URL from environment
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
 
   // Handle category images with proper endpoint
   if (cleanPath.includes('category-') && cleanPath.includes('.jpeg')) {
