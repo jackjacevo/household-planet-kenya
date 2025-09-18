@@ -17,8 +17,13 @@ services:
       POSTGRES_PASSWORD: H0us3h0ld_P1@n3t_K3ny@_2024!
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_destination=stderr
+      -c logging_collector=on
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-household_user}"]
+      test: ["CMD-SHELL", "pg_isready -U household_user"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,7 +61,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   frontend:
     build:
