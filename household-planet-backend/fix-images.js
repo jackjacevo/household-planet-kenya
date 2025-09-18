@@ -19,7 +19,7 @@ async function fixProductImages() {
       
       // If no images or images are invalid URLs, set placeholder
       if (!images || images.length === 0 || images.some(img => !img.startsWith('http'))) {
-        const updatedImages = ['http://localhost:3001/uploads/products/placeholder.svg'];
+        const updatedImages = ['http://householdplanetkenya.co.ke/uploads/products/placeholder.svg'];
         
         await prisma.product.update({
           where: { id: product.id },
