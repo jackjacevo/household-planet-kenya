@@ -100,17 +100,25 @@ async function bootstrap() {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
   
+  // CORS test endpoint
+  app.getHttpAdapter().get('/cors-test', (req: any, res: any) => {
+    res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' ? 'https://householdplanetkenya.co.ke' : 'http://localhost:3000');
+    res.status(200).json({ cors: 'working', origin: req.headers.origin });
+  });
+  
   // Set global API prefix
   app.setGlobalPrefix('api');
   
   // Enhanced CORS configuration
   app.enableCors({
     origin: process.env.NODE_ENV === 'production' 
-      ? [process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke', 'http://household-planet-frontend:3000']
+      ? ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke']
       : process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   });
   
   // Enable CORS for static files
@@ -135,11 +143,12 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().set('trust proxy', true);
   
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   
   const logger = new Logger('Bootstrap');
-  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Application is running on: http://0.0.0.0:${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`CORS Origin: ${process.env.CORS_ORIGIN}`);
 }
 
 bootstrap().catch(err => {

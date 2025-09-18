@@ -2,7 +2,7 @@
   "dns_records": [
     {
       "type": "A",
-      "name": "householdplanet.co.ke",
+      "name": "householdplanetkenya.co.ke",
       "content": "YOUR_SERVER_IP",
       "ttl": 300,
       "proxied": true
@@ -17,20 +17,20 @@
     {
       "type": "CNAME",
       "name": "api",
-      "content": "householdplanet.co.ke",
+      "content": "householdplanetkenya.co.ke",
       "ttl": 300,
       "proxied": true
     },
     {
       "type": "MX",
-      "name": "householdplanet.co.ke",
-      "content": "mail.householdplanet.co.ke",
+      "name": "householdplanetkenya.co.ke",
+      "content": "mail.householdplanetkenya.co.ke",
       "priority": 10,
       "ttl": 300
     },
     {
       "type": "TXT",
-      "name": "householdplanet.co.ke",
+      "name": "householdplanetkenya.co.ke",
       "content": "v=spf1 include:_spf.google.com ~all",
       "ttl": 300
     }
@@ -42,7 +42,7 @@
           "target": "url",
           "constraint": {
             "operator": "matches",
-            "value": "householdplanet.co.ke/*"
+            "value": "householdplanetkenya.co.ke/*"
           }
         }
       ],

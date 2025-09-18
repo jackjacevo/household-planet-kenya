@@ -37,7 +37,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-household_user}:${POSTGRES_PASSWORD:-secure_password_123}@postgres:5432/household_planet
       JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024-production-secure}
       JWT_EXPIRES_IN: 7d
-      CORS_ORIGIN: ${FRONTEND_URL:-http://localhost:3000}
+      CORS_ORIGIN: https://householdplanetkenya.co.ke
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,15 +61,15 @@ services:
       - app-network
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://householdplanet.co.ke
-      NEXT_PUBLIC_SITE_URL: https://householdplanet.co.ke
+      NEXT_PUBLIC_API_URL: https://api.householdplanetkenya.co.ke
+      NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
     depends_on:
       - backend
     ports:
       - "3000:3000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.household-planet.rule=Host(`householdplanet.co.ke`)"
+      - "traefik.http.routers.household-planet.rule=Host(`householdplanetkenya.co.ke`)"
       - "traefik.http.routers.household-planet.tls=true"
       - "traefik.http.routers.household-planet.tls.certresolver=letsencrypt"
       - "traefik.http.services.household-planet.loadbalancer.server.port=3000"
