@@ -48,6 +48,9 @@ services:
       MPESA_PASSKEY: ${MPESA_PASSKEY}
       MPESA_BASE_URL: https://api.safaricom.co.ke
       MPESA_CALLBACK_URL: https://householdplanetkenya.co.ke/api/payments/mpesa/callback
+      MPESA_SHORTCODE: 174379
+      MPESA_ENVIRONMENT: sandbox
+      SESSION_SECRET: household-planet-session-secret-2024
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,6 +73,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://api.householdplanetkenya.co.ke
         NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
+        NEXT_PUBLIC_ENVIRONMENT: production
     restart: unless-stopped
     networks:
       - household-planet
