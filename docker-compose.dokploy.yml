@@ -103,7 +103,7 @@ services:
         RUN npm ci
         
         # Build args
-        ARG NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
+        ARG NEXT_PUBLIC_API_URL=/api
         ARG NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
         ARG NEXT_PUBLIC_ENVIRONMENT=production
         
@@ -134,7 +134,7 @@ services:
         
         CMD ["node", "server.js"]
       args:
-        NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
+        NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
         NEXT_PUBLIC_ENVIRONMENT: production
     restart: unless-stopped
@@ -142,7 +142,7 @@ services:
       - household-planet
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
+      NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
       NEXT_PUBLIC_ENVIRONMENT: production
     depends_on:
