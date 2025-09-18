@@ -56,6 +56,9 @@ services:
     build:
       context: ./household-planet-frontend
       dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke
+        NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
     restart: unless-stopped
     networks:
       - household-planet
