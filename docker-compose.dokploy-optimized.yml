@@ -1,0 +1,137 @@
+# Optimized Dokploy Docker Compose configuration
+networks:
+  household-planet:
+    driver: bridge
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-alpine
+        WORKDIR /app
+        
+        # Install git and download source
+        RUN apk add --no-cache git
+        RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        
+        # Copy backend files
+        RUN cp -r /tmp/source/household-planet-backend/* .
+        
+        # Install dependencies
+        RUN npm ci --only=production
+        RUN npm install -g @nestjs/cli
+        
+        # Install dev dependencies for build
+        RUN npm install --save-dev typescript @types/node
+        
+        # Build the application
+        RUN npm run build
+        
+        # Generate Prisma client
+        RUN npx prisma generate
+        
+        # Create uploads directory
+        RUN mkdir -p uploads
+        
+        # Clean up
+        RUN rm -rf /tmp/source node_modules/@types
+        
+        EXPOSE 3001
+        
+        CMD ["npm", "run", "start:prod"]
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: file:./dev.db
+      JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024-production-secure}
+      JWT_EXPIRES_IN: 7d
+      CORS_ORIGIN: https://householdplanetkenya.co.ke
+      BASE_URL: http://backend:3001
+      FRONTEND_URL: https://householdplanetkenya.co.ke
+      SESSION_SECRET: household-planet-session-secret-2024
+    expose:
+      - "3001"
+    volumes:
+      - uploads_data:/app/uploads
+      - database_data:/app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-alpine AS builder
+        WORKDIR /app
+        
+        # Install git and download source
+        RUN apk add --no-cache git
+        RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        
+        # Copy frontend files
+        RUN cp -r /tmp/source/household-planet-frontend/* .
+        
+        # Install dependencies
+        RUN npm ci
+        
+        # Build args
+        ARG NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
+        ARG NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
+        ARG NEXT_PUBLIC_ENVIRONMENT=production
+        
+        ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+        ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+        ENV NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT
+        
+        RUN npm run build
+        
+        FROM node:20-alpine AS runner
+        WORKDIR /app
+        
+        ENV NODE_ENV=production
+        
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nextjs
+        
+        COPY --from=builder /app/public ./public
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+        
+        USER nextjs
+        
+        EXPOSE 3000
+        
+        ENV PORT=3000
+        ENV HOSTNAME="0.0.0.0"
+        
+        CMD ["node", "server.js"]
+      args:
+        NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
+        NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
+        NEXT_PUBLIC_ENVIRONMENT: production
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
+      NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
+      NEXT_PUBLIC_ENVIRONMENT: production
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+
+volumes:
+  uploads_data:
+    driver: local
+  database_data:
+    driver: local
