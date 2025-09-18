@@ -1,36 +1,35 @@
-# Dokploy-specific Docker Compose configuration
-# This avoids port conflicts by letting Dokploy handle port assignment
+# Dokploy Docker Compose configuration
+# Uses inline Dockerfiles to avoid context path issues
+
+version: '3.8'
 
 networks:
   household-planet:
     driver: bridge
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    networks:
-      - household-planet
-    environment:
-      POSTGRES_DB: household_planet
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    command: >
-      postgres
-      -c log_statement=all
-      -c log_destination=stderr
-      -c logging_collector=on
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d household_planet"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
-      context: ./household-planet-backend
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile_inline: |
+        FROM node:18-alpine
+        WORKDIR /app
+        
+        # Copy backend files
+        COPY household-planet-backend/package*.json ./
+        RUN npm ci --only=production
+        
+        COPY household-planet-backend/ ./
+        
+        # Generate Prisma client
+        RUN npx prisma generate
+        
+        # Create uploads directory
+        RUN mkdir -p uploads
+        
+        EXPOSE 3001
+        
+        CMD ["npm", "run", "start:prod"]
     restart: unless-stopped
     networks:
       - household-planet
@@ -51,10 +50,6 @@ services:
       MPESA_SHORTCODE: 174379
       MPESA_ENVIRONMENT: sandbox
       SESSION_SECRET: household-planet-session-secret-2024
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
-    # No external ports - only internal access
     expose:
       - "3001"
     volumes:
@@ -68,8 +63,48 @@ services:
 
   frontend:
     build:
-      context: ./household-planet-frontend
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile_inline: |
+        FROM node:18-alpine AS builder
+        WORKDIR /app
+        
+        # Copy frontend files
+        COPY household-planet-frontend/package*.json ./
+        RUN npm ci
+        
+        COPY household-planet-frontend/ ./
+        
+        # Build args
+        ARG NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
+        ARG NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
+        ARG NEXT_PUBLIC_ENVIRONMENT=production
+        
+        ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+        ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+        ENV NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT
+        
+        RUN npm run build
+        
+        FROM node:18-alpine AS runner
+        WORKDIR /app
+        
+        ENV NODE_ENV=production
+        
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nextjs
+        
+        COPY --from=builder /app/public ./public
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+        
+        USER nextjs
+        
+        EXPOSE 3000
+        
+        ENV PORT=3000
+        ENV HOSTNAME="0.0.0.0"
+        
+        CMD ["node", "server.js"]
       args:
         NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
         NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
@@ -84,14 +119,11 @@ services:
       NEXT_PUBLIC_ENVIRONMENT: production
     depends_on:
       - backend
-    # Let Dokploy assign the port automatically
     expose:
       - "3000"
     volumes:
       - uploads_data:/app/uploads
 
 volumes:
-  postgres_data:
-    driver: local
   uploads_data:
     driver: local
