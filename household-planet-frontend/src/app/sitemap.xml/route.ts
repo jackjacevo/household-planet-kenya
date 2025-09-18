@@ -15,31 +15,41 @@ const staticPages = [
 ]
 
 async function getProducts() {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=1000`, {
-      next: { revalidate: 3600 } // Revalidate every hour
-    })
-    if (!response.ok) return []
-    const data = await response.json()
-    return data.data || []
-  } catch (error) {
-    console.error('Error fetching products for sitemap:', error)
-    return []
+  // Skip API calls during build time
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_API_URL?.includes('localhost')) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=1000`, {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      })
+      if (!response.ok) return []
+      const data = await response.json()
+      return data.data || []
+    } catch (error) {
+      console.error('Error fetching products for sitemap:', error)
+      return []
+    }
   }
+  return []
 }
 
 async function getCategories() {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
-      next: { revalidate: 3600 }
-    })
-    if (!response.ok) return []
-    const data = await response.json()
-    return data.data || []
-  } catch (error) {
-    console.error('Error fetching categories for sitemap:', error)
-    return []
+  // Skip API calls during build time
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_API_URL?.includes('localhost')) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      })
+      if (!response.ok) return []
+      const data = await response.json()
+      return data.data || []
+    } catch (error) {
+      console.error('Error fetching categories for sitemap:', error)
+      return []
+    }
   }
+  return []
 }
 
 export async function GET() {
