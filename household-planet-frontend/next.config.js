@@ -22,6 +22,11 @@ const nextConfig = {
         hostname: 'householdplanet.co.ke',
       },
       {
+        protocol: 'https',
+        hostname: 'api.householdplanetkenya.co.ke',
+        pathname: '/uploads/**',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
         port: '3001',
@@ -165,7 +170,7 @@ const nextConfig = {
       {
         source: '/api/:path*',
         destination: process.env.NODE_ENV === 'production' 
-          ? 'http://household-planet-backend:3001/api/:path*'  // Docker container name
+          ? 'http://backend:3001/api/:path*'  // Docker container name
           : 'http://localhost:3001/api/:path*', // Local development
       },
     ];
