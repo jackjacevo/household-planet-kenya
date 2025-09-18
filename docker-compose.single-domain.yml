@@ -1,5 +1,5 @@
-# Dokploy-specific Docker Compose configuration
-# This avoids port conflicts by letting Dokploy handle port assignment
+# Single Domain Setup - Fixed Configuration
+version: '3.8'
 
 networks:
   household-planet:
@@ -23,7 +23,8 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
+  # Backend - Internal only (matches Next.js proxy name)
+  household-planet-backend:
     build:
       context: ./household-planet-backend
       dockerfile: Dockerfile.prod
@@ -36,8 +37,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-household_user}:${POSTGRES_PASSWORD:-secure_password_123}@postgres:5432/household_planet
       JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024-production-secure}
       JWT_EXPIRES_IN: 7d
-      CORS_ORIGIN: https://householdplanetkenya.co.ke
-      BASE_URL: http://backend:3001
+      # CORS should allow frontend container communication
+      CORS_ORIGIN: http://household-planet-frontend:3000
+      BASE_URL: http://household-planet-backend:3001
       MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
       MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
       MPESA_PASSKEY: ${MPESA_PASSKEY}
@@ -46,13 +48,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # No external ports - only internal access
     expose:
       - "3001"
     volumes:
       - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  frontend:
+  # Frontend - Public facing (matches backend CORS)
+  household-planet-frontend:
     build:
       context: ./household-planet-frontend
       dockerfile: Dockerfile.prod
@@ -65,10 +73,9 @@ services:
       NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
       NEXT_PUBLIC_ENVIRONMENT: production
     depends_on:
-      - backend
-    # Let Dokploy assign the port automatically
-    expose:
-      - "3000"
+      - household-planet-backend
+    ports:
+      - "3000:3000"
     volumes:
       - uploads_data:/app/uploads
 
