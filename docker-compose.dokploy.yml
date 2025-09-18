@@ -13,7 +13,7 @@ services:
         FROM node:18-alpine
         WORKDIR /app
         
-        # Install git and download source (cache bust: 2025-01-18-v2)
+        # Install git and download source (cache bust: 2025-01-18-18:10)
         RUN apk add --no-cache git
         RUN git clone https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
         
@@ -73,12 +73,15 @@ services:
         FROM node:18-alpine AS builder
         WORKDIR /app
         
-        # Install git and download source (cache bust: 2025-01-18-v2)
+        # Install git and download source (cache bust: 2025-01-18-18:10)
         RUN apk add --no-cache git
         RUN git clone https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
         
         # Copy frontend files
         RUN cp -r /tmp/source/household-planet-frontend/* .
+        
+        # Remove problematic sitemap route if it exists
+        RUN rm -rf src/app/sitemap.xml || true
         
         # Install dependencies
         RUN npm ci
