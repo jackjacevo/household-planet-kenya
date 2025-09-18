@@ -8,7 +8,9 @@ import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://householdplanet.co.ke', 'https://www.householdplanet.co.ke']
+      : process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   },
 })

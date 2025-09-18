@@ -23,8 +23,8 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 7d
-      # CORS should allow the frontend container
-      CORS_ORIGIN: http://household-planet-frontend:3000
+      # CORS should allow the frontend container and public domain
+      CORS_ORIGIN: https://householdplanet.co.ke
       BASE_URL: http://household-planet-backend:3001
       # M-Pesa Configuration
       MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
@@ -59,8 +59,7 @@ services:
       NEXT_PUBLIC_SITE_URL: https://householdplanet.co.ke
       NEXT_PUBLIC_ENVIRONMENT: production
     depends_on:
-      household-planet-backend:
-        condition: service_healthy
+      - household-planet-backend
     ports:
       - "3000:3000"
     labels:

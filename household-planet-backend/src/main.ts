@@ -95,12 +95,19 @@ async function bootstrap() {
     validateCustomDecorators: true,
   }));
   
+  // Health check endpoint (before global prefix)
+  app.getHttpAdapter().get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
   // Set global API prefix
   app.setGlobalPrefix('api');
   
   // Enhanced CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://householdplanet.co.ke', 'http://household-planet-frontend:3000']
+      : process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma'],
