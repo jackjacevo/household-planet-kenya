@@ -9,6 +9,24 @@ networks:
     driver: bridge
 
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      POSTGRES_DB: household_planet
+      POSTGRES_USER: household_user
+      POSTGRES_PASSWORD: your_secure_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Backend Service (Internal only)
   household-planet-backend:
     build:
@@ -20,21 +38,18 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgresql://household_user:your_secure_password_123@postgres:5432/household_planet
+      JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024-production-secure}
       JWT_EXPIRES_IN: 7d
-      # CORS should allow the frontend container and public domain
       CORS_ORIGIN: https://householdplanet.co.ke
       BASE_URL: http://household-planet-backend:3001
-      # M-Pesa Configuration (commented out for now)
-      # MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
-      # MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
-      # MPESA_PASSKEY: ${MPESA_PASSKEY}
       MPESA_BASE_URL: https://api.safaricom.co.ke
       MPESA_CALLBACK_URL: https://householdplanet.co.ke/api/payments/mpesa/callback
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - uploads_data:/app/uploads
-    # No external port exposure - only accessible via frontend proxy
     expose:
       - "3001"
     healthcheck:
@@ -54,7 +69,6 @@ services:
       - household-planet
     environment:
       NODE_ENV: production
-      # API calls go through the same domain (proxy)
       NEXT_PUBLIC_API_URL: https://householdplanet.co.ke
       NEXT_PUBLIC_SITE_URL: https://householdplanet.co.ke
       NEXT_PUBLIC_ENVIRONMENT: production
@@ -63,7 +77,6 @@ services:
     ports:
       - "3000:3000"
     labels:
-      # Dokploy labels for domain routing
       - "traefik.enable=true"
       - "traefik.http.routers.household-planet.rule=Host(`householdplanet.co.ke`)"
       - "traefik.http.routers.household-planet.tls=true"
@@ -71,12 +84,7 @@ services:
       - "traefik.http.services.household-planet.loadbalancer.server.port=3000"
 
 volumes:
+  postgres_data:
+    driver: local
   uploads_data:
     driver: local
-
-# Environment variables needed:
-# DATABASE_URL=postgresql://username:password@host:5432/database
-# JWT_SECRET=your-super-secure-jwt-secret
-# MPESA_CONSUMER_KEY=your-mpesa-consumer-key
-# MPESA_CONSUMER_SECRET=your-mpesa-consumer-secret
-# MPESA_PASSKEY=your-mpesa-passkey
