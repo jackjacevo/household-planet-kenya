@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { PrismaService } from './prisma/prisma.service';
 import * as compression from 'compression';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
@@ -15,6 +16,10 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
+  // Initialize database
+  const logger = new Logger('Bootstrap');
+  logger.log('Initializing database...');
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'debug', 'error', 'verbose', 'warn'],
     httpsOptions: process.env.NODE_ENV === 'production' ? {
@@ -151,10 +156,18 @@ async function bootstrap() {
   // Trust proxy for IP address detection
   app.getHttpAdapter().getInstance().set('trust proxy', true);
   
+  // Initialize Prisma and push schema
+  const prismaService = app.get(PrismaService);
+  try {
+    await prismaService.$connect();
+    logger.log('Database connected successfully');
+  } catch (error) {
+    logger.error('Database connection failed:', error);
+    process.exit(1);
+  }
+  
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
-  
-  const logger = new Logger('Bootstrap');
   logger.log(`Application is running on: http://0.0.0.0:${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.log(`CORS Origin: ${process.env.CORS_ORIGIN}`);
