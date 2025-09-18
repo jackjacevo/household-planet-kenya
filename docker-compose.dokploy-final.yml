@@ -1,6 +1,4 @@
-# Dokploy Docker Compose configuration
-# Docker Raw compatible - downloads code from GitHub
-
+# Final Dokploy Configuration - No Localhost Calls
 networks:
   household-planet:
     driver: bridge
@@ -13,40 +11,26 @@ services:
         FROM node:20-alpine
         WORKDIR /app
         
-        # Force cache invalidation
-        RUN echo "Build timestamp: $(date)" > /tmp/build-info
-        
-        # Install git and download source (cache bust: 2025-01-18-18:15)
-        RUN apk add --no-cache git
+        RUN apk add --no-cache git openssl wget
         RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
-        
-        # Copy backend files
         RUN cp -r /tmp/source/household-planet-backend/* .
         
-        # Install all dependencies (needed for build)
         RUN npm ci
-        
-        # Build the application
-        RUN npm run build
-        
-        # Generate Prisma client
         RUN npx prisma generate
+        RUN npm run build
+        RUN npx prisma db push || true
         
-        # Initialize database and run migrations
-        RUN npx prisma db push
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nestjs
+        RUN mkdir -p uploads && chown -R nestjs:nodejs uploads
         
-        # Remove dev dependencies
+        RUN rm -rf /tmp/source
         RUN npm prune --production
         
-        # Create uploads directory
-        RUN mkdir -p uploads
-        
-        # Clean up
-        RUN rm -rf /tmp/source
-        
+        USER nestjs
         EXPOSE 3001
         
-        CMD ["npm", "run", "start:prod"]
+        CMD ["node", "dist/src/main.js"]
     restart: unless-stopped
     networks:
       - household-planet
@@ -54,7 +38,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: file:./dev.db
-      JWT_SECRET: ${JWT_SECRET:-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6}
+      JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024}
       JWT_EXPIRES_IN: 7d
       CORS_ORIGIN: https://householdplanetkenya.co.ke
       BASE_URL: http://backend:3001
@@ -65,19 +49,13 @@ services:
       MPESA_BASE_URL: https://api.safaricom.co.ke
       MPESA_CALLBACK_URL: https://householdplanetkenya.co.ke/api/payments/mpesa/callback
       MPESA_SHORTCODE: 174379
-      MPESA_ENVIRONMENT: sandbox
+      MPESA_ENVIRONMENT: production
       SESSION_SECRET: household-planet-session-secret-2024
     expose:
       - "3001"
     volumes:
       - uploads_data:/app/uploads
       - database_data:/app
-    healthcheck:
-      test: ["CMD", "sh", "-c", "ps aux | grep '[n]ode' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   frontend:
     build:
@@ -86,30 +64,20 @@ services:
         FROM node:20-alpine AS builder
         WORKDIR /app
         
-        # Force cache invalidation
-        RUN echo "Build timestamp: $(date)" > /tmp/build-info
-        
-        # Install git and download source (cache bust: 2025-01-18-18:15)
         RUN apk add --no-cache git
         RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
-        
-        # Copy frontend files
         RUN cp -r /tmp/source/household-planet-frontend/* .
         
-        # Remove problematic sitemap route if it exists
-        RUN rm -rf src/app/sitemap.xml || true
-        
-        # Install dependencies
         RUN npm ci
         
-        # Set environment variables before build
+        # CRITICAL: Set environment variables BEFORE build
         ENV NEXT_PUBLIC_API_URL=/api
         ENV NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
         ENV NEXT_PUBLIC_ENVIRONMENT=production
         ENV NODE_ENV=production
         
-        # Build with environment variables set
-        RUN NEXT_PUBLIC_API_URL=/api npm run build
+        # Build with explicit environment variables
+        RUN NEXT_PUBLIC_API_URL=/api NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke npm run build
         
         FROM node:20-alpine AS runner
         WORKDIR /app
@@ -119,19 +87,17 @@ services:
         RUN addgroup --system --gid 1001 nodejs
         RUN adduser --system --uid 1001 nextjs
         
-        COPY --from=builder /app/public ./public
         COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
         COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+        COPY --from=builder --chown=nextjs:nodejs /app/public ./public
         
         USER nextjs
-        
         EXPOSE 3000
         
         ENV PORT=3000
         ENV HOSTNAME="0.0.0.0"
         
         CMD ["node", "server.js"]
-
     restart: unless-stopped
     networks:
       - household-planet
@@ -144,8 +110,6 @@ services:
       - backend
     expose:
       - "3000"
-    volumes:
-      - uploads_data:/app/uploads
 
 volumes:
   uploads_data:

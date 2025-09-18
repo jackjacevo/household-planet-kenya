@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
+import { API_CONFIG } from './config';
+
+const API_BASE_URL = API_CONFIG.BASE_URL
 
 class ApiClient {
   private baseURL: string
