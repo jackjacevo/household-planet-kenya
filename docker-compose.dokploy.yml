@@ -1,5 +1,5 @@
 # Dokploy Docker Compose configuration
-# For use with Git source type (not Docker Raw)
+# Docker Raw compatible - downloads code from GitHub
 
 networks:
   household-planet:
@@ -8,8 +8,33 @@ networks:
 services:
   backend:
     build:
-      context: ./household-planet-backend
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile_inline: |
+        FROM node:18-alpine
+        WORKDIR /app
+        
+        # Install git and download source
+        RUN apk add --no-cache git
+        RUN git clone https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        
+        # Copy backend files
+        RUN cp -r /tmp/source/household-planet-backend/* .
+        
+        # Install dependencies
+        RUN npm ci --only=production
+        
+        # Generate Prisma client
+        RUN npx prisma generate
+        
+        # Create uploads directory
+        RUN mkdir -p uploads
+        
+        # Clean up
+        RUN rm -rf /tmp/source
+        
+        EXPOSE 3001
+        
+        CMD ["npm", "run", "start:prod"]
     restart: unless-stopped
     networks:
       - household-planet
@@ -43,8 +68,52 @@ services:
 
   frontend:
     build:
-      context: ./household-planet-frontend
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile_inline: |
+        FROM node:18-alpine AS builder
+        WORKDIR /app
+        
+        # Install git and download source
+        RUN apk add --no-cache git
+        RUN git clone https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        
+        # Copy frontend files
+        RUN cp -r /tmp/source/household-planet-frontend/* .
+        
+        # Install dependencies
+        RUN npm ci
+        
+        # Build args
+        ARG NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
+        ARG NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
+        ARG NEXT_PUBLIC_ENVIRONMENT=production
+        
+        ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+        ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+        ENV NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT
+        
+        RUN npm run build
+        
+        FROM node:18-alpine AS runner
+        WORKDIR /app
+        
+        ENV NODE_ENV=production
+        
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nextjs
+        
+        COPY --from=builder /app/public ./public
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+        
+        USER nextjs
+        
+        EXPOSE 3000
+        
+        ENV PORT=3000
+        ENV HOSTNAME="0.0.0.0"
+        
+        CMD ["node", "server.js"]
       args:
         NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
         NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
