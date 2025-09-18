@@ -1,0 +1,161 @@
+# Dokploy Docker Compose - Fixed Configuration
+networks:
+  household-planet:
+    driver: bridge
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-alpine AS base
+        WORKDIR /app
+        
+        # Install git and system dependencies
+        RUN apk add --no-cache git openssl wget
+        
+        # Download source code
+        RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        
+        # Copy backend files
+        RUN cp -r /tmp/source/household-planet-backend/* .
+        
+        # Install dependencies
+        RUN npm ci
+        
+        # Generate Prisma client
+        RUN npx prisma generate
+        
+        # Build application
+        RUN npm run build
+        
+        # Initialize database
+        RUN npx prisma db push || true
+        
+        # Create system user
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nestjs
+        
+        # Create directories and set permissions
+        RUN mkdir -p uploads/products uploads/categories uploads/avatars uploads/reviews uploads/temp
+        RUN chown -R nestjs:nodejs uploads
+        
+        # Copy healthcheck
+        COPY --chown=nestjs:nodejs /tmp/source/household-planet-backend/healthcheck.js ./
+        
+        # Clean up
+        RUN rm -rf /tmp/source
+        RUN npm prune --production
+        
+        USER nestjs
+        EXPOSE 3001
+        
+        CMD ["node", "dist/src/main.js"]
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: file:./dev.db
+      JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024}
+      JWT_EXPIRES_IN: 7d
+      CORS_ORIGIN: https://householdplanetkenya.co.ke
+      BASE_URL: http://backend:3001
+      FRONTEND_URL: https://householdplanetkenya.co.ke
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
+      MPESA_PASSKEY: ${MPESA_PASSKEY}
+      MPESA_BASE_URL: https://api.safaricom.co.ke
+      MPESA_CALLBACK_URL: https://householdplanetkenya.co.ke/api/payments/mpesa/callback
+      MPESA_SHORTCODE: 174379
+      MPESA_ENVIRONMENT: production
+      SESSION_SECRET: household-planet-session-secret-2024
+    expose:
+      - "3001"
+    volumes:
+      - uploads_data:/app/uploads
+      - database_data:/app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-alpine AS builder
+        WORKDIR /app
+        
+        # Install git
+        RUN apk add --no-cache git
+        
+        # Download source code
+        RUN git clone --depth 1 https://github.com/jackjacevo/household-planet-kenya.git /tmp/source
+        
+        # Copy frontend files
+        RUN cp -r /tmp/source/household-planet-frontend/* .
+        
+        # Install dependencies
+        RUN npm ci
+        
+        # Set build environment variables
+        ENV NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
+        ENV NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
+        ENV NEXT_PUBLIC_ENVIRONMENT=production
+        
+        # Build application
+        RUN npm run build
+        
+        # Production stage
+        FROM node:20-alpine AS runner
+        WORKDIR /app
+        
+        ENV NODE_ENV=production
+        
+        # Create system user
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nextjs
+        
+        # Copy built application
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+        COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+        
+        # Clean up source
+        RUN rm -rf /tmp/source
+        
+        USER nextjs
+        EXPOSE 3000
+        
+        ENV PORT=3000
+        ENV HOSTNAME="0.0.0.0"
+        
+        CMD ["node", "server.js"]
+    restart: unless-stopped
+    networks:
+      - household-planet
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
+      NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
+      NEXT_PUBLIC_ENVIRONMENT: production
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  uploads_data:
+    driver: local
+  database_data:
+    driver: local
