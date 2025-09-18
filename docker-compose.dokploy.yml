@@ -1,5 +1,5 @@
 # Dokploy Docker Compose configuration
-# Uses existing Dockerfiles from subdirectories
+# For use with Git source type (not Docker Raw)
 
 networks:
   household-planet:
@@ -8,42 +8,8 @@ networks:
 services:
   backend:
     build:
-      context: .
-      dockerfile_inline: |
-        FROM node:18-alpine
-        WORKDIR /app
-        
-        # Copy all files first to see what's available
-        COPY . /tmp/source
-        
-        # List contents to debug
-        RUN ls -la /tmp/source/
-        
-        # Find and copy backend files
-        RUN if [ -d "/tmp/source/household-planet-backend" ]; then \
-              cp -r /tmp/source/household-planet-backend/* . && \
-              echo "Backend files copied successfully"; \
-            else \
-              echo "Backend directory not found, listing available directories:" && \
-              find /tmp/source -type d -name "*backend*" -o -name "*household*" && \
-              exit 1; \
-            fi
-        
-        # Install dependencies
-        RUN npm ci --only=production
-        
-        # Generate Prisma client
-        RUN npx prisma generate
-        
-        # Create uploads directory
-        RUN mkdir -p uploads
-        
-        # Clean up
-        RUN rm -rf /tmp/source
-        
-        EXPOSE 3001
-        
-        CMD ["npm", "run", "start:prod"]
+      context: ./household-planet-backend
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     networks:
       - household-planet
@@ -77,61 +43,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile_inline: |
-        FROM node:18-alpine AS builder
-        WORKDIR /app
-        
-        # Copy all files first to see what's available
-        COPY . /tmp/source
-        
-        # List contents to debug
-        RUN ls -la /tmp/source/
-        
-        # Find and copy frontend files
-        RUN if [ -d "/tmp/source/household-planet-frontend" ]; then \
-              cp -r /tmp/source/household-planet-frontend/* . && \
-              echo "Frontend files copied successfully"; \
-            else \
-              echo "Frontend directory not found, listing available directories:" && \
-              find /tmp/source -type d -name "*frontend*" -o -name "*household*" && \
-              exit 1; \
-            fi
-        
-        # Install dependencies
-        RUN npm ci
-        
-        # Build args
-        ARG NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke/api
-        ARG NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
-        ARG NEXT_PUBLIC_ENVIRONMENT=production
-        
-        ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-        ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
-        ENV NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT
-        
-        RUN npm run build
-        
-        FROM node:18-alpine AS runner
-        WORKDIR /app
-        
-        ENV NODE_ENV=production
-        
-        RUN addgroup --system --gid 1001 nodejs
-        RUN adduser --system --uid 1001 nextjs
-        
-        COPY --from=builder /app/public ./public
-        COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-        COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-        
-        USER nextjs
-        
-        EXPOSE 3000
-        
-        ENV PORT=3000
-        ENV HOSTNAME="0.0.0.0"
-        
-        CMD ["node", "server.js"]
+      context: ./household-planet-frontend
+      dockerfile: Dockerfile.prod
       args:
         NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke/api
         NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
