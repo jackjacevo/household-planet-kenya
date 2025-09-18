@@ -32,6 +32,9 @@ services:
         # Generate Prisma client
         RUN npx prisma generate
         
+        # Initialize database and run migrations
+        RUN npx prisma db push
+        
         # Remove dev dependencies
         RUN npm prune --production
         
