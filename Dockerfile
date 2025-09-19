@@ -1,36 +1,38 @@
+# Backend-only deployment Dockerfile
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy all package.json files
-COPY package*.json ./
-COPY household-planet-frontend/package*.json ./household-planet-frontend/
-COPY household-planet-backend/package*.json ./household-planet-backend/
-
-# Install all dependencies
+# Copy backend package files
+COPY household-planet-backend/package*.json ./
 RUN npm ci
-RUN cd household-planet-frontend && npm ci
-RUN cd household-planet-backend && npm ci
 
-# Copy source code
-COPY . .
+# Copy backend prisma schema
+COPY household-planet-backend/prisma ./prisma/
+RUN npx prisma generate
 
-# Build backend only (skip frontend for backend deployment)
-RUN cd household-planet-backend && npm run build
+# Copy backend source and build
+COPY household-planet-backend/ ./
+RUN npm run build
 
-# Production stage - backend only
 FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy built backend
-COPY --from=builder /app/household-planet-backend/dist ./dist
-COPY --from=builder /app/household-planet-backend/package*.json ./
-COPY --from=builder /app/household-planet-backend/prisma ./prisma
-
-# Install production dependencies
+# Copy package files and install production deps
+COPY household-planet-backend/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy prisma and generate client
+COPY household-planet-backend/prisma ./prisma/
+RUN npx prisma generate
+
+# Copy built application
+COPY --from=builder /app/dist ./dist
+
+# Create uploads directory
+RUN mkdir -p uploads
 
 EXPOSE 3001
 
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main"]
