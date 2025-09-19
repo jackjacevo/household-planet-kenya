@@ -118,12 +118,22 @@ export default function ProfilePage() {
                 <p className="text-gray-600 capitalize">{user.role.toLowerCase()}</p>
               </div>
             </div>
-            <button
-              onClick={logout}
-              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-sm"
-            >
-              Logout
-            </button>
+            <div className="flex space-x-3">
+              {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') && (
+                <Link
+                  href="/admin"
+                  className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium shadow-sm"
+                >
+                  Admin Dashboard
+                </Link>
+              )}
+              <button
+                onClick={logout}
+                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-sm"
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
