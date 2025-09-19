@@ -155,8 +155,8 @@ export default function AboutPage() {
               <div className="relative h-96 rounded-3xl overflow-hidden shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/20 to-amber-600/20 z-10" />
                 <Image
-                  src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop"
-                  alt="Modern kitchen with household products"
+                  src="https://via.placeholder.com/600x400/f97316/ffffff?text=Our+Story"
+                  alt="Our Story - Household Planet Kenya"
                   fill
                   className="object-cover"
                 />
