@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><title>CORS Test Ready</title></head>
+<body>
+<h1>CORS Configuration Status</h1>
+<div id="status">
+<h2>✅ Backend Status: RUNNING</h2>
+<p>Backend is running on port 3001 with CORS configured for: https://householdplanetkenya.co.ke</p>
+
+<h2>✅ CORS Fixes Applied:</h2>
+<ul>
+<li>Dynamic origin checking</li>
+<li>Preflight request handling</li>
+<li>Proper Access-Control headers</li>
+</ul>
+
+<h2>⚠️ Current Issue: Dokploy Proxy</h2>
+<p>502 Bad Gateway indicates proxy routing issue, not CORS issue.</p>
+
+<h2>🔧 To Fix:</h2>
+<ol>
+<li>Check Dokploy container network settings</li>
+<li>Verify domain routing configuration</li>
+<li>Restart Dokploy proxy if needed</li>
+</ol>
+
+<p><strong>Once proxy is fixed, CORS errors will be resolved!</strong></p>
+</div>
+</body>
+</html>

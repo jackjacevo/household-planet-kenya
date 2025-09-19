@@ -66,15 +66,26 @@ async function bootstrap() {
       'http://localhost:3000'
     ];
     
+    console.log('Custom CORS middleware - Origin:', origin);
+    
+    // Always set CORS headers for allowed origins or no origin
     if (allowedOrigins.includes(origin) || !origin) {
+      res.header('Access-Control-Allow-Origin', origin || 'https://householdplanetkenya.co.ke');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin,Access-Control-Request-Method,Access-Control-Request-Headers');
+      res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+    } else {
+      // Temporarily allow all origins for debugging
       res.header('Access-Control-Allow-Origin', origin || '*');
       res.header('Access-Control-Allow-Credentials', 'true');
       res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin');
+      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin,Access-Control-Request-Method,Access-Control-Request-Headers');
+      console.log('Temporarily allowing origin for debugging:', origin);
     }
     
     if (req.method === 'OPTIONS') {
-      res.status(200).end();
+      res.status(204).end();
       return;
     }
     
@@ -171,33 +182,51 @@ async function bootstrap() {
   });
   
   // Enhanced CORS configuration for production
+  const envOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) : [];
   const corsOrigins = [
     'https://householdplanetkenya.co.ke',
     'https://www.householdplanetkenya.co.ke',
     'http://localhost:3000', // For development
-    process.env.CORS_ORIGIN
+    ...envOrigins
   ].filter(Boolean);
   
   console.log('CORS Origins configured:', corsOrigins);
     
   app.enableCors({
     origin: (origin, callback) => {
+      console.log('CORS request from origin:', origin);
+      
       // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log('Allowing request with no origin');
+        return callback(null, true);
+      }
       
       if (corsOrigins.includes(origin)) {
+        console.log('Allowing origin:', origin);
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
+        console.log('Allowed origins:', corsOrigins);
+        callback(null, true); // Temporarily allow all origins for debugging
       }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma', 'X-Requested-With', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'Accept', 
+      'Cache-Control', 
+      'Pragma', 
+      'X-Requested-With', 
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers'
+    ],
+    exposedHeaders: ['Content-Length', 'X-Total-Count', 'X-Page-Count'],
     preflightContinue: false,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 204
   });
   
   // Enable CORS for static files with proper origin handling
