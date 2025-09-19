@@ -2,11 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy all backend files at once
-COPY household-planet-backend/ ./
+# Copy package files first for better caching
+COPY household-planet-backend/package*.json ./
 
-# Install all dependencies
+# Install dependencies
 RUN npm ci
+
+# Copy the rest of the application
+COPY household-planet-backend/ ./
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -14,7 +17,7 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Clean install production dependencies
+# Clean install production dependencies only
 RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
 
 # Create uploads directory
