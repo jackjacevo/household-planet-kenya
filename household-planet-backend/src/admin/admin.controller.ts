@@ -329,13 +329,17 @@ export class AdminController {
   }
 
   @Get('categories/image/:filename')
-  getCategoryImage(@Param('filename') filename: string, @Res() res: any) {
+  getCategoryImage(@Param('filename') filename: string, @Res() res: any, @Req() req: any) {
     const path = require('path');
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'categories', filename);
     
     // Enhanced CORS headers
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
+    const origin = req.headers.origin;
+    const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -357,13 +361,17 @@ export class AdminController {
   }
 
   @Get('products/image/:filename')
-  getProductImage(@Param('filename') filename: string, @Res() res: any) {
+  getProductImage(@Param('filename') filename: string, @Res() res: any, @Req() req: any) {
     const path = require('path');
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'products', filename);
     
     // Enhanced CORS headers
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
+    const origin = req.headers.origin;
+    const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -385,12 +393,16 @@ export class AdminController {
   }
 
   @Get('temp/image/:filename')
-  getTempImage(@Param('filename') filename: string, @Res() res: any) {
+  getTempImage(@Param('filename') filename: string, @Res() res: any, @Req() req: any) {
     const path = require('path');
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'temp', filename);
     
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
+    const origin = req.headers.origin;
+    const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
