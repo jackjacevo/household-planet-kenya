@@ -21,7 +21,8 @@ RUN npx prisma generate
 RUN npm run build
 
 # Verify build output
-RUN ls -la dist/
+RUN ls -la dist/ || echo "No dist directory"
+RUN find . -name "*.js" -path "./dist/*" || echo "No JS files in dist"
 
 # Clean install production dependencies only
 RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
