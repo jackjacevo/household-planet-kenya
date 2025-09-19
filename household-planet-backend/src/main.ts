@@ -34,6 +34,7 @@ async function bootstrap() {
   app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
     setHeaders: (res, path, stat) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
     }
@@ -41,12 +42,9 @@ async function bootstrap() {
   
   // Security middleware
   app.use(helmet({
-    contentSecurityPolicy: false, // We handle CSP in SecurityMiddleware
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true
-    }
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+    hsts: false // Disable HSTS temporarily
   }));
   
   app.use(cookieParser());
@@ -54,12 +52,7 @@ async function bootstrap() {
   
 
   
-  // Custom security middleware
-  const securityMiddleware = new SecurityMiddleware();
-  const inputSanitizationMiddleware = new InputSanitizationMiddleware();
-  
-  app.use((req, res, next) => securityMiddleware.use(req, res, next));
-  app.use((req, res, next) => inputSanitizationMiddleware.use(req, res, next));
+
   
   // Global exception filter
   app.useGlobalFilters(new SecurityExceptionFilter());
@@ -95,57 +88,42 @@ async function bootstrap() {
   // Set global API prefix
   app.setGlobalPrefix('api');
   
-  // Health check endpoints for Dokploy
+  // Add global CORS headers middleware
+  app.use((req: any, res: any, next: any) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin');
+    
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    next();
+  });
+  
+  // Health check endpoints
   app.getHttpAdapter().get('/health', (req: any, res: any) => {
+    res.header('Access-Control-Allow-Origin', '*');
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      cors_origin: process.env.CORS_ORIGIN
+      environment: process.env.NODE_ENV
     });
   });
   
   app.getHttpAdapter().get('/api/health', (req: any, res: any) => {
+    res.header('Access-Control-Allow-Origin', '*');
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      cors_origin: process.env.CORS_ORIGIN
-    });
-  });
-  
-  // API communication test endpoints
-  app.getHttpAdapter().get('/cors-test', (req: any, res: any) => {
-    const origin = req.headers.origin;
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.status(200).json({ 
-      cors: 'working', 
-      origin: origin,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      cors_origin: process.env.CORS_ORIGIN,
-      headers: req.headers
-    });
-  });
-  
-  app.getHttpAdapter().get('/api/cors-test', (req: any, res: any) => {
-    const origin = req.headers.origin;
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.status(200).json({ 
-      cors: 'working', 
-      origin: origin,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      cors_origin: process.env.CORS_ORIGIN,
-      headers: req.headers
+      environment: process.env.NODE_ENV
     });
   });
   
   // CORS configuration
   app.enableCors({
-    origin: ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke'],
+    origin: true, // Allow all origins temporarily
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -165,6 +143,9 @@ async function bootstrap() {
   // Trust proxy for IP address detection
   app.getHttpAdapter().getInstance().set('trust proxy', true);
   
+  // Disable X-Powered-By header
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+  
   // Initialize Prisma and push schema
   const prismaService = app.get(PrismaService);
   try {
@@ -177,12 +158,13 @@ async function bootstrap() {
   
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
-  logger.log(`Application is running on: http://0.0.0.0:${port}`);
-  logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.log(`CORS Origin: ${process.env.CORS_ORIGIN}`);
+  logger.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
+  logger.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`🔗 CORS: Enabled for all origins (temporary)`);
+  logger.log(`📊 Health check: http://0.0.0.0:${port}/health`);
 }
 
 bootstrap().catch(err => {
-  console.error('Failed to start application:', err);
+  console.error('❌ Failed to start application:', err);
   process.exit(1);
 });
