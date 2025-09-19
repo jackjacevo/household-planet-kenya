@@ -155,8 +155,8 @@ export default function AboutPage() {
               <div className="relative h-96 rounded-3xl overflow-hidden shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/20 to-amber-600/20 z-10" />
                 <Image
-                  src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop"
-                  alt="Modern home interior with household products"
+                  src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop"
+                  alt="Modern kitchen with household products"
                   fill
                   className="object-cover"
                 />
