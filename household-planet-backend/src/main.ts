@@ -58,7 +58,7 @@ async function bootstrap() {
     const allowedOrigins = [
       'https://householdplanetkenya.co.ke',
       'https://www.householdplanetkenya.co.ke',
-      'http://localhost:3000'
+      ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
     ];
     
     console.log('Custom CORS middleware - Origin:', origin);
@@ -179,9 +179,7 @@ async function bootstrap() {
   // Enhanced CORS configuration for production
   const envOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) : [];
   const corsOrigins = [
-    'https://householdplanetkenya.co.ke',
-    'https://www.householdplanetkenya.co.ke',
-    'http://localhost:3000', // For development
+    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : []),
     ...envOrigins
   ].filter(Boolean);
   
