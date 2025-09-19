@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+# Install OpenSSL 3.x for Prisma
+RUN apk add --no-cache openssl openssl-dev
 
 WORKDIR /app
 
