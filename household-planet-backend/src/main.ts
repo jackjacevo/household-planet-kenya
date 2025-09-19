@@ -22,10 +22,8 @@ async function bootstrap() {
   logger.log('Initializing database...');
   
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'debug', 'error', 'verbose', 'warn'],
-    httpsOptions: process.env.NODE_ENV === 'production' ? {
-      // HTTPS configuration for production
-    } : undefined,
+    logger: ['log', 'error', 'warn', 'debug'], // Enable all logs to see CORS messages
+    cors: true, // Enable CORS at app level
   });
   
   // Serve static files from uploads directory
@@ -88,7 +86,24 @@ async function bootstrap() {
   // Set global API prefix
   app.setGlobalPrefix('api');
   
-  // Add global CORS headers middleware
+  // CORS configuration - MUST be before routes
+  app.enableCors({
+    origin: true, // Allow all origins temporarily
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'Accept', 
+      'Cache-Control', 
+      'Pragma', 
+      'X-Requested-With', 
+      'Origin'
+    ],
+    optionsSuccessStatus: 200
+  });
+  
+  // Add global CORS headers middleware as backup
   app.use((req: any, res: any, next: any) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -108,7 +123,8 @@ async function bootstrap() {
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
+      cors: 'enabled-all-origins'
     });
   });
   
@@ -117,25 +133,9 @@ async function bootstrap() {
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
+      cors: 'enabled-all-origins'
     });
-  });
-  
-  // CORS configuration
-  app.enableCors({
-    origin: true, // Allow all origins temporarily
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'Accept', 
-      'Cache-Control', 
-      'Pragma', 
-      'X-Requested-With', 
-      'Origin'
-    ],
-    optionsSuccessStatus: 200
   });
   
 
@@ -160,11 +160,13 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   logger.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
   logger.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.log(`🔗 CORS: Enabled for all origins (temporary)`);
+  logger.log(`🔗 CORS: ENABLED FOR ALL ORIGINS (TEMPORARY FIX)`);
   logger.log(`📊 Health check: http://0.0.0.0:${port}/health`);
+  logger.log(`⚠️  CORS BYPASS ACTIVE - REMOVE IN PRODUCTION`);
 }
 
 bootstrap().catch(err => {
   console.error('❌ Failed to start application:', err);
+  console.error('Stack trace:', err.stack);
   process.exit(1);
 });
