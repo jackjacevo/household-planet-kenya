@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isAdmin = () => {
-    return user?.role === 'ADMIN' || user?.role === 'admin'
+    return user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin'
   }
 
   const isStaff = () => {
