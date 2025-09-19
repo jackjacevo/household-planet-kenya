@@ -52,40 +52,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(session(SessionConfig.getSessionConfig()));
   
-  // Custom CORS middleware for debugging
-  app.use((req: any, res: any, next: any) => {
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-      'https://householdplanetkenya.co.ke',
-      'https://www.householdplanetkenya.co.ke',
-      ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
-    ];
-    
-    console.log('Custom CORS middleware - Origin:', origin);
-    
-    // Always set CORS headers for allowed origins or no origin
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.header('Access-Control-Allow-Origin', origin || 'https://householdplanetkenya.co.ke');
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin,Access-Control-Request-Method,Access-Control-Request-Headers');
-      res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
-    } else {
-      // Temporarily allow all origins for debugging
-      res.header('Access-Control-Allow-Origin', origin || '*');
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin,Access-Control-Request-Method,Access-Control-Request-Headers');
-      console.log('Temporarily allowing origin for debugging:', origin);
-    }
-    
-    if (req.method === 'OPTIONS') {
-      res.status(204).end();
-      return;
-    }
-    
-    next();
-  });
+
   
   // Custom security middleware
   const securityMiddleware = new SecurityMiddleware();
@@ -176,17 +143,9 @@ async function bootstrap() {
     });
   });
   
-  // Enhanced CORS configuration for production
-  const envOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) : [];
-  const corsOrigins = [
-    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : []),
-    ...envOrigins
-  ].filter(Boolean);
-  
-  console.log('CORS Origins configured:', corsOrigins);
-    
+  // CORS configuration
   app.enableCors({
-    origin: ["https://householdplanetkenya.co.ke", "https://www.householdplanetkenya.co.ke"],
+    origin: ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -196,35 +155,12 @@ async function bootstrap() {
       'Cache-Control', 
       'Pragma', 
       'X-Requested-With', 
-      'Origin',
-      'Access-Control-Request-Method',
-      'Access-Control-Request-Headers'
-    ]
+      'Origin'
+    ],
+    optionsSuccessStatus: 200
   });
   
-  // Enable CORS for static files with proper origin handling
-  app.use('/uploads', (req: any, res: any, next: any) => {
-    const allowedOrigins = corsOrigins;
-    const origin = req.headers.origin;
-    
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.header('Access-Control-Allow-Origin', origin || '*');
-    }
-    
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.header('Cache-Control', 'public, max-age=31536000');
-    
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
-      return;
-    }
-    
-    next();
-  });
+
   
   // Trust proxy for IP address detection
   app.getHttpAdapter().getInstance().set('trust proxy', true);
