@@ -186,24 +186,7 @@ async function bootstrap() {
   console.log('CORS Origins configured:', corsOrigins);
     
   app.enableCors({
-    origin: (origin, callback) => {
-      console.log('CORS request from origin:', origin);
-      
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) {
-        console.log('Allowing request with no origin');
-        return callback(null, true);
-      }
-      
-      if (corsOrigins.includes(origin)) {
-        console.log('Allowing origin:', origin);
-        callback(null, true);
-      } else {
-        console.log('CORS blocked origin:', origin);
-        console.log('Allowed origins:', corsOrigins);
-        callback(null, true); // Temporarily allow all origins for debugging
-      }
-    },
+    origin: ["https://householdplanetkenya.co.ke", "https://www.householdplanetkenya.co.ke"],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -216,10 +199,7 @@ async function bootstrap() {
       'Origin',
       'Access-Control-Request-Method',
       'Access-Control-Request-Headers'
-    ],
-    exposedHeaders: ['Content-Length', 'X-Total-Count', 'X-Page-Count'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
+    ]
   });
   
   // Enable CORS for static files with proper origin handling
