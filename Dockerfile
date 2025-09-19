@@ -1,35 +1,21 @@
-# Multi-stage build for monorepo
-FROM node:18-alpine AS base
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Install dependencies for all projects
-FROM base AS deps
-# Copy root package files
+# Copy all package.json files
 COPY package*.json ./
-RUN npm ci
-
-# Copy and install frontend dependencies
 COPY household-planet-frontend/package*.json ./household-planet-frontend/
-RUN cd household-planet-frontend && npm ci
-
-# Copy and install backend dependencies  
 COPY household-planet-backend/package*.json ./household-planet-backend/
+
+# Install all dependencies
+RUN npm ci
+RUN cd household-planet-frontend && npm ci
 RUN cd household-planet-backend && npm ci
-
-# Build stage
-FROM base AS builder
-WORKDIR /app
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/household-planet-frontend/node_modules ./household-planet-frontend/node_modules
-COPY --from=deps /app/household-planet-backend/node_modules ./household-planet-backend/node_modules
 
 # Copy source code
 COPY . .
 
-# Build both projects
-RUN npm run build
+# Build backend only (skip frontend for backend deployment)
+RUN cd household-planet-backend && npm run build
 
 # Production stage - backend only
 FROM node:18-alpine AS runner
