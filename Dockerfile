@@ -9,7 +9,7 @@ WORKDIR /app
 COPY household-planet-backend/package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy the entire backend application (including prisma directory)
 COPY household-planet-backend/ ./
