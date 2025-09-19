@@ -13,7 +13,10 @@ export class SettingsService {
     private prisma: PrismaService,
     private activityService: ActivityService,
   ) {
-    this.initializeDefaultSettings();
+    // Initialize settings asynchronously to avoid blocking app startup
+    this.initializeDefaultSettings().catch(error => {
+      console.error('Settings initialization failed:', error);
+    });
   }
 
   async getAllSettings(category?: string) {
@@ -344,8 +347,15 @@ export class SettingsService {
 
   private async initializeDefaultSettings() {
     try {
-      // Add a small delay to ensure database is ready
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Add a delay to ensure database is ready
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if settings table exists first
+      const tableExists = await this.checkSettingsTableExists();
+      if (!tableExists) {
+        console.log('Settings table does not exist, skipping initialization');
+        return;
+      }
       
       const existingSettings = await this.prisma.setting.count();
       if (existingSettings === 0) {
@@ -359,6 +369,18 @@ export class SettingsService {
     } catch (error) {
       console.error('Failed to initialize default settings:', error);
       // Don't throw the error to prevent app startup failure
+    }
+  }
+
+  private async checkSettingsTableExists(): Promise<boolean> {
+    try {
+      await this.prisma.setting.findFirst();
+      return true;
+    } catch (error) {
+      if (error.code === 'P2021') {
+        return false;
+      }
+      throw error;
     }
   }
 

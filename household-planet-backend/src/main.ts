@@ -13,6 +13,7 @@ import { SecurityLoggingInterceptor } from './common/interceptors/security-loggi
 import { ApiVersionInterceptor } from './common/interceptors/api-version.interceptor';
 import { DeprecationInterceptor } from './common/interceptors/deprecation.interceptor';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { SessionConfig } from './config/session.config';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -50,17 +51,7 @@ async function bootstrap() {
   }));
   
   app.use(cookieParser());
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'change-this-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'strict'
-    }
-  }));
+  app.use(session(SessionConfig.getSessionConfig()));
   
   // Custom security middleware
   const securityMiddleware = new SecurityMiddleware();

@@ -2,13 +2,13 @@
 
 echo "Starting Household Planet Backend..."
 
-# Run database migrations
-echo "Running database migrations..."
-npx prisma migrate deploy
-
-# Generate Prisma client (in case it's needed)
+# Generate Prisma client first
 echo "Generating Prisma client..."
 npx prisma generate
+
+# Push database schema (creates tables if they don't exist)
+echo "Pushing database schema..."
+npx prisma db push --accept-data-loss
 
 # Start the application
 echo "Starting the application..."
