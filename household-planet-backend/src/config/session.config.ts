@@ -17,7 +17,7 @@ export class SessionConfig {
         secure: isProduction,
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: isProduction ? 'strict' : 'lax'
+        sameSite: (isProduction ? 'strict' : 'lax') as 'strict' | 'lax' | 'none'
       },
       name: 'household-planet.sid'
     };

@@ -5,13 +5,14 @@ RUN apk add --no-cache openssl openssl-dev
 
 WORKDIR /app
 
-# Copy package files from the backend subdirectory
+# Copy package files and prisma schema first
 COPY household-planet-backend/package*.json ./
+COPY household-planet-backend/prisma ./prisma/
 
-# Install dependencies
+# Install dependencies (this will run prisma generate)
 RUN npm install
 
-# Copy the entire backend application (including prisma directory)
+# Copy the rest of the backend application
 COPY household-planet-backend/ ./
 
 # Run production setup (fixes security, creates settings table, builds app)
