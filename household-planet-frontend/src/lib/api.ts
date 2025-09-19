@@ -190,6 +190,35 @@ class ApiClient {
       },
     }).then(res => res.json())
   }
+
+  // Generic HTTP methods
+  async get<T>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint)
+    return { data: result }
+  }
+
+  async post<T>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+    return { data: result }
+  }
+
+  async patch<T>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+    return { data: result }
+  }
+
+  async delete<T>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'DELETE',
+    })
+    return { data: result }
+  }
 }
 
 const api = new ApiClient(API_BASE_URL)
