@@ -20,6 +20,9 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
+# Verify build output
+RUN ls -la dist/
+
 # Clean install production dependencies only
 RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
 
