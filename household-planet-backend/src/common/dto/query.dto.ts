@@ -25,7 +25,6 @@ export class SearchDto extends PaginationDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['createdAt', 'name', 'price', 'rating'])
   sortBy?: string = 'createdAt';
 
   @IsOptional()
