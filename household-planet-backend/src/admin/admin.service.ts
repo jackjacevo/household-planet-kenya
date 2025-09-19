@@ -1231,7 +1231,7 @@ export class AdminService {
       })
     );
 
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+    const baseUrl = process.env.BASE_URL || 'https://api.householdplanetkenya.co.ke';
     return categoriesWithTotalCount.map(category => ({
       ...category,
       image: category.image && !category.image.startsWith('http') 
@@ -1353,7 +1353,7 @@ export class AdminService {
           .toFile(filepath);
       }
       
-      const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+      const baseUrl = process.env.BASE_URL || 'https://api.householdplanetkenya.co.ke';
       const imageUrl = `${baseUrl}/api/admin/categories/image/${filename}`;
       
       return {

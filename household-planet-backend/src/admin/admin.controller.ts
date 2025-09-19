@@ -335,7 +335,7 @@ export class AdminController {
     const imagePath = path.join(process.cwd(), 'uploads', 'categories', filename);
     
     // Enhanced CORS headers
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -363,7 +363,7 @@ export class AdminController {
     const imagePath = path.join(process.cwd(), 'uploads', 'products', filename);
     
     // Enhanced CORS headers
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -390,7 +390,7 @@ export class AdminController {
     const fs = require('fs');
     const imagePath = path.join(process.cwd(), 'uploads', 'temp', filename);
     
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');

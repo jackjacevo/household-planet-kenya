@@ -34,7 +34,7 @@ async function bootstrap() {
   app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
     setHeaders: (res, path) => {
-      res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+      res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke');
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
     }
@@ -141,7 +141,7 @@ async function bootstrap() {
         'https://www.householdplanetkenya.co.ke',
         process.env.CORS_ORIGIN
       ].filter(Boolean)
-    : [process.env.CORS_ORIGIN || 'http://localhost:3000'];
+    : [process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke'];
     
   app.enableCors({
     origin: corsOrigins,

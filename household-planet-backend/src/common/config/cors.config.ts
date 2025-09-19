@@ -3,9 +3,9 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 export const corsConfig: CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      process.env.CORS_ORIGIN || 'http://localhost:3000',
+      'https://householdplanetkenya.co.ke',
+      'https://www.householdplanetkenya.co.ke',
+      process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke',
       'https://household-planet-kenya.vercel.app',
       'https://www.householdplanet.co.ke'
     ];

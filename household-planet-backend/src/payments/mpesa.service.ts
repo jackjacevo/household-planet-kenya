@@ -501,8 +501,8 @@ export class MpesaService {
       const registerData = {
         ShortCode: this.businessShortCode,
         ResponseType: 'Completed',
-        ConfirmationURL: `${process.env.APP_URL || 'http://localhost:3001'}/api/payments/mpesa/c2b/confirmation`,
-        ValidationURL: `${process.env.APP_URL || 'http://localhost:3001'}/api/payments/mpesa/c2b/validation`,
+        ConfirmationURL: `${process.env.APP_URL || 'https://api.householdplanetkenya.co.ke'}/api/payments/mpesa/c2b/confirmation`,
+        ValidationURL: `${process.env.APP_URL || 'https://api.householdplanetkenya.co.ke'}/api/payments/mpesa/c2b/validation`,
       };
 
       const response = await axios.post(

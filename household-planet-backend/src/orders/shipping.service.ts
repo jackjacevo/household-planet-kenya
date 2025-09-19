@@ -55,7 +55,7 @@ export class ShippingService {
         
         return {
           trackingNumber: order.trackingNumber,
-          labelUrl: `${process.env.API_URL || 'http://localhost:3001'}/shipping/labels/${order.trackingNumber}.pdf`,
+          labelUrl: `${process.env.API_URL || 'https://api.householdplanetkenya.co.ke'}/shipping/labels/${order.trackingNumber}.pdf`,
           carrier,
           estimatedDelivery,
           cost: this.BASE_SHIPPING_COST
@@ -105,7 +105,7 @@ export class ShippingService {
 
       return {
         trackingNumber,
-        labelUrl: `${process.env.API_URL || 'http://localhost:3001'}/shipping/labels/${trackingNumber}.pdf`,
+        labelUrl: `${process.env.API_URL || 'https://api.householdplanetkenya.co.ke'}/shipping/labels/${trackingNumber}.pdf`,
         carrier,
         estimatedDelivery,
         cost: this.BASE_SHIPPING_COST

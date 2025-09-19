@@ -149,7 +149,7 @@ export default function TestDeliveryPage() {
           <p>If you see issues above:</p>
           <ul className="list-disc list-inside ml-4 space-y-1">
             <li>Check that the backend server is running on port 3001</li>
-            <li>Verify NEXT_PUBLIC_API_URL is set to http://localhost:3001</li>
+            <li>Verify NEXT_PUBLIC_API_URL is set to https://api.householdplanetkenya.co.ke</li>
             <li>Check browser console for any JavaScript errors</li>
             <li>Check Network tab in browser dev tools for failed requests</li>
             <li>Try refreshing the page</li>

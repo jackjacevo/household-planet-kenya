@@ -10,7 +10,7 @@ import { Server, Socket } from 'socket.io';
   cors: {
     origin: process.env.NODE_ENV === 'production' 
       ? ['https://householdplanet.co.ke', 'https://www.householdplanet.co.ke']
-      : process.env.CORS_ORIGIN || 'http://localhost:3000',
+      : process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke',
     credentials: true,
   },
 })
