@@ -33,12 +33,7 @@ async function bootstrap() {
   console.log('Serving static files from:', uploadsPath);
   app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
-    setHeaders: (res, path) => {
-      const origin = req.headers.origin;
-      const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
-      if (allowedOrigins.includes(origin) || !origin) {
-        res.setHeader('Access-Control-Allow-Origin', origin || '*');
-      }
+    setHeaders: (res, path, stat) => {
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
     }
