@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { settingsApi, type SettingsResponse } from '@/lib/settings-api';
+import { settingsApi, type SettingsData } from '@/lib/settings-api';
 // import toast from 'react-hot-toast';
 const toast = {
   success: (msg: string) => {
@@ -70,7 +70,7 @@ const TABS = [
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('company');
-  const [settings, setSettings] = useState<SettingsResponse>({});
+  const [settings, setSettings] = useState<SettingsData>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -126,7 +126,7 @@ export default function AdminSettingsPage() {
       }
       
       console.log('Loaded settings:', data);
-      setSettings(data as SettingsResponse || {});
+      setSettings(data as SettingsData || {});
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error('Failed to load settings');

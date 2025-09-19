@@ -173,6 +173,25 @@ class ApiClient {
       },
     })
   }
+
+  // Reviews endpoints
+  async getProductReviews(productId: number | string) {
+    return this.request(`/api/products/${productId}/reviews`)
+  }
+
+  async createReview(formData: FormData) {
+    const token = localStorage.getItem('token')
+    
+    return fetch(`${this.baseURL}/api/reviews`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(res => res.json())
+  }
 }
 
-export default new ApiClient(API_BASE_URL)
+const api = new ApiClient(API_BASE_URL)
+export { api }
+export default api

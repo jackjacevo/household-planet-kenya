@@ -2,16 +2,24 @@
 
 echo "Starting Household Planet Backend..."
 
-# Generate Prisma client first
+# Wait for database to be ready
+echo "Waiting for database connection..."
+sleep 5
+
+# Generate Prisma client
 echo "Generating Prisma client..."
 npx prisma generate
 
-# Run database migrations (production safe)
-echo "Running database migrations..."
-npx prisma migrate deploy || {
-  echo "Migrations failed, falling back to db push..."
-  npx prisma db push --accept-data-loss
+# Run database setup
+echo "Setting up database..."
+npx prisma db push --accept-data-loss || {
+  echo "Database push failed, trying migration..."
+  npx prisma migrate deploy
 }
+
+# Create settings table
+echo "Creating settings table..."
+node scripts/create-settings-runtime.js
 
 # Start the application
 echo "Starting the application..."

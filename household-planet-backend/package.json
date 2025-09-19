@@ -24,7 +24,7 @@
     "prisma:studio": "prisma studio",
     "db:init": "node scripts/migrate-db.js",
     "db:push": "prisma db push",
-    "setup:production": "node scripts/setup-production.js",
+    "setup:production": "node scripts/setup-production-build.js",
     "fix:security": "node scripts/fix-security-vulnerabilities.js",
     "create:settings": "node scripts/create-settings-table.js",
     "postinstall": "prisma generate"

@@ -1,20 +1,32 @@
-FROM node:18-alpine
+FROM node:20-alpine
+
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl openssl-dev
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+# Copy package files
+COPY household-planet-backend/package*.json ./
 
-COPY . .
-RUN npx prisma generate
-RUN npx prisma db push
-RUN npm run build
+# Copy prisma schema for generation
+COPY household-planet-backend/prisma ./prisma/
 
-RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
+# Install dependencies
+RUN npm install
 
+# Copy source code
+COPY household-planet-backend/ ./
+
+# Run production setup (fixes security, creates settings table, builds app)
+RUN npm run setup:production
+
+# Verify build output
+RUN ls -la dist/
+
+# Create uploads directory
 RUN mkdir -p uploads
 
-COPY start.sh ./
+# Make start script executable
 RUN chmod +x start.sh
 
 EXPOSE 3001
