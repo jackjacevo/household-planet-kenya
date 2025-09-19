@@ -14,11 +14,8 @@ RUN npm ci
 # Copy the entire backend application (including prisma directory)
 COPY household-planet-backend/ ./
 
-# Generate Prisma client (now the prisma folder should be available)
-RUN npx prisma generate
-
-# Build the application
-RUN npm run build
+# Run production setup (fixes security, creates settings table, builds app)
+RUN npm run setup:production
 
 # Verify build output
 RUN ls -la dist/ || echo "No dist directory"
