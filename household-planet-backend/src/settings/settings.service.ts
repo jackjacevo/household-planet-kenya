@@ -344,15 +344,21 @@ export class SettingsService {
 
   private async initializeDefaultSettings() {
     try {
+      // Add a small delay to ensure database is ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       const existingSettings = await this.prisma.setting.count();
       if (existingSettings === 0) {
+        console.log('Initializing default settings...');
         const defaults = this.getDefaultSettings();
         for (const setting of defaults) {
           await this.prisma.setting.create({ data: setting }).catch(() => {});
         }
+        console.log('Default settings initialized successfully');
       }
     } catch (error) {
       console.error('Failed to initialize default settings:', error);
+      // Don't throw the error to prevent app startup failure
     }
   }
 

@@ -13,6 +13,9 @@ RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
 
 RUN mkdir -p uploads
 
+COPY start.sh ./
+RUN chmod +x start.sh
+
 EXPOSE 3001
 
-CMD ["node", "dist/src/main.js"]
+CMD ["./start.sh"]
