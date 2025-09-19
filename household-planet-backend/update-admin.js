@@ -31,7 +31,7 @@ async function updateAdminUser() {
         role: 'SUPER_ADMIN',
         isActive: true,
         emailVerified: true,
-        phone: '+254700000000'
+        phone: '+254790227760'
       }
     });
     

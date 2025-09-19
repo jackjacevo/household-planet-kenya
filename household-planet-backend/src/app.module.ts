@@ -26,6 +26,7 @@ import { SettingsModule } from './settings/settings.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SetupModule } from './setup/setup.module';
 import { CleanupService } from './common/cleanup.service';
 import { WebSocketGatewayService } from './websocket/websocket.gateway';
 import { HealthController } from './health/health.controller';
@@ -64,6 +65,7 @@ import { HealthController } from './health/health.controller';
     WishlistModule,
     PromoCodesModule,
     NotificationsModule,
+    SetupModule,
   ],
   providers: [CleanupService, WebSocketGatewayService],
 })
