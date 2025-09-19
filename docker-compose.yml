@@ -8,11 +8,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://backend:3001
     depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
+      - backend
 
   backend:
     build:
@@ -22,18 +20,4 @@ services:
       - "3001:3001"
     environment:
       - PORT=3001
-      - DATABASE_URL=file:./data/dev.db
-      - JWT_SECRET=${JWT_SECRET:-household-planet-jwt-secret-key-2024-production}
-      - JWT_EXPIRES_IN=7d
       - CORS_ORIGIN=http://localhost:3000
-      - NODE_ENV=production
-    volumes:
-      - ./data:/app/data
-      - ./uploads:/app/uploads
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "healthcheck.js"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s

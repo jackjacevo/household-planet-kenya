@@ -1,17 +1,17 @@
-FROM node:18-alpine
-
+# Backend Dockerfile
+FROM node:18-alpine AS builder
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm ci
-
 COPY . .
 RUN npm run build
-RUN npm prune --production
+
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3001
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
-
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main"]
