@@ -18,6 +18,7 @@ class ApiClient {
         ...options.headers,
       },
       credentials: 'include',
+      mode: 'cors',
       ...options,
     }
 

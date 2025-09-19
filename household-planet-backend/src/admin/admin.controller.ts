@@ -337,8 +337,8 @@ export class AdminController {
     // Enhanced CORS headers
     const origin = req.headers.origin;
     const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -369,8 +369,8 @@ export class AdminController {
     // Enhanced CORS headers
     const origin = req.headers.origin;
     const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -400,8 +400,8 @@ export class AdminController {
     
     const origin = req.headers.origin;
     const allowedOrigins = ['https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke', 'http://localhost:3000'];
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');

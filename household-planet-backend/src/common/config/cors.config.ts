@@ -1,10 +1,23 @@
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
-// TEMPORARY CORS BYPASS - ALLOWS ALL ORIGINS
-// TODO: Restrict to specific domains in production
-
 export const corsConfig: CorsOptions = {
-  origin: true, // TEMPORARY: Allow all origins to fix CORS issues
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://householdplanetkenya.co.ke',
+      'https://www.householdplanetkenya.co.ke',
+      'http://localhost:3000'
+    ];
+    
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',

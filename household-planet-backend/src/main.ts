@@ -9,6 +9,7 @@ import * as session from 'express-session';
 import { SecurityExceptionFilter } from './common/filters/security-exception.filter';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { InputSanitizationMiddleware } from './common/middleware/input-sanitization.middleware';
+import { CorsFixMiddleware } from './common/middleware/cors-fix.middleware';
 import { SecurityLoggingInterceptor } from './common/interceptors/security-logging.interceptor';
 import { ApiVersionInterceptor } from './common/interceptors/api-version.interceptor';
 import { DeprecationInterceptor } from './common/interceptors/deprecation.interceptor';
@@ -23,7 +24,7 @@ async function bootstrap() {
   
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['log', 'error', 'warn', 'debug'], // Enable all logs to see CORS messages
-    cors: true, // Enable CORS at app level
+    cors: false, // Disable default CORS, we'll configure it manually
   });
   
   // Serve static files from uploads directory
@@ -32,7 +33,7 @@ async function bootstrap() {
   app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
     setHeaders: (res, path, stat) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      // Don't use wildcard for CORS when credentials are involved
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
     }
@@ -83,12 +84,37 @@ async function bootstrap() {
     validateCustomDecorators: true,
   }));
   
+  // Apply CORS fix middleware to ensure proper headers
+  app.use(new CorsFixMiddleware().use.bind(new CorsFixMiddleware()));
+  
   // Set global API prefix
   app.setGlobalPrefix('api');
   
   // CORS configuration - MUST be before routes
   app.enableCors({
-    origin: ['https://householdplanetkenya.co.ke', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'https://householdplanetkenya.co.ke',
+        'https://www.householdplanetkenya.co.ke',
+        'http://localhost:3000'
+      ];
+      
+      console.log(`CORS check - Origin: ${origin}`);
+      
+      // Allow requests with no origin (mobile apps, etc.)
+      if (!origin) {
+        console.log('CORS: Allowing request with no origin');
+        return callback(null, true);
+      }
+      
+      if (allowedOrigins.includes(origin)) {
+        console.log(`CORS: Allowing origin: ${origin}`);
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -100,27 +126,50 @@ async function bootstrap() {
       'X-Requested-With', 
       'Origin'
     ],
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    preflightContinue: false
   });
   
   // Health check endpoints
   app.getHttpAdapter().get('/health', (req: any, res: any) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'https://householdplanetkenya.co.ke',
+      'https://www.householdplanetkenya.co.ke',
+      'http://localhost:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      cors: 'enabled-all-origins'
+      cors: 'enabled-specific-origins'
     });
   });
   
   app.getHttpAdapter().get('/api/health', (req: any, res: any) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'https://householdplanetkenya.co.ke',
+      'https://www.householdplanetkenya.co.ke',
+      'http://localhost:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      cors: 'enabled-all-origins'
+      cors: 'enabled-specific-origins'
     });
   });
   
@@ -146,9 +195,9 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   logger.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
   logger.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.log(`🔗 CORS: ENABLED FOR ALL ORIGINS (TEMPORARY FIX)`);
+  logger.log(`🔗 CORS: ENABLED FOR SPECIFIC ORIGINS WITH CREDENTIALS`);
   logger.log(`📊 Health check: http://0.0.0.0:${port}/health`);
-  logger.log(`⚠️  CORS BYPASS ACTIVE - REMOVE IN PRODUCTION`);
+  logger.log(`✅ CORS PROPERLY CONFIGURED FOR PRODUCTION`);
 }
 
 bootstrap().catch(err => {
