@@ -1,120 +1,182 @@
-import { Controller, Post, UseGuards, Request, Body, Get, Param, Ip, Headers, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Req, Put, Query, ValidationPipe, UsePipes, HttpCode, HttpStatus, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Throttle } from '@nestjs/throttler';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { VerifyEmailDto } from './dto/verify-email.dto';
-import { SendPhoneVerificationDto, VerifyPhoneDto } from './dto/verify-phone.dto';
+import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { CurrentUser } from './decorators/current-user.decorator';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { VerifyPhoneDto } from './dto/verify-phone.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { TwoFactorDto } from './dto/two-factor.dto';
+import { SocialAuthDto } from './dto/social-auth.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 registrations per minute
-  async register(
-    @Body(ValidationPipe) registerDto: RegisterDto,
-    @Ip() ipAddress: string,
-    @Headers('user-agent') userAgent: string = 'Unknown'
-  ) {
+  @UseGuards(ThrottlerGuard)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async register(@Body() registerDto: RegisterDto, @Req() req) {
+    const ipAddress = req.ip || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
     return this.authService.register(registerDto, ipAddress, userAgent);
   }
 
-  @UseGuards(AuthGuard('local'))
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 login attempts per minute
-  async login(
-    @Request() req,
-    @Body(ValidationPipe) loginDto: LoginDto,
-    @Ip() ipAddress: string,
-    @Headers('user-agent') userAgent: string = 'Unknown'
-  ) {
-    return this.authService.login(loginDto, req.user, ipAddress, userAgent);
-  }
-
-  @Post('refresh')
-  async refreshToken(@Body(ValidationPipe) refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshToken(refreshTokenDto.refreshToken);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('logout')
-  async logout(
-    @CurrentUser() user: any,
-    @Headers('authorization') authorization: string
-  ) {
-    const token = authorization?.replace('Bearer ', '');
-    return this.authService.logout(user.id, token);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('logout-all')
-  async logoutAll(@CurrentUser() user: any) {
-    return this.authService.logoutAll(user.id);
-  }
-
-  @Post('verify-email')
-  async verifyEmail(@Body(ValidationPipe) verifyEmailDto: VerifyEmailDto) {
-    return this.authService.verifyEmail(verifyEmailDto.token);
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async login(@Body() loginDto: LoginDto, @Req() req) {
+    const ipAddress = req.ip || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    
+    const user = await this.authService.validateUser(
+      loginDto.email, 
+      loginDto.password, 
+      ipAddress, 
+      userAgent
+    );
+    
+    return this.authService.login(loginDto, user, ipAddress, userAgent);
   }
 
   @Post('forgot-password')
-  @Throttle({ default: { limit: 3, ttl: 300000 } }) // 3 requests per 5 minutes
-  async forgotPassword(@Body(ValidationPipe) forgotPasswordDto: ForgotPasswordDto) {
-    return this.authService.requestPasswordReset(forgotPasswordDto.email);
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
   @Post('reset-password')
-  async resetPassword(@Body(ValidationPipe) resetPasswordDto: ResetPasswordDto) {
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.password);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('change-password')
-  async changePassword(
-    @CurrentUser() user: any,
-    @Body(ValidationPipe) changePasswordDto: ChangePasswordDto
-  ) {
-    return this.authService.changePassword(user.id, changePasswordDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('send-phone-verification')
-  @Throttle({ default: { limit: 3, ttl: 300000 } }) // 3 SMS per 5 minutes
-  async sendPhoneVerification(
-    @CurrentUser() user: any,
-    @Body(ValidationPipe) sendPhoneVerificationDto: SendPhoneVerificationDto
-  ) {
-    return this.authService.sendPhoneVerification(user.id, sendPhoneVerificationDto.phone);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('verify-phone')
-  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 attempts per 5 minutes
-  async verifyPhone(
-    @CurrentUser() user: any,
-    @Body(ValidationPipe) verifyPhoneDto: VerifyPhoneDto
-  ) {
-    return this.authService.verifyPhone(user.id, verifyPhoneDto.phone, verifyPhoneDto.code);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@CurrentUser() user: any) {
-    return { user };
+  @UseGuards(AuthGuard('jwt'))
+  async getProfile(@Req() req) {
+    return this.authService.getProfile(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Put('profile')
+  @UseGuards(AuthGuard('jwt'))
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async updateProfile(@Req() req, @Body() updateData: any) {
+    return this.authService.updateProfile(req.user.id, updateData);
+  }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async changePassword(@Req() req, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.authService.changePassword(req.user.id, changePasswordDto);
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmail(verifyEmailDto.token);
+  }
+
+  @Post('resend-verification')
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async resendVerification(@Body() resendDto: ResendVerificationDto) {
+    return this.authService.resendVerification(resendDto.email, resendDto.type);
+  }
+
+  @Post('verify-phone')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async verifyPhone(@Req() req, @Body() verifyPhoneDto: VerifyPhoneDto) {
+    return this.authService.verifyPhone(req.user.id, verifyPhoneDto.phone, verifyPhoneDto.code);
+  }
+
+  @Post('send-phone-verification')
+  @UseGuards(AuthGuard('jwt'), ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  async sendPhoneVerification(@Req() req, @Body() body: any) {
+    return this.authService.sendPhoneVerification(req.user.id, body.phone);
+  }
+
+  @Post('enable-2fa')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async enableTwoFactor(@Req() req) {
+    return this.authService.enableTwoFactor(req.user.id);
+  }
+
+  @Post('verify-2fa')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async verifyTwoFactor(@Req() req, @Body() twoFactorDto: TwoFactorDto) {
+    return this.authService.verifyTwoFactor(req.user.id, twoFactorDto.code);
+  }
+
+  @Post('disable-2fa')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async disableTwoFactor(@Req() req, @Body() twoFactorDto: TwoFactorDto) {
+    return this.authService.disableTwoFactor(req.user.id, twoFactorDto.code);
+  }
+
+  @Post('social/google')
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async googleAuth(@Body() socialAuthDto: SocialAuthDto) {
+    return this.authService.socialAuth('google', socialAuthDto);
+  }
+
+  @Post('social/facebook')
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async facebookAuth(@Body() socialAuthDto: SocialAuthDto) {
+    return this.authService.socialAuth('facebook', socialAuthDto);
+  }
+
+  @Post('logout')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async logout(@Req() req) {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    return this.authService.logout(req.user.id, token);
+  }
+
+  @Post('logout-all')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async logoutAll(@Req() req) {
+    return this.authService.logoutAll(req.user.id);
+  }
+
   @Get('sessions')
-  async getSessions(@CurrentUser() user: any) {
-    // TODO: Implement session listing
-    return { message: 'Sessions endpoint - to be implemented' };
+  @UseGuards(AuthGuard('jwt'))
+  async getSessions(@Req() req) {
+    return this.authService.getUserSessions(req.user.id);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required');
+    }
+    return this.authService.refreshToken(refreshToken);
   }
 }

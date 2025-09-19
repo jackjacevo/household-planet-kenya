@@ -12,12 +12,12 @@ import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 
 @Controller('admin')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(Role.ADMIN, Role.SUPER_ADMIN)
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
   @Get('dashboard')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   getDashboardStats() {
     return this.adminService.getDashboardStats();
   }
@@ -48,8 +48,6 @@ export class AdminController {
   }
 
   @Get('inventory/alerts')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
   getInventoryAlerts() {
     return this.adminService.getInventoryAlerts();
   }
@@ -69,11 +67,6 @@ export class AdminController {
     return this.adminService.getRecentActivities();
   }
 
-  @Get('kpis')
-  getKPIs() {
-    return this.adminService.getKPIs();
-  }
-
   // Product Management
   @Get('products')
   getProducts(@Query() query: any) {
@@ -81,8 +74,6 @@ export class AdminController {
   }
 
   @Post('products')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: false, forbidNonWhitelisted: false }))
   createProduct(@Body() createProductDto: CreateProductDto, @Req() req) {
     console.log('Received product creation request:', JSON.stringify(createProductDto, null, 2));
@@ -92,8 +83,6 @@ export class AdminController {
   }
 
   @Put('products/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   updateProduct(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto, @Req() req) {
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
     const userAgent = req.get('User-Agent') || 'Unknown';
@@ -101,8 +90,6 @@ export class AdminController {
   }
 
   @Delete('products/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   deleteProduct(@Param('id', ParseIntPipe) id: number, @Req() req) {
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
     const userAgent = req.get('User-Agent') || 'Unknown';
@@ -110,15 +97,11 @@ export class AdminController {
   }
 
   @Post('products/bulk')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   bulkCreateProducts(@Body() bulkProductDto: BulkProductDto, @Req() req) {
     return this.adminService.bulkCreateProducts(bulkProductDto.products, req.user?.id);
   }
 
   @Put('products/bulk')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   bulkUpdateProducts(@Body() bulkUpdateDto: BulkUpdateDto, @Req() req) {
     return this.adminService.bulkUpdateProducts(bulkUpdateDto, req.user?.id);
   }
@@ -146,8 +129,6 @@ export class AdminController {
 
   // Dedicated temp image upload endpoint
   @Post('products/temp/images')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   @UseInterceptors(FilesInterceptor('images', 10, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
@@ -167,8 +148,6 @@ export class AdminController {
   }
 
   @Post('products/:id/images')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   @UseInterceptors(FilesInterceptor('images', 10, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
@@ -198,15 +177,11 @@ export class AdminController {
   }
 
   @Delete('products/:id/images/:imageIndex')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   deleteProductImage(@Param('id', ParseIntPipe) id: number, @Param('imageIndex', ParseIntPipe) imageIndex: number, @Req() req) {
     return this.adminService.deleteProductImage(id, imageIndex, req.user?.id);
   }
 
   @Delete('products/temp/images')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   deleteTempImage(@Body('imageUrl') imageUrl: string) {
     return this.adminService.deleteTempImage(imageUrl);
   }
@@ -277,7 +252,7 @@ export class AdminController {
     return this.adminService.getActivities(query);
   }
 
-  @Get('activities/stats')
+  @Get('activity-stats')
   getActivitiesStats() {
     return this.adminService.getActivitiesStats();
   }
@@ -289,22 +264,16 @@ export class AdminController {
   }
 
   @Post('categories')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   createCategory(@Body() categoryData: any, @Req() req) {
     return this.adminService.createCategory(categoryData, req.user?.id);
   }
 
   @Put('categories/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   updateCategory(@Param('id', ParseIntPipe) id: number, @Body() categoryData: any, @Req() req) {
     return this.adminService.updateCategory(id, categoryData, req.user?.id);
   }
 
   @Delete('categories/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   deleteCategory(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.adminService.deleteCategory(id, req.user?.id);
   }
@@ -436,8 +405,6 @@ export class AdminController {
   }
 
   @Delete('brands/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
   deleteBrand(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.deleteBrand(id);
   }
