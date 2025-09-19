@@ -53,7 +53,7 @@ async function bootstrap() {
   app.use(session(SessionConfig.getSessionConfig()));
   
   // Custom CORS middleware for debugging
-  app.use((req, res, next) => {
+  app.use((req: any, res: any, next: any) => {
     const origin = req.headers.origin;
     const allowedOrigins = [
       'https://householdplanetkenya.co.ke',
@@ -225,7 +225,7 @@ async function bootstrap() {
   });
   
   // Enable CORS for static files with proper origin handling
-  app.use('/uploads', (req, res, next) => {
+  app.use('/uploads', (req: any, res: any, next: any) => {
     const allowedOrigins = corsOrigins;
     const origin = req.headers.origin;
     
