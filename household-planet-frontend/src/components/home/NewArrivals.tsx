@@ -30,7 +30,7 @@ export function NewArrivals() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await api.getProducts({ limit: 6, sortBy: 'createdAt', sortOrder: 'desc' }) as any;
+        const data = await api.getProducts({ limit: 6, sortBy: 'newest' }) as any;
         if (data && Array.isArray(data) && data.length > 0) {
           setProducts(data);
         } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {

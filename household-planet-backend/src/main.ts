@@ -88,7 +88,7 @@ async function bootstrap() {
   
   // CORS configuration - MUST be before routes
   app.enableCors({
-    origin: true, // Allow all origins temporarily
+    origin: ['https://householdplanetkenya.co.ke', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -101,20 +101,6 @@ async function bootstrap() {
       'Origin'
     ],
     optionsSuccessStatus: 200
-  });
-  
-  // Add global CORS headers middleware as backup
-  app.use((req: any, res: any, next: any) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With,Origin');
-    
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
-      return;
-    }
-    next();
   });
   
   // Health check endpoints

@@ -112,7 +112,8 @@ export class ProductsService {
     
     switch (sortBy) {
       case 'newest':
-        orderBy = { createdAt: 'desc' };
+      case 'createdAt':
+        orderBy = { createdAt: sortOrder === 'asc' ? 'asc' : 'desc' };
         break;
       case 'oldest':
         orderBy = { createdAt: 'asc' };
