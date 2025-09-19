@@ -6,7 +6,9 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npx prisma generate --schema=./prisma/schema.prisma
+RUN ls -la
+RUN ls -la prisma/
+RUN npx prisma generate
 RUN npm run build
 
 RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
