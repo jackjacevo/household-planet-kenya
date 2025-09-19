@@ -24,6 +24,55 @@ export interface CompanySettings {
   language?: string
 }
 
+export interface InventorySettings {
+  lowStockThreshold?: number
+  trackStock?: boolean
+  autoApproveReviews?: boolean
+  allowBackorders?: boolean
+  showOutOfStock?: boolean
+  maxOrderQuantity?: number
+  requireStockConfirmation?: boolean
+}
+
+export interface NotificationSettings {
+  emailNotifications?: boolean
+  smsNotifications?: boolean
+  whatsappNotifications?: boolean
+  orderConfirmationEmail?: boolean
+  orderStatusUpdates?: boolean
+  lowStockAlerts?: boolean
+  newCustomerNotifications?: boolean
+  dailySalesReport?: boolean
+  notificationEmail?: string
+}
+
+export interface PaymentSettings {
+  taxRate?: number
+  shippingFee?: number
+  freeShippingThreshold?: number
+  mpesaShortcode?: string
+  mpesaPaybill?: string
+  mpesaAccount?: string
+  mpesaPasskey?: string
+  mpesaConsumerKey?: string
+  mpesaConsumerSecret?: string
+  enableCashPayments?: boolean
+  enableBankTransfer?: boolean
+  bankAccountDetails?: string
+}
+
+export interface SecuritySettings {
+  sessionTimeout?: number
+  maxLoginAttempts?: number
+  lockoutDuration?: number
+  requireTwoFactor?: boolean
+  enableCaptcha?: boolean
+  captchaSiteKey?: string
+  captchaSecretKey?: string
+  passwordMinLength?: number
+  requirePasswordComplexity?: boolean
+}
+
 export interface SettingsData {
   company?: { [key: string]: Setting }
   payment?: { [key: string]: Setting }
@@ -141,31 +190,28 @@ class SettingsApiClient {
     return response.data
   }
 
-  async getPublicSettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings/public`)
-    return response.data
-  }
-
-  async exportSettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings/export`, {
+  async updateInventorySettings(settings: InventorySettings) {
+    const response = await axios.put(`${this.baseURL}/api/settings/inventory`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
-  async importSettings(data: any) {
-    const response = await axios.post(`${this.baseURL}/api/settings/import`, data, {
+  async updateNotificationSettings(settings: NotificationSettings) {
+    const response = await axios.put(`${this.baseURL}/api/settings/notification`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
-  async resetToDefaults() {
-    const response = await axios.post(`${this.baseURL}/api/settings/reset`, {}, {
+  async updateSecuritySettings(settings: SecuritySettings) {
+    const response = await axios.put(`${this.baseURL}/api/settings/security`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
+
+
 }
 
 const settingsApi = new SettingsApiClient(API_BASE_URL)
