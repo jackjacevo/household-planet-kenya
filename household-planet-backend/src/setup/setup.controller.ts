@@ -23,7 +23,16 @@ export class SetupController {
         role: 'SUPER_ADMIN',
         isActive: true,
         emailVerified: true,
-        phone: '+254790227760'
+        phoneVerified: true,
+        phone: '+254790227760',
+        permissions: JSON.stringify([
+          'admin:read', 'admin:write', 'admin:delete',
+          'products:read', 'products:write', 'products:delete',
+          'orders:read', 'orders:write', 'orders:delete',
+          'users:read', 'users:write', 'users:delete',
+          'categories:read', 'categories:write', 'categories:delete',
+          'settings:read', 'settings:write'
+        ])
       },
       create: {
         email,
@@ -34,10 +43,19 @@ export class SetupController {
         role: 'SUPER_ADMIN',
         isActive: true,
         emailVerified: true,
-        phone: '+254790227760'
+        phoneVerified: true,
+        phone: '+254790227760',
+        permissions: JSON.stringify([
+          'admin:read', 'admin:write', 'admin:delete',
+          'products:read', 'products:write', 'products:delete',
+          'orders:read', 'orders:write', 'orders:delete',
+          'users:read', 'users:write', 'users:delete',
+          'categories:read', 'categories:write', 'categories:delete',
+          'settings:read', 'settings:write'
+        ])
       }
     });
 
-    return { message: 'Admin created', email: admin.email };
+    return { message: 'Admin created with full permissions', email: admin.email, role: admin.role };
   }
 }
