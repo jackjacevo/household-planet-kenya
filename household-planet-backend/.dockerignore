@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+.env.local
+.env.development.local
+.env.test.local
+.git
+.gitignore
+coverage
+.nyc_output
+.cache
+*.log
+test
+uploads/temp

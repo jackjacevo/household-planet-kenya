@@ -6,8 +6,6 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN ls -la
-RUN ls -la prisma/
 RUN npx prisma generate
 RUN npm run build
 
