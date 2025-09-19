@@ -73,6 +73,28 @@ export interface SecuritySettings {
   requirePasswordComplexity?: boolean
 }
 
+export interface SEOSettings {
+  metaTitle?: string
+  metaDescription?: string
+  metaKeywords?: string
+  googleAnalyticsId?: string
+  facebookPixelId?: string
+  googleTagManagerId?: string
+  enableSitemap?: boolean
+  enableRobotsTxt?: boolean
+  canonicalUrl?: string
+}
+
+export interface SocialMediaSettings {
+  facebookUrl?: string
+  twitterUrl?: string
+  instagramUrl?: string
+  linkedinUrl?: string
+  youtubeUrl?: string
+  tiktokUrl?: string
+  whatsappNumber?: string
+}
+
 export interface SettingsData {
   company?: { [key: string]: Setting }
   payment?: { [key: string]: Setting }
@@ -89,18 +111,6 @@ export interface SettingsResponse {
   success: boolean
   data: any
   message?: string
-}
-
-export interface SettingsData {
-  company?: any
-  payment?: any
-  notification?: any
-  inventory?: any
-  delivery?: any
-  seo?: any
-  security?: any
-  email?: any
-  social?: any
 }
 
 class SettingsApiClient {
@@ -206,6 +216,20 @@ class SettingsApiClient {
 
   async updateSecuritySettings(settings: SecuritySettings) {
     const response = await axios.put(`${this.baseURL}/api/settings/security`, settings, {
+      headers: this.getAuthHeaders(),
+    })
+    return response.data
+  }
+
+  async updateSEOSettings(settings: SEOSettings) {
+    const response = await axios.put(`${this.baseURL}/api/settings/seo`, settings, {
+      headers: this.getAuthHeaders(),
+    })
+    return response.data
+  }
+
+  async updateSocialMediaSettings(settings: SocialMediaSettings) {
+    const response = await axios.put(`${this.baseURL}/api/settings/social`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
