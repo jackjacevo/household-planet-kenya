@@ -1,5 +1,9 @@
 FROM node:20-alpine
 
+# Set environment variables to skip Puppeteer download FIRST
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl openssl-dev
 
@@ -10,10 +14,6 @@ COPY household-planet-backend/package*.json ./
 
 # Copy prisma schema for generation
 COPY household-planet-backend/prisma ./prisma/
-
-# Set environment variables to skip Puppeteer download
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Install dependencies
 RUN npm install
