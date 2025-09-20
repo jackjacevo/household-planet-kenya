@@ -35,10 +35,24 @@ export class SettingsController {
     return this.settingsService.updateCompanySettings(companySettings, req.user.id);
   }
 
+  @Put('company')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async updateCompanySettingsPut(@Body() companySettings: any, @Req() req) {
+    return this.settingsService.updateCompanySettings(companySettings, req.user.id);
+  }
+
   @Post('payment')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   async updatePaymentSettings(@Body() paymentSettings: any, @Req() req) {
+    return this.settingsService.updatePaymentSettings(paymentSettings, req.user.id);
+  }
+
+  @Put('payment')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async updatePaymentSettingsPut(@Body() paymentSettings: any, @Req() req) {
     return this.settingsService.updatePaymentSettings(paymentSettings, req.user.id);
   }
 
@@ -49,10 +63,24 @@ export class SettingsController {
     return this.settingsService.updateDeliverySettings(deliverySettings, req.user.id);
   }
 
+  @Put('delivery')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async updateDeliverySettingsPut(@Body() deliverySettings: any, @Req() req) {
+    return this.settingsService.updateDeliverySettings(deliverySettings, req.user.id);
+  }
+
   @Post('notification')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   async updateNotificationSettings(@Body() notificationSettings: any, @Req() req) {
+    return this.settingsService.updateNotificationSettings(notificationSettings, req.user.id);
+  }
+
+  @Put('notification')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  async updateNotificationSettingsPut(@Body() notificationSettings: any, @Req() req) {
     return this.settingsService.updateNotificationSettings(notificationSettings, req.user.id);
   }
 }

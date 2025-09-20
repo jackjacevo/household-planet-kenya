@@ -268,7 +268,8 @@ export const useCart = create<CartStore>()(
           
           const response = await api.getCart();
           const cartData = response as any;
-          const backendItems = (cartData.items || []).map((item: any) => ({
+          const items = Array.isArray(cartData?.items) ? cartData.items : [];
+          const backendItems = items.map((item: any) => ({
             id: item.id.toString(), // Use actual cart item ID from backend
             productId: item.productId,
             product: item.product,
@@ -315,7 +316,8 @@ export const useCart = create<CartStore>()(
       
       getTotalPrice: () => {
         const state = get();
-        return state.items.reduce((total, item) => {
+        const items = Array.isArray(state.items) ? state.items : [];
+        return items.reduce((total, item) => {
           const price = item.variant?.price || item.product.price;
           return total + price * item.quantity;
         }, 0);
@@ -323,7 +325,8 @@ export const useCart = create<CartStore>()(
       
       getTotalItems: () => {
         const state = get();
-        return state.items.reduce((total, item) => total + item.quantity, 0);
+        const items = Array.isArray(state.items) ? state.items : [];
+        return items.reduce((total, item) => total + item.quantity, 0);
       },
       
       clearOnLogout: () => {

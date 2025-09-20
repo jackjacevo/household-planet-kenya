@@ -138,7 +138,7 @@ class SettingsApiClient {
   }
 
   async updateCompanySettings(settings: CompanySettings) {
-    const response = await axios.put(`${this.baseURL}/api/settings/company`, settings, {
+    const response = await axios.post(`${this.baseURL}/api/settings/company`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
@@ -208,7 +208,7 @@ class SettingsApiClient {
   }
 
   async updateNotificationSettings(settings: NotificationSettings) {
-    const response = await axios.put(`${this.baseURL}/api/settings/notification`, settings, {
+    const response = await axios.post(`${this.baseURL}/api/settings/notification`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data

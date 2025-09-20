@@ -67,6 +67,9 @@ export default function CategoriesPage() {
             productCount: cat._count?.products || 0
           }));
           setCategories(mappedCategories);
+        } else {
+          console.log('Categories API returned non-array data:', data);
+          setCategories([]);
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
@@ -78,7 +81,7 @@ export default function CategoriesPage() {
     fetchCategories();
   }, []);
 
-  const filteredCategories = categories.filter(category =>
+  const filteredCategories = (Array.isArray(categories) ? categories : []).filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -181,7 +184,7 @@ export default function CategoriesPage() {
             : "space-y-4"
           }
         >
-          {filteredCategories.map((category, index) => (
+          {(Array.isArray(filteredCategories) ? filteredCategories : []).map((category, index) => (
             <motion.div key={category.slug} variants={itemVariants}>
               <Link href={`/products?category=${category.slug}`}>
                 {viewMode === 'grid' ? (

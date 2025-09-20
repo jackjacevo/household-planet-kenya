@@ -34,11 +34,19 @@ class ApiClient {
       const response = await fetch(url, config)
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
-        throw new Error(errorData.message || `API Error: ${response.status}`)
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch {
+          // If JSON parsing fails, use status text
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
       }
 
-      return response.json()
+      const data = await response.json()
+      return data
     } catch (error) {
       console.error('API request failed:', error)
       throw error
@@ -178,7 +186,7 @@ class ApiClient {
 
   // Reviews endpoints
   async getProductReviews(productId: number | string) {
-    return this.request(`/api/products/${productId}/reviews`)
+    return this.request(`/api/reviews/product/${productId}`)
   }
 
   async createReview(formData: FormData) {

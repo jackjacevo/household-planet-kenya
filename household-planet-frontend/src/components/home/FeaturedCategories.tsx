@@ -66,15 +66,16 @@ export function FeaturedCategories() {
         const data = await response.json();
         
         if (data && Array.isArray(data) && data.length > 0) {
-          const parentCategories = data.filter((cat: any) => !cat.parentId && cat.isActive);
-          const mappedCategories = parentCategories.slice(0, 6).map((cat: any) => ({
+          const parentCategories = (Array.isArray(data) ? data : []).filter((cat: any) => !cat.parentId && cat.isActive);
+          const mappedCategories = (Array.isArray(parentCategories) ? parentCategories : []).slice(0, 6).map((cat: any) => ({
             id: cat.id.toString(),
             name: cat.name,
             slug: cat.slug,
             image: cat.image
           }));
-          setCategories(mappedCategories);
+          setCategories(Array.isArray(mappedCategories) ? mappedCategories : []);
         } else {
+          console.log('FeaturedCategories API returned non-array data:', data);
           setCategories([]);
         }
       } catch (error) {
@@ -109,7 +110,7 @@ export function FeaturedCategories() {
               <p className="text-gray-600">Categories will appear here once added.</p>
             </div>
           ) : (
-            categories.map((category, index) => (
+            (Array.isArray(categories) ? categories : []).map((category, index) => (
               <Link 
                 key={category.slug}
                 href={`/products?category=${category.slug}`} 

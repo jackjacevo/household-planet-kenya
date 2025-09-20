@@ -156,12 +156,24 @@ function ProductsContent() {
       const response = await api.getProducts(queryParams) as any;
       console.log('API Response:', response);
       
-      const newProducts = response.products || (response as any).data || response || [];
+      // Handle different response structures and ensure we get an array
+      let newProducts = [];
+      if (Array.isArray(response)) {
+        newProducts = response;
+      } else if (Array.isArray(response?.products)) {
+        newProducts = response.products;
+      } else if (Array.isArray(response?.data)) {
+        newProducts = response.data;
+      } else {
+        console.warn('Unexpected API response structure:', response);
+        newProducts = [];
+      }
+      
       console.log('Processed products:', newProducts);
       if (append && scrollMode === 'infinite') {
-        setProducts(prev => [...prev, ...newProducts] as any[]);
+        setProducts(prev => [...(Array.isArray(prev) ? prev : []), ...newProducts]);
       } else {
-        setProducts(newProducts as any[]);
+        setProducts(newProducts);
       }
       
       setTotalPages(response.pagination?.totalPages || response.meta?.totalPages || 1);
@@ -221,16 +233,16 @@ function ProductsContent() {
     url: `${process.env.NEXT_PUBLIC_SITE_URL}/products`,
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: products.length,
+      numberOfItems: Array.isArray(products) ? products.length : 0,
       itemListElement: (Array.isArray(products) ? products : []).slice(0, 10).map((product, index) => ({
         '@type': 'Product',
         position: index + 1,
-        name: product.name,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product.slug}`,
-        image: product.images?.[0],
+        name: product?.name || 'Product',
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product?.slug || ''}`,
+        image: product?.images?.[0] || '',
         offers: {
           '@type': 'Offer',
-          price: product.price,
+          price: product?.price || 0,
           priceCurrency: 'KES'
         }
       }))
@@ -341,7 +353,7 @@ function ProductsContent() {
                     <div className="flex items-center space-x-2 whitespace-nowrap">
                       <Package className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       <span className="text-gray-600 font-medium text-sm sm:text-base">
-                        {loading ? 'Loading...' : `${products.length} products`}
+                        {loading ? 'Loading...' : `${Array.isArray(products) ? products.length : 0} products`}
                       </span>
                     </div>
                     
@@ -493,7 +505,7 @@ function ProductsContent() {
                 </motion.div>
               ) : !error ? (
                 <>
-                  {products.length === 0 ? (
+                  {!Array.isArray(products) || products.length === 0 ? (
                     <motion.div 
                       className="text-center py-16 bg-white rounded-3xl shadow-lg"
                       initial={{ opacity: 0, y: 20 }}
@@ -522,7 +534,7 @@ function ProductsContent() {
                       initial="initial"
                       animate="animate"
                     >
-                      {products.map((product, index) => (
+                      {(Array.isArray(products) ? products : []).map((product, index) => (
                         <motion.div
                           key={product.id}
                           variants={fadeInUp}

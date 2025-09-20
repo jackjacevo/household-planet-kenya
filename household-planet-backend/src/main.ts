@@ -186,15 +186,12 @@ async function bootstrap() {
   // Disable X-Powered-By header
   app.getHttpAdapter().getInstance().disable('x-powered-by');
   
-  // Initialize Prisma and push schema
+  // Prisma connection is handled automatically in onModuleInit
+  logger.log('Database connection initialized via PrismaService.onModuleInit');
+  
+  // Get PrismaService to ensure it's initialized
   const prismaService = app.get(PrismaService);
-  try {
-    await prismaService.$connect();
-    logger.log('Database connected successfully');
-  } catch (error) {
-    logger.error('Database connection failed:', error);
-    process.exit(1);
-  }
+  logger.log('PrismaService initialized successfully');
   
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
