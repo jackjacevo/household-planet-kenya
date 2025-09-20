@@ -160,25 +160,7 @@ export function UserProfile() {
             </>
           )}
           
-          {/* Force show admin link for testing */}
-          {user?.email === 'householdplanet819@gmail.com' && (
-            <>
-              <div className="border-t my-2"></div>
-              <div className="py-2">
-                <Link
-                  href="/admin/dashboard"
-                  className="flex items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors font-medium"
-                  onClick={handleMenuClick}
-                >
-                  <Shield className="w-4 h-4 mr-3" />
-                  Admin Dashboard
-                </Link>
-                <div className="px-4 py-1 text-xs text-gray-500">
-                  Role: {user?.role || 'undefined'}
-                </div>
-              </div>
-            </>
-          )}
+
 
           {/* Logout section */}
           <div className="border-t pt-2">
