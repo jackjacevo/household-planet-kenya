@@ -48,7 +48,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/admin/categories`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/categories`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

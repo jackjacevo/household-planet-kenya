@@ -4,6 +4,7 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
   },
   images: {
+    domains: ['images.unsplash.com', 'api.householdplanetkenya.co.ke'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -13,11 +14,8 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'api.householdplanetkenya.co.ke',
       },
-      {
-        protocol: 'https',
-        hostname: 'householdplanetkenya.co.ke',
-      },
     ],
+    unoptimized: true,
   },
 }
 
