@@ -35,15 +35,46 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <script dangerouslySetInnerHTML={{
           __html: `
-            if (typeof window !== 'undefined') {
-              const originalConsoleWarn = console.warn;
-              console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && args[0].includes('WebSocket connection disabled')) {
-                  return;
-                }
-                originalConsoleWarn.apply(console, args);
-              };
-            }
+            (function() {
+              if (typeof window !== 'undefined') {
+                const originalConsoleWarn = console.warn;
+                const originalConsoleLog = console.log;
+                const originalConsoleError = console.error;
+                
+                console.warn = function(...args) {
+                  const message = args[0];
+                  if (message && typeof message === 'string' && 
+                      (message.includes('WebSocket connection disabled') || 
+                       message.includes('WebSocket') ||
+                       message.includes('ws connection'))) {
+                    return;
+                  }
+                  originalConsoleWarn.apply(console, args);
+                };
+                
+                console.log = function(...args) {
+                  const message = args[0];
+                  if (message && typeof message === 'string' && 
+                      (message.includes('WebSocket connection disabled') || 
+                       message.includes('WebSocket') ||
+                       message.includes('ws connection'))) {
+                    return;
+                  }
+                  originalConsoleLog.apply(console, args);
+                };
+                
+                console.error = function(...args) {
+                  const message = args[0];
+                  if (message && typeof message === 'string' && 
+                      (message.includes('WebSocket connection disabled') || 
+                       message.includes('WebSocket') ||
+                       message.includes('ws connection'))) {
+                    return;
+                  }
+                  originalConsoleError.apply(console, args);
+                };
+              }
+            })();
           `
         }} />
 
