@@ -1,36 +1,60 @@
 const axios = require('axios');
 
+const API_URL = 'https://api.householdplanetkenya.co.ke';
+const ADMIN_EMAIL = 'admin@householdplanet.co.ke';
+const ADMIN_PASSWORD = 'Admin@2025';
+
 async function testAdminAPI() {
   try {
-    console.log('Testing admin dashboard API...');
+    console.log('🔐 Testing admin login...');
     
-    // Test if backend is running
-    const healthCheck = await axios.get('http://localhost:3001/api/admin/dashboard', {
-      timeout: 5000,
-      headers: {
-        'Authorization': 'Bearer test-token' // This will fail auth but should return 401, not 404
-      }
-    }).catch(error => {
-      console.log('Response status:', error.response?.status);
-      console.log('Response data:', error.response?.data);
-      return error.response;
+    // Login
+    const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD
     });
-
-    if (healthCheck?.status === 401) {
-      console.log('✅ Backend is running - got 401 Unauthorized (expected without valid token)');
-      console.log('❌ Issue: Frontend needs valid authentication token');
-    } else if (healthCheck?.status === 404) {
-      console.log('❌ Backend endpoint not found - check if admin routes are properly configured');
-    } else {
-      console.log('Backend response:', healthCheck?.status, healthCheck?.data);
-    }
-
+    
+    const { accessToken } = loginResponse.data;
+    console.log('✅ Login successful');
+    
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    };
+    
+    // Test dashboard endpoint
+    console.log('📊 Testing dashboard API...');
+    const dashboardResponse = await axios.get(`${API_URL}/api/admin/dashboard`, { headers });
+    console.log('✅ Dashboard API working');
+    
+    // Test products endpoint
+    console.log('🛍️ Testing products API...');
+    const productsResponse = await axios.get(`${API_URL}/api/admin/products`, { headers });
+    console.log(`✅ Products API working - ${productsResponse.data.products?.length || 0} products found`);
+    
+    // Test categories endpoint
+    console.log('📂 Testing categories API...');
+    const categoriesResponse = await axios.get(`${API_URL}/api/admin/categories`, { headers });
+    console.log(`✅ Categories API working - ${categoriesResponse.data?.length || 0} categories found`);
+    
+    // Test analytics endpoints
+    console.log('📈 Testing analytics APIs...');
+    const salesResponse = await axios.get(`${API_URL}/api/admin/analytics/sales`, { headers });
+    console.log('✅ Sales analytics working');
+    
+    const performanceResponse = await axios.get(`${API_URL}/api/admin/analytics/performance`, { headers });
+    console.log('✅ Performance analytics working');
+    
+    console.log('\n🎉 All admin API endpoints are working correctly!');
+    
   } catch (error) {
-    if (error.code === 'ECONNREFUSED') {
-      console.log('❌ Backend server is not running on http://localhost:3001');
-      console.log('💡 Solution: Start the backend server with: cd household-planet-backend && npm run start:dev');
+    console.error('❌ API Test Failed:');
+    if (error.response) {
+      console.error(`Status: ${error.response.status}`);
+      console.error(`Message: ${error.response.data?.message || error.response.statusText}`);
+      console.error(`URL: ${error.config?.url}`);
     } else {
-      console.log('❌ Error:', error.message);
+      console.error(error.message);
     }
   }
 }

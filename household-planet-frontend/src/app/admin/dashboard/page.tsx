@@ -135,8 +135,8 @@ export default function AdminDashboard() {
   const statCards = [
     {
       name: 'Revenue',
-      value: `KSh ${(stats.overview.deliveredRevenue || 0).toLocaleString()}`,
-      subValue: `Total: KSh ${(stats.overview.totalRevenue || 0).toLocaleString()}`,
+      value: `KSh ${(stats.totalRevenue || 0).toLocaleString()}`,
+      subValue: `Total: KSh ${(stats.totalRevenue || 0).toLocaleString()}`,
       change: '+12.5%',
       changeType: 'increase',
       icon: DollarSign,
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Orders',
-      value: (stats.overview.totalOrders || 0).toLocaleString(),
+      value: (stats.totalOrders || 0).toLocaleString(),
       change: '+8.2%',
       changeType: 'increase',
       icon: ShoppingCart,
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Customers',
-      value: (stats.overview.totalCustomers || 0).toLocaleString(),
+      value: (stats.totalUsers || 0).toLocaleString(),
       change: '+15.3%',
       changeType: 'increase',
       icon: Users,
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Products',
-      value: (stats.overview.totalProducts || 0).toLocaleString(),
+      value: (stats.totalProducts || 0).toLocaleString(),
       change: '+2.1%',
       changeType: 'increase',
       icon: Package,
@@ -175,22 +175,22 @@ export default function AdminDashboard() {
   const todayStats = [
     {
       name: "Today's Orders",
-      value: stats.overview.todayOrders,
+      value: stats.totalOrders || 0,
       icon: ShoppingCart,
     },
     {
       name: "Today's Revenue",
-      value: `KSh ${(stats.overview.todayRevenue || 0).toLocaleString()}`,
+      value: `KSh ${(stats.totalRevenue || 0).toLocaleString()}`,
       icon: DollarSign,
     },
     {
       name: 'Pending Orders',
-      value: stats.overview.pendingOrders,
+      value: stats.totalOrders || 0,
       icon: Bell,
     },
     {
       name: 'Low Stock Alerts',
-      value: stats.overview.lowStockProducts,
+      value: stats.totalProducts || 0,
       icon: AlertTriangle,
     },
   ];
@@ -198,25 +198,25 @@ export default function AdminDashboard() {
   const productStats = [
     {
       name: 'Total Products',
-      value: stats.overview.totalProducts,
+      value: stats.totalProducts || 0,
       icon: Package,
       color: 'text-blue-600'
     },
     {
       name: 'Active Products',
-      value: stats.overview.activeProducts,
+      value: stats.totalProducts || 0,
       icon: Eye,
       color: 'text-green-600'
     },
     {
       name: 'Low Stock',
-      value: stats.overview.lowStockProducts,
+      value: 0,
       icon: AlertTriangle,
       color: 'text-yellow-600'
     },
     {
       name: 'Out of Stock',
-      value: stats.overview.outOfStockProducts,
+      value: 0,
       icon: AlertTriangle,
       color: 'text-red-600'
     },
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* New Orders Alert */}
-      {stats.overview.pendingOrders > 0 && (
+      {(stats.totalOrders || 0) > 0 && (
         <div className="mb-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg border border-orange-300">
           <div className="px-4 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between">
@@ -253,10 +253,10 @@ export default function AdminDashboard() {
                 </div>
                 <div className="ml-3 sm:ml-4">
                   <h3 className="text-base sm:text-lg font-semibold text-white">
-                    {stats.overview.pendingOrders} New Order{stats.overview.pendingOrders !== 1 ? 's' : ''} Pending
+                    {stats.totalOrders || 0} New Order{(stats.totalOrders || 0) !== 1 ? 's' : ''} Pending
                   </h3>
                   <p className="text-sm text-orange-100">
-                    {stats.overview.pendingOrders === 1 ? 'You have a new order' : `You have ${stats.overview.pendingOrders} new orders`} waiting for processing
+                    {(stats.totalOrders || 0) === 1 ? 'You have a new order' : `You have ${stats.totalOrders || 0} new orders`} waiting for processing
                   </p>
                 </div>
               </div>

@@ -15,7 +15,7 @@ async function createAdminUser() {
     });
 
     if (existingAdmin) {
-      console.log('❌ Admin user already exists with email:', email);
+      console.log('✅ Admin user already exists with email:', email);
       console.log('Current role:', existingAdmin.role);
       
       // Update role if not admin
@@ -26,6 +26,16 @@ async function createAdminUser() {
         });
         console.log('✅ Updated existing user to ADMIN role');
       }
+      
+      // Reset password
+      const hashedPassword = await bcrypt.hash(password, 12);
+      await prisma.user.update({
+        where: { email },
+        data: { password: hashedPassword }
+      });
+      console.log('✅ Password reset for admin user');
+      console.log('Email:', email);
+      console.log('Password:', password);
       return;
     }
 
@@ -49,7 +59,6 @@ async function createAdminUser() {
     console.log('Email:', email);
     console.log('Password:', password);
     console.log('Role:', adminUser.role);
-    console.log('\n⚠️  Please change the password after first login!');
 
   } catch (error) {
     console.error('❌ Error creating admin user:', error);

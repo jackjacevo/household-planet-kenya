@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Auth Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Debug Tool</h1>
+    
+    <div class="section">
+        <h2>Current Authentication State</h2>
+        <div id="authState"></div>
+        <button onclick="checkAuthState()">Check Auth State</button>
+        <button onclick="clearAuth()">Clear Auth Data</button>
+    </div>
+
+    <div class="section">
+        <h2>Token Information</h2>
+        <div id="tokenInfo"></div>
+        <button onclick="decodeToken()">Decode Token</button>
+    </div>
+
+    <div class="section">
+        <h2>API Test</h2>
+        <div id="apiTest"></div>
+        <button onclick="testDashboardAPI()">Test Dashboard API</button>
+        <button onclick="testProfileAPI()">Test Profile API</button>
+    </div>
+
+    <div class="section">
+        <h2>Login Test</h2>
+        <input type="email" id="email" placeholder="Email" value="admin@householdplanetkenya.co.ke">
+        <input type="password" id="password" placeholder="Password" value="">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.householdplanetkenya.co.ke';
+
+        function checkAuthState() {
+            const token = localStorage.getItem('token');
+            const authStateDiv = document.getElementById('authState');
+            
+            if (token) {
+                authStateDiv.innerHTML = `
+                    <div class="info">Token exists in localStorage</div>
+                    <div>Token length: ${token.length}</div>
+                    <div>Token preview: ${token.substring(0, 50)}...</div>
+                `;
+            } else {
+                authStateDiv.innerHTML = '<div class="error">No token found in localStorage</div>';
+            }
+        }
+
+        function decodeToken() {
+            const token = localStorage.getItem('token');
+            const tokenInfoDiv = document.getElementById('tokenInfo');
+            
+            if (!token) {
+                tokenInfoDiv.innerHTML = '<div class="error">No token to decode</div>';
+                return;
+            }
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    tokenInfoDiv.innerHTML = '<div class="error">Invalid JWT format</div>';
+                    return;
+                }
+
+                const payload = JSON.parse(atob(parts[1]));
+                const isExpired = payload.exp * 1000 < Date.now();
+                
+                tokenInfoDiv.innerHTML = `
+                    <div class="${isExpired ? 'error' : 'success'}">
+                        Token ${isExpired ? 'EXPIRED' : 'VALID'}
+                    </div>
+                    <pre>${JSON.stringify(payload, null, 2)}</pre>
+                    <div>Expires: ${new Date(payload.exp * 1000).toLocaleString()}</div>
+                `;
+            } catch (error) {
+                tokenInfoDiv.innerHTML = `<div class="error">Error decoding token: ${error.message}</div>`;
+            }
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('cart-storage');
+            localStorage.removeItem('wishlist-storage');
+            localStorage.removeItem('guestCart');
+            localStorage.removeItem('checkoutData');
+            document.getElementById('authState').innerHTML = '<div class="success">Auth data cleared</div>';
+        }
+
+        async function testDashboardAPI() {
+            const token = localStorage.getItem('token');
+            const apiTestDiv = document.getElementById('apiTest');
+            
+            if (!token) {
+                apiTestDiv.innerHTML = '<div class="error">No token available for API test</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.text();
+                
+                apiTestDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        Dashboard API Response: ${response.status} ${response.statusText}
+                    </div>
+                    <pre>${result}</pre>
+                `;
+            } catch (error) {
+                apiTestDiv.innerHTML = `<div class="error">API Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testProfileAPI() {
+            const token = localStorage.getItem('token');
+            const apiTestDiv = document.getElementById('apiTest');
+            
+            if (!token) {
+                apiTestDiv.innerHTML = '<div class="error">No token available for API test</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.text();
+                
+                apiTestDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        Profile API Response: ${response.status} ${response.statusText}
+                    </div>
+                    <pre>${result}</pre>
+                `;
+            } catch (error) {
+                apiTestDiv.innerHTML = `<div class="error">API Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginResultDiv = document.getElementById('loginResult');
+            
+            if (!email || !password) {
+                loginResultDiv.innerHTML = '<div class="error">Please enter email and password</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', result.accessToken || result.access_token);
+                    loginResultDiv.innerHTML = `
+                        <div class="success">Login successful!</div>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } else {
+                    loginResultDiv.innerHTML = `
+                        <div class="error">Login failed: ${response.status}</div>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                loginResultDiv.innerHTML = `<div class="error">Login Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-check auth state on load
+        window.onload = function() {
+            checkAuthState();
+            decodeToken();
+        };
+    </script>
+</body>
+</html>

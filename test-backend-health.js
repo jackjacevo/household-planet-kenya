@@ -1,51 +1,21 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 async function testBackendHealth() {
-  const baseUrl = 'http://localhost:3001';
+  const endpoints = [
+    'https://api.householdplanetkenya.co.ke/health',
+    'https://api.householdplanetkenya.co.ke/api/health',
+    'https://api.householdplanetkenya.co.ke'
+  ];
   
-  console.log('🏥 Testing backend health...');
-  
-  try {
-    // Test health endpoint
-    console.log('\n💓 Testing health endpoint...');
-    const healthResponse = await fetch(`${baseUrl}/health`);
-    console.log(`Status: ${healthResponse.status}`);
-    
-    if (healthResponse.ok) {
-      const health = await healthResponse.json();
-      console.log('Health:', health);
-    } else {
-      console.log('Error response:', await healthResponse.text());
+  for (const endpoint of endpoints) {
+    try {
+      console.log(`🔍 Testing: ${endpoint}`);
+      const response = await axios.get(endpoint, { timeout: 10000 });
+      console.log(`✅ ${endpoint} - Status: ${response.status}`);
+      console.log(`Response:`, response.data);
+    } catch (error) {
+      console.log(`❌ ${endpoint} - Error: ${error.response?.status || error.code} ${error.response?.statusText || error.message}`);
     }
-    
-    // Test categories endpoint (should work)
-    console.log('\n📂 Testing categories endpoint...');
-    const categoriesResponse = await fetch(`${baseUrl}/categories`);
-    console.log(`Status: ${categoriesResponse.status}`);
-    
-    if (categoriesResponse.ok) {
-      const categories = await categoriesResponse.json();
-      console.log(`Found ${categories.length} categories`);
-    } else {
-      console.log('Error response:', await categoriesResponse.text());
-    }
-    
-    // Test content endpoints with different paths
-    console.log('\n🔍 Testing different content paths...');
-    const paths = [
-      '/content/faqs',
-      '/api/content/faqs',
-      '/content/faqs/categories',
-      '/api/content/faqs/categories'
-    ];
-    
-    for (const path of paths) {
-      const response = await fetch(`${baseUrl}${path}`);
-      console.log(`${path}: ${response.status}`);
-    }
-    
-  } catch (error) {
-    console.error('❌ Error testing backend:', error.message);
   }
 }
 

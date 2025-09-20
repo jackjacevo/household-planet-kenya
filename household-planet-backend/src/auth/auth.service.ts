@@ -30,20 +30,20 @@ export class AuthService {
       where: { email },
     });
 
-    // Log login attempt
-    await this.logLoginAttempt(email, ipAddress, userAgent, false);
-
     if (!user) {
+      await this.logLoginAttempt(email, ipAddress, userAgent, false, 'User not found');
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Check if account is locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
+      await this.logLoginAttempt(email, ipAddress, userAgent, false, 'Account locked');
       throw new ForbiddenException('Account is temporarily locked');
     }
 
     // Check if account is active
     if (!user.isActive) {
+      await this.logLoginAttempt(email, ipAddress, userAgent, false, 'Account deactivated');
       throw new ForbiddenException('Account is deactivated');
     }
 
@@ -51,6 +51,7 @@ export class AuthService {
     
     if (!isPasswordValid) {
       await this.handleFailedLogin(user.id);
+      await this.logLoginAttempt(email, ipAddress, userAgent, false, 'Invalid password');
       throw new UnauthorizedException('Invalid credentials');
     }
 
