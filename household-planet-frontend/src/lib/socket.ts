@@ -4,22 +4,9 @@ class SocketService {
   private socket: Socket | null = null
 
   connect() {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://householdplanetkenya.co.ke/api'
-    
-    this.socket = io(API_BASE_URL, {
-      transports: ['websocket'],
-      autoConnect: true,
-    })
-
-    this.socket.on('connect', () => {
-      console.log('Connected to server')
-    })
-
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from server')
-    })
-
-    return this.socket
+    // WebSocket temporarily disabled to prevent connection errors
+    console.log('WebSocket connection disabled')
+    return null
   }
 
   disconnect() {

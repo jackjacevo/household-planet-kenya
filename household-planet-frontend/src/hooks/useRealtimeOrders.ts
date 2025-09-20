@@ -6,8 +6,8 @@ export function useRealtimeOrders() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Connect to WebSocket for real-time updates
-    socketService.connect();
+    // Connect to WebSocket for real-time updates (if available)
+    const socket = socketService.connect();
 
     const handleOrderStatusUpdate = (data: any) => {
       console.log('Received order status update:', data);
@@ -18,8 +18,10 @@ export function useRealtimeOrders() {
       queryClient.invalidateQueries({ queryKey: ['order', data.orderId] });
     };
 
-    // Listen for order status updates
-    socketService.on('orderStatusUpdate', handleOrderStatusUpdate);
+    // Listen for order status updates (only if socket is available)
+    if (socket) {
+      socketService.on('orderStatusUpdate', handleOrderStatusUpdate);
+    }
 
     // Fallback polling for critical updates (reduced frequency since we have WebSocket)
     const interval = setInterval(() => {
