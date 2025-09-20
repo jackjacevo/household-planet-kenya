@@ -21,11 +21,20 @@ const nextConfig = {
     webVitalsAttribution: ['CLS', 'LCP']
   },
   webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
+    if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         ws: false,
+        net: false,
+        tls: false,
+        crypto: false,
       };
+      
+      // Suppress WebSocket warnings
+      config.ignoreWarnings = [
+        /Critical dependency: the request of a dependency is an expression/,
+        /Module not found: Can't resolve 'ws'/,
+      ];
     }
     return config;
   },
