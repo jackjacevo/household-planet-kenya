@@ -227,7 +227,14 @@ export default function AdminDashboard() {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return '🌅 Good Morning! Dashboard Overview';
+                if (hour < 17) return '☀️ Good Afternoon! Dashboard Overview';
+                return '🌙 Good Evening! Dashboard Overview';
+              })()} 
+            </h1>
             <p className="mt-1 sm:mt-2 text-sm text-gray-700">
               Welcome to your admin dashboard. Here's what's happening with your store today.
             </p>

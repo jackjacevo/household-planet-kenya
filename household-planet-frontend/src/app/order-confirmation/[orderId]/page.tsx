@@ -49,6 +49,15 @@ export default function OrderConfirmationPage() {
 
   useEffect(() => {
     if (params.orderId) {
+      // Immediately clear cart when order confirmation page loads
+      const orderCreated = localStorage.getItem('orderCreated');
+      if (orderCreated === 'true') {
+        clearCart(false, true); // Force clear the cart immediately
+        localStorage.removeItem('orderCreated');
+        localStorage.removeItem('orderIdToConfirm');
+        localStorage.removeItem('checkoutData');
+      }
+      
       // Load completion data from localStorage if available
       const completionData = localStorage.getItem('orderCompletionData');
       if (completionData) {
