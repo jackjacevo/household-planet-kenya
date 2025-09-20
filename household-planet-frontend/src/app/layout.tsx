@@ -41,29 +41,26 @@ export default function RootLayout({
                 const originalConsoleLog = console.log;
                 const originalConsoleError = console.error;
                 
+                const shouldFilter = (msg) => {
+                  const str = String(msg || '').toLowerCase();
+                  return str.includes('websocket') || 
+                         str.includes('ws connection') ||
+                         str.includes('connection disabled') ||
+                         str === 'websocket connection disabled';
+                };
+                
                 console.warn = function(...args) {
-                  const message = String(args[0] || '');
-                  if (message.includes('WebSocket') || 
-                      message.includes('ws connection') ||
-                      message.includes('connection disabled')) {
-                    return;
-                  }
+                  if (shouldFilter(args[0])) return;
                   originalConsoleWarn.apply(console, args);
                 };
                 
                 console.log = function(...args) {
-                  const message = String(args[0] || '');
-                  if (message.includes('WebSocket') || message.includes('connection disabled')) {
-                    return;
-                  }
+                  if (shouldFilter(args[0])) return;
                   originalConsoleLog.apply(console, args);
                 };
                 
                 console.error = function(...args) {
-                  const message = String(args[0] || '');
-                  if (message.includes('WebSocket') || message.includes('connection disabled')) {
-                    return;
-                  }
+                  if (shouldFilter(args[0])) return;
                   originalConsoleError.apply(console, args);
                 };
               }
