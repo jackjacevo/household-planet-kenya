@@ -47,7 +47,7 @@ export function useCategories(autoRefresh = true, refreshInterval = 30000, showN
       setLoading(true);
       setError(null);
       
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/admin/categories`;
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/categories`;
       console.log('🔍 useCategories - Fetching from:', apiUrl);
       
       const response = await fetch(apiUrl, {
