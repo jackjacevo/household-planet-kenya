@@ -1404,8 +1404,8 @@ export class OrdersService {
       
       return Buffer.from(pdf);
     } catch (error) {
-      this.logger.error('Error generating PDF:', error);
-      throw new BadRequestException('Failed to generate PDF');
+      this.logger.error('Error generating PDF:', error.message, error.stack);
+      throw new BadRequestException(`Failed to generate PDF: ${error.message}`);
     } finally {
       if (browser) {
         await browser.close();

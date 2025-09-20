@@ -281,7 +281,8 @@ export class OrdersController {
       
       return res.send(invoice.pdf);
     } catch (error) {
-      throw new BadRequestException('Unable to generate invoice');
+      this.logger.error(`Invoice generation error for order ${orderId}:`, error.message, error.stack);
+      throw new BadRequestException(`Unable to generate invoice: ${error.message}`);
     }
   }
 
