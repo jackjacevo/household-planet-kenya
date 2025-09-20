@@ -19,7 +19,7 @@ export class OrdersController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   async findAll(@Query() filters: OrderFilterDto) {
     try {
       console.log('Orders controller findAll called with filters:', filters);
@@ -56,21 +56,21 @@ export class OrdersController {
 
   @Get('admin/stats')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getOrderStats() {
     return this.ordersService.getOrderStats();
   }
 
   @Get('admin/inventory-report')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getInventoryReport() {
     return this.ordersService.getInventoryReport();
   }
 
   @Get('admin/sales-report')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getSalesReport(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string
@@ -97,7 +97,7 @@ export class OrdersController {
 
   @Get('returns')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getReturnRequests(
     @Query('status') status?: string,
     @Query('orderId') orderId?: string
@@ -111,7 +111,7 @@ export class OrdersController {
 
   @Put('returns/process')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   processReturn(@Body() dto: ProcessReturnDto, @Request() req) {
     return this.ordersService.processReturn(dto, req.user.email);
   }
@@ -144,7 +144,7 @@ export class OrdersController {
 
   @Post('delete/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   async deleteOrder(@Param('id') id: string, @Request() req) {
     const orderId = parseInt(id, 10);
     if (isNaN(orderId)) {
@@ -155,7 +155,7 @@ export class OrdersController {
 
   @Post('bulk/delete')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   async bulkDeleteOrders(@Body() body: { orderIds: number[] }, @Request() req) {
     return this.ordersService.bulkDeleteOrders(body.orderIds, req.user.id);
   }
@@ -212,7 +212,7 @@ export class OrdersController {
 
   @Put(':id/status')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   async updateStatus(@Param('id') id: string, @Body() updateStatusDto: UpdateOrderStatusDto, @Request() req) {
     try {
       console.log('Update status request:', { id, updateStatusDto, user: req.user?.email });
@@ -290,42 +290,42 @@ export class OrdersController {
 
   @Put('bulk/status')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   bulkUpdateStatus(@Body() bulkUpdateDto: BulkOrderUpdateDto, @Request() req) {
     return this.ordersService.bulkUpdateOrders(bulkUpdateDto, req.user.email);
   }
 
   @Post(':id/notes')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   addOrderNote(@Param('id') id: string, @Body() addNoteDto: AddOrderNoteDto, @Request() req) {
     return this.ordersService.addOrderNote(+id, addNoteDto, req.user.email);
   }
 
   @Get(':id/notes')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getOrderNotes(@Param('id') id: string) {
     return this.ordersService.getOrderNotes(+id);
   }
 
   @Post(':id/email')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   sendCustomerEmail(@Param('id') id: string, @Body() emailDto: SendCustomerEmailDto, @Request() req) {
     return this.ordersService.sendCustomerEmail(+id, emailDto, req.user.email);
   }
 
   @Post(':id/shipping-label')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   generateShippingLabel(@Param('id') id: string) {
     return this.ordersService.generateShippingLabel(+id);
   }
 
   @Get('admin/analytics')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getOrderAnalytics(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string
@@ -353,7 +353,7 @@ export class OrdersController {
   // WhatsApp Order Endpoints
   @Post('whatsapp')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   createWhatsAppOrder(@Body() dto: CreateWhatsAppOrderDto, @Request() req) {
     return this.whatsAppService.createWhatsAppOrder(dto, req.user?.id);
   }
@@ -370,21 +370,21 @@ export class OrdersController {
 
   @Get('whatsapp/pending')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getPendingWhatsAppMessages() {
     return this.whatsAppService.getPendingWhatsAppMessages();
   }
 
   @Get('whatsapp/orders')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   getWhatsAppOrders() {
     return this.whatsAppService.getWhatsAppOrders();
   }
 
   @Patch('whatsapp/:messageId/processed')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.SUPER_ADMIN)
   markWhatsAppMessageProcessed(
     @Param('messageId') messageId: string,
     @Body() body: { orderId?: number }
