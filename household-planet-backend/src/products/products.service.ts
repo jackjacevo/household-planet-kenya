@@ -167,7 +167,8 @@ export class ProductsService {
     }));
 
       return { 
-        data: processedProducts, 
+        products: processedProducts, 
+        total,
         pagination: {
           page,
           limit,
