@@ -156,7 +156,7 @@ function ProductsContent() {
       const response = await api.getProducts(queryParams) as any;
       console.log('API Response:', response);
       
-      const newProducts = (response as any).data || response || [];
+      const newProducts = response.products || (response as any).data || response || [];
       console.log('Processed products:', newProducts);
       if (append && scrollMode === 'infinite') {
         setProducts(prev => [...prev, ...newProducts] as any[]);

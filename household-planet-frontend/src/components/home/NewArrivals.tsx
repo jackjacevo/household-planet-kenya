@@ -31,7 +31,9 @@ export function NewArrivals() {
     const fetchProducts = async () => {
       try {
         const data = await api.getProducts({ limit: 6, sortBy: 'newest' }) as any;
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && data.products && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        } else if (data && Array.isArray(data) && data.length > 0) {
           setProducts(data);
         } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
           setProducts(data.data);
