@@ -20,7 +20,6 @@ const nextConfig = {
   experimental: {
     webVitalsAttribution: ['CLS', 'LCP']
   },
-  webSocketServer: false,
   webpack: (config, { dev, isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -31,11 +30,21 @@ const nextConfig = {
         crypto: false,
       };
       
-      // Suppress WebSocket warnings
+      // Suppress all WebSocket related warnings
       config.ignoreWarnings = [
         /Critical dependency: the request of a dependency is an expression/,
         /Module not found: Can't resolve 'ws'/,
+        /WebSocket connection disabled/,
+        /Failed to construct 'WebSocket'/,
       ];
+      
+      // Disable WebSocket in production
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new config.webpack.DefinePlugin({
+          'process.env.DISABLE_WEBSOCKET': JSON.stringify('true')
+        })
+      );
     }
     return config;
   },

@@ -6,7 +6,7 @@ import axios from 'axios';
 
 export default function AdminProductsTestPage() {
   const [status, setStatus] = useState('');
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 

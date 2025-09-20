@@ -33,6 +33,19 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#16a34a" />
         <link rel="manifest" href="/manifest.json" />
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if (typeof window !== 'undefined') {
+              const originalConsoleWarn = console.warn;
+              console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('WebSocket connection disabled')) {
+                  return;
+                }
+                originalConsoleWarn.apply(console, args);
+              };
+            }
+          `
+        }} />
 
 
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
