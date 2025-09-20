@@ -6,14 +6,60 @@ export class AdminService {
   constructor(private prisma: PrismaService) {}
 
   async getDashboardStats() {
+    const [totalProducts, totalOrders, totalCustomers, orders, revenue] = await Promise.all([
+      this.prisma.product.count(),
+      this.prisma.order.count(),
+      this.prisma.user.count({ where: { role: 'CUSTOMER' } }),
+      this.prisma.order.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { name: true, email: true } },
+          items: { include: { product: { select: { name: true } } } }
+        }
+      }),
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+        where: { status: { not: 'CANCELLED' } }
+      })
+    ]);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [todayOrders, todayRevenue, pendingOrders] = await Promise.all([
+      this.prisma.order.count({
+        where: { createdAt: { gte: today, lt: tomorrow } }
+      }),
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+        where: {
+          createdAt: { gte: today, lt: tomorrow },
+          status: { not: 'CANCELLED' }
+        }
+      }),
+      this.prisma.order.count({ where: { status: 'PENDING' } })
+    ]);
+
     return {
-      totalProducts: await this.prisma.product.count(),
-      totalOrders: await this.prisma.order.count(),
-      totalUsers: await this.prisma.user.count(),
-      totalRevenue: 0,
-      recentOrders: [],
-      lowStockProducts: [],
-      topProducts: []
+      overview: {
+        totalOrders,
+        totalRevenue: Number(revenue._sum.total) || 0,
+        totalCustomers,
+        totalProducts,
+        activeProducts: totalProducts,
+        outOfStockProducts: 0,
+        todayOrders,
+        todayRevenue: Number(todayRevenue._sum.total) || 0,
+        pendingOrders,
+        lowStockProducts: 0
+      },
+      recentOrders: orders,
+      topProducts: [],
+      customerGrowth: [],
+      salesByCounty: []
     };
   }
 
