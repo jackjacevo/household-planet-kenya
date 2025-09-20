@@ -29,44 +29,22 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              const orig = console.log;
+              console.log = function(...args) {
+                const msg = String(args[0] || '').toLowerCase();
+                if (msg.includes('websocket') || msg.includes('connection disabled')) return;
+                orig.apply(console, args);
+              };
+            })();
+          `
+        }} />
         <title>Household Planet Kenya | Kenya's Best Online Shopping platform</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#16a34a" />
         <link rel="manifest" href="/manifest.json" />
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              if (typeof window !== 'undefined') {
-                const originalConsoleWarn = console.warn;
-                const originalConsoleLog = console.log;
-                const originalConsoleError = console.error;
-                
-                const shouldFilter = (msg) => {
-                  const str = String(msg || '').toLowerCase();
-                  return str.includes('websocket') || 
-                         str.includes('ws connection') ||
-                         str.includes('connection disabled') ||
-                         str === 'websocket connection disabled';
-                };
-                
-                console.warn = function(...args) {
-                  if (shouldFilter(args[0])) return;
-                  originalConsoleWarn.apply(console, args);
-                };
-                
-                console.log = function(...args) {
-                  if (shouldFilter(args[0])) return;
-                  originalConsoleLog.apply(console, args);
-                };
-                
-                console.error = function(...args) {
-                  if (shouldFilter(args[0])) return;
-                  originalConsoleError.apply(console, args);
-                };
-              }
-            })();
-          `
-        }} />
 
 
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
