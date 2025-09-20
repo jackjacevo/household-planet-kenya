@@ -68,8 +68,18 @@ export default function AdminActivitiesPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      setActivities((response as any).data.data || []);
-      setPagination(prev => ({ ...prev, ...((response as any).data.meta || {}) }));
+      // Handle different response structures
+      const responseData = (response as any).data;
+      if (responseData.data && Array.isArray(responseData.data)) {
+        setActivities(responseData.data);
+        setPagination(prev => ({ ...prev, ...(responseData.meta || {}) }));
+      } else if (Array.isArray(responseData)) {
+        setActivities(responseData);
+        setPagination(prev => ({ ...prev, total: responseData.length, totalPages: 1 }));
+      } else {
+        console.warn('Unexpected activities API response structure:', responseData);
+        setActivities([]);
+      }
     } catch (error) {
       console.error('Error fetching activities:', error);
       setActivities([]);

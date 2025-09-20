@@ -20,6 +20,7 @@ const nextConfig = {
   experimental: {
     webVitalsAttribution: ['CLS', 'LCP']
   },
+  webSocketServer: false,
   webpack: (config, { dev, isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

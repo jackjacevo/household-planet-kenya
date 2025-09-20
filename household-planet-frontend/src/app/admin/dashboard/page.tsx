@@ -135,7 +135,7 @@ export default function AdminDashboard() {
   const statCards = [
     {
       name: 'Revenue',
-      value: `KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
+      value: `KSh ${(stats.overview?.deliveredRevenue || 0).toLocaleString()}`,
       subValue: `Total: KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
       change: '+12.5%',
       changeType: 'increase',
@@ -291,12 +291,12 @@ export default function AdminDashboard() {
                     <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                       {item.name}
                     </dt>
-                    <dd className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-0">
-                      <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                    <dd className="flex flex-col gap-1">
+                      <div className="text-xl sm:text-3xl font-bold text-gray-900">
                         {item.value}
                       </div>
                       {item.subValue && (
-                        <div className="text-xs text-gray-500 hidden sm:block">
+                        <div className="text-xs sm:text-sm text-gray-500">
                           {item.subValue}
                         </div>
                       )}

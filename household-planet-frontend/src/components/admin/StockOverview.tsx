@@ -36,8 +36,20 @@ export default function StockOverview({ className = '' }: StockOverviewProps) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Handle different response structures and filter products
+      const responseData = (response as any).data;
+      let products = [];
+      
+      if (responseData.products && Array.isArray(responseData.products)) {
+        products = responseData.products;
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        products = responseData.data;
+      } else if (Array.isArray(responseData)) {
+        products = responseData;
+      }
+      
       // Filter products that are actually low stock or out of stock
-      const lowStock = (response as any).data.data?.filter((product: any) => 
+      const lowStock = products.filter((product: any) => 
         product.trackStock && (product.stock === 0 || product.stock <= product.lowStockThreshold)
       ) || [];
       

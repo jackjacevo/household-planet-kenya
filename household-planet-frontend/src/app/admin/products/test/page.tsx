@@ -26,7 +26,18 @@ export default function AdminProductsTestPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setProducts(productsResponse.data.data);
+      // Handle different response structures
+      const productsData = productsResponse.data;
+      if (productsData.products && Array.isArray(productsData.products)) {
+        setProducts(productsData.products);
+      } else if (productsData.data && Array.isArray(productsData.data)) {
+        setProducts(productsData.data);
+      } else if (Array.isArray(productsData)) {
+        setProducts(productsData);
+      } else {
+        console.warn('Unexpected products API response structure:', productsData);
+        setProducts([]);
+      }
       setStatus(prev => prev + '\n✅ Products API working');
 
       // Test categories endpoint

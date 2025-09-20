@@ -88,10 +88,23 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
 
       const response = await api.get(`/reviews/product/${productId}?${params}`);
       
-      if (pageNum === 1) {
-        setReviews((response as any).data.data);
+      // Handle different response structures
+      const responseData = (response as any).data;
+      let reviewsData = [];
+      
+      if (responseData.data && Array.isArray(responseData.data)) {
+        reviewsData = responseData.data;
+      } else if (Array.isArray(responseData)) {
+        reviewsData = responseData;
       } else {
-        setReviews(prev => [...prev, ...(response as any).data.data]);
+        console.warn('Unexpected reviews API response structure:', responseData);
+        reviewsData = [];
+      }
+      
+      if (pageNum === 1) {
+        setReviews(reviewsData);
+      } else {
+        setReviews(prev => [...prev, ...reviewsData]);
       }
       
       setHasMore((response as any).data.meta.page < (response as any).data.meta.totalPages);

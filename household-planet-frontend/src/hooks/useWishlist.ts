@@ -99,7 +99,20 @@ export const useWishlist = create<WishlistStore>()(
         try {
           const response = await api.get('/api/wishlist');
           const wishlistData = (response as any).data;
-          const backendItems = (wishlistData.items || (response as any).data).map((item: any) => item.product || item);
+          // Handle different response structures
+          let itemsArray = [];
+          if (wishlistData.items && Array.isArray(wishlistData.items)) {
+            itemsArray = wishlistData.items;
+          } else if (Array.isArray((response as any).data)) {
+            itemsArray = (response as any).data;
+          } else if (Array.isArray(wishlistData)) {
+            itemsArray = wishlistData;
+          } else {
+            console.warn('Unexpected wishlist API response structure:', wishlistData);
+            itemsArray = [];
+          }
+          
+          const backendItems = itemsArray.map((item: any) => item.product || item);
           set({ items: backendItems, wishlistData });
         } catch (error) {
           console.error('Failed to sync wishlist:', error);

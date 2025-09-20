@@ -40,7 +40,20 @@ export default function PaymentReconciliation() {
         }
       );
 
-      const transactions = (response as any).data;
+      // Handle different response structures
+      const responseData = (response as any).data;
+      let transactions = [];
+      
+      if (Array.isArray(responseData)) {
+        transactions = responseData;
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        transactions = responseData.data;
+      } else if (responseData.transactions && Array.isArray(responseData.transactions)) {
+        transactions = responseData.transactions;
+      } else {
+        console.warn('Unexpected transactions API response structure:', responseData);
+        transactions = [];
+      }
       const reconciliation = {
         totalTransactions: transactions.length,
         totalAmount: transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0),
@@ -71,15 +84,31 @@ export default function PaymentReconciliation() {
 
       const csvContent = [
         'Date,Order,Customer,Amount,Status,Provider,Receipt',
-        ...(response as any).data.map((t: any) => [
-          new Date(t.createdAt).toLocaleDateString(),
-          t.order?.orderNumber || 'N/A',
-          t.order?.user?.name || 'N/A',
-          t.amount,
-          t.status,
-          t.provider,
-          t.mpesaReceiptNumber || 'N/A'
-        ].join(','))
+        // Handle different response structures for export
+        ...(() => {
+          const responseData = (response as any).data;
+          let transactionsArray = [];
+          
+          if (Array.isArray(responseData)) {
+            transactionsArray = responseData;
+          } else if (responseData.data && Array.isArray(responseData.data)) {
+            transactionsArray = responseData.data;
+          } else if (responseData.transactions && Array.isArray(responseData.transactions)) {
+            transactionsArray = responseData.transactions;
+          } else {
+            transactionsArray = [];
+          }
+          
+          return transactionsArray.map((t: any) => [
+            new Date(t.createdAt).toLocaleDateString(),
+            t.order?.orderNumber || 'N/A',
+            t.order?.user?.name || 'N/A',
+            t.amount,
+            t.status,
+            t.provider,
+            t.mpesaReceiptNumber || 'N/A'
+          ].join(','));
+        })()
       ].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv' });

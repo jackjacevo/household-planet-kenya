@@ -93,8 +93,29 @@ export default function AdminProductsPage() {
       );
       
       console.log('Products response:', (response as any).data);
-      setProducts((response as any).data.data || []);
-      setMeta((response as any).data.meta || { total: 0, totalPages: 0 });
+      
+      // Handle different response structures
+      const responseData = (response as any).data;
+      if (responseData.products && Array.isArray(responseData.products)) {
+        // Response format: {products: Array, total: number}
+        setProducts(responseData.products);
+        setMeta({ 
+          total: responseData.total || responseData.products.length, 
+          totalPages: Math.ceil((responseData.total || responseData.products.length) / filters.limit) 
+        });
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        // Response format: {data: Array, meta: object}
+        setProducts(responseData.data);
+        setMeta(responseData.meta || { total: 0, totalPages: 0 });
+      } else if (Array.isArray(responseData)) {
+        // Response format: Array
+        setProducts(responseData);
+        setMeta({ total: responseData.length, totalPages: 1 });
+      } else {
+        console.warn('Unexpected API response structure:', responseData);
+        setProducts([]);
+        setMeta({ total: 0, totalPages: 0 });
+      }
     } catch (error: any) {
       console.error('Error fetching products:', error);
       if (error.response?.status === 401) {
