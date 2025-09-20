@@ -12,12 +12,13 @@ import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 
 @Controller('admin')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN, Role.SUPER_ADMIN)
+@UseGuards(AuthGuard('jwt'))
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
   @Get('dashboard')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getDashboardStats() {
     return this.adminService.getDashboardStats();
   }
