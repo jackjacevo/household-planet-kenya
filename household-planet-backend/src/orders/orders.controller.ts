@@ -274,12 +274,19 @@ export class OrdersController {
         }
       }
       
-      res.setHeader('Content-Type', 'application/pdf');
-      
-      if (preview === 'true') {
-        res.setHeader('Content-Disposition', 'inline');
+      // Set appropriate headers based on content type
+      if (invoice.pdf.toString().startsWith('\n===========================================')) {
+        // Text fallback
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `attachment; filename="receipt-${invoice.orderNumber}.txt"`);
       } else {
-        res.setHeader('Content-Disposition', `attachment; filename="receipt-${invoice.orderNumber}.pdf"`);
+        // PDF content
+        res.setHeader('Content-Type', 'application/pdf');
+        if (preview === 'true') {
+          res.setHeader('Content-Disposition', 'inline');
+        } else {
+          res.setHeader('Content-Disposition', `attachment; filename="receipt-${invoice.orderNumber}.pdf"`);
+        }
       }
       
       return res.send(invoice.pdf);
