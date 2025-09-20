@@ -11,6 +11,10 @@ COPY household-planet-backend/package*.json ./
 # Copy prisma schema for generation
 COPY household-planet-backend/prisma ./prisma/
 
+# Set environment variables to skip Puppeteer download
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # Install dependencies
 RUN npm install
 
