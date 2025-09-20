@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 export async function GET(request: NextRequest) {
   try {
     const timestamp = Date.now();
-    const response = await fetch(`${API_BASE_URL}/api/simple-delivery/locations?t=${timestamp}`, {
+    const response = await fetch(`${API_BASE_URL}/simple-delivery/locations?t=${timestamp}`, {
       headers: {
         'Content-Type': 'application/json',
       },

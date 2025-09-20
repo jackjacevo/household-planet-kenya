@@ -40,7 +40,7 @@ export function useDeliveryLocations() {
       setError(null);
       
       const timestamp = Date.now();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/simple-delivery/locations?t=${timestamp}`, {
+      const response = await fetch(`/api/delivery/locations?t=${timestamp}`, {
         cache: 'no-store'
       });
       

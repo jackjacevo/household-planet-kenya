@@ -170,10 +170,13 @@ function ProductsContent() {
       }
       
       console.log('Processed products:', newProducts);
+      // Ensure newProducts is always an array
+      const safeProducts = Array.isArray(newProducts) ? newProducts : [];
+      
       if (append && scrollMode === 'infinite') {
-        setProducts(prev => [...(Array.isArray(prev) ? prev : []), ...newProducts]);
+        setProducts(prev => [...(Array.isArray(prev) ? prev : []), ...safeProducts]);
       } else {
-        setProducts(newProducts);
+        setProducts(safeProducts);
       }
       
       setTotalPages(response.pagination?.totalPages || response.meta?.totalPages || 1);
@@ -182,7 +185,7 @@ function ProductsContent() {
       console.error('Error fetching products:', error);
       setError('Failed to load products. Please try again.');
       if (!append) {
-        setProducts([] as any[]);
+        setProducts([]);
       }
     } finally {
       setLoading(false);

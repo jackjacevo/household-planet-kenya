@@ -1,95 +1,107 @@
+#!/usr/bin/env node
+
 const axios = require('axios');
 
+const API_URL = 'https://api.householdplanetkenya.co.ke';
+
 async function seedProductionData() {
+  console.log('🌱 Seeding Production Data...\n');
+
   try {
-    console.log('🌱 Seeding production database with sample data...');
-    
-    // Login as admin first
-    const loginResponse = await axios.post('https://api.householdplanetkenya.co.ke/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
-      password: 'Admin@2025'
-    });
-    
-    const token = loginResponse.data.accessToken;
-    const headers = { 'Authorization': `Bearer ${token}` };
-    
-    // Create categories
-    console.log('📂 Creating categories...');
-    const categories = [
-      { name: 'Kitchen & Dining', description: 'Kitchen appliances, cookware, and dining essentials' },
-      { name: 'Home Cleaning', description: 'Cleaning supplies and equipment' },
-      { name: 'Bathroom Essentials', description: 'Bathroom accessories and toiletries' },
-      { name: 'Storage & Organization', description: 'Storage solutions and organizers' },
-    ];
-    
-    const createdCategories = [];
-    for (const category of categories) {
-      try {
-        const response = await axios.post('https://api.householdplanetkenya.co.ke/api/admin/categories', category, { headers });
-        createdCategories.push(response.data);
-        console.log(`✅ Created category: ${category.name}`);
-      } catch (error) {
-        console.log(`⚠️ Category ${category.name} might already exist`);
+    // 1. Check current data
+    console.log('📊 Checking current data...');
+    const categoriesResponse = await axios.get(`${API_URL}/api/categories`);
+    const productsResponse = await axios.get(`${API_URL}/api/products`);
+    const locationsResponse = await axios.get(`${API_URL}/api/delivery/locations`);
+
+    console.log(`Categories: ${categoriesResponse.data.length}`);
+    console.log(`Products: ${productsResponse.data.length}`);
+    console.log(`Delivery Locations: ${locationsResponse.data.length}\n`);
+
+    // 2. Seed products if none exist
+    if (productsResponse.data.length === 0) {
+      console.log('🛍️ Adding sample products...');
+      
+      const sampleProducts = [
+        {
+          name: "Premium Kitchen Utensil Set",
+          description: "Complete 12-piece stainless steel kitchen utensil set perfect for modern Kenyan homes",
+          price: 2500,
+          categoryId: categoriesResponse.data[0]?.id,
+          stock: 50,
+          images: ["https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500"],
+          isActive: true
+        },
+        {
+          name: "Ceramic Dinner Plate Set",
+          description: "Beautiful 6-piece ceramic dinner plate set, dishwasher safe",
+          price: 1800,
+          categoryId: categoriesResponse.data[1]?.id,
+          stock: 30,
+          images: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500"],
+          isActive: true
+        },
+        {
+          name: "Non-Stick Cooking Pan",
+          description: "High-quality non-stick frying pan, 28cm diameter",
+          price: 1200,
+          categoryId: categoriesResponse.data[0]?.id,
+          stock: 25,
+          images: ["https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500"],
+          isActive: true
+        }
+      ];
+
+      for (const product of sampleProducts) {
+        try {
+          const response = await axios.post(`${API_URL}/api/products`, product);
+          console.log(`✅ Added: ${product.name}`);
+        } catch (error) {
+          console.log(`❌ Failed to add ${product.name}: ${error.response?.data?.message || error.message}`);
+        }
       }
     }
-    
-    // Create products
-    console.log('🛍️ Creating products...');
-    const products = [
-      {
-        name: 'Non-Stick Frying Pan Set',
-        sku: 'KIT-PAN-001',
-        description: 'Professional grade non-stick frying pan set with heat-resistant handles',
-        shortDescription: '3-piece non-stick frying pan set',
-        price: 2500,
-        comparePrice: 3000,
-        categoryId: 1,
-        stock: 50,
-        isFeatured: true,
-        tags: ['kitchen', 'cookware', 'non-stick'],
-        images: []
-      },
-      {
-        name: 'All-Purpose Cleaner 500ml',
-        sku: 'CLN-APC-001',
-        description: 'Multi-surface cleaner suitable for kitchen, bathroom, and general cleaning',
-        shortDescription: 'Multi-surface cleaning solution',
-        price: 350,
-        comparePrice: 450,
-        categoryId: 2,
-        stock: 100,
-        isFeatured: true,
-        tags: ['cleaning', 'household', 'multi-surface'],
-        images: []
-      },
-      {
-        name: 'Storage Basket Set',
-        sku: 'STO-BAS-001',
-        description: 'Set of 3 woven storage baskets in different sizes for home organization',
-        shortDescription: '3-piece storage basket set',
-        price: 1200,
-        comparePrice: 1500,
-        categoryId: 4,
-        stock: 30,
-        isFeatured: true,
-        tags: ['storage', 'organization', 'baskets'],
-        images: []
-      }
-    ];
-    
-    for (const product of products) {
-      try {
-        const response = await axios.post('https://api.householdplanetkenya.co.ke/api/admin/products', product, { headers });
-        console.log(`✅ Created product: ${product.name}`);
-      } catch (error) {
-        console.log(`⚠️ Product ${product.name} creation failed:`, error.response?.data?.message || error.message);
+
+    // 3. Seed delivery locations if none exist
+    if (locationsResponse.data.length === 0) {
+      console.log('\n🚚 Adding delivery locations...');
+      
+      const locations = [
+        { name: "Nairobi CBD", cost: 200, estimatedDays: 1 },
+        { name: "Westlands", cost: 250, estimatedDays: 1 },
+        { name: "Karen", cost: 300, estimatedDays: 2 },
+        { name: "Kiambu", cost: 350, estimatedDays: 2 },
+        { name: "Thika", cost: 400, estimatedDays: 3 }
+      ];
+
+      for (const location of locations) {
+        try {
+          const response = await axios.post(`${API_URL}/api/delivery/locations`, location);
+          console.log(`✅ Added location: ${location.name}`);
+        } catch (error) {
+          console.log(`❌ Failed to add ${location.name}: ${error.response?.data?.message || error.message}`);
+        }
       }
     }
-    
-    console.log('🎉 Production database seeded successfully!');
-    
+
+    // 4. Final verification
+    console.log('\n🔍 Final verification...');
+    const finalCategories = await axios.get(`${API_URL}/api/categories`);
+    const finalProducts = await axios.get(`${API_URL}/api/products`);
+    const finalLocations = await axios.get(`${API_URL}/api/delivery/locations`);
+
+    console.log(`✅ Categories: ${finalCategories.data.length}`);
+    console.log(`✅ Products: ${finalProducts.data.length}`);
+    console.log(`✅ Delivery Locations: ${finalLocations.data.length}`);
+
+    console.log('\n🎉 Production data seeding completed!');
+    console.log(`🌍 Visit: https://householdplanetkenya.co.ke`);
+
   } catch (error) {
-    console.error('❌ Seeding failed:', error.response?.data || error.message);
+    console.error('❌ Error seeding production data:', error.message);
+    if (error.response) {
+      console.error('Response:', error.response.data);
+    }
   }
 }
 

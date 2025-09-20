@@ -17,6 +17,18 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  experimental: {
+    webVitalsAttribution: ['CLS', 'LCP']
+  },
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        ws: false,
+      };
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig

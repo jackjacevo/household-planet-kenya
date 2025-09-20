@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-09-20T16:28:13.851Z",
+  "services": {
+    "backend": {
+      "status": "✅ ONLINE",
+      "responseTime": "610ms",
+      "httpStatus": 200
+    },
+    "frontend": {
+      "status": "✅ ONLINE",
+      "responseTime": "611ms",
+      "httpStatus": 200
+    }
+  },
+  "data": {
+    "categories": 14,
+    "products": 0,
+    "deliveryLocations": 0
+  },
+  "performance": {},
+  "issues": [
+    "No products available in the system",
+    "No delivery locations configured"
+  ]
+}
