@@ -1,11 +1,20 @@
 FROM node:20-alpine
 
-# Set environment variables to skip Puppeteer download FIRST
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# Install Chrome dependencies and Chrome
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    openssl \
+    openssl-dev
 
-# Install OpenSSL for Prisma
-RUN apk add --no-cache openssl openssl-dev
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 WORKDIR /app
 
