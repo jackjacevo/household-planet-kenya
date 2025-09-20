@@ -32,6 +32,7 @@ const staggerContainer = {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
+  const [safeProducts, setSafeProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,9 +175,13 @@ function ProductsContent() {
       const safeProducts = Array.isArray(newProducts) ? newProducts : [];
       
       if (append && scrollMode === 'infinite') {
-        setProducts(prev => [...(Array.isArray(prev) ? prev : []), ...safeProducts]);
+        const prevProducts = Array.isArray(products) ? products : [];
+        const newProductsList = [...prevProducts, ...safeProducts];
+        setProducts(newProductsList);
+        setSafeProducts(newProductsList);
       } else {
         setProducts(safeProducts);
+        setSafeProducts(safeProducts);
       }
       
       setTotalPages(response.pagination?.totalPages || response.meta?.totalPages || 1);
@@ -186,6 +191,7 @@ function ProductsContent() {
       setError('Failed to load products. Please try again.');
       if (!append) {
         setProducts([]);
+        setSafeProducts([]);
       }
     } finally {
       setLoading(false);
@@ -236,8 +242,8 @@ function ProductsContent() {
     url: `${process.env.NEXT_PUBLIC_SITE_URL}/products`,
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: Array.isArray(products) ? products.length : 0,
-      itemListElement: (Array.isArray(products) ? products : []).slice(0, 10).map((product, index) => ({
+      numberOfItems: safeProducts.length,
+      itemListElement: safeProducts.slice(0, 10).map((product, index) => ({
         '@type': 'Product',
         position: index + 1,
         name: product?.name || 'Product',
@@ -250,7 +256,7 @@ function ProductsContent() {
         }
       }))
     }
-  }), [products])
+  }), [safeProducts])
 
   return (
     <>
@@ -356,7 +362,7 @@ function ProductsContent() {
                     <div className="flex items-center space-x-2 whitespace-nowrap">
                       <Package className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                       <span className="text-gray-600 font-medium text-sm sm:text-base">
-                        {loading ? 'Loading...' : `${Array.isArray(products) ? products.length : 0} products`}
+                        {loading ? 'Loading...' : `${safeProducts.length} products`}
                       </span>
                     </div>
                     
@@ -508,7 +514,7 @@ function ProductsContent() {
                 </motion.div>
               ) : !error ? (
                 <>
-                  {!Array.isArray(products) || products.length === 0 ? (
+                  {safeProducts.length === 0 ? (
                     <motion.div 
                       className="text-center py-16 bg-white rounded-3xl shadow-lg"
                       initial={{ opacity: 0, y: 20 }}
@@ -537,7 +543,7 @@ function ProductsContent() {
                       initial="initial"
                       animate="animate"
                     >
-                      {(Array.isArray(products) ? products : []).map((product, index) => (
+                      {safeProducts.map((product, index) => (
                         <motion.div
                           key={product.id}
                           variants={fadeInUp}
