@@ -1,37 +1,33 @@
-const axios = require('axios');
+const fetch = require('node-fetch');
 
 async function testDeliveryEndpoint() {
-  try {
-    console.log('🔍 Testing delivery endpoint...\n');
+  console.log('🔍 Testing Delivery Endpoint Fix...\n');
 
-    // Test the delivery locations endpoint
-    console.log('1. Testing /delivery/locations...');
-    const locationsResponse = await axios.get('http://localhost:3001/delivery/locations');
-    console.log('✅ Delivery locations response:', locationsResponse.data);
-    console.log(`Found ${locationsResponse.data.data?.length || 0} total locations`);
+  const endpoints = [
+    'https://api.householdplanetkenya.co.ke/simple-delivery/locations',
+    'https://api.householdplanetkenya.co.ke/api/simple-delivery/locations',
+    'https://api.householdplanetkenya.co.ke/delivery/locations'
+  ];
 
-    if (locationsResponse.data.data?.length > 0) {
-      // Group by tier
-      const locationsByTier = locationsResponse.data.data.reduce((acc, location) => {
-        if (!acc[location.tier]) {
-          acc[location.tier] = [];
-        }
-        acc[location.tier].push(location);
-        return acc;
-      }, {});
-
-      console.log('\nLocations by tier:');
-      Object.keys(locationsByTier).sort().forEach(tier => {
-        console.log(`Tier ${tier}: ${locationsByTier[tier].length} locations`);
-        locationsByTier[tier].slice(0, 2).forEach(location => {
-          console.log(`  - ${location.name}: Ksh ${location.price}`);
-        });
-      });
+  for (const url of endpoints) {
+    try {
+      console.log(`Testing: ${url}`);
+      const response = await fetch(url);
+      console.log(`Status: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ SUCCESS - Found ${data.data?.length || 0} locations\n`);
+        return;
+      } else {
+        console.log(`❌ FAILED\n`);
+      }
+    } catch (error) {
+      console.log(`❌ ERROR: ${error.message}\n`);
     }
-
-  } catch (error) {
-    console.error('❌ Error:', error.response?.data || error.message);
   }
+
+  console.log('🔧 All endpoints failed. Backend may need restart.');
 }
 
 testDeliveryEndpoint();
