@@ -21,6 +21,10 @@ npx prisma db push --accept-data-loss || {
 echo "Creating settings table..."
 node scripts/create-settings-runtime.js
 
+# Auto-seed database
+echo "Auto-seeding database..."
+node scripts/auto-seed.js || echo "⚠️ Auto-seeding failed (normal if already seeded)"
+
 # Start the application
 echo "Starting the application..."
 node dist/src/main.js
