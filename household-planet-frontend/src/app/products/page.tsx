@@ -222,7 +222,7 @@ function ProductsContent() {
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: products.length,
-      itemListElement: products.slice(0, 10).map((product, index) => ({
+      itemListElement: (Array.isArray(products) ? products : []).slice(0, 10).map((product, index) => ({
         '@type': 'Product',
         position: index + 1,
         name: product.name,

@@ -111,7 +111,8 @@ export default function CategoryPage() {
         ...otherFilters,
       }) as any;
       
-      setProducts((response as any).data || []);
+      const newProducts = response.products || (response as any).data || response || [];
+      setProducts(Array.isArray(newProducts) ? newProducts : []);
       setTotalPages(response.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -145,7 +146,7 @@ export default function CategoryPage() {
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: products.length,
-      itemListElement: products.slice(0, 10).map((product, index) => ({
+      itemListElement: (Array.isArray(products) ? products : []).slice(0, 10).map((product, index) => ({
         '@type': 'Product',
         position: index + 1,
         name: product.name,
