@@ -136,7 +136,15 @@ export default function AdminDashboard() {
   const statCards = [
     {
       name: 'Revenue',
-      value: `KSh ${(stats.overview?.deliveredRevenue || stats.overview?.totalRevenue || 0).toLocaleString()}`,
+      value: `KSh ${(() => {
+        // Calculate delivered revenue from recent orders if not provided by backend
+        if (stats.overview?.deliveredRevenue) {
+          return stats.overview.deliveredRevenue;
+        }
+        // Calculate from delivered orders in recentOrders
+        const deliveredTotal = (stats.recentOrders || []).filter(order => order.status === 'DELIVERED').reduce((sum, order) => sum + order.total, 0);
+        return deliveredTotal || stats.overview?.totalRevenue || 0;
+      })().toLocaleString()}`,
       subValue: `Total: KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
       change: '+12.5%',
       changeType: 'increase',
