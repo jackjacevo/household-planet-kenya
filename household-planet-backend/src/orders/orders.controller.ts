@@ -11,6 +11,7 @@ import { Role } from '../common/enums';
 
 @Controller('orders')
 export class OrdersController {
+  // Logger for invoice generation debugging
   private readonly logger = new Logger(OrdersController.name);
 
   constructor(
