@@ -269,16 +269,7 @@ export function Header() {
                   <Search className="h-4 w-4 mr-3" /> 
                   <span>Track Order</span>
                 </Link>
-                {(user.role === 'ADMIN' || user.role === 'admin') && (
-                  <Link 
-                    href="/admin/dashboard" 
-                    className="flex items-center py-3 text-green-700 hover:text-green-600"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-5 w-5 mr-3" /> 
-                    <span>Admin Dashboard</span>
-                  </Link>
-                )}
+
                 <button
                   onClick={() => {
                     logout()
