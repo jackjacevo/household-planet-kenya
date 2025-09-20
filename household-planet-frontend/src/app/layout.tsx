@@ -42,33 +42,26 @@ export default function RootLayout({
                 const originalConsoleError = console.error;
                 
                 console.warn = function(...args) {
-                  const message = args[0];
-                  if (message && typeof message === 'string' && 
-                      (message.includes('WebSocket connection disabled') || 
-                       message.includes('WebSocket') ||
-                       message.includes('ws connection'))) {
+                  const message = String(args[0] || '');
+                  if (message.includes('WebSocket') || 
+                      message.includes('ws connection') ||
+                      message.includes('connection disabled')) {
                     return;
                   }
                   originalConsoleWarn.apply(console, args);
                 };
                 
                 console.log = function(...args) {
-                  const message = args[0];
-                  if (message && typeof message === 'string' && 
-                      (message.includes('WebSocket connection disabled') || 
-                       message.includes('WebSocket') ||
-                       message.includes('ws connection'))) {
+                  const message = String(args[0] || '');
+                  if (message.includes('WebSocket') || message.includes('connection disabled')) {
                     return;
                   }
                   originalConsoleLog.apply(console, args);
                 };
                 
                 console.error = function(...args) {
-                  const message = args[0];
-                  if (message && typeof message === 'string' && 
-                      (message.includes('WebSocket connection disabled') || 
-                       message.includes('WebSocket') ||
-                       message.includes('ws connection'))) {
+                  const message = String(args[0] || '');
+                  if (message.includes('WebSocket') || message.includes('connection disabled')) {
                     return;
                   }
                   originalConsoleError.apply(console, args);
