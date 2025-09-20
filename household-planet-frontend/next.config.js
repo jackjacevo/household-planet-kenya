@@ -39,9 +39,10 @@ const nextConfig = {
       ];
       
       // Disable WebSocket in production
+      const webpack = require('webpack');
       config.plugins = config.plugins || [];
       config.plugins.push(
-        new config.webpack.DefinePlugin({
+        new webpack.DefinePlugin({
           'process.env.DISABLE_WEBSOCKET': JSON.stringify('true')
         })
       );
