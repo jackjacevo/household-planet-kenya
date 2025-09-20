@@ -989,12 +989,20 @@ export class OrdersService {
     }
 
     const invoiceHtml = this.generateInvoiceHtml(order);
-    const pdf = await this.generatePdfFromHtml(invoiceHtml);
     
-    return {
-      orderNumber: order.orderNumber,
-      pdf
-    };
+    try {
+      const pdf = await this.generatePdfFromHtml(invoiceHtml);
+      return {
+        orderNumber: order.orderNumber,
+        pdf
+      };
+    } catch (error) {
+      const textReceipt = this.generateTextReceipt(order);
+      return {
+        orderNumber: order.orderNumber,
+        pdf: textReceipt
+      };
+    }
   }
 
   async generateGuestInvoice(orderId: number) {
@@ -1019,12 +1027,20 @@ export class OrdersService {
     }
 
     const invoiceHtml = this.generateInvoiceHtml(order);
-    const pdf = await this.generatePdfFromHtml(invoiceHtml);
     
-    return {
-      orderNumber: order.orderNumber,
-      pdf
-    };
+    try {
+      const pdf = await this.generatePdfFromHtml(invoiceHtml);
+      return {
+        orderNumber: order.orderNumber,
+        pdf
+      };
+    } catch (error) {
+      const textReceipt = this.generateTextReceipt(order);
+      return {
+        orderNumber: order.orderNumber,
+        pdf: textReceipt
+      };
+    }
   }
 
   async generateAnyOrderInvoice(orderId: number) {
@@ -1046,12 +1062,20 @@ export class OrdersService {
     }
 
     const invoiceHtml = this.generateInvoiceHtml(order);
-    const pdf = await this.generatePdfFromHtml(invoiceHtml);
     
-    return {
-      orderNumber: order.orderNumber,
-      pdf
-    };
+    try {
+      const pdf = await this.generatePdfFromHtml(invoiceHtml);
+      return {
+        orderNumber: order.orderNumber,
+        pdf
+      };
+    } catch (error) {
+      const textReceipt = this.generateTextReceipt(order);
+      return {
+        orderNumber: order.orderNumber,
+        pdf: textReceipt
+      };
+    }
   }
 
   private generateInvoiceHtml(order: any): string {
@@ -1405,8 +1429,8 @@ export class OrdersService {
       return Buffer.from(pdf);
     } catch (error) {
       this.logger.error('PDF generation failed, using text fallback:', error.message);
-      // Fallback to text-based receipt
-      return this.generateTextReceipt(html);
+      // Fallback to text-based receipt - need to extract order from context
+      throw error; // Let the caller handle the fallback with order data
     } finally {
       if (browser) {
         await browser.close();
@@ -1414,25 +1438,56 @@ export class OrdersService {
     }
   }
 
-  private generateTextReceipt(html: string): Buffer {
-    // Extract order info from HTML and create simple text receipt
+  private generateTextReceipt(order: any): Buffer {
+    const shippingAddress = JSON.parse(order.shippingAddress || '{}');
+    const customerName = order.user?.name || shippingAddress.fullName || 'Guest Customer';
+    const customerPhone = order.user?.phone || shippingAddress.phone || 'N/A';
+    const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+    const trackingNumber = order.trackingNumber || `HP${Date.now().toString().slice(-8)}`;
+    
+    let itemsList = '';
+    if (order.items && order.items.length > 0) {
+      itemsList = order.items.map((item, index) => {
+        const variant = item.variant ? ` (${item.variant.size || ''}${item.variant.color ? ' • ' + item.variant.color : ''})` : '';
+        return `${index + 1}. ${item.product.name}${variant}\n   Qty: ${item.quantity} x KSh ${Number(item.price).toLocaleString()} = KSh ${Number(item.total).toLocaleString()}`;
+      }).join('\n\n');
+    }
+    
     const textReceipt = `
 ===========================================
         HOUSEHOLD PLANET KENYA
      Your Premier Home & Living Store
 ===========================================
 
-RECEIPT
+RECEIPT #${order.orderNumber}
+Date: ${orderDate}
+Tracking: ${trackingNumber}
 
-Thank you for your order!
-Your receipt has been generated.
+CUSTOMER INFORMATION:
+Name: ${customerName}
+Phone: ${customerPhone}
+Location: ${order.deliveryLocation || 'N/A'}
 
-For full receipt details, please contact:
-Phone: +254790 227 760
+ORDER ITEMS (${order.items?.length || 0}):
+${itemsList}
+
+-------------------------------------------
+Subtotal: KSh ${Number(order.subtotal).toLocaleString()}
+${order.promoCode && order.discountAmount > 0 ? `Discount (${order.promoCode}): -KSh ${Number(order.discountAmount).toLocaleString()}\n` : ''}Delivery Fee: KSh ${Number(order.deliveryPrice || order.shippingCost || 0).toLocaleString()}
+-------------------------------------------
+TOTAL: KSh ${Number(order.total).toLocaleString()}
+
+Payment Method: ${order.paymentMethod === 'MPESA' ? 'M-Pesa' : order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Cash on Delivery' : order.paymentMethod || 'N/A'}
+Status: ${order.status || 'PENDING'}
+
+===========================================
+Thank you for shopping with us!
+
+Customer Support: +254790 227 760
 Email: householdplanet819@gmail.com
+Website: householdplanetkenya.co.ke
 
 Generated: ${new Date().toLocaleString()}
-
 ===========================================
 `;
     
