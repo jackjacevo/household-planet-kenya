@@ -85,7 +85,25 @@ export class AdminService {
 
   // Product methods
   async createProduct(data: any, userId: number, ip: string, ua: string) {
-    return { message: 'Product created' };
+    const product = await this.prisma.product.create({
+      data: {
+        name: data.name,
+        slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: data.description,
+        shortDescription: data.shortDescription,
+        sku: data.sku,
+        price: data.price,
+        comparePrice: data.comparePrice,
+        categoryId: data.categoryId,
+        brandId: data.brandId,
+        stock: data.stock || 0,
+        isActive: data.isActive !== false,
+        isFeatured: data.isFeatured || false,
+        images: JSON.stringify(data.images || []),
+        tags: JSON.stringify(data.tags || [])
+      }
+    });
+    return { product };
   }
 
   async updateProduct(id: number, data: any, userId: number, ip: string, ua: string) {
@@ -174,7 +192,18 @@ export class AdminService {
 
   // Category methods
   async createCategory(data: any, userId: number) {
-    return { category: {} };
+    const category = await this.prisma.category.create({
+      data: {
+        name: data.name,
+        slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: data.description,
+        image: data.image,
+        parentId: data.parentId,
+        isActive: data.isActive !== false,
+        sortOrder: data.sortOrder || 0
+      }
+    });
+    return { category };
   }
 
   async updateCategory(id: number, data: any, userId: number) {
