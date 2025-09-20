@@ -1,8 +1,8 @@
 // Centralized configuration to prevent localhost calls
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
-  SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.co.ke',
-  ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT || 'production'
+  BASE_URL: 'https://api.householdplanetkenya.co.ke',
+  SITE_URL: 'https://householdplanetkenya.co.ke',
+  ENVIRONMENT: 'production'
 };
 
 // Debug function to check configuration
