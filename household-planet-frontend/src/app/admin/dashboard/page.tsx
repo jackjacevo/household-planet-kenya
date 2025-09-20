@@ -29,6 +29,7 @@ interface DashboardStats {
   overview: {
     totalOrders: number;
     totalRevenue: number;
+    deliveredRevenue?: number;
     totalCustomers: number;
     totalProducts: number;
     activeProducts: number;
@@ -135,7 +136,7 @@ export default function AdminDashboard() {
   const statCards = [
     {
       name: 'Revenue',
-      value: `KSh ${(stats.overview?.deliveredRevenue || 0).toLocaleString()}`,
+      value: `KSh ${(stats.overview?.deliveredRevenue || stats.overview?.totalRevenue || 0).toLocaleString()}`,
       subValue: `Total: KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
       change: '+12.5%',
       changeType: 'increase',
