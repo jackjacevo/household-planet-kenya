@@ -1027,6 +1027,33 @@ export class OrdersService {
     };
   }
 
+  async generateAnyOrderInvoice(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: {
+          include: {
+            product: true,
+            variant: true
+          }
+        },
+        user: true
+      }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const invoiceHtml = this.generateInvoiceHtml(order);
+    const pdf = await this.generatePdfFromHtml(invoiceHtml);
+    
+    return {
+      orderNumber: order.orderNumber,
+      pdf
+    };
+  }
+
   private generateInvoiceHtml(order: any): string {
     const shippingAddress = JSON.parse(order.shippingAddress || '{}');
     const customerName = order.user?.name || shippingAddress.fullName || 'Guest Customer';

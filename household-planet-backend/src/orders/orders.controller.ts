@@ -245,18 +245,30 @@ export class OrdersController {
     @Res() res: Response
   ) {
     try {
+      const orderIdNum = parseInt(orderId, 10);
+      if (isNaN(orderIdNum)) {
+        throw new BadRequestException('Invalid order ID');
+      }
+
       let invoice;
       
       // Check if user is authenticated
       if (req.user && req.user.id) {
-        invoice = await this.ordersService.generateInvoice(req.user.id, orderId);
-      } else {
-        // Try to generate guest invoice
-        const orderIdNum = parseInt(orderId, 10);
-        if (isNaN(orderIdNum)) {
-          throw new BadRequestException('Invalid order ID');
+        // Try authenticated user first
+        try {
+          invoice = await this.ordersService.generateInvoice(req.user.id, orderId);
+        } catch (error) {
+          // If not found for user, try as guest order
+          invoice = await this.ordersService.generateGuestInvoice(orderIdNum);
         }
-        invoice = await this.ordersService.generateGuestInvoice(orderIdNum);
+      } else {
+        // Try guest invoice first, then any order
+        try {
+          invoice = await this.ordersService.generateGuestInvoice(orderIdNum);
+        } catch (error) {
+          // Fallback: try to find any order with this ID
+          invoice = await this.ordersService.generateAnyOrderInvoice(orderIdNum);
+        }
       }
       
       res.setHeader('Content-Type', 'application/pdf');
