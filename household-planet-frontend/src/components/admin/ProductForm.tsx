@@ -25,12 +25,20 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       name: '',
       sku: '',
       price: 0,
+      comparePrice: 0,
       categoryId: '',
       brandId: '',
       stock: 0,
+      lowStockThreshold: 5,
+      weight: 0,
+      dimensions: '',
       description: '',
+      shortDescription: '',
+      tags: '',
       isActive: true,
-      trackStock: true
+      trackStock: true,
+      isFeatured: false,
+      isOnSale: false
     }
   });
 
@@ -46,12 +54,20 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         name: product.name || '',
         sku: product.sku || '',
         price: product.price || 0,
+        comparePrice: product.comparePrice || 0,
         categoryId: product.categoryId || '',
         brandId: product.brandId || '',
         stock: product.stock || 0,
+        lowStockThreshold: product.lowStockThreshold || 5,
+        weight: product.weight || 0,
+        dimensions: product.dimensions || '',
         description: product.description || '',
+        shortDescription: product.shortDescription || '',
+        tags: Array.isArray(product.tags) ? product.tags.join(', ') : '',
         isActive: product.isActive !== false,
-        trackStock: product.trackStock !== false
+        trackStock: product.trackStock !== false,
+        isFeatured: product.isFeatured || false,
+        isOnSale: product.isOnSale || false
       });
       setImages(product.images || []);
     } else {
@@ -85,30 +101,40 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
-
-    const formData = new FormData();
-    Array.from(files).forEach(file => {
-      formData.append('images', file);
-    });
+    if (!files || files.length === 0) return;
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/upload/images`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/upload/product`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
           }
-        }
-      );
-      setImages(prev => [...prev, ...response.data.urls]);
-    } catch (error) {
+        );
+        return response.data.url;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setImages(prev => [...prev, ...uploadedUrls]);
+      
+      showToast({
+        title: 'Success',
+        description: `${uploadedUrls.length} image(s) uploaded successfully`,
+        variant: 'success'
+      });
+    } catch (error: any) {
+      console.error('Image upload error:', error);
       showToast({
         title: 'Upload Failed',
-        description: 'Failed to upload images',
+        description: error.response?.data?.message || 'Failed to upload images',
         variant: 'destructive'
       });
     }
@@ -151,18 +177,24 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       const productData = {
         ...data,
         name: data.name.trim(),
-        slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         sku: product ? data.sku : generateSKU(),
         price: Number(data.price),
+        comparePrice: Number(data.comparePrice || 0),
         categoryId: Number(data.categoryId),
         brandId: data.brandId ? Number(data.brandId) : null,
         stock: Number(data.stock || 0),
-        lowStockThreshold: 5,
+        lowStockThreshold: Number(data.lowStockThreshold || 5),
+        weight: Number(data.weight || 0),
+        dimensions: data.dimensions?.trim() || null,
+        shortDescription: data.shortDescription?.trim() || null,
+        description: data.description?.trim() || null,
         trackStock: Boolean(data.trackStock),
         isActive: Boolean(data.isActive),
-        isFeatured: false,
+        isFeatured: Boolean(data.isFeatured),
+        isOnSale: Boolean(data.isOnSale),
         images: images,
-        tags: []
+        tags: data.tags ? data.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : []
       };
 
       await onSubmit(productData);
@@ -220,6 +252,18 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Compare Price (KSh)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register('comparePrice')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
+            />
+            <p className="text-xs text-gray-500 mt-1">Original price for sale items</p>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
             <select
               {...register('categoryId', { required: 'Category is required' })}
@@ -260,15 +304,65 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
               placeholder="0"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Low Stock Threshold</label>
+            <input
+              type="number"
+              min="0"
+              {...register('lowStockThreshold')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="5"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register('weight')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions</label>
+            <input
+              {...register('dimensions')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="L x W x H (cm)"
+            />
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
+          <textarea
+            {...register('shortDescription')}
+            rows={2}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Brief product summary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Full Description</label>
           <textarea
             {...register('description')}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Product description"
+            placeholder="Detailed product description"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+          <input
+            {...register('tags')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Separate tags with commas (e.g., kitchen, appliance, modern)"
           />
         </div>
 
@@ -316,7 +410,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           )}
         </div>
 
-        <div className="flex items-center space-x-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <label className="flex items-center">
             <input
               type="checkbox"
@@ -333,6 +427,24 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <span className="ml-2 text-sm font-medium text-gray-700">Track Stock</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              {...register('isFeatured')}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="ml-2 text-sm font-medium text-gray-700">Featured</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              {...register('isOnSale')}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="ml-2 text-sm font-medium text-gray-700">On Sale</span>
           </label>
         </div>
 

@@ -193,24 +193,40 @@ export default function CategoriesPage() {
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
                   <div className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-6">
                         <button
                           onClick={() => toggleCategory(category.id)}
-                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md transition-shadow"
+                          className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm hover:shadow-md transition-shadow"
                         >
                           {expandedCategories.has(category.id) ? (
-                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                            <ChevronDown className="w-5 h-5 text-gray-600" />
                           ) : (
-                            <ChevronRight className="w-4 h-4 text-gray-600" />
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
                           )}
                         </button>
-                        <div>
-                          <Link href={`/products?category=${category.slug}`}>
-                            <h2 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
-                              {category.name}
-                            </h2>
-                          </Link>
-                          <p className="text-gray-600 text-sm mt-1">{category.description}</p>
+                        <div className="flex items-center space-x-4">
+                          {category.image ? (
+                            <div className="relative">
+                              <img 
+                                src={category.image} 
+                                alt={category.name}
+                                className="h-20 w-20 object-cover rounded-xl border-2 border-blue-200 shadow-md"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
+                            </div>
+                          ) : (
+                            <div className="h-20 w-20 bg-blue-100 rounded-xl flex items-center justify-center border-2 border-blue-200">
+                              <Package className="h-8 w-8 text-blue-600" />
+                            </div>
+                          )}
+                          <div>
+                            <Link href={`/products?category=${category.slug}`}>
+                              <h2 className="text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+                                {category.name}
+                              </h2>
+                            </Link>
+                            <p className="text-gray-600 mt-1 max-w-md">{category.description}</p>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">

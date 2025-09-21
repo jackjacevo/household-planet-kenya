@@ -264,6 +264,40 @@ export default function AdminCategoriesPage() {
               </div>
               
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      try {
+                        const token = localStorage.getItem('token');
+                        const response = await axios.post(
+                          `${process.env.NEXT_PUBLIC_API_URL}/api/upload/category`,
+                          formData,
+                          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+                        );
+                        setFormData(prev => ({ ...prev, image: response.data.url }));
+                        showToast({ title: 'Success', description: 'Image uploaded successfully', variant: 'success' });
+                      } catch (error) {
+                        showToast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
+                      }
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                />
+                {formData.image && (
+                  <div className="mt-2">
+                    <img src={formData.image} alt="Preview" className="h-20 w-20 object-cover rounded" />
+                  </div>
+                )}
+              </div>
+              
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={formData.description}
@@ -316,13 +350,34 @@ export default function AdminCategoriesPage() {
             return (
               <div key={parentCategory.id} className="bg-white shadow rounded-lg overflow-hidden">
                 {/* Parent Category Header */}
-                <div className="bg-blue-50 border-b border-blue-200 px-6 py-4">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-6 py-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FolderOpen className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <h3 className="text-lg font-semibold text-blue-900">{parentCategory.name}</h3>
-                        <p className="text-sm text-blue-600">{parentCategory.description}</p>
+                    <div className="flex items-center space-x-6">
+                      {parentCategory.image ? (
+                        <div className="relative">
+                          <img 
+                            src={parentCategory.image} 
+                            alt={parentCategory.name}
+                            className="h-20 w-20 object-cover rounded-xl border-2 border-blue-300 shadow-lg"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
+                        </div>
+                      ) : (
+                        <div className="h-20 w-20 bg-blue-100 rounded-xl flex items-center justify-center border-2 border-blue-300 shadow-lg">
+                          <FolderOpen className="h-10 w-10 text-blue-600" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-blue-900 mb-1">{parentCategory.name}</h3>
+                        <p className="text-sm text-blue-700 mb-2">{parentCategory.description}</p>
+                        <div className="flex items-center space-x-4 text-xs text-blue-600">
+                          <span className="bg-blue-100 px-2 py-1 rounded-full">
+                            {subcategories.length} subcategories
+                          </span>
+                          <span className="bg-blue-100 px-2 py-1 rounded-full">
+                            {parentCategory._count?.products || 0} products
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -354,39 +409,52 @@ export default function AdminCategoriesPage() {
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {subcategories.map((subcategory) => (
-                        <div key={subcategory.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <Folder className="h-4 w-4 text-gray-500" />
-                              <h4 className="font-medium text-gray-900">{subcategory.name}</h4>
+                        <div key={subcategory.id} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-200 hover:border-blue-200">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              {subcategory.image ? (
+                                <img 
+                                  src={subcategory.image} 
+                                  alt={subcategory.name}
+                                  className="h-12 w-12 object-cover rounded-lg border border-gray-200"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                  <Folder className="h-6 w-6 text-gray-500" />
+                                </div>
+                              )}
+                              <div>
+                                <h4 className="font-semibold text-gray-900 text-base">{subcategory.name}</h4>
+                                <p className="text-sm text-gray-600 mt-1">{subcategory.description}</p>
+                              </div>
                             </div>
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              subcategory.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                              subcategory.isActive ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
                             }`}>
                               {subcategory.isActive ? 'Active' : 'Inactive'}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">{subcategory.description}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded">
                               {subcategory._count?.products || 0} products
                             </span>
-                            <div className="flex space-x-1">
-                              <Button size="sm" variant="outline" onClick={() => handleEdit(subcategory)}>
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => handleDelete(subcategory)}
-                                className="hover:bg-red-50 hover:text-red-600"
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(subcategory)}
+                                className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded border border-blue-200 hover:border-blue-300 transition-colors"
                               >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(subcategory)}
+                                className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
                           </div>
                         </div>
-                      ))}
+                      ))
                     </div>
                   </div>
                 )}

@@ -130,25 +130,28 @@ export function FeaturedCategories() {
               >
                 <Link 
                   href={`/products?category=${category.slug}`} 
-                  className="block bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
+                  className="block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-1"
                 >
-                  <div className="p-6">
-                    <div className="w-full h-40 overflow-hidden rounded-lg relative mb-4 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <div className="relative">
+                    <div className="w-full h-48 overflow-hidden relative bg-gradient-to-br from-gray-50 to-gray-100">
                       <Image 
                         src={category.image || fallbackImages[index % fallbackImages.length]} 
                         alt={category.name} 
                         fill
                         priority={index < 4}
-                        className="object-cover transition-transform duration-300 group-hover:scale-110"
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                         onError={() => {
                           console.error(`Failed to load image: ${category.image}`);
                         }}
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
-                    <h3 className="text-base font-semibold text-gray-900 text-center group-hover:text-green-600 transition-colors">
-                      {category.name}
-                    </h3>
+                    <div className="p-4">
+                      <h3 className="text-base font-semibold text-gray-900 text-center group-hover:text-green-600 transition-colors">
+                        {category.name}
+                      </h3>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
