@@ -94,7 +94,7 @@ export function FeaturedCategories() {
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Shop by Category</h2>
         
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 auto-rows-max">
           {loading ? (
             [...Array(6)].map((_, i) => (
               <div key={i} className="category-card bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
