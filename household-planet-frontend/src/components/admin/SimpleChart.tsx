@@ -47,11 +47,24 @@ export function SimpleLineChart() {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=monthly`,
+        `${apiUrl}/api/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      return (response as any).data;
+      // Generate monthly revenue data from orders
+      const orders = response.data.recentOrders || [];
+      const monthlyData = orders.reduce((acc: any, order: any) => {
+        const date = new Date(order.createdAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!acc[monthKey]) {
+          acc[monthKey] = { period: monthKey, revenue: 0, orders: 0 };
+        }
+        acc[monthKey].revenue += order.total;
+        acc[monthKey].orders += 1;
+        return acc;
+      }, {});
+      return Object.values(monthlyData).slice(-6); // Last 6 months
     },
     refetchInterval: 60000,
     retry: 2
@@ -139,11 +152,30 @@ export function SimplePieChart() {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/popular?period=monthly`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
-      return (response as any).data;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      const [dashboardResponse, productsResponse] = await Promise.all([
+        axios.get(`${apiUrl}/api/admin/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        axios.get(`${apiUrl}/api/products`, { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
+      // Generate category data from products and orders
+      const products = productsResponse.data || [];
+      const orders = dashboardResponse.data.recentOrders || [];
+      const categoryStats = products.reduce((acc: any, product: any) => {
+        const category = product.category?.name || 'Uncategorized';
+        if (!acc[category]) {
+          acc[category] = { category, sales: 0 };
+        }
+        // Count sales from orders
+        orders.forEach((order: any) => {
+          order.orderItems?.forEach((item: any) => {
+            if (item.product?.category?.name === category) {
+              acc[category].sales += item.quantity || 1;
+            }
+          });
+        });
+        return acc;
+      }, {});
+      return Object.values(categoryStats).slice(0, 8); // Top 8 categories
     },
     refetchInterval: 60000,
     retry: 2
@@ -214,11 +246,24 @@ export function SimpleBarChart() {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=monthly`,
+        `${apiUrl}/api/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      return (response as any).data;
+      // Generate monthly orders data
+      const orders = response.data.recentOrders || [];
+      const monthlyData = orders.reduce((acc: any, order: any) => {
+        const date = new Date(order.createdAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!acc[monthKey]) {
+          acc[monthKey] = { period: monthKey, revenue: 0, orders: 0 };
+        }
+        acc[monthKey].revenue += order.total;
+        acc[monthKey].orders += 1;
+        return acc;
+      }, {});
+      return Object.values(monthlyData).slice(-6); // Last 6 months
     },
     refetchInterval: 60000,
     retry: 2
@@ -291,7 +336,55 @@ export function SimpleBarChart() {
 }
 
 export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<{ month: string; customers: number }> }) {
-  const dataToUse = customerGrowth?.length > 0 ? customerGrowth : [];
+  const { data: growthData, isLoading, error } = useQuery({
+    queryKey: ['customerGrowth'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      const response = await axios.get(
+        `${apiUrl}/api/admin/dashboard`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      // Generate customer growth data from orders
+      const orders = response.data.recentOrders || [];
+      const monthlyCustomers = orders.reduce((acc: any, order: any) => {
+        const date = new Date(order.createdAt);
+        const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        if (!acc[monthKey]) {
+          acc[monthKey] = { month: monthKey, customers: new Set() };
+        }
+        if (order.user?.id) {
+          acc[monthKey].customers.add(order.user.id);
+        }
+        return acc;
+      }, {});
+      return Object.values(monthlyCustomers).map((item: any) => ({
+        month: item.month,
+        customers: item.customers.size
+      })).slice(-6); // Last 6 months
+    },
+    refetchInterval: 60000,
+    retry: 2
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+        Unable to load chart data
+      </div>
+    );
+  }
+
+  const dataToUse = growthData?.length > 0 ? growthData : (customerGrowth?.length > 0 ? customerGrowth : []);
   
   const chartData = {
     labels: dataToUse.map(item => item.month),
@@ -334,8 +427,6 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
       },
     },
   };
-
-
 
   return <Line data={chartData} options={options} />;
 }
