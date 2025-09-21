@@ -340,11 +340,14 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
           <textarea
-            {...register('shortDescription')}
+            {...register('shortDescription', { maxLength: { value: 28, message: 'Short description must be 28 characters or less' } })}
             rows={2}
+            maxLength={28}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Brief product summary"
+            placeholder="Brief product summary (max 28 chars)"
           />
+          {errors.shortDescription && <p className="text-red-500 text-sm mt-1">{errors.shortDescription.message}</p>}
+          <p className="text-xs text-gray-500 mt-1">{watch('shortDescription')?.length || 0}/28 characters</p>
         </div>
 
         <div>
