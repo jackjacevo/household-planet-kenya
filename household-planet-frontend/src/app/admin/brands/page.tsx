@@ -61,7 +61,7 @@ export default function AdminBrandsPage() {
           return;
         }
       } catch (apiError) {
-        console.warn('Brands API failed:', apiError.message);
+        console.warn('Brands API failed:', apiError instanceof Error ? apiError.message : 'Unknown error');
         setBrands([]);
         setError('Unable to load brands. Please try again later.');
       }
