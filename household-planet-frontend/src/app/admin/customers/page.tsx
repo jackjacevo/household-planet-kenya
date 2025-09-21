@@ -66,7 +66,18 @@ export default function CustomersPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/search?q=${encodeURIComponent(searchQuery)}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setCustomers((response as any).data);
+      // Handle different response structures
+      const responseData = (response as any).data;
+      if (responseData.customers && Array.isArray(responseData.customers)) {
+        setCustomers(responseData.customers);
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        setCustomers(responseData.data);
+      } else if (Array.isArray(responseData)) {
+        setCustomers(responseData);
+      } else {
+        console.warn('Unexpected customers API response structure:', responseData);
+        setCustomers([]);
+      }
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
@@ -176,7 +187,15 @@ export default function CustomersPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}/details`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      setSelectedCustomer((response as any).data);
+      // Handle different response structures
+      const responseData = (response as any).data;
+      if (responseData.customer) {
+        setSelectedCustomer(responseData.customer);
+      } else if (responseData.data) {
+        setSelectedCustomer(responseData.data);
+      } else {
+        setSelectedCustomer(responseData);
+      }
     } catch (error) {
       console.error('Error fetching customer details:', error);
       alert('Failed to load customer details');
