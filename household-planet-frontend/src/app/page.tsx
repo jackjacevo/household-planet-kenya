@@ -20,6 +20,8 @@ if (process.env.NODE_ENV === 'development') {
   import('@/lib/addTestRecentlyViewed');
 }
 
+// Force deployment refresh
+
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
