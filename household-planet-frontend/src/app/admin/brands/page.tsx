@@ -38,23 +38,44 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Handle different response structures
-      const responseData = (response as any).data;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      
+      // Try to fetch from brands endpoint first, fallback to products/brands
+      let response;
+      try {
+        response = await axios.get(`${apiUrl}/api/brands`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch {
+        response = await axios.get(`${apiUrl}/api/products/brands`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      const responseData = response.data;
       if (Array.isArray(responseData)) {
-        // Transform the brand strings into brand objects
-        const brandObjects = responseData.map((brandName: string, index: number) => ({
-          id: index + 1,
-          name: brandName,
-          slug: brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-          isActive: true,
-          _count: { products: 0 } // We don't have product count from this endpoint
-        }));
+        // Handle array of brand objects or strings
+        const brandObjects = responseData.map((item: any, index: number) => {
+          if (typeof item === 'string') {
+            return {
+              id: index + 1,
+              name: item,
+              slug: item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+              isActive: true,
+              _count: { products: 0 }
+            };
+          }
+          return {
+            id: item.id || index + 1,
+            name: item.name,
+            slug: item.slug || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            logo: item.logo,
+            isActive: item.isActive !== false,
+            _count: item._count || { products: 0 }
+          };
+        });
         setBrands(brandObjects);
       } else {
-        console.warn('Unexpected brands API response structure:', responseData);
         setBrands([]);
       }
     } catch (error: any) {
@@ -88,6 +109,7 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const data = {
         ...formData,
         name: formData.name.trim(),
@@ -95,10 +117,17 @@ export default function AdminBrandsPage() {
         logo: formData.logo.trim() || null
       };
 
-      // Note: Brand management through products API is read-only
-      // Brands are automatically created when products are added
-      setError('Brand management is currently read-only. Brands are automatically created when you add products with new brand names.');
-      return;
+      if (editingBrand) {
+        await axios.put(`${apiUrl}/api/brands/${editingBrand.id}`, data, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('Brand updated successfully');
+      } else {
+        await axios.post(`${apiUrl}/api/brands`, data, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('Brand created successfully');
+      }
 
       await fetchBrands();
       resetForm();
@@ -116,9 +145,25 @@ export default function AdminBrandsPage() {
       return;
     }
 
-    // Note: Brand deletion through products API is not supported
-    setError('Brand deletion is not supported. Brands are automatically managed through products.');
-    setDeleteConfirm(null);
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      
+      await axios.delete(`${apiUrl}/api/brands/${brand.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('Brand deleted successfully');
+      await fetchBrands();
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to delete brand');
+      console.error('Error deleting brand:', error);
+    } finally {
+      setLoading(false);
+      setDeleteConfirm(null);
+    }
   };
 
   const resetForm = () => {
