@@ -57,22 +57,51 @@ export default function AdminProductsPage() {
   const fetchFilterOptions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [categoriesRes, brandsRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
-      setCategories(categoriesRes.data || []);
-      // Handle brands as array of strings
-      const brandsData = brandsRes.data || [];
-      if (Array.isArray(brandsData) && typeof brandsData[0] === 'string') {
-        // Convert string array to objects
-        setBrands(brandsData.map((brand, index) => ({ id: index + 1, name: brand })));
-      } else {
-        setBrands(brandsData);
+      
+      // Fetch categories
+      try {
+        const categoriesRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        });
+        const categoriesData = categoriesRes.data;
+        if (Array.isArray(categoriesData)) {
+          setCategories(categoriesData);
+        } else if (categoriesData.categories && Array.isArray(categoriesData.categories)) {
+          setCategories(categoriesData.categories);
+        }
+      } catch (error) {
+        console.warn('Categories API failed');
+        setCategories([]);
+      }
+      
+      // Fetch brands - try brands endpoint first
+      try {
+        const brandsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/brands`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        });
+        const brandsData = brandsRes.data || [];
+        if (Array.isArray(brandsData)) {
+          setBrands(brandsData.filter((brand: any) => brand.isActive !== false));
+        }
+      } catch (brandsError) {
+        // Try fallback endpoint
+        try {
+          const brandsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000
+          });
+          const brandsData = brandsRes.data || [];
+          if (Array.isArray(brandsData) && typeof brandsData[0] === 'string') {
+            setBrands(brandsData.map((brand, index) => ({ id: index + 1, name: brand })));
+          } else if (Array.isArray(brandsData)) {
+            setBrands(brandsData.filter((brand: any) => brand.isActive !== false));
+          }
+        } catch (fallbackError) {
+          console.warn('All brand APIs failed');
+          setBrands([]);
+        }
       }
     } catch (error: any) {
       console.error('Error fetching filter options:', error);

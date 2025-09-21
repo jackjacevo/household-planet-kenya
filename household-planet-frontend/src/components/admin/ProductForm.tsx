@@ -133,17 +133,39 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const brandsData = (response as any).data || [];
-      if (Array.isArray(brandsData) && typeof brandsData[0] === 'string') {
-        setBrands(brandsData.map((brand, index) => ({ id: index + 1, name: brand, isActive: true })));
-      } else {
-        setBrands(brandsData);
+      
+      // Try brands endpoint first
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/brands`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        });
+        const brandsData = (response as any).data || [];
+        if (Array.isArray(brandsData)) {
+          setBrands(brandsData.filter((brand: any) => brand.isActive !== false));
+          return;
+        }
+      } catch (brandsError) {
+        // Try fallback endpoint
+        try {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000
+          });
+          const brandsData = (response as any).data || [];
+          if (Array.isArray(brandsData) && typeof brandsData[0] === 'string') {
+            setBrands(brandsData.map((brand, index) => ({ id: index + 1, name: brand, isActive: true })));
+            return;
+          } else if (Array.isArray(brandsData)) {
+            setBrands(brandsData.filter((brand: any) => brand.isActive !== false));
+            return;
+          }
+        } catch (fallbackError) {
+          console.warn('All brand APIs failed');
+        }
       }
-    } catch (error) {
-      console.warn('Brands API unavailable, using fallback');
+      
+      // Final fallback
       setBrands([
         { id: 1, name: 'Samsung', isActive: true },
         { id: 2, name: 'LG', isActive: true },
@@ -151,6 +173,9 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         { id: 4, name: 'Philips', isActive: true },
         { id: 5, name: 'Panasonic', isActive: true }
       ]);
+    } catch (error) {
+      console.error('Error in fetchBrands:', error);
+      setBrands([]);
     }
   };
 

@@ -40,8 +40,31 @@ export default function AdminBrandsPage() {
       const token = localStorage.getItem('token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       
-      // Immediate fallback - skip API calls entirely when backend is known to be down
-      console.warn('Backend API unavailable, using fallback data');
+      // Try to fetch from backend first
+      try {
+        const response = await axios.get(`${apiUrl}/api/brands`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        });
+        
+        const responseData = response.data;
+        if (Array.isArray(responseData)) {
+          const brandObjects = responseData.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            slug: item.slug || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            logo: item.logo,
+            isActive: item.isActive !== false,
+            _count: item._count || { products: 0 }
+          }));
+          setBrands(brandObjects);
+          return;
+        }
+      } catch (apiError) {
+        console.warn('Brands API failed, using fallback data');
+      }
+      
+      // Fallback data
       setBrands([
         { id: 1, name: 'Samsung', slug: 'samsung', isActive: true, _count: { products: 5 } },
         { id: 2, name: 'LG', slug: 'lg', isActive: true, _count: { products: 3 } },
@@ -49,9 +72,7 @@ export default function AdminBrandsPage() {
         { id: 4, name: 'Philips', slug: 'philips', isActive: true, _count: { products: 4 } },
         { id: 5, name: 'Panasonic', slug: 'panasonic', isActive: true, _count: { products: 1 } }
       ]);
-      setError(null); // Don't show error for expected fallback
-      setLoading(false);
-      return;
+      setError('Using demo brands - API unavailable');
       
       const responseData = response.data;
       if (Array.isArray(responseData)) {
@@ -118,15 +139,33 @@ export default function AdminBrandsPage() {
         logo: formData.logo.trim() || null
       };
 
-      // Skip API calls - simulate offline success immediately
-      console.warn('Brand API unavailable, simulating success');
-      if (editingBrand) {
-        setBrands(prev => prev.map(b => b.id === editingBrand.id ? { ...b, ...data } : b));
-        setSuccess('Brand updated successfully');
-      } else {
-        const newBrand = { id: Date.now(), ...data, _count: { products: 0 } };
-        setBrands(prev => [...prev, newBrand]);
-        setSuccess('Brand created successfully');
+      // Try to save to backend first
+      try {
+        if (editingBrand) {
+          await axios.put(`${apiUrl}/api/brands/${editingBrand.id}`, data, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000
+          });
+          setSuccess('Brand updated successfully');
+        } else {
+          await axios.post(`${apiUrl}/api/brands`, data, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000
+          });
+          setSuccess('Brand created successfully');
+        }
+        await fetchBrands();
+      } catch (apiError) {
+        console.warn('Brand save API failed, updating locally');
+        // Fallback to local update
+        if (editingBrand) {
+          setBrands(prev => prev.map(b => b.id === editingBrand.id ? { ...b, ...data } : b));
+          setSuccess('Brand updated (local only)');
+        } else {
+          const newBrand = { id: Date.now(), ...data, _count: { products: 0 } };
+          setBrands(prev => [...prev, newBrand]);
+          setSuccess('Brand created (local only)');
+        }
       }
       resetForm();
     } catch (error: any) {
@@ -150,10 +189,19 @@ export default function AdminBrandsPage() {
       const token = localStorage.getItem('token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       
-      // Skip API calls - simulate offline success immediately
-      console.warn('Brand delete API unavailable, simulating success');
-      setBrands(prev => prev.filter(b => b.id !== brand.id));
-      setSuccess('Brand deleted successfully');
+      // Try to delete from backend first
+      try {
+        await axios.delete(`${apiUrl}/api/brands/${brand.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        });
+        setSuccess('Brand deleted successfully');
+        await fetchBrands();
+      } catch (apiError) {
+        console.warn('Brand delete API failed, updating locally');
+        setBrands(prev => prev.filter(b => b.id !== brand.id));
+        setSuccess('Brand deleted (local only)');
+      }
     } catch (error: any) {
       setError('Failed to delete brand - API unavailable');
       console.error('Error deleting brand:', error);
