@@ -704,52 +704,22 @@ export class ProductsService {
 
   async remove(id: number) {
     try {
-      // Check if product exists
+      // Simple delete - just deactivate instead of actual deletion
       const product = await this.prisma.product.findUnique({ where: { id } });
       if (!product) {
         throw new Error('Product not found');
       }
 
-      // Check for order items (cannot delete if product has been ordered)
-      const orderItemCount = await this.prisma.orderItem.count({
-        where: { productId: id }
+      // Instead of deleting, just deactivate the product
+      await this.prisma.product.update({
+        where: { id },
+        data: { isActive: false }
       });
       
-      if (orderItemCount > 0) {
-        throw new Error('Cannot delete product that has been ordered. Consider deactivating instead.');
-      }
-
-      // Delete related records that don't have cascade delete
-      await this.prisma.$transaction(async (tx) => {
-        // Delete cart items
-        await tx.cart.deleteMany({ where: { productId: id } });
-        
-        // Delete wishlist items  
-        await tx.wishlist.deleteMany({ where: { productId: id } });
-        
-        // Delete reviews
-        await tx.review.deleteMany({ where: { productId: id } });
-        
-        // Delete recently viewed records
-        await tx.recentlyViewed.deleteMany({ where: { productId: id } });
-        
-        // Delete product recommendations
-        await tx.productRecommendation.deleteMany({
-          where: {
-            OR: [
-              { productId: id },
-              { recommendedProductId: id }
-            ]
-          }
-        });
-        
-        // Finally delete the product
-        await tx.product.delete({ where: { id } });
-      });
-      
-      return { message: 'Product deleted successfully' };
+      return { message: 'Product deactivated successfully' };
     } catch (error) {
-      throw new Error(`Failed to delete product: ${error.message}`);
+      console.error('Delete error:', error);
+      throw new Error(`Failed to deactivate product: ${error.message}`);
     }
   }
 

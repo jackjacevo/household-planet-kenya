@@ -101,7 +101,6 @@ export class ProductsController {
     return this.productsService.getAutocomplete(query, validatedLimit);
   }
 
-  // Recently Viewed - Must come before :id route
   @Get('recently-viewed')
   getRecentlyViewed(@Req() req: any, @Query('limit') limit?: string) {
     const userId = req.user?.id;
@@ -141,11 +140,14 @@ export class ProductsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    try {
+      return await this.productsService.remove(id);
+    } catch (error) {
+      throw new Error(`Delete failed: ${error.message}`);
+    }
   }
 
-  // Variant Management
   @Post(':id/variants')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
@@ -167,7 +169,6 @@ export class ProductsController {
     return this.productsService.deleteVariant(variantId);
   }
 
-  // Recommendations
   @Get(':id/recommendations')
   getRecommendations(
     @Param('id', ParseIntPipe) productId: number,
@@ -184,9 +185,6 @@ export class ProductsController {
     return this.productsService.generateRecommendations(productId);
   }
 
-
-
-  // Low Stock Management
   @Get('inventory/low-stock')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
@@ -204,7 +202,6 @@ export class ProductsController {
     return this.productsService.createLowStockAlert(variantId, threshold);
   }
 
-  // Bulk Import/Export
   @Post('import/csv')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
