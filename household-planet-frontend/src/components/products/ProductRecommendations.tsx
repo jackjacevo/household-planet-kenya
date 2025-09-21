@@ -45,7 +45,7 @@ export function ProductRecommendations({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="bg-gray-200 rounded-lg aspect-[3/4] animate-pulse" />
         ))}
@@ -63,7 +63,7 @@ export function ProductRecommendations({
       {recommendations.length === 0 ? (
         <p className="text-gray-500 text-center py-8">No related products found.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
           {recommendations.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

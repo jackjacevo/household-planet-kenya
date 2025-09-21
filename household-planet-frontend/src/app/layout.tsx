@@ -42,7 +42,7 @@ export default function RootLayout({
           `
         }} />
         <title>Household Planet Kenya | Kenya's Best Online Shopping platform</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#16a34a" />
         <link rel="manifest" href="/manifest.json" />
 

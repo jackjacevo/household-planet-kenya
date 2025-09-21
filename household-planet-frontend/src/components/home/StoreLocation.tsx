@@ -28,11 +28,11 @@ export function StoreLocation() {
               <span className="text-sm font-medium text-orange-800">Visit Our Store</span>
             </div>
             
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-6 leading-tight">
               Find Us in <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Nairobi</span>
             </h2>
             
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
               Visit our showroom to see and feel our quality products in person
             </p>
           </motion.div>
@@ -43,23 +43,23 @@ export function StoreLocation() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+            className="flex flex-wrap gap-6 mb-12 justify-center"
           >
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center flex-1 min-w-[200px] max-w-[300px]">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
                 <MapPin className="h-6 w-6 text-white" />
               </div>
               <h3 className="font-bold text-gray-900 mb-2">Our Address</h3>
               <p className="text-gray-600 text-sm">Iconic Business Plaza, Basement Shop B10, Moi Avenue</p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center flex-1 min-w-[200px] max-w-[300px]">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
                 <Clock className="h-6 w-6 text-white" />
               </div>
               <h3 className="font-bold text-gray-900 mb-2">Business Hours</h3>
               <p className="text-gray-600 text-sm">Mon-Sat: 8:00 AM - 6:00 PM</p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center flex-1 min-w-[200px] max-w-[300px]">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
                 <Phone className="h-6 w-6 text-white" />
               </div>
@@ -76,16 +76,13 @@ export function StoreLocation() {
             viewport={{ once: true }}
           >
             <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100 overflow-hidden">
-              <div className="relative w-full h-96 lg:h-[500px] rounded-xl overflow-hidden">
+              <div className="relative w-full pb-[56.25%] h-0">
                 <iframe
                   src="https://maps.google.com/maps?q=Moi+Avenue,+Nairobi,+Kenya&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
+                  className="absolute top-0 left-0 w-full h-full border-0 rounded-xl"
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  className="rounded-xl"
                   title="Household Planet Kenya Store Location"
                 />
                 

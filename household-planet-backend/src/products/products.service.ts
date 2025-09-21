@@ -247,6 +247,28 @@ export class ProductsService {
     }));
   }
 
+  async getPopular(limit = 10) {
+    const products = await this.prisma.product.findMany({
+      where: { isActive: true },
+      include: { category: true, brand: true },
+      orderBy: [
+        { totalSales: 'desc' },
+        { averageRating: 'desc' },
+        { createdAt: 'desc' }
+      ],
+      take: limit,
+    });
+
+    return products.map(product => ({
+      ...product,
+      images: this.safeJsonParse(product.images, []),
+      tags: this.safeJsonParse(product.tags, []),
+      dimensions: this.safeJsonParse(product.dimensions, null),
+      averageRating: product.averageRating || 0,
+      reviewCount: product.totalReviews || 0
+    }));
+  }
+
   async getBrands() {
     return this.prisma.brand.findMany({
       where: { isActive: true },

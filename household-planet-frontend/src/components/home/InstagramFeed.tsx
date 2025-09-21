@@ -121,7 +121,7 @@ export function InstagramFeed() {
             <Instagram className="w-4 h-4" />
             Follow Us
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
             Follow Us on <span className="text-pink-600">Instagram</span>
           </h2>
           <p className="text-gray-600 max-w-xl mx-auto mb-4">
@@ -146,7 +146,7 @@ export function InstagramFeed() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-10 gap-1 max-w-full mx-auto"
+          className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(80px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(120px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] max-w-full mx-auto"
         >
           {instagramPosts.map((post, index) => (
             <motion.div key={post.id} variants={itemVariants}>

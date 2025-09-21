@@ -301,7 +301,7 @@ function ProductsContent() {
         <section className="py-3 sm:py-6 px-3 sm:px-4">
           <div className="container mx-auto max-w-7xl">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">All Products</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">All Products</h1>
               <p className="text-gray-600 hidden md:block text-sm sm:text-base">Discover our complete collection</p>
             </div>
           </div>
@@ -544,7 +544,7 @@ function ProductsContent() {
                     <motion.div 
                       className={`grid gap-3 sm:gap-4 md:gap-6 ${
                         viewMode === 'grid' || isMobile
-                          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+                          ? '[grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]'
                           : 'grid-cols-1'
                       }`}
                       variants={staggerContainer}

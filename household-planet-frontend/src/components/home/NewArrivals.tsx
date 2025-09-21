@@ -60,14 +60,14 @@ export function NewArrivals() {
     <section className="py-8 bg-white">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">New Arrivals</h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">New Arrivals</h2>
           <Link href="/products?sortBy=createdAt&sortOrder=desc" className="text-green-600 hover:text-green-700 font-medium">
             View All
           </Link>
         </div>
         
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] md:gap-6">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                 <div className="h-48 bg-gray-200 animate-pulse" />
@@ -94,7 +94,7 @@ export function NewArrivals() {
           </motion.div>
         ) : (
           <motion.div 
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6"
+            className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] md:gap-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"

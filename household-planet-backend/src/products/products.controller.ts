@@ -52,6 +52,12 @@ export class ProductsController {
     return this.productsService.getFeatured(validatedLimit);
   }
 
+  @Get('popular')
+  getPopular(@Query('limit') limit?: string) {
+    const validatedLimit = Math.min(50, Math.max(1, parseInt(limit || '10') || 10));
+    return this.productsService.getPopular(validatedLimit);
+  }
+
   @Get('brands')
   getBrands() {
     return this.productsService.getBrands();

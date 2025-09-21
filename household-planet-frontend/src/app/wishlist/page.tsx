@@ -43,7 +43,7 @@ export default function WishlistPage() {
       <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
       
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
         {items.map((item, index) => {
           const product = item || item;
           return (

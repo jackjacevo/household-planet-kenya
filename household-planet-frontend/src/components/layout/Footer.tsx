@@ -8,9 +8,9 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="flex flex-wrap gap-6 sm:gap-8">
           {/* Company Info */}
-          <div className="sm:col-span-2 lg:col-span-1">
+          <div className="flex-1 min-w-[250px] max-w-[400px]">
             <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Household Planet Kenya</h3>
             <p className="text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base">
               Household Planet Kenya is your premier destination for high-quality home goods that transform your living spaces.
@@ -34,7 +34,7 @@ export function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="flex-1 min-w-[150px] max-w-[200px]">
             <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
@@ -71,7 +71,7 @@ export function Footer() {
           </div>
 
           {/* Customer Service */}
-          <div>
+          <div className="flex-1 min-w-[150px] max-w-[200px]">
             <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Customer Service</h4>
             <ul className="space-y-2">
               <li>
@@ -103,7 +103,7 @@ export function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div>
+          <div className="flex-1 min-w-[200px] max-w-[300px]">
             <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Contact Info</h4>
             <ul className="space-y-3">
               <li className="flex items-start">

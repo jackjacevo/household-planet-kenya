@@ -91,7 +91,7 @@ export default function CategoriesPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-64 mb-8"></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                   <div className="h-48 bg-gray-200"></div>
@@ -119,10 +119,10 @@ export default function CategoriesPage() {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4">
               All Categories
             </h1>
-            <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-green-100 mb-8 max-w-2xl mx-auto">
               Discover everything you need for your home in our carefully curated categories
             </p>
             
@@ -180,7 +180,7 @@ export default function CategoriesPage() {
           initial="hidden"
           animate="visible"
           className={viewMode === 'grid' 
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            ? "grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]"
             : "space-y-4"
           }
         >
