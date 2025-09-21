@@ -49,15 +49,22 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/products/bulk`, {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { productIds: selectedProducts }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        data: { productIds: selectedProducts },
+        timeout: 15000
       });
       
       onBulkUpdate();
       onClearSelection();
       setShowDeleteConfirm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting products:', error);
+      // Show error but still close modal
+      setShowDeleteConfirm(false);
+      onClearSelection();
     }
   };
 

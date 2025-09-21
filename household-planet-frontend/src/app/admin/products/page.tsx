@@ -330,9 +330,16 @@ export default function AdminProductsPage() {
       
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/products/${productId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        }
       );
       await fetchProducts();
+      
       showToast({
         title: 'Success!',
         description: `Product "${productName}" deleted successfully`,
@@ -352,7 +359,7 @@ export default function AdminProductsPage() {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to delete product';
         showToast({
           title: 'Error',
-          description: errorMessage,
+          description: `Failed to delete "${productName}": ${errorMessage}`,
           variant: 'destructive'
         });
       }
