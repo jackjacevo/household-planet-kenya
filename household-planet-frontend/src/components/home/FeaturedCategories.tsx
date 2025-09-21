@@ -98,7 +98,7 @@ export function FeaturedCategories() {
           <p className="text-gray-600">Discover our wide range of household essentials</p>
         </div>
         
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {loading ? (
             [...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
