@@ -9,7 +9,7 @@ interface Staff {
   id: number;
   name: string;
   email: string;
-  role: 'ADMIN' | 'STAFF';
+  role: 'ADMIN' | 'STAFF' | 'SUPER_ADMIN';
   isActive: boolean;
   permissions: string[];
   createdAt: string;
@@ -46,7 +46,7 @@ export default function AdminManagementPage() {
     name: '',
     email: '',
     password: '',
-    role: 'ADMIN' as 'ADMIN' | 'STAFF',
+    role: 'ADMIN' as 'ADMIN' | 'STAFF' | 'SUPER_ADMIN',
     permissions: [] as string[]
   });
 
@@ -57,12 +57,15 @@ export default function AdminManagementPage() {
   const fetchStaff = async () => {
     try {
       const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
+        `${apiUrl}/api/admin/staff`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      // Filter to only show ADMIN users
-      setStaff((response as any).data.filter((member: Staff) => member.role === 'ADMIN'));
+      // Filter to show ADMIN and SUPER_ADMIN users
+      setStaff((response as any).data.filter((member: Staff) => 
+        member.role === 'ADMIN' || member.role === 'SUPER_ADMIN'
+      ));
     } catch (error) {
       console.error('Error fetching staff:', error);
     } finally {
@@ -259,8 +262,10 @@ export default function AdminManagementPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                    ADMIN
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    member.role === 'SUPER_ADMIN' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
+                  }`}>
+                    {member.role}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

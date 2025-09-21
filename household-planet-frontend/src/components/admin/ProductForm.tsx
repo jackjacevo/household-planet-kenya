@@ -45,7 +45,7 @@ interface ProductFormProps {
 
 export default function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [tagInput, setTagInput] = useState('');
 
@@ -107,7 +107,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories((response as any).data);
@@ -119,10 +119,15 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBrands((response as any).data);
+      const brandsData = (response as any).data || [];
+      if (Array.isArray(brandsData) && typeof brandsData[0] === 'string') {
+        setBrands(brandsData.map((brand, index) => ({ id: index + 1, name: brand, isActive: true })));
+      } else {
+        setBrands(brandsData);
+      }
     } catch (error) {
       console.error('Error fetching brands:', error);
     }

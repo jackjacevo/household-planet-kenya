@@ -54,7 +54,8 @@ export default function PromoCodesPage() {
   const fetchPromoCodes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes?search=${searchTerm}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      const response = await fetch(`${apiUrl}/api/promo-codes?search=${searchTerm}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -73,9 +74,10 @@ export default function PromoCodesPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const url = editingCode 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/${editingCode.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes`;
+        ? `${apiUrl}/api/promo-codes/${editingCode.id}`
+        : `${apiUrl}/api/promo-codes`;
       
       const method = editingCode ? 'PATCH' : 'POST';
       
@@ -111,7 +113,8 @@ export default function PromoCodesPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/${id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      const response = await fetch(`${apiUrl}/api/promo-codes/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -60,7 +60,18 @@ export default function AdminCategoriesPage() {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCategories((response as any).data);
+      // Handle different response structures
+      const responseData = (response as any).data;
+      if (responseData.categories && Array.isArray(responseData.categories)) {
+        setCategories(responseData.categories);
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        setCategories(responseData.data);
+      } else if (Array.isArray(responseData)) {
+        setCategories(responseData);
+      } else {
+        console.warn('Unexpected categories API response structure:', responseData);
+        setCategories([]);
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to fetch categories');
       console.error('Error fetching categories:', error);

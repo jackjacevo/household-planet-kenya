@@ -2,69 +2,82 @@ const https = require('https');
 
 const API_BASE = 'https://api.householdplanetkenya.co.ke';
 
-// Test both admin accounts
-const adminAccounts = [
-  {
-    email: 'householdplanet819@gmail.com',
-    password: 'HouseholdPlanet2024!'
-  },
-  {
-    email: 'admin@householdplanet.co.ke', 
-    password: 'HouseholdPlanet2024!'
-  }
-];
-
-async function testAdminLogins() {
-  console.log('🔍 Testing Admin Logins and Protected Endpoints...\n');
+// Test admin authentication and endpoints
+async function testAdminAuth() {
+  console.log('🔍 Testing Admin Authentication and API Endpoints...\n');
   
-  for (const account of adminAccounts) {
-    console.log(`Testing login for: ${account.email}`);
+  // First, let's test if we can get a valid admin token
+  const loginData = {
+    email: 'admin@householdplanet.co.ke',
+    password: 'HouseholdPlanet2024!'
+  };
+  
+  console.log('1. Testing admin login...');
+  
+  try {
+    const loginResponse = await makeRequest('/api/auth/login', 'POST', loginData);
     
-    try {
-      const loginResponse = await makeRequest('/api/auth/login', 'POST', account);
+    if (loginResponse.success && loginResponse.data.accessToken) {
+      console.log('✅ Admin login successful');
+      const token = loginResponse.data.accessToken;
+      const user = loginResponse.data.user;
       
-      if (loginResponse.success && loginResponse.data.accessToken) {
-        console.log('✅ Login successful');
-        const token = loginResponse.data.accessToken;
-        const user = loginResponse.data.user;
-        
-        console.log(`   User: ${user.email} (Role: ${user.role})`);
-        
-        // Test protected endpoints
-        console.log('   Testing protected endpoints...');
-        
-        const protectedEndpoints = [
-          '/api/promo-codes',
-          '/api/analytics/dashboard', 
-          '/api/admin/dashboard'
-        ];
-        
-        for (const endpoint of protectedEndpoints) {
-          try {
-            const result = await makeAuthenticatedRequest(endpoint, 'GET', null, token);
-            if (result.success) {
-              console.log(`   ✅ ${endpoint}: Working`);
-            } else {
-              console.log(`   ❌ ${endpoint}: ${result.status} - ${result.error}`);
-            }
-          } catch (error) {
-            console.log(`   ❌ ${endpoint}: ${error.message}`);
+      console.log(`   User: ${user.email} (Role: ${user.role})`);
+      console.log(`   Token: ${token.substring(0, 20)}...`);
+      
+      // Test protected endpoints with the token
+      console.log('\n2. Testing protected endpoints with admin token...');
+      
+      const protectedEndpoints = [
+        '/api/promo-codes',
+        '/api/analytics/dashboard',
+        '/api/admin/dashboard',
+        '/api/products/brands'
+      ];
+      
+      for (const endpoint of protectedEndpoints) {
+        try {
+          const result = await makeAuthenticatedRequest(endpoint, 'GET', null, token);
+          if (result.success) {
+            console.log(`✅ ${endpoint}: Working`);
+          } else {
+            console.log(`❌ ${endpoint}: ${result.status} - ${result.error}`);
           }
+        } catch (error) {
+          console.log(`❌ ${endpoint}: ${error.message}`);
         }
-        
-        console.log(''); // Add spacing
-        break; // If one works, we're good
-        
-      } else {
-        console.log('❌ Login failed');
-        console.log('   Response:', loginResponse.error || loginResponse.data);
       }
       
-    } catch (error) {
-      console.log('❌ Login request failed:', error.message);
+    } else {
+      console.log('❌ Admin login failed');
+      console.log('   Response:', loginResponse);
     }
     
-    console.log(''); // Add spacing between accounts
+  } catch (error) {
+    console.log('❌ Login request failed:', error.message);
+  }
+  
+  // Test CORS and basic connectivity
+  console.log('\n3. Testing CORS and basic connectivity...');
+  
+  const basicEndpoints = [
+    '/health',
+    '/api/health',
+    '/api/products',
+    '/api/categories'
+  ];
+  
+  for (const endpoint of basicEndpoints) {
+    try {
+      const result = await makeRequest(endpoint, 'GET');
+      if (result.success) {
+        console.log(`✅ ${endpoint}: Working`);
+      } else {
+        console.log(`❌ ${endpoint}: ${result.status} - ${result.error}`);
+      }
+    } catch (error) {
+      console.log(`❌ ${endpoint}: ${error.message}`);
+    }
   }
 }
 
@@ -209,4 +222,4 @@ function makeAuthenticatedRequest(endpoint, method = 'GET', data = null, token) 
   });
 }
 
-testAdminLogins().catch(console.error);
+testAdminAuth().catch(console.error);

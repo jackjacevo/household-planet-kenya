@@ -32,7 +32,7 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
       if (bulkData.isFeatured !== '') updateData.isFeatured = bulkData.isFeatured === 'true';
       if (bulkData.tags) updateData.tags = bulkData.tags;
 
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/bulk`, updateData, {
+      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/bulk`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -48,7 +48,7 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
     try {
       const token = localStorage.getItem('token');
       const endpoint = format === 'excel' ? 'export/excel' : 'export/csv';
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${endpoint}`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -72,7 +72,7 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
       const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
       const endpoint = isExcel ? 'import/excel' : 'import/csv';
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${endpoint}`, formData, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${endpoint}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

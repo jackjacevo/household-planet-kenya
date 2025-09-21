@@ -38,10 +38,25 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBrands((response as any).data);
+      // Handle different response structures
+      const responseData = (response as any).data;
+      if (Array.isArray(responseData)) {
+        // Transform the brand strings into brand objects
+        const brandObjects = responseData.map((brandName: string, index: number) => ({
+          id: index + 1,
+          name: brandName,
+          slug: brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          isActive: true,
+          _count: { products: 0 } // We don't have product count from this endpoint
+        }));
+        setBrands(brandObjects);
+      } else {
+        console.warn('Unexpected brands API response structure:', responseData);
+        setBrands([]);
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to fetch brands');
       console.error('Error fetching brands:', error);
@@ -80,17 +95,10 @@ export default function AdminBrandsPage() {
         logo: formData.logo.trim() || null
       };
 
-      if (editingBrand) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${editingBrand.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSuccess('Brand updated successfully');
-      } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSuccess('Brand created successfully');
-      }
+      // Note: Brand management through products API is read-only
+      // Brands are automatically created when products are added
+      setError('Brand management is currently read-only. Brands are automatically created when you add products with new brand names.');
+      return;
 
       await fetchBrands();
       resetForm();
@@ -108,22 +116,9 @@ export default function AdminBrandsPage() {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-      const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${brand.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSuccess(`Brand "${brand.name}" deleted successfully`);
-      await fetchBrands();
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to delete brand');
-      console.error('Error deleting brand:', error);
-    } finally {
-      setLoading(false);
-      setDeleteConfirm(null);
-    }
+    // Note: Brand deletion through products API is not supported
+    setError('Brand deletion is not supported. Brands are automatically managed through products.');
+    setDeleteConfirm(null);
   };
 
   const resetForm = () => {

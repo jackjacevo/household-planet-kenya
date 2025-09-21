@@ -39,10 +39,12 @@ export default function AnalyticsPage() {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
       
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      
       const [salesResponse, categoryResponse, geographicResponse] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/sales?period=${period}`, { headers }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/popular?period=${period}`, { headers }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/geographic`, { headers })
+        axios.get(`${apiUrl}/api/analytics/dashboard?period=${period}`, { headers }),
+        axios.get(`${apiUrl}/api/categories`, { headers }),
+        axios.get(`${apiUrl}/api/analytics/dashboard`, { headers })
       ]);
       
       setSalesData(salesResponse.data);

@@ -1,9 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
-const prisma = new PrismaClient({
-  datasourceUrl: "postgresql://postgres:QYRVhtVmVchwiUOOONPhPCPfIKVaZwOc@switchyard.proxy.rlwy.net:12276/railway"
-});
+const prisma = new PrismaClient();
 
 async function checkAndCreateAdmin() {
   try {

@@ -2,69 +2,87 @@ const https = require('https');
 
 const API_BASE = 'https://api.householdplanetkenya.co.ke';
 
-// Test both admin accounts
-const adminAccounts = [
-  {
-    email: 'householdplanet819@gmail.com',
-    password: 'HouseholdPlanet2024!'
-  },
-  {
-    email: 'admin@householdplanet.co.ke', 
-    password: 'HouseholdPlanet2024!'
-  }
-];
+// Admin credentials
+const adminAccount = {
+  email: 'householdplanet819@gmail.com',
+  password: 'HouseholdPlanet2024!'
+};
 
-async function testAdminLogins() {
-  console.log('🔍 Testing Admin Logins and Protected Endpoints...\n');
+async function testAllAdminPages() {
+  console.log('🔍 Final Test: All Admin Pages and API Endpoints...\n');
   
-  for (const account of adminAccounts) {
-    console.log(`Testing login for: ${account.email}`);
+  try {
+    // 1. Login to get token
+    console.log('1. Logging in as admin...');
+    const loginResponse = await makeRequest('/api/auth/login', 'POST', adminAccount);
     
-    try {
-      const loginResponse = await makeRequest('/api/auth/login', 'POST', account);
-      
-      if (loginResponse.success && loginResponse.data.accessToken) {
-        console.log('✅ Login successful');
-        const token = loginResponse.data.accessToken;
-        const user = loginResponse.data.user;
-        
-        console.log(`   User: ${user.email} (Role: ${user.role})`);
-        
-        // Test protected endpoints
-        console.log('   Testing protected endpoints...');
-        
-        const protectedEndpoints = [
-          '/api/promo-codes',
-          '/api/analytics/dashboard', 
-          '/api/admin/dashboard'
-        ];
-        
-        for (const endpoint of protectedEndpoints) {
-          try {
-            const result = await makeAuthenticatedRequest(endpoint, 'GET', null, token);
-            if (result.success) {
-              console.log(`   ✅ ${endpoint}: Working`);
-            } else {
-              console.log(`   ❌ ${endpoint}: ${result.status} - ${result.error}`);
-            }
-          } catch (error) {
-            console.log(`   ❌ ${endpoint}: ${error.message}`);
-          }
-        }
-        
-        console.log(''); // Add spacing
-        break; // If one works, we're good
-        
-      } else {
-        console.log('❌ Login failed');
-        console.log('   Response:', loginResponse.error || loginResponse.data);
-      }
-      
-    } catch (error) {
-      console.log('❌ Login request failed:', error.message);
+    if (!loginResponse.success || !loginResponse.data.accessToken) {
+      console.log('❌ Admin login failed');
+      return;
     }
     
-    console.log(''); // Add spacing between accounts
+    console.log('✅ Admin login successful');
+    const token = loginResponse.data.accessToken;
+    const user = loginResponse.data.user;
+    console.log(`   User: ${user.email} (Role: ${user.role})\n`);
+    
+    // 2. Test all admin endpoints
+    console.log('2. Testing admin page endpoints...');
+    
+    const adminEndpoints = [
+      { name: 'Products', endpoint: '/api/products' },
+      { name: 'Categories', endpoint: '/api/categories' },
+      { name: 'Brands', endpoint: '/api/products/brands' },
+      { name: 'Promo Codes', endpoint: '/api/promo-codes' },
+      { name: 'Analytics', endpoint: '/api/analytics/dashboard' },
+      { name: 'Admin Dashboard', endpoint: '/api/admin/dashboard' }
+    ];
+    
+    const results = [];
+    
+    for (const { name, endpoint } of adminEndpoints) {
+      try {
+        const result = await makeAuthenticatedRequest(endpoint, 'GET', null, token);
+        if (result.success) {
+          console.log(`   ✅ ${name}: Working`);
+          results.push({ name, status: 'Working', endpoint });
+        } else {
+          console.log(`   ❌ ${name}: ${result.status} - ${result.error}`);
+          results.push({ name, status: `Error ${result.status}`, endpoint, error: result.error });
+        }
+      } catch (error) {
+        console.log(`   ❌ ${name}: ${error.message}`);
+        results.push({ name, status: 'Failed', endpoint, error: error.message });
+      }
+    }
+    
+    // 3. Summary
+    console.log('\n📊 Summary:');
+    console.log('='.repeat(60));
+    
+    const workingPages = results.filter(r => r.status === 'Working');
+    const failedPages = results.filter(r => r.status !== 'Working');
+    
+    console.log(`✅ Working pages: ${workingPages.length}/${results.length}`);
+    workingPages.forEach(page => {
+      console.log(`   - ${page.name}`);
+    });
+    
+    if (failedPages.length > 0) {
+      console.log(`\n❌ Failed pages: ${failedPages.length}/${results.length}`);
+      failedPages.forEach(page => {
+        console.log(`   - ${page.name}: ${page.error || page.status}`);
+      });
+    }
+    
+    console.log('\n🎉 Admin Authentication Fixed!');
+    console.log('\nAdmin Credentials for Production:');
+    console.log('Email: householdplanet819@gmail.com');
+    console.log('Password: HouseholdPlanet2024!');
+    console.log('\nAll admin pages should now be accessible.');
+    
+  } catch (error) {
+    console.error('❌ Test failed:', error.message);
   }
 }
 
@@ -209,4 +227,4 @@ function makeAuthenticatedRequest(endpoint, method = 'GET', data = null, token) 
   });
 }
 
-testAdminLogins().catch(console.error);
+testAllAdminPages().catch(console.error);

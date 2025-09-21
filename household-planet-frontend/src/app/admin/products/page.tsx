@@ -58,15 +58,22 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       const [categoriesRes, brandsRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       setCategories(categoriesRes.data || []);
-      setBrands(brandsRes.data || []);
+      // Handle brands as array of strings
+      const brandsData = brandsRes.data || [];
+      if (Array.isArray(brandsData) && typeof brandsData[0] === 'string') {
+        // Convert string array to objects
+        setBrands(brandsData.map((brand, index) => ({ id: index + 1, name: brand })));
+      } else {
+        setBrands(brandsData);
+      }
     } catch (error: any) {
       console.error('Error fetching filter options:', error);
     }
@@ -88,7 +95,7 @@ export default function AdminProductsPage() {
 
       console.log('Fetching products with params:', params.toString());
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -161,7 +168,7 @@ export default function AdminProductsPage() {
       }
       
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
         productData,
         { 
           headers: { 
@@ -245,7 +252,7 @@ export default function AdminProductsPage() {
         return;
       }
       
-      const updateUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`;
+      const updateUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/products/${editingProduct.id}`;
       console.log('AdminProductsPage: Making PUT request to:', updateUrl);
       console.log('AdminProductsPage: Request payload:', productData);
       
@@ -322,7 +329,7 @@ export default function AdminProductsPage() {
       }
       
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await fetchProducts();
