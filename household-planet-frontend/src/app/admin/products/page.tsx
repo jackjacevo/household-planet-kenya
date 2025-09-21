@@ -265,6 +265,7 @@ export default function AdminProductsPage() {
             </table>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
