@@ -130,55 +130,70 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="px-2 sm:px-4 lg:px-8">
-      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Management</h1>
-          <p className="mt-1 sm:mt-2 text-sm text-gray-700">
-            Manage your product catalog and inventory.
-          </p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+              <p className="mt-2 text-gray-600">
+                Manage your product catalog ({products.length} products)
+              </p>
+            </div>
+            <Button 
+              onClick={() => setShowForm(true)} 
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              Add Product
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Button>
-      </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Products ({products.length})</h2>
-        </div>
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 className="text-lg font-semibold text-gray-900">All Products</h2>
+          </div>
         
         {loading ? (
-          <div className="px-6 py-12 text-center">
+          <div className="px-6 py-16 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
             <p className="text-gray-500">Loading products...</p>
           </div>
         ) : products.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <p className="text-gray-500 mb-4">No products found</p>
-            <Button onClick={() => setShowForm(true)} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Product
-            </Button>
+          <div className="px-6 py-16 text-center">
+            <div className="max-w-sm mx-auto">
+              <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Plus className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+              <p className="text-gray-500 mb-6">Get started by adding your first product to the catalog.</p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Add Your First Product
+              </button>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                     Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                     Actions
                   </th>
                 </tr>
@@ -186,59 +201,62 @@ export default function AdminProductsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {products.map((product) => (
                   <tr key={product.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
+                        <div className="h-12 w-12 flex-shrink-0">
                           <img
-                            className="h-10 w-10 rounded object-cover"
+                            className="h-12 w-12 rounded-lg object-cover border border-gray-200"
                             src={product.images?.[0] || '/placeholder.jpg'}
                             alt={product.name}
                           />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900">
                             {product.name}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {product.sku}
+                          <div className="text-xs text-gray-500 mt-1">
+                            SKU: {product.sku}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       KSh {product.price?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.stock || 0}
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      <span className={`font-medium ${
+                        (product.stock || 0) > 10 ? 'text-green-600' : 
+                        (product.stock || 0) > 0 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {product.stock || 0}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
                         product.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-100 text-green-700 border border-green-200' 
+                          : 'bg-red-100 text-red-700 border border-red-200'
                       }`}>
                         {product.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4">
                       <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
+                        <button
+                          className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded border border-blue-200 hover:border-blue-300 transition-colors"
                           onClick={() => {
                             setEditingProduct(product);
                             setShowForm(true);
                           }}
                         >
                           Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
+                        </button>
+                        <button
+                          className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 transition-colors"
                           onClick={() => handleDeleteProduct(product.id)}
                         >
                           Delete
-                        </Button>
+                        </button>
                       </div>
                     </td>
                   </tr>
