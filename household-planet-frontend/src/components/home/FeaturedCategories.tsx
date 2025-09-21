@@ -60,7 +60,8 @@ export function FeaturedCategories() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/categories`);
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          console.debug('Categories API unavailable');
+          return;
         }
         
         const data = await response.json();
@@ -79,7 +80,7 @@ export function FeaturedCategories() {
           setCategories([]);
         }
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
+        console.debug('Categories API unavailable');
         setCategories([]);
       } finally {
         setLoading(false);

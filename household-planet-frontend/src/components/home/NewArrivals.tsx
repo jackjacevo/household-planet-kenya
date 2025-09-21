@@ -41,12 +41,7 @@ export function NewArrivals() {
           setProducts([]);
         }
       } catch (error) {
-        console.error('Failed to fetch new arrivals:', error);
-        showToast({
-          title: 'Error',
-          description: 'Failed to load new arrivals',
-          variant: 'destructive'
-        });
+        console.debug('New arrivals API unavailable');
         setProducts([]);
       } finally {
         setLoading(false);

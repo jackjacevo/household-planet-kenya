@@ -43,12 +43,7 @@ export function BestSellers() {
           setProducts([]);
         }
       } catch (error) {
-        console.error('Failed to fetch products:', error);
-        showToast({
-          title: 'Error',
-          description: 'Failed to load featured products',
-          variant: 'destructive'
-        });
+        console.debug('Products API unavailable');
         setProducts([]);
       } finally {
         setLoading(false);
