@@ -57,11 +57,11 @@ export default function AnalyticsPage() {
     }
   };
 
-  const totalRevenue = salesData.reduce((sum, item) => sum + Number(item.revenue), 0);
-  const totalOrders = salesData.reduce((sum, item) => sum + Number(item.orders), 0);
+  const totalRevenue = Array.isArray(salesData) ? salesData.reduce((sum, item) => sum + Number(item.revenue), 0) : 0;
+  const totalOrders = Array.isArray(salesData) ? salesData.reduce((sum, item) => sum + Number(item.orders), 0) : 0;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-  const maxRevenue = Math.max(...salesData.map(item => Number(item.revenue)));
+  const maxRevenue = Array.isArray(salesData) && salesData.length > 0 ? Math.max(...salesData.map(item => Number(item.revenue))) : 0;
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">

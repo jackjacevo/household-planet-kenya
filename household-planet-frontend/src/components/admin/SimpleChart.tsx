@@ -85,11 +85,11 @@ export function SimpleLineChart() {
         const date = new Date(item.period);
         return date.toLocaleDateString('en-US', { month: 'short' });
       }
-    }) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    }) : [],
     datasets: [
       {
         label: 'Revenue (KSh)',
-        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.revenue) || 0) : [125000, 145000, 135000, 175000, 165000, 195000],
+        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.revenue) || 0) : [],
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         tension: 0.4,
@@ -166,10 +166,10 @@ export function SimplePieChart() {
   }
 
   const chartData = {
-    labels: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => item.category) : ['Kitchen & Dining', 'Home Decor', 'Cleaning', 'Storage', 'Bathroom'],
+    labels: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => item.category) : [],
     datasets: [
       {
-        data: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => Number(item.sales) || 0) : [35, 25, 20, 12, 8],
+        data: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => Number(item.sales) || 0) : [],
         backgroundColor: [
           '#FF6B6B',
           '#4ECDC4',
@@ -252,11 +252,11 @@ export function SimpleBarChart() {
         const date = new Date(item.period);
         return date.toLocaleDateString('en-US', { month: 'short' });
       }
-    }) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    }) : [],
     datasets: [
       {
         label: 'Orders',
-        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.orders) || 0) : [45, 52, 48, 61, 55, 67],
+        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.orders) || 0) : [],
         backgroundColor: '#10B981',
         borderRadius: 8,
         borderSkipped: false,
@@ -291,16 +291,7 @@ export function SimpleBarChart() {
 }
 
 export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<{ month: string; customers: number }> }) {
-  const fallbackData = [
-    { month: 'Jan', customers: 12 },
-    { month: 'Feb', customers: 18 },
-    { month: 'Mar', customers: 25 },
-    { month: 'Apr', customers: 32 },
-    { month: 'May', customers: 28 },
-    { month: 'Jun', customers: 35 }
-  ];
-  
-  const dataToUse = customerGrowth?.length > 0 ? customerGrowth : fallbackData;
+  const dataToUse = customerGrowth?.length > 0 ? customerGrowth : [];
   
   const chartData = {
     labels: dataToUse.map(item => item.month),

@@ -104,6 +104,7 @@ export default function AdminCategoriesPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const data = {
         ...formData,
         name: formData.name.trim(),
@@ -112,8 +113,6 @@ export default function AdminCategoriesPage() {
         image: formData.image.trim() || null,
         parentId: formData.parentId ? parseInt(formData.parentId) : null
       };
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       
       if (editingCategory) {
         await axios.put(`${apiUrl}/api/categories/${editingCategory.id}`, data, {
@@ -214,8 +213,9 @@ export default function AdminCategoriesPage() {
 
     try {
       const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload-image`,
+        `${apiUrl}/api/admin/categories/upload-image`,
         uploadFormData,
         {
           headers: {
