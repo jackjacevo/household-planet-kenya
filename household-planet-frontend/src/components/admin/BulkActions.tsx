@@ -13,6 +13,7 @@ interface BulkActionsProps {
 
 export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSelection }: BulkActionsProps) {
   const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [bulkData, setBulkData] = useState({
     categoryId: '',
     brandId: '',
@@ -41,6 +42,22 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
       onClearSelection();
     } catch (error) {
       console.error('Error updating products:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/products/bulk`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { productIds: selectedProducts }
+      });
+      
+      onBulkUpdate();
+      onClearSelection();
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Error deleting products:', error);
     }
   };
 
@@ -160,6 +177,15 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
             <Edit className="h-4 w-4 mr-2" />
             Bulk Edit
           </Button>
+          <Button 
+            onClick={() => setShowDeleteConfirm(true)} 
+            variant="outline" 
+            size="sm"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Selected
+          </Button>
           <Button onClick={onClearSelection} variant="outline" size="sm">
             Clear Selection
           </Button>
@@ -220,6 +246,37 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
             <Button onClick={handleBulkUpdate} size="sm" className="w-full">
               Apply Changes
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4 text-red-800">⚠️ Confirm Bulk Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete <strong>{selectedProducts.length}</strong> selected product{selectedProducts.length > 1 ? 's' : ''}? 
+              <br /><br />
+              <span className="text-red-600 font-medium">This action cannot be undone!</span>
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteConfirm(false)}
+                size="sm"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleBulkDelete}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete {selectedProducts.length} Product{selectedProducts.length > 1 ? 's' : ''}
+              </Button>
+            </div>
           </div>
         </div>
       )}
