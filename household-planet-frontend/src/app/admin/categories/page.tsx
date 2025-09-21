@@ -63,19 +63,30 @@ export default function AdminCategoriesPage() {
       });
       // Handle different response structures
       const responseData = (response as any).data;
+      let categoriesData = [];
       if (responseData.categories && Array.isArray(responseData.categories)) {
-        setCategories(responseData.categories);
+        categoriesData = responseData.categories;
       } else if (responseData.data && Array.isArray(responseData.data)) {
-        setCategories(responseData.data);
+        categoriesData = responseData.data;
       } else if (Array.isArray(responseData)) {
-        setCategories(responseData);
+        categoriesData = responseData;
       } else {
         console.warn('Unexpected categories API response structure:', responseData);
-        setCategories([]);
+        categoriesData = [];
       }
+      
+      // Ensure _count.products exists for each category
+      const safeCategoriesData = categoriesData.map((cat: any) => ({
+        ...cat,
+        _count: cat._count || { products: 0 },
+        children: cat.children || []
+      }));
+      
+      setCategories(safeCategoriesData);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to fetch categories');
-      console.error('Error fetching categories:', error);
+      console.warn('Categories API unavailable, using fallback');
+      setCategories([]);
+      setError('Categories temporarily unavailable');
     } finally {
       setLoading(false);
     }
@@ -137,12 +148,15 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (category: Category) => {
-    if (category._count.products > 0) {
-      setError(`Cannot delete category "${category.name}" because it has ${category._count.products} products. Please move or delete the products first.`);
+    const productCount = category._count?.products || 0;
+    const childrenCount = category.children?.length || 0;
+    
+    if (productCount > 0) {
+      setError(`Cannot delete category "${category.name}" because it has ${productCount} products. Please move or delete the products first.`);
       return;
     }
 
-    if (category.children.length > 0) {
+    if (childrenCount > 0) {
       setError(`Cannot delete category "${category.name}" because it has subcategories. Please delete or move the subcategories first.`);
       return;
     }
@@ -484,7 +498,7 @@ export default function AdminCategoriesPage() {
                       Parent
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {parentCategory._count.products}
+                      {parentCategory._count?.products || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -506,8 +520,8 @@ export default function AdminCategoriesPage() {
                         size="sm" 
                         variant="outline" 
                         onClick={() => setDeleteConfirm(parentCategory)}
-                        disabled={loading || parentCategory._count.products > 0 || parentCategory.children.length > 0}
-                        className={parentCategory._count.products > 0 || parentCategory.children.length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
+                        disabled={loading || (parentCategory._count?.products || 0) > 0 || (parentCategory.children?.length || 0) > 0}
+                        className={(parentCategory._count?.products || 0) > 0 || (parentCategory.children?.length || 0) > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -545,7 +559,7 @@ export default function AdminCategoriesPage() {
                           Subcategory
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {subCategory._count.products}
+                          {subCategory._count?.products || 0}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -567,8 +581,8 @@ export default function AdminCategoriesPage() {
                             size="sm" 
                             variant="outline" 
                             onClick={() => setDeleteConfirm(subCategory)}
-                            disabled={loading || subCategory._count.products > 0}
-                            className={subCategory._count.products > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
+                            disabled={loading || (subCategory._count?.products || 0) > 0}
+                            className={(subCategory._count?.products || 0) > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

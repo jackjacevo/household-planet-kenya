@@ -154,8 +154,14 @@ function ProductsContent() {
         queryParams.sortOrder = filters.sortOrder;
       }
       
-      const response = await api.getProducts(queryParams) as any;
-      console.log('API Response:', response);
+      let response;
+      try {
+        response = await api.getProducts(queryParams) as any;
+        console.log('API Response:', response);
+      } catch (error) {
+        console.warn('Products API unavailable, using fallback');
+        response = { products: [] };
+      }
       
       // Handle different response structures and ensure we get an array
       let newProducts = [];
