@@ -221,7 +221,6 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
 
-      {/* Category Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -333,7 +332,6 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* Categories Display */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -349,7 +347,6 @@ export default function AdminCategoriesPage() {
             const subcategories = getSubcategories(parentCategory.id);
             return (
               <div key={parentCategory.id} className="bg-white shadow rounded-lg overflow-hidden">
-                {/* Parent Category Header */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-6 py-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-6">
@@ -386,9 +383,6 @@ export default function AdminCategoriesPage() {
                       }`}>
                         {parentCategory.isActive ? 'Active' : 'Inactive'}
                       </span>
-                      <span className="text-sm text-gray-500">
-                        {subcategories.length} subcategories
-                      </span>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(parentCategory)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -404,7 +398,6 @@ export default function AdminCategoriesPage() {
                   </div>
                 </div>
                 
-                {/* Subcategories */}
                 {subcategories.length > 0 && (
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -454,7 +447,7 @@ export default function AdminCategoriesPage() {
                             </div>
                           </div>
                         </div>
-                      ))
+                      ))}
                     </div>
                   </div>
                 )}
