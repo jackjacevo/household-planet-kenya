@@ -19,7 +19,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
         return
       }
       
-      if (!isAdmin() && !isStaff()) {
+      // Allow ADMIN, SUPER_ADMIN, and STAFF roles
+      if (!(user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')) {
         router.push('/dashboard')
         return
       }
@@ -34,7 +35,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
     )
   }
 
-  if (!user || (!isAdmin() && !isStaff())) {
+  if (!user || !(user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

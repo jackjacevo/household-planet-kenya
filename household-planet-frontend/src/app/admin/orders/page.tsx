@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
       });
     },
     refetchInterval: 30000,
-    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')
   });
 
   const { data: ordersData, refetch: refetchOrders, isLoading } = useQuery({
@@ -165,7 +165,7 @@ export default function AdminOrdersPage() {
       });
     },
     refetchInterval: 60000,
-    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')
   });
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export default function AdminOrdersPage() {
   }, [ordersData]);
 
   useEffect(() => {
-    if (showReturns && (user?.role === 'ADMIN' || user?.role === 'STAFF')) {
+    if (showReturns && (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')) {
       fetchReturns();
     }
   }, [showReturns, user]);
@@ -1577,7 +1577,7 @@ export default function AdminOrdersPage() {
     );
   };
 
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
+  if (!user || !(user.role === 'ADMIN' || user.role === 'admin' || user.role === 'SUPER_ADMIN' || user.role === 'super_admin' || user.role === 'STAFF' || user.role === 'staff')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -1980,7 +1980,7 @@ export default function AdminOrdersPage() {
                                   <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
                               )}
-                              {['PENDING', 'CANCELLED'].includes(order.status) && user?.role === 'ADMIN' && (
+                              {['PENDING', 'CANCELLED'].includes(order.status) && (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') && (
                                 <Button
                                   variant="outline"
                                   size="sm"

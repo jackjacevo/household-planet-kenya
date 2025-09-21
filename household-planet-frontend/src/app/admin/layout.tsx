@@ -132,8 +132,11 @@ export default function AdminLayout({
   }
 
   const getVisibleNavigation = () => {
+    // Admin, Super Admin, and Staff can see all navigation items
+    if (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') {
+      return navigation;
+    }
     return navigation.filter(item => {
-      if (isAdmin()) return true;
       const requiredPermission = navigationPermissions[item.href];
       return requiredPermission ? hasPermission(requiredPermission) : false;
     });

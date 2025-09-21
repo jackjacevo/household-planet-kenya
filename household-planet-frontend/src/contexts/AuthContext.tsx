@@ -155,15 +155,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isAdmin = () => {
-    return user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin'
+    return user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff'
   }
 
   const isStaff = () => {
-    return user?.role === 'STAFF' || user?.role === 'staff'
+    return user?.role === 'STAFF' || user?.role === 'staff' || user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin'
   }
 
   const hasPermission = (permission: string) => {
-    if (isAdmin()) return true
+    // Admin, Super Admin, and Staff have all permissions
+    if (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') return true
     return user?.permissions?.includes(permission) || false
   }
 
