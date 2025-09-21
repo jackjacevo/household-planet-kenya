@@ -86,7 +86,7 @@ export default function BulkActions({ selectedProducts, onBulkUpdate, onClearSel
   };
 
   const convertToCSV = (data: any[]) => {
-    if (!data.length) return '';
+    if (!Array.isArray(data) || !data.length) return '';
     
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map(row => Object.values(row).join(','));

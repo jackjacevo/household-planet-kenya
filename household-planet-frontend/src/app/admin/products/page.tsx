@@ -368,7 +368,9 @@ export default function AdminProductsPage() {
   };
 
   const selectAllProducts = () => {
-    setSelectedProducts(products.map(p => p.id));
+    if (Array.isArray(products)) {
+      setSelectedProducts(products.map(p => p.id));
+    }
   };
 
   const clearSelection = () => {
@@ -444,7 +446,7 @@ export default function AdminProductsPage() {
               <div className="ml-2 sm:ml-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Active Products</p>
                 <p className="text-lg sm:text-2xl font-semibold text-gray-900">
-                  {products.filter(p => p.isActive).length}
+                  {Array.isArray(products) ? products.filter(p => p.isActive).length : 0}
                 </p>
               </div>
             </div>
@@ -458,7 +460,7 @@ export default function AdminProductsPage() {
               <div className="ml-2 sm:ml-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Low Stock</p>
                 <p className="text-lg sm:text-2xl font-semibold text-gray-900">
-                  {products.filter(p => p.trackStock && p.stock <= p.lowStockThreshold && p.stock > 0).length}
+                  {Array.isArray(products) ? products.filter(p => p.trackStock && p.stock <= p.lowStockThreshold && p.stock > 0).length : 0}
                 </p>
               </div>
             </div>
@@ -472,7 +474,7 @@ export default function AdminProductsPage() {
               <div className="ml-2 sm:ml-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Out of Stock</p>
                 <p className="text-lg sm:text-2xl font-semibold text-gray-900">
-                  {products.filter(p => p.stock === 0).length}
+                  {Array.isArray(products) ? products.filter(p => p.stock === 0).length : 0}
                 </p>
               </div>
             </div>
@@ -561,8 +563,8 @@ export default function AdminProductsPage() {
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={selectedProducts.length === products.length && products.length > 0}
-              onChange={selectedProducts.length === products.length ? clearSelection : selectAllProducts}
+              checked={Array.isArray(products) && selectedProducts.length === products.length && products.length > 0}
+              onChange={Array.isArray(products) && selectedProducts.length === products.length ? clearSelection : selectAllProducts}
               className="rounded"
             />
             <span className="text-sm text-gray-500">Select All</span>
@@ -600,7 +602,20 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    Loading products...
+                  </td>
+                </tr>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    No products found
+                  </td>
+                </tr>
+              ) : (
+                products.map((product) => (
                 <tr key={product.id} className={selectedProducts.includes(product.id) ? 'bg-blue-50' : ''}>
                   <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                     <input
@@ -695,7 +710,8 @@ export default function AdminProductsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
