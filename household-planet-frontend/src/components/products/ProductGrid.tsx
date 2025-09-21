@@ -8,7 +8,9 @@ interface ProductGridProps {
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid gap-4 sm:gap-6" style={{
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))'
+    }}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

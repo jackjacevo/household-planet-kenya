@@ -77,7 +77,10 @@ export function MobileProductGrid({
     <div className={`w-full ${className}`}>
       {/* Mobile Grid */}
       <motion.div
-        className="mobile-grid gap-3 px-4"
+        className="grid gap-3 px-4"
+        style={{
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))'
+        }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -136,7 +139,9 @@ export function MobileProductGrid({
 
       {/* Loading State */}
       {loading && products.length === 0 && (
-        <div className="mobile-grid gap-3 px-4">
+        <div className="grid gap-3 px-4" style={{
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))'
+        }}>
           {[...Array(6)].map((_, index) => (
             <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden animate-pulse">
               <div className="w-full h-48 bg-gray-200" />
