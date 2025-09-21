@@ -1,0 +1,3 @@
+Deployment trigger: TypeScript fix for admin brands page
+Timestamp: 2024-12-19 14:30:00
+Fix: Properly handle unknown error type in catch block
