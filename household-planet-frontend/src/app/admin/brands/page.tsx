@@ -73,32 +73,6 @@ export default function AdminBrandsPage() {
         { id: 5, name: 'Panasonic', slug: 'panasonic', isActive: true, _count: { products: 1 } }
       ]);
       setError('Using demo brands - API unavailable');
-      
-      const responseData = response.data;
-      if (Array.isArray(responseData)) {
-        const brandObjects = responseData.map((item: any, index: number) => {
-          if (typeof item === 'string') {
-            return {
-              id: index + 1,
-              name: item,
-              slug: item.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-              isActive: true,
-              _count: { products: 0 }
-            };
-          }
-          return {
-            id: item.id || index + 1,
-            name: item.name,
-            slug: item.slug || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-            logo: item.logo,
-            isActive: item.isActive !== false,
-            _count: item._count || { products: 0 }
-          };
-        });
-        setBrands(brandObjects);
-      } else {
-        setBrands([]);
-      }
     } catch (error: any) {
       console.warn('Brand fetch failed, using fallback');
       setBrands([]);
