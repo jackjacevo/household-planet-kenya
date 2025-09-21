@@ -227,9 +227,11 @@ export function DeliveryLocationsTab() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h3 className="text-base sm:text-lg font-medium text-gray-900">Delivery Locations</h3>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">Delivery Locations ({locations.length})</h3>
           <p className="text-xs sm:text-sm text-gray-500">
             Manage delivery locations and pricing for your store
+            {locations.length === 63 && <span className="text-green-600 font-medium"> ✓ All 63 locations loaded</span>}
+            {locations.length > 0 && locations.length !== 63 && <span className="text-yellow-600 font-medium"> ⚠️ Expected 63 locations</span>}
           </p>
         </div>
         <Button onClick={() => setShowForm(true)} className="flex items-center justify-center w-full sm:w-auto">

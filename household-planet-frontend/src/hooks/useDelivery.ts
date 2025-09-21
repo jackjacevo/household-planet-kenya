@@ -40,6 +40,9 @@ export function useDelivery() {
           if (mounted) {
             setLocations(data.data);
             console.log(`✅ Loaded ${data.data.length} delivery locations`);
+            if (data.data.length !== 63) {
+              console.warn(`⚠️ Expected 63 locations, got ${data.data.length}`);
+            }
           }
         } else {
           throw new Error('Invalid API response format');
