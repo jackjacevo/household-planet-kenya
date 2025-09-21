@@ -9,7 +9,7 @@ export class StaffService {
 
   async getAllStaff() {
     const staff = await this.prisma.user.findMany({
-      where: { role: { in: ['ADMIN', 'STAFF'] } },
+      where: { role: { in: ['ADMIN', 'STAFF', 'SUPER_ADMIN'] } },
       select: {
         id: true,
         name: true,
