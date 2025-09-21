@@ -54,17 +54,20 @@ export function SimpleLineChart() {
       );
       // Generate monthly revenue data from orders
       const orders = response.data.recentOrders || [];
-      const monthlyData = orders.reduce((acc: any, order: any) => {
+      const monthlyData: any = {};
+      
+      orders.forEach((order: any) => {
         const date = new Date(order.createdAt);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (!acc[monthKey]) {
-          acc[monthKey] = { period: monthKey, revenue: 0, orders: 0 };
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { period: monthKey, revenue: 0, orders: 0 };
         }
-        acc[monthKey].revenue += order.total;
-        acc[monthKey].orders += 1;
-        return acc;
-      }, {});
-      return Object.values(monthlyData).slice(-6); // Last 6 months
+        monthlyData[monthKey].revenue += order.total || 0;
+        monthlyData[monthKey].orders += 1;
+      });
+      
+      const result = Object.values(monthlyData).slice(-6); // Last 6 months
+      return result.length > 0 ? result : [{ period: 'No Data', revenue: 0, orders: 0 }];
     },
     refetchInterval: 60000,
     retry: 2
@@ -88,6 +91,7 @@ export function SimpleLineChart() {
 
   const chartData = {
     labels: salesData?.length > 0 ? salesData.map((item: SalesData) => {
+      if (item.period === 'No Data') return item.period;
       if (item.period.includes('-')) {
         // Handle YYYY-MM format
         const [year, month] = item.period.split('-');
@@ -98,11 +102,11 @@ export function SimpleLineChart() {
         const date = new Date(item.period);
         return date.toLocaleDateString('en-US', { month: 'short' });
       }
-    }) : [],
+    }) : ['No Data'],
     datasets: [
       {
         label: 'Revenue (KSh)',
-        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.revenue) || 0) : [],
+        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.revenue) || 0) : [0],
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         tension: 0.4,
@@ -153,29 +157,23 @@ export function SimplePieChart() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
-      const [dashboardResponse, productsResponse] = await Promise.all([
-        axios.get(`${apiUrl}/api/admin/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        axios.get(`${apiUrl}/api/products`, { headers: { 'Authorization': `Bearer ${token}` } })
-      ]);
-      // Generate category data from products and orders
-      const products = productsResponse.data || [];
+      const dashboardResponse = await axios.get(`${apiUrl}/api/admin/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Generate category data from orders only
       const orders = dashboardResponse.data.recentOrders || [];
-      const categoryStats = products.reduce((acc: any, product: any) => {
-        const category = product.category?.name || 'Uncategorized';
-        if (!acc[category]) {
-          acc[category] = { category, sales: 0 };
-        }
-        // Count sales from orders
-        orders.forEach((order: any) => {
-          order.orderItems?.forEach((item: any) => {
-            if (item.product?.category?.name === category) {
-              acc[category].sales += item.quantity || 1;
-            }
-          });
+      const categoryStats: any = {};
+      
+      orders.forEach((order: any) => {
+        order.orderItems?.forEach((item: any) => {
+          const category = item.product?.category?.name || item.product?.name || 'Uncategorized';
+          if (!categoryStats[category]) {
+            categoryStats[category] = { category, sales: 0 };
+          }
+          categoryStats[category].sales += item.quantity || 1;
         });
-        return acc;
-      }, {});
-      return Object.values(categoryStats).slice(0, 8); // Top 8 categories
+      });
+      
+      const result = Object.values(categoryStats).slice(0, 8); // Top 8 categories
+      return result.length > 0 ? result : [{ category: 'No Data', sales: 1 }];
     },
     refetchInterval: 60000,
     retry: 2
@@ -198,10 +196,10 @@ export function SimplePieChart() {
   }
 
   const chartData = {
-    labels: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => item.category) : [],
+    labels: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => item.category) : ['No Data'],
     datasets: [
       {
-        data: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => Number(item.sales) || 0) : [],
+        data: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => Number(item.sales) || 0) : [1],
         backgroundColor: [
           '#FF6B6B',
           '#4ECDC4',
@@ -253,17 +251,20 @@ export function SimpleBarChart() {
       );
       // Generate monthly orders data
       const orders = response.data.recentOrders || [];
-      const monthlyData = orders.reduce((acc: any, order: any) => {
+      const monthlyData: any = {};
+      
+      orders.forEach((order: any) => {
         const date = new Date(order.createdAt);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (!acc[monthKey]) {
-          acc[monthKey] = { period: monthKey, revenue: 0, orders: 0 };
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { period: monthKey, revenue: 0, orders: 0 };
         }
-        acc[monthKey].revenue += order.total;
-        acc[monthKey].orders += 1;
-        return acc;
-      }, {});
-      return Object.values(monthlyData).slice(-6); // Last 6 months
+        monthlyData[monthKey].revenue += order.total || 0;
+        monthlyData[monthKey].orders += 1;
+      });
+      
+      const result = Object.values(monthlyData).slice(-6); // Last 6 months
+      return result.length > 0 ? result : [{ period: 'No Data', revenue: 0, orders: 0 }];
     },
     refetchInterval: 60000,
     retry: 2
@@ -287,6 +288,7 @@ export function SimpleBarChart() {
 
   const chartData = {
     labels: salesData?.length > 0 ? salesData.map((item: SalesData) => {
+      if (item.period === 'No Data') return item.period;
       if (item.period.includes('-')) {
         // Handle YYYY-MM format
         const [year, month] = item.period.split('-');
@@ -297,11 +299,11 @@ export function SimpleBarChart() {
         const date = new Date(item.period);
         return date.toLocaleDateString('en-US', { month: 'short' });
       }
-    }) : [],
+    }) : ['No Data'],
     datasets: [
       {
         label: 'Orders',
-        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.orders) || 0) : [],
+        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.orders) || 0) : [0],
         backgroundColor: '#10B981',
         borderRadius: 8,
         borderSkipped: false,
@@ -348,21 +350,25 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
       );
       // Generate customer growth data from orders
       const orders = response.data.recentOrders || [];
-      const monthlyCustomers = orders.reduce((acc: any, order: any) => {
+      const monthlyCustomers: any = {};
+      
+      orders.forEach((order: any) => {
         const date = new Date(order.createdAt);
         const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-        if (!acc[monthKey]) {
-          acc[monthKey] = { month: monthKey, customers: new Set() };
+        if (!monthlyCustomers[monthKey]) {
+          monthlyCustomers[monthKey] = { month: monthKey, customers: new Set() };
         }
         if (order.user?.id) {
-          acc[monthKey].customers.add(order.user.id);
+          monthlyCustomers[monthKey].customers.add(order.user.id);
         }
-        return acc;
-      }, {});
-      return Object.values(monthlyCustomers).map((item: any) => ({
+      });
+      
+      const result = Object.values(monthlyCustomers).map((item: any) => ({
         month: item.month,
         customers: item.customers.size
       })).slice(-6); // Last 6 months
+      
+      return result.length > 0 ? result : [{ month: 'No Data', customers: 0 }];
     },
     refetchInterval: 60000,
     retry: 2
@@ -387,11 +393,11 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
   const dataToUse = growthData?.length > 0 ? growthData : (customerGrowth?.length > 0 ? customerGrowth : []);
   
   const chartData = {
-    labels: dataToUse.map(item => item.month),
+    labels: dataToUse.length > 0 ? dataToUse.map(item => item.month) : ['No Data'],
     datasets: [
       {
         label: 'New Customers',
-        data: dataToUse.map(item => item.customers),
+        data: dataToUse.length > 0 ? dataToUse.map(item => item.customers) : [0],
         borderColor: 'rgb(168, 85, 247)',
         backgroundColor: 'rgba(168, 85, 247, 0.1)',
         tension: 0.4,
