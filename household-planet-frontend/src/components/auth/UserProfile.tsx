@@ -67,7 +67,7 @@ export function UserProfile() {
 
       {/* Hover tooltip */}
       {isHovered && !isOpen && (
-        <div className="absolute right-0 mt-1 w-48 bg-gray-900 text-white text-xs rounded-lg py-2 px-3 z-50 pointer-events-none">
+        <div className="absolute right-0 mt-1 w-48 max-w-[80vw] bg-gray-900 text-white text-xs rounded-lg py-2 px-3 z-[9999] pointer-events-none">
           <p className="font-medium">{user.name}</p>
           <p className="text-gray-300">{user.email}</p>
           {user.phone && <p className="text-gray-300">{user.phone}</p>}
@@ -76,9 +76,9 @@ export function UserProfile() {
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-lg border py-2 z-50">
-          <div className="px-3 sm:px-4 py-2 sm:py-3 border-b">
-            <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="absolute right-0 mt-2 w-72 max-w-[90vw] bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]">
+          <div className="px-4 py-3 border-b">
+            <div className="flex items-center space-x-3">
               {user.avatar ? (
                 <img
                   src={user.avatar}

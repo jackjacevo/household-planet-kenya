@@ -544,7 +544,7 @@ function ProductsContent() {
                     <motion.div 
                       className={`grid gap-3 sm:gap-4 md:gap-6 ${
                         viewMode === 'grid' || isMobile
-                          ? '[grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]'
+                          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8'
                           : 'grid-cols-1'
                       }`}
                       variants={staggerContainer}

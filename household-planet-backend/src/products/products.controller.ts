@@ -63,6 +63,27 @@ export class ProductsController {
     return this.productsService.getBrands();
   }
 
+  @Post('brands')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  createBrand(@Body() createBrandDto: any) {
+    return this.productsService.createBrand(createBrandDto);
+  }
+
+  @Patch('brands/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  updateBrand(@Param('id', ParseIntPipe) id: number, @Body() updateBrandDto: any) {
+    return this.productsService.updateBrand(id, updateBrandDto);
+  }
+
+  @Delete('brands/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  deleteBrand(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.deleteBrand(id);
+  }
+
   @Get('search')
   @UsePipes(new ValidationPipe({ transform: true }))
   search(@Query() searchDto: SearchDto) {

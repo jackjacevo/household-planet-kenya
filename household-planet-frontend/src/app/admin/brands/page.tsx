@@ -42,7 +42,7 @@ export default function AdminBrandsPage() {
       
       // Try to fetch from backend first
       try {
-        const response = await axios.get(`${apiUrl}/api/brands`, {
+        const response = await axios.get(`${apiUrl}/api/products/brands`, {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000
         });
@@ -61,18 +61,10 @@ export default function AdminBrandsPage() {
           return;
         }
       } catch (apiError) {
-        console.warn('Brands API failed, using fallback data');
+        console.warn('Brands API failed:', apiError.message);
+        setBrands([]);
+        setError('Unable to load brands. Please try again later.');
       }
-      
-      // Fallback data
-      setBrands([
-        { id: 1, name: 'Samsung', slug: 'samsung', isActive: true, _count: { products: 5 } },
-        { id: 2, name: 'LG', slug: 'lg', isActive: true, _count: { products: 3 } },
-        { id: 3, name: 'Sony', slug: 'sony', isActive: true, _count: { products: 2 } },
-        { id: 4, name: 'Philips', slug: 'philips', isActive: true, _count: { products: 4 } },
-        { id: 5, name: 'Panasonic', slug: 'panasonic', isActive: true, _count: { products: 1 } }
-      ]);
-      setError('Using demo brands - API unavailable');
     } catch (error: any) {
       console.warn('Brand fetch failed, using fallback');
       setBrands([]);
@@ -116,13 +108,13 @@ export default function AdminBrandsPage() {
       // Try to save to backend first
       try {
         if (editingBrand) {
-          await axios.put(`${apiUrl}/api/brands/${editingBrand.id}`, data, {
+          await axios.put(`${apiUrl}/api/products/brands/${editingBrand.id}`, data, {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 10000
           });
           setSuccess('Brand updated successfully');
         } else {
-          await axios.post(`${apiUrl}/api/brands`, data, {
+          await axios.post(`${apiUrl}/api/products/brands`, data, {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 10000
           });
@@ -165,7 +157,7 @@ export default function AdminBrandsPage() {
       
       // Try to delete from backend first
       try {
-        await axios.delete(`${apiUrl}/api/brands/${brand.id}`, {
+        await axios.delete(`${apiUrl}/api/products/brands/${brand.id}`, {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000
         });

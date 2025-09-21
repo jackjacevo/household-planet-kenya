@@ -272,8 +272,61 @@ export class ProductsService {
   async getBrands() {
     return this.prisma.brand.findMany({
       where: { isActive: true },
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      },
       orderBy: { name: 'asc' }
     });
+  }
+
+  async createBrand(data: any) {
+    const { name, slug, logo, isActive = true } = data;
+    return this.prisma.brand.create({
+      data: {
+        name,
+        slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        logo,
+        isActive
+      },
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      }
+    });
+  }
+
+  async updateBrand(id: number, data: any) {
+    const { name, slug, logo, isActive } = data;
+    return this.prisma.brand.update({
+      where: { id },
+      data: {
+        name,
+        slug,
+        logo,
+        isActive
+      },
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      }
+    });
+  }
+
+  async deleteBrand(id: number) {
+    // Check if brand has products
+    const productCount = await this.prisma.product.count({
+      where: { brandId: id }
+    });
+    
+    if (productCount > 0) {
+      throw new Error(`Cannot delete brand because it has ${productCount} products`);
+    }
+    
+    return this.prisma.brand.delete({ where: { id } });
   }
 
   async search(query: string, limit = 20) {

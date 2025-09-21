@@ -69,7 +69,7 @@ export function BestSellers() {
         </div>
         
         {loading ? (
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] md:gap-6">
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 md:gap-6">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                 <div className="h-48 bg-gray-200 animate-pulse" />
@@ -96,7 +96,7 @@ export function BestSellers() {
           </motion.div>
         ) : (
           <motion.div 
-            className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] md:gap-6"
+            className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 md:gap-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
