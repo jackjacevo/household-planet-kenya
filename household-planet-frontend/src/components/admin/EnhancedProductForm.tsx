@@ -104,7 +104,7 @@ export default function EnhancedProductForm({ product, onSubmit, onCancel }: Enh
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBrands((response as any).data);

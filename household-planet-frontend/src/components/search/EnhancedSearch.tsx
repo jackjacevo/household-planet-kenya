@@ -98,7 +98,7 @@ export default function EnhancedSearch() {
     try {
       const [categoriesRes, brandsRes] = await Promise.all([
         api.get('/categories'),
-        api.get('/brands')
+        api.get('/products/brands')
       ]);
       setCategories(categoriesRes.data as Category[]);
       setBrands(brandsRes.data as Brand[]);

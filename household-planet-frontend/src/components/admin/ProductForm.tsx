@@ -136,7 +136,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       
       // Try brands endpoint first
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/brands`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000
         });

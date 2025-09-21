@@ -77,7 +77,7 @@ export default function AdminProductsPage() {
       
       // Fetch brands - try brands endpoint first
       try {
-        const brandsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/brands`, {
+        const brandsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products/brands`, {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000
         });
