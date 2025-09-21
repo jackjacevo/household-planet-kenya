@@ -2,12 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files from frontend directory
-COPY household-planet-frontend/package*.json ./
+COPY package*.json ./
 RUN npm install --no-optional && npm cache clean --force
 
-# Copy frontend source code
-COPY household-planet-frontend/ ./
+COPY . .
 RUN npm run build
 
 RUN rm -rf node_modules && npm install --production --no-optional && npm cache clean --force
