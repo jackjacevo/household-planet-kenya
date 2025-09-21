@@ -66,34 +66,42 @@ export function RecentlyViewed() {
   }
 
   return (
-    <section className="py-8 bg-white">
+    <section className="py-12 bg-gray-50">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-10">
           <div className="flex items-center">
-            <Clock className="h-6 w-6 text-green-600 mr-3" />
-            <h2 className="text-2xl font-bold text-gray-800">Recently Viewed</h2>
+            <div className="bg-green-100 p-2 rounded-lg mr-4">
+              <Clock className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-1">Recently Viewed</h2>
+              <p className="text-gray-600">Products you've looked at recently</p>
+            </div>
           </div>
-          <Link href="/products" className="text-green-600 hover:text-green-700 font-medium">
+          <Link href="/products" className="text-green-600 hover:text-green-700 font-semibold flex items-center group">
             View All
+            <svg className="ml-1 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
         
         {loading ? (
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 md:gap-6">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <div className="h-48 bg-gray-200 animate-pulse" />
-                <div className="p-4">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
-                  <div className="h-3 bg-gray-200 rounded animate-pulse mb-2" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="h-64 bg-gray-200 animate-pulse" />
+                <div className="p-5">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-3" />
+                  <div className="h-3 bg-gray-200 rounded animate-pulse mb-3" />
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : (
           <motion.div 
-            className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 md:gap-6 auto-rows-max"
+            className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"

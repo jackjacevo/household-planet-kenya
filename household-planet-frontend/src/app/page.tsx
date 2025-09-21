@@ -5,12 +5,9 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedCategories } from '@/components/home/FeaturedCategories'
 import { BestSellers } from '@/components/home/BestSellers'
 import { NewArrivals } from '@/components/home/NewArrivals'
-
-
 import { InstagramFeed } from '@/components/home/InstagramFeed'
 import { StoreLocation } from '@/components/home/StoreLocation'
 import { TrustBadges } from '@/components/home/TrustBadges'
-
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import SEOHead from '@/components/SEO/SEOHead'
 import { InternalLinks } from '@/components/SEO/InternalLinks'
@@ -24,11 +21,11 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const sectionVariants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20 },
   visible: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.8 }
+    transition: { duration: 0.6, ease: "easeOut" }
   }
 };
 
@@ -37,8 +34,8 @@ const staggerContainer = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
+      staggerChildren: 0.15,
+      delayChildren: 0.1
     }
   }
 };
@@ -84,108 +81,111 @@ export default function HomePage() {
         structuredData={structuredData}
       />
       
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/30 overflow-hidden">
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/20">
         {/* Sticky Social Media Icons */}
         <SocialMediaIcons />
         
-        {/* Dynamic Hero Banner */}
-        <HeroSection />
+        {/* Hero Section */}
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+        >
+          <HeroSection />
+        </motion.section>
         
-        {/* Shop by Category - Right after banner */}
-        <motion.div
+        {/* Categories Section */}
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
-          className="px-4 sm:px-0"
+          className="py-8"
         >
           <FeaturedCategories />
-        </motion.div>
+        </motion.section>
         
         {/* Featured Products */}
-        <motion.div
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
+          className="py-8"
         >
           <BestSellers />
-        </motion.div>
+        </motion.section>
       
         {/* New Arrivals */}
-        <motion.div
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
+          className="py-8"
         >
           <NewArrivals />
-        </motion.div>
+        </motion.section>
         
-
-      
-
-      
-
-      
-      {/* Recently Viewed */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <RecentlyViewed />
-      </motion.div>
-      
-      {/* Trust Badges - Build confidence */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-      >
-        <TrustBadges />
-      </motion.div>
-      
-
-      {/* Instagram Feed */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-        className="mb-16"
-      >
-        <InstagramFeed />
-      </motion.div>
-      
-      {/* Internal Links for SEO */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={sectionVariants}
-        className="px-4 py-16"
-      >
-        <div className="container mx-auto max-w-7xl">
-          <InternalLinks
-            title="Explore More"
-            links={getHomepageLinks()}
-          />
-        </div>
-      </motion.div>
-      
-        {/* Store Location - Find Us */}
-        <motion.div
+        {/* Recently Viewed */}
+        <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
+          <RecentlyViewed />
+        </motion.section>
+        
+        {/* Trust Badges */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
+          <TrustBadges />
+        </motion.section>
+        
+        {/* Instagram Feed */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
+          <InstagramFeed />
+        </motion.section>
+        
+        {/* Internal Links */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-16 px-4"
+        >
+          <div className="container mx-auto max-w-7xl">
+            <InternalLinks
+              title="Explore More"
+              links={getHomepageLinks()}
+            />
+          </div>
+        </motion.section>
+        
+        {/* Store Location */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
           className="pb-16"
         >
           <StoreLocation />
-        </motion.div>
+        </motion.section>
       </main>
     </>
   )

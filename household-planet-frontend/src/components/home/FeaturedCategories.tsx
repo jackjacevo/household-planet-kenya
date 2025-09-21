@@ -91,17 +91,20 @@ export function FeaturedCategories() {
   }, []);
 
   return (
-    <section className="py-8 bg-white">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Shop by Category</h2>
+    <section className="py-12 bg-white">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Shop by Category</h2>
+          <p className="text-gray-600">Discover our wide range of household essentials</p>
+        </div>
         
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 auto-rows-max">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {loading ? (
             [...Array(6)].map((_, i) => (
-              <div key={i} className="category-card bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
-                <div className="p-4">
-                  <div className="w-full h-32 bg-gray-200 rounded-lg animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded mt-3 animate-pulse" />
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                <div className="p-6">
+                  <div className="w-full h-40 bg-gray-200 rounded-lg animate-pulse mb-4" />
+                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
                 </div>
               </div>
             ))
@@ -111,39 +114,58 @@ export function FeaturedCategories() {
               <p className="text-gray-600">Categories will appear here once added.</p>
             </div>
           ) : (
-            (Array.isArray(categories) ? categories : []).map((category, index) => (
-              <Link 
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="contents"
+            >
+              {(Array.isArray(categories) ? categories : []).map((category, index) => (
+              <motion.div
                 key={category.slug}
-                href={`/products?category=${category.slug}`} 
-                className="category-card bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition duration-300"
+                variants={itemVariants}
+                whileHover={{ y: -5, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="p-4">
-                  <div className="w-full h-32 overflow-hidden rounded-lg relative">
-                    <Image 
-                      src={category.image || fallbackImages[index % fallbackImages.length]} 
-                      alt={category.name} 
-                      fill
-                      priority={index === 0}
-                      className="object-cover transition duration-300"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-                      onError={() => {
-                        console.error(`Failed to load image: ${category.image}`);
-                      }}
-                    />
+                <Link 
+                  href={`/products?category=${category.slug}`} 
+                  className="block bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
+                >
+                  <div className="p-6">
+                    <div className="w-full h-40 overflow-hidden rounded-lg relative mb-4 bg-gradient-to-br from-gray-50 to-gray-100">
+                      <Image 
+                        src={category.image || fallbackImages[index % fallbackImages.length]} 
+                        alt={category.name} 
+                        fill
+                        priority={index < 4}
+                        className="object-cover transition-transform duration-300 group-hover:scale-110"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                        onError={() => {
+                          console.error(`Failed to load image: ${category.image}`);
+                        }}
+                      />
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-900 text-center group-hover:text-green-600 transition-colors">
+                      {category.name}
+                    </h3>
                   </div>
-                  <h3 className="mt-3 text-sm font-medium text-gray-900 text-center">{category.name}</h3>
-                </div>
-              </Link>
-            ))
+                </Link>
+              </motion.div>
+              ))}
+            </motion.div>
           )}
         </div>
         
-        <div className="text-center mt-6">
+        <div className="text-center mt-10">
           <Link 
             href="/categories" 
-            className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-full transition duration-300"
+            className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
           >
             View All Categories
+            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
       </div>

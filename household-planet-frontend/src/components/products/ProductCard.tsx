@@ -190,27 +190,31 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
 
   return (
     <motion.div
-      whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}
+      whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)' }}
       whileTap={{ scale: 0.98 }}
-      className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 h-full flex flex-col"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 h-full flex flex-col hover:border-green-200"
     >
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-56 bg-gray-50 overflow-hidden relative p-2">
+          <div className="w-full h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative p-4">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               fill
-              sizes="(max-width: 768px) 100vw, 300px"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
               priority={priority}
-              className="object-contain group-hover:scale-105 transition-transform duration-300"
+              className="object-contain group-hover:scale-110 transition-transform duration-500"
             />
           </div>
         </Link>
         
         {/* Stock indicator */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
-          <span className="text-xs text-white font-medium">
+        <div className="absolute bottom-2 left-2">
+          <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+            product.stock && product.stock > 0 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
             {product.stock && product.stock > 0 ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
@@ -223,17 +227,17 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         
         <button
           onClick={handleAddToWishlist}
-          className="absolute top-2 right-2 bg-white rounded-full p-2 shadow hover:bg-green-100 text-gray-600 hover:text-green-600 transition-colors w-8 h-8 flex items-center justify-center"
+          className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white hover:scale-110 text-gray-600 hover:text-red-500 transition-all duration-300 w-9 h-9 flex items-center justify-center"
         >
           <Heart
-            className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`}
+            className={`h-4 w-4 transition-colors ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`}
           />
         </button>
       </div>
 
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-5 flex-1 flex flex-col">
         <Link href={`/products/${product.slug}`}>
-          <h3 className="text-sm font-medium text-gray-800 hover:text-green-600 transition-colors line-clamp-1 min-h-[1.25rem]">
+          <h3 className="text-base font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-2 min-h-[2.5rem] leading-tight">
             {product.name}
           </h3>
         </Link>
@@ -250,32 +254,32 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         </div>
 
         <div className="mt-auto pt-3">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <span className="text-green-600 font-bold text-sm">Ksh {product.price.toLocaleString()}</span>
+          <div className="mb-4">
+            <div className="flex items-baseline space-x-2">
+              <span className="text-green-600 font-bold text-lg">Ksh {product.price.toLocaleString()}</span>
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-xs text-gray-500 line-through ml-1 block">
+                <span className="text-sm text-gray-500 line-through">
                   Ksh {product.comparePrice.toLocaleString()}
                 </span>
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex items-center space-x-2">
             <button
               onClick={handleWhatsAppOrder}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors flex items-center justify-center space-x-1"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 px-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 hover:shadow-lg transform hover:-translate-y-0.5"
               title="Order via WhatsApp"
             >
-              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs hidden sm:inline">WhatsApp</span>
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">WhatsApp</span>
             </button>
             <button
               onClick={handleAddToCart}
               disabled={!product.stock || product.stock <= 0}
-              className="bg-orange-600 hover:bg-orange-700 text-white p-1.5 sm:p-2 rounded-lg transition-colors disabled:bg-gray-300 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center"
+              className="bg-orange-600 hover:bg-orange-700 text-white p-2.5 rounded-lg transition-all duration-300 disabled:bg-gray-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
               title="Add to Cart"
             >
-              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <ShoppingCart className="h-4 w-4" />
             </button>
           </div>
         </div>
