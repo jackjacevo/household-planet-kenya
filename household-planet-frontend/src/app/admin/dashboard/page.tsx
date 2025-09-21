@@ -142,7 +142,7 @@ export default function AdminDashboard() {
           return stats.overview.deliveredRevenue;
         }
         // Calculate from delivered orders in recentOrders
-        const deliveredTotal = (stats.recentOrders || []).filter(order => order.status === 'DELIVERED').reduce((sum, order) => sum + order.total, 0);
+        const deliveredTotal = (stats.recentOrders || []).filter((order: any) => order.status === 'DELIVERED').reduce((sum: number, order: any) => sum + order.total, 0);
         return deliveredTotal || stats.overview?.totalRevenue || 0;
       })().toLocaleString()}`,
       subValue: `Total: KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
