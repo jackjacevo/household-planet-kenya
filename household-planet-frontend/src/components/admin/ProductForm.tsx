@@ -44,7 +44,7 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [tagInput, setTagInput] = useState('');

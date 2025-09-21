@@ -110,7 +110,7 @@ export default function AdminBrandsPage() {
         ...formData,
         name: formData.name.trim(),
         slug: formData.slug.trim() || generateSlug(formData.name),
-        logo: formData.logo.trim() || null
+        logo: formData.logo.trim() || undefined
       };
 
       // Try to save to backend first
