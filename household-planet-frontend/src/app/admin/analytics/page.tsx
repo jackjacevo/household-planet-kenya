@@ -38,18 +38,67 @@ export default function AnalyticsPage() {
     try {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
-      
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       
-      const [salesResponse, categoryResponse, geographicResponse] = await Promise.all([
-        axios.get(`${apiUrl}/api/analytics/dashboard?period=${period}`, { headers }),
-        axios.get(`${apiUrl}/api/categories`, { headers }),
-        axios.get(`${apiUrl}/api/analytics/dashboard`, { headers })
-      ]);
+      // Fetch dashboard data and generate analytics
+      const dashboardResponse = await axios.get(`${apiUrl}/api/admin/dashboard`, { headers });
+      const dashboardData = dashboardResponse.data;
       
-      setSalesData(Array.isArray(salesResponse.data) ? salesResponse.data : []);
-      setCategoryData(Array.isArray(categoryResponse.data) ? categoryResponse.data : []);
-      setGeographicData(Array.isArray(geographicResponse.data) ? geographicResponse.data : []);
+      // Generate sales data from orders
+      const orders = dashboardData.recentOrders || [];
+      const salesByPeriod: any = {};
+      
+      orders.forEach((order: any) => {
+        const date = new Date(order.createdAt);
+        let periodKey = '';
+        
+        switch (period) {
+          case 'daily':
+            periodKey = date.toISOString().split('T')[0];
+            break;
+          case 'weekly':
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - date.getDay());
+            periodKey = weekStart.toISOString().split('T')[0];
+            break;
+          case 'monthly':
+            periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            break;
+          case 'yearly':
+            periodKey = date.getFullYear().toString();
+            break;
+        }
+        
+        if (!salesByPeriod[periodKey]) {
+          salesByPeriod[periodKey] = { period: periodKey, orders: 0, revenue: 0, avgOrderValue: 0 };
+        }
+        salesByPeriod[periodKey].orders += 1;
+        salesByPeriod[periodKey].revenue += order.total || 0;
+      });
+      
+      // Calculate average order values
+      Object.values(salesByPeriod).forEach((item: any) => {
+        item.avgOrderValue = item.orders > 0 ? item.revenue / item.orders : 0;
+      });
+      
+      setSalesData(Object.values(salesByPeriod).slice(-10) as SalesData[]);
+      
+      // Generate category data from orders
+      const categoryStats: Record<string, CategoryData> = {};
+      orders.forEach((order: any) => {
+        order.orderItems?.forEach((item: any) => {
+          const category = item.product?.category?.name || 'Uncategorized';
+          if (!categoryStats[category]) {
+            categoryStats[category] = { category, sales: 0 };
+          }
+          categoryStats[category].sales += item.quantity || 1;
+        });
+      });
+      setCategoryData(Object.values(categoryStats).slice(0, 8) as CategoryData[]);
+      
+      // Use existing geographic data from dashboard
+      setGeographicData(dashboardData.salesByCounty || []);
+      
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {

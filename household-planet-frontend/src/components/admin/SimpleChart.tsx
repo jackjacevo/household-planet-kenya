@@ -52,9 +52,8 @@ export function SimpleLineChart() {
         `${apiUrl}/api/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      // Generate monthly revenue data from orders
       const orders = response.data.recentOrders || [];
-      const monthlyData: any = {};
+      const monthlyData: Record<string, SalesData> = {};
       
       orders.forEach((order: any) => {
         const date = new Date(order.createdAt);
@@ -66,7 +65,7 @@ export function SimpleLineChart() {
         monthlyData[monthKey].orders += 1;
       });
       
-      const result = Object.values(monthlyData).slice(-6); // Last 6 months
+      const result = Object.values(monthlyData).slice(-6);
       return result.length > 0 ? result : [{ period: 'No Data', revenue: 0, orders: 0 }];
     },
     refetchInterval: 60000,
@@ -89,24 +88,23 @@ export function SimpleLineChart() {
     );
   }
 
+  const data = salesData || [];
   const chartData = {
-    labels: salesData?.length > 0 ? salesData.map((item: SalesData) => {
+    labels: data.map((item) => {
       if (item.period === 'No Data') return item.period;
       if (item.period.includes('-')) {
-        // Handle YYYY-MM format
         const [year, month] = item.period.split('-');
         const date = new Date(parseInt(year), parseInt(month) - 1);
         return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       } else {
-        // Handle other date formats
         const date = new Date(item.period);
         return date.toLocaleDateString('en-US', { month: 'short' });
       }
-    }) : ['No Data'],
+    }),
     datasets: [
       {
         label: 'Revenue (KSh)',
-        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.revenue) || 0) : [0],
+        data: data.map((item) => Number(item.revenue) || 0),
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         tension: 0.4,
@@ -158,9 +156,8 @@ export function SimplePieChart() {
       if (!token) throw new Error('No token found');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const dashboardResponse = await axios.get(`${apiUrl}/api/admin/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } });
-      // Generate category data from orders only
       const orders = dashboardResponse.data.recentOrders || [];
-      const categoryStats: any = {};
+      const categoryStats: Record<string, CategoryData> = {};
       
       orders.forEach((order: any) => {
         order.orderItems?.forEach((item: any) => {
@@ -172,7 +169,7 @@ export function SimplePieChart() {
         });
       });
       
-      const result = Object.values(categoryStats).slice(0, 8); // Top 8 categories
+      const result = Object.values(categoryStats).slice(0, 8);
       return result.length > 0 ? result : [{ category: 'No Data', sales: 1 }];
     },
     refetchInterval: 60000,
@@ -195,11 +192,12 @@ export function SimplePieChart() {
     );
   }
 
+  const data = categoryData || [];
   const chartData = {
-    labels: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => item.category) : ['No Data'],
+    labels: data.map((item) => item.category),
     datasets: [
       {
-        data: categoryData?.length > 0 ? categoryData.map((item: CategoryData) => Number(item.sales) || 0) : [1],
+        data: data.map((item) => Number(item.sales) || 0),
         backgroundColor: [
           '#FF6B6B',
           '#4ECDC4',
@@ -249,9 +247,8 @@ export function SimpleBarChart() {
         `${apiUrl}/api/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      // Generate monthly orders data
       const orders = response.data.recentOrders || [];
-      const monthlyData: any = {};
+      const monthlyData: Record<string, SalesData> = {};
       
       orders.forEach((order: any) => {
         const date = new Date(order.createdAt);
@@ -263,7 +260,7 @@ export function SimpleBarChart() {
         monthlyData[monthKey].orders += 1;
       });
       
-      const result = Object.values(monthlyData).slice(-6); // Last 6 months
+      const result = Object.values(monthlyData).slice(-6);
       return result.length > 0 ? result : [{ period: 'No Data', revenue: 0, orders: 0 }];
     },
     refetchInterval: 60000,
@@ -286,24 +283,23 @@ export function SimpleBarChart() {
     );
   }
 
+  const data = salesData || [];
   const chartData = {
-    labels: salesData?.length > 0 ? salesData.map((item: SalesData) => {
+    labels: data.map((item) => {
       if (item.period === 'No Data') return item.period;
       if (item.period.includes('-')) {
-        // Handle YYYY-MM format
         const [year, month] = item.period.split('-');
         const date = new Date(parseInt(year), parseInt(month) - 1);
         return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       } else {
-        // Handle other date formats
         const date = new Date(item.period);
         return date.toLocaleDateString('en-US', { month: 'short' });
       }
-    }) : ['No Data'],
+    }),
     datasets: [
       {
         label: 'Orders',
-        data: salesData?.length > 0 ? salesData.map((item: SalesData) => Number(item.orders) || 0) : [0],
+        data: data.map((item) => Number(item.orders) || 0),
         backgroundColor: '#10B981',
         borderRadius: 8,
         borderSkipped: false,
@@ -348,9 +344,8 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
         `${apiUrl}/api/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      // Generate customer growth data from orders
       const orders = response.data.recentOrders || [];
-      const monthlyCustomers: any = {};
+      const monthlyCustomers: Record<string, { month: string; customers: Set<any> }> = {};
       
       orders.forEach((order: any) => {
         const date = new Date(order.createdAt);
@@ -363,10 +358,10 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
         }
       });
       
-      const result = Object.values(monthlyCustomers).map((item: any) => ({
+      const result = Object.values(monthlyCustomers).map((item) => ({
         month: item.month,
         customers: item.customers.size
-      })).slice(-6); // Last 6 months
+      })).slice(-6);
       
       return result.length > 0 ? result : [{ month: 'No Data', customers: 0 }];
     },
@@ -390,7 +385,7 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
     );
   }
 
-  const dataToUse = growthData?.length > 0 ? growthData : (customerGrowth?.length > 0 ? customerGrowth : []);
+  const dataToUse = growthData?.length ? growthData : (customerGrowth?.length ? customerGrowth : []);
   
   const chartData = {
     labels: dataToUse.length > 0 ? dataToUse.map(item => item.month) : ['No Data'],

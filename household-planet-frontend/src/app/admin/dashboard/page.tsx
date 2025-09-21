@@ -73,7 +73,7 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
     const response = await axios.get(
       `${apiUrl}/api/admin/dashboard`,
       { headers: { 'Authorization': `Bearer ${token}` } }
