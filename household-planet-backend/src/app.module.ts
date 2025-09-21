@@ -27,6 +27,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SetupModule } from './setup/setup.module';
+import { UploadModule } from './upload/upload.module';
 import { CleanupService } from './common/cleanup.service';
 import { WebSocketGatewayService } from './websocket/websocket.gateway';
 import { HealthController } from './health/health.controller';
@@ -67,6 +68,7 @@ import { TempAdminUpdateController } from './temp-admin-update.controller';
     PromoCodesModule,
     NotificationsModule,
     SetupModule,
+    UploadModule,
   ],
   providers: [CleanupService, WebSocketGatewayService],
 })
