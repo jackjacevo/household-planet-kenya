@@ -159,12 +159,14 @@ function ProductsContent() {
       
       // Handle different response structures and ensure we get an array
       let newProducts = [];
-      if (Array.isArray(response)) {
+      if (response && Array.isArray(response)) {
         newProducts = response;
-      } else if (Array.isArray(response?.products)) {
+      } else if (response && Array.isArray(response.products)) {
         newProducts = response.products;
-      } else if (Array.isArray(response?.data)) {
+      } else if (response && Array.isArray(response.data)) {
         newProducts = response.data;
+      } else if (response && response.data && Array.isArray(response.data.products)) {
+        newProducts = response.data.products;
       } else {
         console.warn('Unexpected API response structure:', response);
         newProducts = [];
