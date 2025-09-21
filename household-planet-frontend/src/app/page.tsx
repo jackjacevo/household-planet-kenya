@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedCategories } from '@/components/home/FeaturedCategories'
 import { BestSellers } from '@/components/home/BestSellers'
@@ -20,9 +20,14 @@ if (process.env.NODE_ENV === 'development') {
   import('@/lib/addTestRecentlyViewed');
 }
 
-// Force deployment refresh
-
-
+const sectionVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6 }
+  }
+};
 
 export default function HomePage() {
   const structuredData = [
@@ -70,54 +75,106 @@ export default function HomePage() {
         <SocialMediaIcons />
         
         {/* Hero Section */}
-        <section>
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+        >
           <HeroSection />
-        </section>
+        </motion.section>
         
         {/* Categories Section */}
-        <section className="py-8">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
           <FeaturedCategories />
-        </section>
+        </motion.section>
         
         {/* Featured Products */}
-        <section className="py-8">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
           <BestSellers />
-        </section>
+        </motion.section>
       
         {/* New Arrivals */}
-        <section className="py-8">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
           <NewArrivals />
-        </section>
+        </motion.section>
         
         {/* Recently Viewed */}
-        <section className="py-8">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
           <RecentlyViewed />
-        </section>
+        </motion.section>
         
         {/* Trust Badges */}
-        <section className="py-8">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
           <TrustBadges />
-        </section>
+        </motion.section>
         
         {/* Instagram Feed */}
-        <section className="py-8">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-8"
+        >
           <InstagramFeed />
-        </section>
+        </motion.section>
         
         {/* Internal Links */}
-        <section className="py-16 px-4">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="py-16 px-4"
+        >
           <div className="container mx-auto max-w-7xl">
             <InternalLinks
               title="Explore More"
               links={getHomepageLinks()}
             />
           </div>
-        </section>
+        </motion.section>
         
         {/* Store Location */}
-        <section className="pb-16">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={sectionVariants}
+          className="pb-16"
+        >
           <StoreLocation />
-        </section>
+        </motion.section>
       </main>
     </>
   )
