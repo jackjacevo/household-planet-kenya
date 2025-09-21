@@ -159,11 +159,6 @@ export default function AdminManagementPage() {
   };
 
   const openEditDialog = (staff: Staff) => {
-    // Prevent staff from editing their own details
-    if (!isAdmin() && user?.id === staff.id) {
-      alert('You cannot edit your own staff details. Contact an administrator.');
-      return;
-    }
     setEditingStaff(staff);
     setFormData({
       name: staff.name,
@@ -301,8 +296,7 @@ export default function AdminManagementPage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => openEditDialog(member)}
-                      className={`${(isAdmin() || user?.id !== member.id) ? 'text-blue-600 hover:text-blue-900' : 'text-gray-400 cursor-not-allowed'}`}
-                      disabled={!isAdmin() && user?.id === member.id}
+                      className="text-blue-600 hover:text-blue-900"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -489,40 +483,55 @@ export default function AdminManagementPage() {
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-                    value="ADMIN"
-                    disabled
-                  />
-                </div>
+                {/* Only show role and permissions for admins editing others */}
+                {isAdmin() && user?.id !== editingStaff?.id && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                        value="ADMIN"
+                        disabled
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Permissions</label>
+                      <div className="bg-gray-50 rounded-lg p-4 max-h-40 overflow-y-auto">
+                        <div className="grid grid-cols-1 gap-3">
+                          {AVAILABLE_PERMISSIONS.map(permission => (
+                            <label key={permission} className="flex items-center space-x-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                checked={formData.permissions.includes(permission)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData(prev => ({ ...prev, permissions: [...prev.permissions, permission] }));
+                                  } else {
+                                    setFormData(prev => ({ ...prev, permissions: prev.permissions.filter(p => p !== permission) }));
+                                  }
+                                }}
+                              />
+                              <span className="text-sm text-gray-700 capitalize">{permission.replace('_', ' ')}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Permissions</label>
-                  <div className="bg-gray-50 rounded-lg p-4 max-h-40 overflow-y-auto">
-                    <div className="grid grid-cols-1 gap-3">
-                      {AVAILABLE_PERMISSIONS.map(permission => (
-                        <label key={permission} className="flex items-center space-x-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            checked={formData.permissions.includes(permission)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData(prev => ({ ...prev, permissions: [...prev.permissions, permission] }));
-                              } else {
-                                setFormData(prev => ({ ...prev, permissions: prev.permissions.filter(p => p !== permission) }));
-                              }
-                            }}
-                          />
-                          <span className="text-sm text-gray-700 capitalize">{permission.replace('_', ' ')}</span>
-                        </label>
-                      ))}
+                {/* Show read-only info for staff editing themselves */}
+                {user?.id === editingStaff?.id && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-2">You can update your name, email, and password. Role and permissions can only be changed by an administrator.</p>
+                    <div className="text-sm">
+                      <span className="font-medium">Current Role:</span> {editingStaff?.role}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
               
               <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
