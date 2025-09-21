@@ -49,6 +49,44 @@ export class UploadController {
     }
   }
 
+  @Post('product')
+  @RateLimit(10, 60000)
+  @UseGuards(FileUploadGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProductImage(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    try {
+      if (!file) {
+        throw new BadRequestException('No file uploaded');
+      }
+      
+      this.logger.log(`Product image upload by user ${req.user?.userId}`);
+      const result = await this.secureUpload.uploadFile(file, 'products');
+      return { url: typeof result === 'string' ? result : (result as any).url };
+    } catch (error) {
+      this.logger.error(`Product image upload failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Post('category')
+  @RateLimit(10, 60000)
+  @UseGuards(FileUploadGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadCategoryImage(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    try {
+      if (!file) {
+        throw new BadRequestException('No file uploaded');
+      }
+      
+      this.logger.log(`Category image upload by user ${req.user?.userId}`);
+      const result = await this.secureUpload.uploadFile(file, 'categories');
+      return { url: typeof result === 'string' ? result : (result as any).url };
+    } catch (error) {
+      this.logger.error(`Category image upload failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
   @Post('images')
   @RateLimit(5, 60000)
   @UseGuards(FileUploadGuard)
