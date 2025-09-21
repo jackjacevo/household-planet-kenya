@@ -145,7 +145,7 @@ export default function AdminProductsPage() {
 
   const handleCreateProduct = async (productData: any) => {
     try {
-      console.log('Creating product with data:', productData);
+      console.log('AdminProductsPage: Creating product with data:', productData);
       const token = localStorage.getItem('token');
       
       if (!token) {
@@ -157,28 +157,54 @@ export default function AdminProductsPage() {
         return;
       }
       
-      // Validate required fields
-      if (!productData.name || !productData.categoryId || !productData.price) {
+      // Enhanced validation
+      const validationErrors = [];
+      if (!productData.name?.trim()) validationErrors.push('Product name');
+      if (!productData.categoryId || Number(productData.categoryId) <= 0) validationErrors.push('Category');
+      if (!productData.price || Number(productData.price) <= 0) validationErrors.push('Price');
+      if (!productData.sku?.trim()) validationErrors.push('SKU');
+      
+      if (validationErrors.length > 0) {
         showToast({
           title: 'Validation Error',
-          description: 'Please fill in all required fields (name, category, price).',
+          description: `Missing required fields: ${validationErrors.join(', ')}`,
           variant: 'destructive'
         });
         return;
       }
       
+      // Clean data for API
+      const cleanData = {
+        ...productData,
+        name: productData.name.trim(),
+        slug: productData.slug?.trim() || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        sku: productData.sku.trim(),
+        price: Number(productData.price),
+        categoryId: Number(productData.categoryId),
+        stock: Number(productData.stock || 0),
+        lowStockThreshold: Number(productData.lowStockThreshold || 5),
+        trackStock: Boolean(productData.trackStock !== false),
+        isActive: Boolean(productData.isActive !== false),
+        isFeatured: Boolean(productData.isFeatured),
+        images: Array.isArray(productData.images) ? productData.images : [],
+        tags: Array.isArray(productData.tags) ? productData.tags : []
+      };
+      
+      console.log('AdminProductsPage: Sending clean data:', cleanData);
+      
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
-        productData,
+        cleanData,
         { 
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          },
+          timeout: 15000
         }
       );
       
-      console.log('Product creation response:', (response as any).data);
+      console.log('AdminProductsPage: Product creation response:', (response as any).data);
       await fetchProducts();
       setShowForm(false);
       setEditingProduct(null);
@@ -188,7 +214,9 @@ export default function AdminProductsPage() {
         variant: 'success'
       });
     } catch (error: any) {
-      console.error('Error creating product:', error);
+      console.error('AdminProductsPage: Error creating product:', error);
+      console.error('AdminProductsPage: Error response:', error.response?.data);
+      
       if (error.response?.status === 401) {
         showToast({
           title: 'Authentication Error',
@@ -198,9 +226,12 @@ export default function AdminProductsPage() {
         localStorage.removeItem('token');
         window.location.href = '/login';
       } else {
-        const errorMessage = error.response?.data?.message || error.message || 'Failed to create product';
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           error.message || 
+                           'Failed to create product';
         showToast({
-          title: 'Error',
+          title: 'Error Creating Product',
           description: errorMessage,
           variant: 'destructive'
         });
@@ -237,33 +268,51 @@ export default function AdminProductsPage() {
         return;
       }
       
-      // Validate required fields
-      if (!productData.name || !productData.categoryId || !productData.price) {
-        console.error('AdminProductsPage: Validation failed:', {
-          name: productData.name,
-          categoryId: productData.categoryId,
-          price: productData.price
-        });
+      // Enhanced validation
+      const validationErrors = [];
+      if (!productData.name?.trim()) validationErrors.push('Product name');
+      if (!productData.categoryId || Number(productData.categoryId) <= 0) validationErrors.push('Category');
+      if (!productData.price || Number(productData.price) <= 0) validationErrors.push('Price');
+      
+      if (validationErrors.length > 0) {
+        console.error('AdminProductsPage: Validation failed:', validationErrors);
         showToast({
           title: 'Validation Error',
-          description: 'Please fill in all required fields (name, category, price).',
+          description: `Invalid fields: ${validationErrors.join(', ')}`,
           variant: 'destructive'
         });
         return;
       }
       
+      // Clean data for API
+      const cleanData = {
+        ...productData,
+        name: productData.name.trim(),
+        slug: productData.slug?.trim() || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        price: Number(productData.price),
+        categoryId: Number(productData.categoryId),
+        stock: Number(productData.stock || 0),
+        lowStockThreshold: Number(productData.lowStockThreshold || 5),
+        trackStock: Boolean(productData.trackStock !== false),
+        isActive: Boolean(productData.isActive !== false),
+        isFeatured: Boolean(productData.isFeatured),
+        images: Array.isArray(productData.images) ? productData.images : [],
+        tags: Array.isArray(productData.tags) ? productData.tags : []
+      };
+      
       const updateUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/products/${editingProduct.id}`;
       console.log('AdminProductsPage: Making PUT request to:', updateUrl);
-      console.log('AdminProductsPage: Request payload:', productData);
+      console.log('AdminProductsPage: Clean request payload:', cleanData);
       
       const response = await axios.put(
         updateUrl,
-        productData,
+        cleanData,
         { 
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          },
+          timeout: 15000
         }
       );
       
@@ -282,11 +331,7 @@ export default function AdminProductsPage() {
       });
     } catch (error: any) {
       console.error('AdminProductsPage: Error updating product:', error);
-      console.error('AdminProductsPage: Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
+      console.error('AdminProductsPage: Error response:', error.response?.data);
       
       if (error.response?.status === 401) {
         showToast({
@@ -297,10 +342,12 @@ export default function AdminProductsPage() {
         localStorage.removeItem('token');
         window.location.href = '/login';
       } else {
-        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to update product';
-        console.log('Full error response:', error.response?.data);
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           error.message || 
+                           'Failed to update product';
         showToast({
-          title: 'Error',
+          title: 'Error Updating Product',
           description: errorMessage,
           variant: 'destructive'
         });
