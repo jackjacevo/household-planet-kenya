@@ -61,7 +61,7 @@ export default function PromoCodesPage() {
       
       if (response.ok) {
         const data = await response.json();
-        setPromoCodes(data.data);
+        setPromoCodes(Array.isArray(data) ? data : (data.data || []));
       }
     } catch (error) {
       console.error('Error fetching promo codes:', error);

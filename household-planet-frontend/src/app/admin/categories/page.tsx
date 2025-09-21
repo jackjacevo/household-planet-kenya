@@ -57,7 +57,8 @@ export default function AdminCategoriesPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+      const response = await axios.get(`${apiUrl}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Handle different response structures
@@ -113,12 +114,12 @@ export default function AdminCategoriesPage() {
       };
 
       if (editingCategory) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${editingCategory.id}`, data, {
+        await axios.put(`${apiUrl}/api/categories/${editingCategory.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSuccess('Category updated successfully');
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, data, {
+        await axios.post(`${apiUrl}/api/categories`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSuccess('Category created successfully');
@@ -149,7 +150,7 @@ export default function AdminCategoriesPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${category.id}`, {
+      await axios.delete(`${apiUrl}/api/categories/${category.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess(`Category "${category.name}" deleted successfully`);

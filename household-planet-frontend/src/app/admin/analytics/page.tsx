@@ -47,9 +47,9 @@ export default function AnalyticsPage() {
         axios.get(`${apiUrl}/api/analytics/dashboard`, { headers })
       ]);
       
-      setSalesData(salesResponse.data);
-      setCategoryData(categoryResponse.data);
-      setGeographicData(geographicResponse.data);
+      setSalesData(Array.isArray(salesResponse.data) ? salesResponse.data : []);
+      setCategoryData(Array.isArray(categoryResponse.data) ? categoryResponse.data : []);
+      setGeographicData(Array.isArray(geographicResponse.data) ? geographicResponse.data : []);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
