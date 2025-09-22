@@ -50,7 +50,7 @@ export function SimpleLineChart() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         const response = await axios.get(
-          `${apiUrl}/admin/analytics/revenue?period=monthly`,
+          `${apiUrl}/api/admin/analytics/revenue?period=monthly`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const revenueData = response.data.revenue || [];
@@ -170,7 +170,7 @@ export function SimplePieChart() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         const response = await axios.get(
-          `${apiUrl}/admin/categories/popular?period=monthly`,
+          `${apiUrl}/api/admin/categories/popular?period=monthly`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const categories = response.data.categories || [];
@@ -268,7 +268,7 @@ export function SimpleBarChart() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         const response = await axios.get(
-          `${apiUrl}/admin/analytics/sales?period=monthly`,
+          `${apiUrl}/api/admin/analytics/sales?period=monthly`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const salesData = response.data.sales || [];
@@ -378,7 +378,7 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
       try {
         // First try to get data from dashboard (which now includes proper customer growth)
         const response = await axios.get(
-          `${apiUrl}/admin/dashboard`,
+          `${apiUrl}/api/admin/dashboard`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const dashboardGrowth = response.data.customerGrowth || [];
@@ -389,7 +389,7 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
         
         // Fallback: try customer insights endpoint
         const insightsResponse = await axios.get(
-          `${apiUrl}/admin/customers/insights`,
+          `${apiUrl}/api/admin/customers/insights`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         
