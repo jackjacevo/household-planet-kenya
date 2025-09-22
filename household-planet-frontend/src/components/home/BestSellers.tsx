@@ -59,14 +59,14 @@ export function BestSellers() {
   }, [showToast]);
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="container mx-auto max-w-7xl px-4">
-        <div className="flex justify-between items-center mb-10">
+    <section className="py-8 sm:py-12 bg-gray-50">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
-            <p className="text-gray-600">Handpicked items just for you</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
+            <p className="text-gray-600 text-sm sm:text-base">Handpicked items just for you</p>
           </div>
-          <Link href="/products" className="text-green-600 hover:text-green-700 font-semibold flex items-center group">
+          <Link href="/products" className="text-green-600 hover:text-green-700 font-semibold flex items-center group text-sm sm:text-base">
             View All
             <svg className="ml-1 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -75,14 +75,14 @@ export function BestSellers() {
         </div>
         
         {loading ? (
-          <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {[...Array(8)].map((_, i) => (
+          <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="h-56 bg-gray-200 animate-pulse" />
-                <div className="p-4">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-3" />
-                  <div className="h-3 bg-gray-200 rounded animate-pulse mb-3" />
-                  <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
+                <div className="h-40 sm:h-56 bg-gray-200 animate-pulse" />
+                <div className="p-2 sm:p-4">
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse mb-2 sm:mb-3" />
+                  <div className="h-2 sm:h-3 bg-gray-200 rounded animate-pulse mb-2 sm:mb-3" />
+                  <div className="h-4 sm:h-6 bg-gray-200 rounded animate-pulse w-1/2" />
                 </div>
               </div>
             ))}
@@ -104,7 +104,7 @@ export function BestSellers() {
           </motion.div>
         ) : (
           <motion.div 
-            className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+            className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"

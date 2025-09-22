@@ -78,34 +78,34 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
       <motion.div
         whileHover={{ y: -2, boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)' }}
         whileTap={{ scale: 0.98 }}
-        className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300"
+        className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 w-full"
       >
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-32 sm:h-36 bg-gray-50 overflow-hidden relative p-2">
+          <div className="w-full h-28 sm:h-36 bg-gray-50 overflow-hidden relative p-1 sm:p-2">
             <Image
               src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
               alt={product.name}
               fill
-              sizes="(max-width: 768px) 100vw, 200px"
+              sizes="(max-width: 768px) 50vw, 200px"
               priority={priority}
               className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
         </Link>
-        <div className="p-3">
+        <div className="p-2 sm:p-3">
           <Link href={`/products/${product.slug}`}>
-            <h3 className="text-sm font-medium text-gray-800 hover:text-orange-600 line-clamp-1 transition-colors">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-800 hover:text-orange-600 line-clamp-2 transition-colors leading-tight">
               {product.name}
             </h3>
           </Link>
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-orange-600 font-bold text-sm">Ksh {product.price.toLocaleString()}</span>
+            <span className="text-orange-600 font-bold text-xs sm:text-sm">Ksh {product.price.toLocaleString()}</span>
             <button
               onClick={handleWhatsAppOrder}
-              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-colors w-8 h-8 flex items-center justify-center"
+              className="bg-green-600 hover:bg-green-700 text-white p-1.5 sm:p-2 rounded-full transition-colors w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center"
               title="Order via WhatsApp"
             >
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>
@@ -190,13 +190,13 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
 
   return (
     <motion.div
-      whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)' }}
+      whileHover={{ y: -4, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}
       whileTap={{ scale: 0.98 }}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 h-full flex flex-col hover:border-green-200"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 h-full flex flex-col hover:border-green-200 w-full"
     >
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative p-2 sm:p-4">
+          <div className="w-full h-40 sm:h-48 md:h-56 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative p-1 sm:p-2 md:p-4">
             <Image
               src={(() => {
                 const imageUrl = getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null);
@@ -213,9 +213,9 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
               }
               alt={product.name}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               priority={priority}
-              className="object-contain group-hover:scale-110 transition-transform duration-500"
+              className="object-contain group-hover:scale-105 sm:group-hover:scale-110 transition-transform duration-500"
               onError={(e) => {
                 console.error('Image failed to load:', {
                   src: e.currentTarget.src,
@@ -227,8 +227,8 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         </Link>
         
         {/* Stock indicator */}
-        <div className="absolute bottom-2 left-2">
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+        <div className="absolute bottom-1 sm:bottom-2 left-1 sm:left-2">
+          <span className={`text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${
             product.stock && product.stock > 0 
               ? 'bg-green-100 text-green-800' 
               : 'bg-red-100 text-red-800'
@@ -245,17 +245,17 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         
         <button
           onClick={handleAddToWishlist}
-          className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white hover:scale-110 text-gray-600 hover:text-red-500 transition-all duration-300 w-9 h-9 flex items-center justify-center"
+          className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-white/90 backdrop-blur-sm rounded-full p-1.5 sm:p-2 shadow-lg hover:bg-white hover:scale-110 text-gray-600 hover:text-red-500 transition-all duration-300 w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center"
         >
           <Heart
-            className={`h-4 w-4 transition-colors ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`}
+            className={`h-3 w-3 sm:h-4 sm:w-4 transition-colors ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`}
           />
         </button>
       </div>
 
-      <div className="p-3 sm:p-4 lg:p-5 flex-1 flex flex-col">
+      <div className="p-2 sm:p-3 lg:p-4 flex-1 flex flex-col">
         <Link href={`/products/${product.slug}`}>
-          <h3 className="text-sm sm:text-base font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-tight">
+          <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-2 min-h-[1.5rem] sm:min-h-[2rem] leading-tight">
             {product.name}
           </h3>
         </Link>
@@ -272,32 +272,32 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         </div>
 
         <div className="mt-auto pt-3">
-          <div className="mb-4">
-            <div className="flex items-baseline space-x-2">
+          <div className="mb-3 sm:mb-4">
+            <div className="flex items-baseline space-x-1 sm:space-x-2">
               <span className="text-green-600 font-bold text-sm sm:text-base lg:text-lg">Ksh {product.price.toLocaleString()}</span>
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-xs sm:text-sm text-gray-500 line-through">
+                <span className="text-xs text-gray-500 line-through">
                   Ksh {product.comparePrice.toLocaleString()}
                 </span>
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button
               onClick={handleWhatsAppOrder}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-1 hover:shadow-lg transform hover:-translate-y-0.5"
               title="Order via WhatsApp"
             >
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:inline">WhatsApp</span>
+              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs font-medium hidden sm:inline">WhatsApp</span>
             </button>
             <button
               onClick={handleAddToCart}
               disabled={!product.stock || product.stock <= 0}
-              className="bg-orange-600 hover:bg-orange-700 text-white p-2 sm:p-2.5 rounded-lg transition-all duration-300 disabled:bg-gray-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
+              className="bg-orange-600 hover:bg-orange-700 text-white p-1.5 sm:p-2 rounded-lg transition-all duration-300 disabled:bg-gray-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
               title="Add to Cart"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>

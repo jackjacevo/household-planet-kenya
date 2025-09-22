@@ -264,12 +264,12 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 pb-24 md:pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-24 md:pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12">
           {/* Image Gallery */}
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             <div 
-              className="aspect-square bg-white rounded-xl overflow-hidden shadow-lg cursor-zoom-in"
+              className="aspect-square bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-lg cursor-zoom-in w-full"
               onMouseMove={handleMouseMove}
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
@@ -310,10 +310,10 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-3 sm:space-y-4 md:space-y-6 w-full">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-              <p className="text-gray-600 text-sm md:text-base">{product.shortDescription || product.description}</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 leading-tight">{product.name}</h1>
+              <p className="text-gray-600 text-sm md:text-base leading-relaxed">{product.shortDescription || product.description}</p>
             </div>
 
             {/* Rating and SKU */}
@@ -329,12 +329,12 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline space-x-3">
-              <span className="text-2xl md:text-3xl font-bold text-orange-600">
+            <div className="flex items-baseline space-x-2 sm:space-x-3">
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">
                 {formatPrice(currentPrice)}
               </span>
               {product.comparePrice && product.comparePrice > currentPrice && (
-                <span className="text-lg md:text-xl text-gray-500 line-through">
+                <span className="text-base sm:text-lg md:text-xl text-gray-500 line-through">
                   {formatPrice(product.comparePrice)}
                 </span>
               )}
@@ -467,21 +467,21 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Mobile Trust Badges & Delivery Info */}
-        <div className="md:hidden mt-6">
-          <div className="bg-white rounded-xl shadow-lg p-4">
-            <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="md:hidden mt-4 sm:mt-6">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
               <div className="text-center">
-                <Truck className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 mx-auto mb-1 sm:mb-2" />
                 <p className="text-xs font-medium text-gray-900">Fast Delivery</p>
-                <p className="text-xs text-gray-600">Same day in Nairobi</p>
+                <p className="text-xs text-gray-600">Same day</p>
               </div>
               <div className="text-center">
-                <Shield className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 mx-auto mb-1 sm:mb-2" />
                 <p className="text-xs font-medium text-gray-900">Secure Payment</p>
                 <p className="text-xs text-gray-600">M-Pesa & Card</p>
               </div>
               <div className="text-center">
-                <RotateCcw className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+                <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 mx-auto mb-1 sm:mb-2" />
                 <p className="text-xs font-medium text-gray-900">Easy Returns</p>
                 <p className="text-xs text-gray-600">7-day policy</p>
               </div>
@@ -498,8 +498,8 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Details */}
-        <div className="mt-8 md:mt-16">
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+        <div className="mt-6 sm:mt-8 md:mt-16">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-8">
             <div className="space-y-6 md:space-y-8">
               {/* Description */}
               <div>
@@ -583,17 +583,17 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Mobile Sticky Action Bar - Enhanced */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-50 shadow-lg" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center space-x-2">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 sm:p-3 z-50 shadow-lg" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <Button
             variant="outline"
             onClick={handleAddToWishlist}
-            className={`min-w-[52px] min-h-[52px] px-3 flex items-center justify-center ${
+            className={`min-w-[44px] sm:min-w-[52px] min-h-[44px] sm:min-h-[52px] px-2 sm:px-3 flex items-center justify-center ${
               isInWishlist(product.id.toString()) ? 'bg-red-50 text-red-600 border-red-200' : ''
             }`}
           >
             <Heart
-              className={`h-6 w-6 ${
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${
                 isInWishlist(product.id.toString()) ? 'fill-red-600' : ''
               }`}
             />
@@ -601,26 +601,27 @@ export default function ProductDetailPage() {
           
           <Button
             onClick={handleWhatsAppOrder}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[52px] font-medium"
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[44px] sm:min-h-[52px] font-medium text-sm sm:text-base"
           >
-            <MessageCircle className="h-5 w-5 mr-2" />
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
             <span>WhatsApp</span>
           </Button>
           
           <Button
             onClick={handleAddToCart}
             disabled={currentStock <= 0}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white min-h-[52px] font-medium disabled:opacity-50"
+            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white min-h-[44px] sm:min-h-[52px] font-medium disabled:opacity-50 text-sm sm:text-base"
           >
-            <ShoppingCart className="h-5 w-5 mr-2" />
-            <span>{currentStock <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{currentStock <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            <span className="sm:hidden">{currentStock <= 0 ? 'Out' : 'Cart'}</span>
           </Button>
         </div>
         
         {/* Price and Stock Info */}
-        <div className="flex items-center justify-between mt-2 text-sm">
-          <span className="font-bold text-orange-600 text-lg">{formatPrice(currentPrice)}</span>
-          <span className={`text-xs px-2 py-1 rounded-full ${
+        <div className="flex items-center justify-between mt-1 sm:mt-2 text-sm">
+          <span className="font-bold text-orange-600 text-base sm:text-lg">{formatPrice(currentPrice)}</span>
+          <span className={`text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${
             currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
           }`}>
             {currentStock > 0 ? `${currentStock} in stock` : 'Out of stock'}

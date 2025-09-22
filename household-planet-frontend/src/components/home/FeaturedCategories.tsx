@@ -80,20 +80,20 @@ export function FeaturedCategories() {
   }, []);
 
   return (
-    <section className="py-12 bg-white">
-      <div className="container mx-auto max-w-7xl px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Shop by Category</h2>
-          <p className="text-gray-600">Discover our wide range of household essentials</p>
+    <section className="py-8 sm:py-12 bg-white">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="text-center mb-6 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Shop by Category</h2>
+          <p className="text-gray-600 text-sm sm:text-base">Discover our wide range of household essentials</p>
         </div>
         
-        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {loading ? (
             [...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                <div className="p-6">
-                  <div className="w-full h-40 bg-gray-200 rounded-lg animate-pulse mb-4" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                <div className="p-2 sm:p-4">
+                  <div className="w-full h-32 sm:h-40 bg-gray-200 rounded-lg animate-pulse mb-2 sm:mb-4" />
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse" />
                 </div>
               </div>
             ))
@@ -119,10 +119,10 @@ export function FeaturedCategories() {
               >
                 <Link 
                   href={`/categories/${category.slug}`} 
-                  className="block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-1"
+                  className="block bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-1 w-full"
                 >
                   <div className="relative">
-                    <div className="w-full h-48 overflow-hidden relative">
+                    <div className="w-full h-32 sm:h-40 lg:h-48 overflow-hidden relative">
                       {category.image ? (
                         <img 
                           src={category.image} 
@@ -143,8 +143,8 @@ export function FeaturedCategories() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
-                    <div className="p-4">
-                      <h3 className="text-base font-semibold text-gray-900 text-center group-hover:text-green-600 transition-colors">
+                    <div className="p-2 sm:p-3 lg:p-4">
+                      <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 text-center group-hover:text-green-600 transition-colors line-clamp-2">
                         {category.name}
                       </h3>
                     </div>
@@ -156,10 +156,10 @@ export function FeaturedCategories() {
           )}
         </div>
         
-        <div className="text-center mt-10">
+        <div className="text-center mt-6 sm:mt-10">
           <Link 
             href="/categories" 
-            className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
+            className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2 sm:py-3 px-6 sm:px-8 rounded-full transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 text-sm sm:text-base"
           >
             View All Categories
             <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

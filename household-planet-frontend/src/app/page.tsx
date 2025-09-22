@@ -70,7 +70,7 @@ export default function HomePage() {
         structuredData={structuredData}
       />
       
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/20">
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/20 w-full overflow-x-hidden">
         {/* Sticky Social Media Icons */}
         <SocialMediaIcons />
         
@@ -89,7 +89,7 @@ export default function HomePage() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
-          className="py-8"
+          className="py-4 sm:py-8"
         >
           <FeaturedCategories />
         </motion.section>
@@ -100,7 +100,7 @@ export default function HomePage() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
-          className="py-8"
+          className="py-4 sm:py-8"
         >
           <BestSellers />
         </motion.section>
@@ -111,7 +111,7 @@ export default function HomePage() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
-          className="py-8"
+          className="py-4 sm:py-8"
         >
           <NewArrivals />
         </motion.section>
@@ -155,9 +155,9 @@ export default function HomePage() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
-          className="py-16 px-4"
+          className="py-8 sm:py-16 px-2 sm:px-4"
         >
-          <div className="container mx-auto max-w-7xl">
+          <div className="w-full max-w-7xl mx-auto">
             <InternalLinks
               title="Explore More"
               links={getHomepageLinks()}
