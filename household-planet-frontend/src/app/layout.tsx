@@ -1,7 +1,6 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import '../styles/mobile-optimizations.css'
-import '../styles/icon-fixes.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ToastProvider } from '@/contexts/ToastContext'

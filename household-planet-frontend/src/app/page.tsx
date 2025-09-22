@@ -15,10 +15,7 @@ import { SocialMediaIcons } from '@/components/layout/SocialMediaIcons'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { getHomepageLinks } from '@/lib/internal-links'
 
-// Import test utility in development
-if (process.env.NODE_ENV === 'development') {
-  import('@/lib/addTestRecentlyViewed');
-}
+
 
 const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
