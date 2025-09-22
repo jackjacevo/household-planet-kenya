@@ -121,7 +121,7 @@ export default function CategoryPage() {
   const fetchCategory = async () => {
     try {
       setCategoryLoading(true);
-      const response = await api.getCategories();
+      const response = await api.getCategories() as any;
       const categories = response.categories || response.data || response || [];
       const foundCategory = categories.find((cat: any) => cat.slug === slug);
       setCategory(foundCategory);
