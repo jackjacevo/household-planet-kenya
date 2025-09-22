@@ -138,14 +138,14 @@ export default function CategoriesPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6"
+          className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
         >
           {filteredCategories.map((category) => (
             <motion.div key={category.id} variants={itemVariants}>
               <Link href={`/products?category=${category.slug}`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group h-full flex flex-col">
                   {/* Category Image */}
-                  <div className="aspect-square relative overflow-hidden">
+                  <div className="w-full h-32 sm:h-40 lg:h-48 overflow-hidden relative">
                     {category.image ? (
                       <img 
                         src={getImageUrl(category.image)} 
@@ -154,32 +154,29 @@ export default function CategoriesPage() {
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                        <Package className="h-16 w-16 text-blue-600" />
+                        <Package className="h-8 w-8 sm:h-12 sm:w-12 lg:h-16 lg:w-16 text-blue-600" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Product count badge */}
+                    {category._count?.products && category._count.products > 0 && (
+                      <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        {category._count.products}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Category Info */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <div className="p-2 sm:p-3 lg:p-4 flex-1 flex flex-col">
+                    <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 text-center group-hover:text-blue-600 transition-colors line-clamp-2 mb-1">
                       {category.name}
                     </h3>
                     {category.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-xs text-gray-500 text-center mt-1 line-clamp-2 flex-1">
                         {category.description}
                       </p>
                     )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-blue-600">
-                        <ShoppingBag className="w-4 h-4 mr-1" />
-                        <span className="font-semibold">{category._count?.products || 0}</span>
-                        <span className="text-gray-500 ml-1 text-sm">products</span>
-                      </div>
-                      <div className="text-green-600 font-medium text-sm group-hover:text-green-700">
-                        View All →
-                      </div>
-                    </div>
                   </div>
                 </div>
               </Link>

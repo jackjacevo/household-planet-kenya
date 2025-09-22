@@ -172,20 +172,26 @@ export default function CartPage() {
 
   if (items.length === 0 && savedForLater.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
-          <p className="text-gray-600 mb-8">Add some products to get started!</p>
-          <Link href="/products">
-            <Button size="lg">Continue Shopping</Button>
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50/20 w-full">
+        <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-8 sm:py-16">
+          <div className="text-center">
+            <div className="bg-gradient-to-r from-orange-400 to-amber-600 rounded-full p-6 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <ShoppingCart className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900">Your Cart is Empty</h1>
+            <p className="text-gray-600 mb-8 text-sm sm:text-base">Add some products to get started!</p>
+            <Link href="/products">
+              <Button size="lg" className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">Continue Shopping</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50/20 w-full">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
         <p className="text-gray-600">Review your items and proceed to checkout</p>
@@ -588,5 +594,6 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

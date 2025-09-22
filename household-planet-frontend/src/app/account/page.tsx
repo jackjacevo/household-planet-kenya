@@ -74,17 +74,26 @@ export default function AccountDashboard() {
 
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">Please log in to access your account</h1>
-        <Link href="/login">
-          <Button>Login</Button>
-        </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 w-full flex items-center justify-center">
+        <div className="text-center px-4">
+          <div className="bg-gradient-to-r from-blue-400 to-indigo-600 rounded-full p-6 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold mb-4 text-gray-900">Please log in to access your account</h1>
+          <Link href="/login">
+            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">Login</Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 w-full">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="space-y-4 sm:space-y-8">
       <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
         <div className="flex items-center space-x-3 sm:space-x-4">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
