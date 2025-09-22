@@ -33,17 +33,22 @@ export function BestSellers() {
     const fetchProducts = async () => {
       try {
         const data = await api.getProducts({ limit: 6, featured: true }) as any;
+        console.log('🔍 BestSellers API Response:', data);
         if (data && data.products && Array.isArray(data.products) && data.products.length > 0) {
+          console.log('📦 Products found:', data.products.length, data.products[0]);
           setProducts(data.products);
         } else if (data && Array.isArray(data) && data.length > 0) {
+          console.log('📦 Direct array:', data.length, data[0]);
           setProducts(data);
         } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+          console.log('📦 Nested data:', data.data.length, data.data[0]);
           setProducts(data.data);
         } else {
+          console.log('❌ No products found in response');
           setProducts([]);
         }
       } catch (error) {
-        console.debug('Products API unavailable');
+        console.error('❌ Products API error:', error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -70,7 +75,7 @@ export function BestSellers() {
         </div>
         
         {loading ? (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="h-56 bg-gray-200 animate-pulse" />
@@ -99,7 +104,7 @@ export function BestSellers() {
           </motion.div>
         ) : (
           <motion.div 
-            className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"

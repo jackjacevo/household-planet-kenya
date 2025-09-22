@@ -68,7 +68,7 @@ export function NewArrivals() {
         </div>
         
         {loading ? (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="h-64 bg-gray-200 animate-pulse" />
@@ -97,7 +97,7 @@ export function NewArrivals() {
           </motion.div>
         ) : (
           <motion.div 
-            className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"

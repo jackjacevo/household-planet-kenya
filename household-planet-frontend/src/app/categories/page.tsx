@@ -137,11 +137,11 @@ export default function CategoriesPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6"
         >
           {filteredCategories.map((category) => (
             <motion.div key={category.id} variants={itemVariants}>
-              <Link href={`/categories/${category.slug}`}>
+              <Link href={`/products?category=${category.slug}`}>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
                   {/* Category Image */}
                   <div className="aspect-square relative overflow-hidden">

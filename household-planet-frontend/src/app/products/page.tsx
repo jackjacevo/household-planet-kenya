@@ -291,7 +291,11 @@ function ProductsContent() {
           <div className="container mx-auto max-w-7xl">
             <Breadcrumbs
               items={[
-                { name: 'Products', url: '/products' }
+                { name: 'Products', url: '/products' },
+                ...(filters.category && categories.find(cat => cat.id === filters.category) 
+                  ? [{ name: categories.find(cat => cat.id === filters.category)?.name || 'Category', url: `/products?category=${categories.find(cat => cat.id === filters.category)?.slug}` }]
+                  : []
+                )
               ]}
             />
           </div>
@@ -301,8 +305,34 @@ function ProductsContent() {
         <section className="py-3 sm:py-6 px-3 sm:px-4">
           <div className="container mx-auto max-w-7xl">
             <div className="flex items-center justify-between">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">All Products</h1>
-              <p className="text-gray-600 hidden md:block text-sm sm:text-base">Discover our complete collection</p>
+              <div>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
+                  {filters.category && categories.find(cat => cat.id === filters.category) 
+                    ? `${categories.find(cat => cat.id === filters.category)?.name} Products`
+                    : 'All Products'
+                  }
+                </h1>
+                {filters.category && categories.find(cat => cat.id === filters.category) && (
+                  <div className="flex items-center mt-2 space-x-3">
+                    <span className="text-sm text-gray-600">
+                      Showing products in {categories.find(cat => cat.id === filters.category)?.name}
+                    </span>
+                    <button
+                      onClick={() => {
+                        handleFilterChange({ category: undefined });
+                        window.history.replaceState({}, '', '/products');
+                      }}
+                      className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-medium rounded-full hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Clear Filter
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-600 hidden md:block text-sm sm:text-base">
+                {filters.category ? 'Browse category products' : 'Discover our complete collection'}
+              </p>
             </div>
           </div>
         </section>
@@ -395,11 +425,15 @@ function ProductsContent() {
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
                       {filters.category && (
                         <button
-                          onClick={() => handleFilterChange({ category: undefined })}
-                          className="flex items-center space-x-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors text-xs border border-orange-200"
+                          onClick={() => {
+                            handleFilterChange({ category: undefined });
+                            window.history.replaceState({}, '', '/products');
+                          }}
+                          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
+                          <Package className="h-4 w-4" />
                           <span>{categories.find(cat => cat.id === filters.category)?.name || 'Category'}</span>
-                          <X className="h-3 w-3" />
+                          <X className="h-4 w-4" />
                         </button>
                       )}
                       {filters.search && (
@@ -544,7 +578,7 @@ function ProductsContent() {
                     <motion.div 
                       className={`grid gap-3 sm:gap-4 md:gap-6 ${
                         viewMode === 'grid' || isMobile
-                          ? 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8'
+                          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
                           : 'grid-cols-1'
                       }`}
                       variants={staggerContainer}

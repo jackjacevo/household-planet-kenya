@@ -29,7 +29,12 @@ export class ProductsService {
         sortOrder = 'desc' 
       } = params;
       
-      const where: any = { isActive: active };
+      const where: any = {};
+      
+      // Only filter by isActive if explicitly specified
+      if (active !== undefined) {
+        where.isActive = active;
+      }
       
       if (category) {
         const categoryId = parseInt(category);

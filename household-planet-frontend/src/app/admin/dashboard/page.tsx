@@ -96,13 +96,19 @@ export default function AdminDashboard() {
     };
     
     try {
+      console.log('🔍 Fetching dashboard data from:', `${apiUrl}/api/admin/dashboard`);
       const response = await axios.get(
-        `${apiUrl}/admin/dashboard`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
+        `${apiUrl}/api/admin/dashboard`,
+        { 
+          headers: { 'Authorization': `Bearer ${token}` },
+          timeout: 10000
+        }
       );
-      return (response as any).data;
+      console.log('✅ Dashboard API response:', response.data);
+      return response.data;
     } catch (error) {
-      console.warn('Dashboard API unavailable, using fallback data');
+      console.error('❌ Dashboard API error:', error.response?.data || error.message);
+      console.warn('Using fallback data');
       return fallbackStats;
     }
   };

@@ -196,14 +196,32 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
     >
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
-          <div className="w-full h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative p-4">
+          <div className="w-full h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative p-2 sm:p-4">
             <Image
-              src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null)}
+              src={(() => {
+                const imageUrl = getImageUrl(product.images && product.images.length > 0 ? product.images[0] : null);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Product image debug:', {
+                    productName: product.name,
+                    rawImages: product.images,
+                    firstImage: product.images && product.images.length > 0 ? product.images[0] : null,
+                    finalUrl: imageUrl
+                  });
+                }
+                return imageUrl;
+              })()
+              }
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
               priority={priority}
               className="object-contain group-hover:scale-110 transition-transform duration-500"
+              onError={(e) => {
+                console.error('Image failed to load:', {
+                  src: e.currentTarget.src,
+                  product: product.name
+                });
+              }}
             />
           </div>
         </Link>
@@ -235,9 +253,9 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         </button>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="p-3 sm:p-4 lg:p-5 flex-1 flex flex-col">
         <Link href={`/products/${product.slug}`}>
-          <h3 className="text-base font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-2 min-h-[2.5rem] leading-tight">
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-tight">
             {product.name}
           </h3>
         </Link>
@@ -256,9 +274,9 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
         <div className="mt-auto pt-3">
           <div className="mb-4">
             <div className="flex items-baseline space-x-2">
-              <span className="text-green-600 font-bold text-lg">Ksh {product.price.toLocaleString()}</span>
+              <span className="text-green-600 font-bold text-sm sm:text-base lg:text-lg">Ksh {product.price.toLocaleString()}</span>
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-sm text-gray-500 line-through">
+                <span className="text-xs sm:text-sm text-gray-500 line-through">
                   Ksh {product.comparePrice.toLocaleString()}
                 </span>
               )}
@@ -267,16 +285,16 @@ export function ProductCard({ product, viewMode = 'grid', compact = false, prior
           <div className="flex items-center space-x-2">
             <button
               onClick={handleWhatsAppOrder}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 px-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 hover:shadow-lg transform hover:-translate-y-0.5"
               title="Order via WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">WhatsApp</span>
+              <span className="text-xs sm:text-sm font-medium hidden sm:inline">WhatsApp</span>
             </button>
             <button
               onClick={handleAddToCart}
               disabled={!product.stock || product.stock <= 0}
-              className="bg-orange-600 hover:bg-orange-700 text-white p-2.5 rounded-lg transition-all duration-300 disabled:bg-gray-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
+              className="bg-orange-600 hover:bg-orange-700 text-white p-2 sm:p-2.5 rounded-lg transition-all duration-300 disabled:bg-gray-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
               title="Add to Cart"
             >
               <ShoppingCart className="h-4 w-4" />

@@ -3,8 +3,10 @@
  * Handles both local uploads and external URLs
  */
 export function getImageUrl(imagePath: string | null | undefined): string {
+  console.log('🖼️ getImageUrl called with:', imagePath);
   // Return placeholder if no image path or empty string
   if (!imagePath || imagePath.trim() === '') {
+    console.log('❌ No image path, using placeholder');
     return '/images/products/placeholder.svg';
   }
 
@@ -37,6 +39,11 @@ export function getImageUrl(imagePath: string | null | undefined): string {
 
   // Get API URL from environment
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+
+  // Handle product images - check if it's a UUID-based filename
+  if (cleanPath.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|jpeg|png|webp|gif)$/i)) {
+    return `${apiUrl}/uploads/products/${cleanPath}`;
+  }
 
   // Handle category images with proper endpoint
   if (cleanPath.includes('category-') && cleanPath.includes('.jpeg')) {

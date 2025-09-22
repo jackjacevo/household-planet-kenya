@@ -23,6 +23,13 @@ export class AdminController {
     return this.adminService.getDashboardStats();
   }
 
+  @Get('dashboard/customer-growth')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  getCustomerGrowth() {
+    return this.adminService.getCustomerInsights();
+  }
+
   @Get('analytics/sales')
   getSalesAnalytics(@Query('period') period: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'daily') {
     return this.adminService.getSalesAnalytics(period);
