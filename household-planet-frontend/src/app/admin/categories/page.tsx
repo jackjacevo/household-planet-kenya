@@ -97,7 +97,7 @@ export default function AdminCategoriesPage() {
       formData.append('file', file);
       
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/categories/upload`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload`,
         formData,
         {
           headers: {
@@ -149,7 +149,7 @@ export default function AdminCategoriesPage() {
       };
       
       if (editingCategory) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${editingCategory.id}`, data, {
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${editingCategory.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         showToast({
@@ -158,7 +158,7 @@ export default function AdminCategoriesPage() {
           variant: 'success'
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, data, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         showToast({
@@ -187,7 +187,7 @@ export default function AdminCategoriesPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${category.id}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${category.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToast({

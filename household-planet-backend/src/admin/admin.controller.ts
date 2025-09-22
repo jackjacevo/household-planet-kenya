@@ -311,11 +311,30 @@ export class AdminController {
     return this.adminService.deleteCategory(id, req.user?.id);
   }
 
+  @Post('categories/upload')
+  @UseInterceptors(FilesInterceptor('file', 1, {
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|bmp|tiff|svg|ico)$/)) {
+        return cb(new Error('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  }))
+  uploadCategoryImageAlt(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new Error('No file uploaded');
+    }
+    return this.adminService.uploadCategoryImage(files[0]);
+  }
+
   @Post('categories/upload-image')
   @UseInterceptors(FilesInterceptor('image', 1, {
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-        return cb(new Error('Only JPG and PNG image files are allowed!'), false);
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|bmp|tiff|svg|ico)$/)) {
+        return cb(new Error('Only image files are allowed!'), false);
       }
       cb(null, true);
     },
