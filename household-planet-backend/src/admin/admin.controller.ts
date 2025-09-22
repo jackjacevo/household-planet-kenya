@@ -12,7 +12,6 @@ import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 
 @Controller('admin')
-@UseGuards(AuthGuard('jwt'))
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
@@ -102,6 +101,8 @@ export class AdminController {
   }
 
   @Post('products')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: false, forbidNonWhitelisted: false }))
   createProduct(@Body() createProductDto: CreateProductDto, @Req() req) {
     console.log('Received product creation request:', JSON.stringify(createProductDto, null, 2));
@@ -111,6 +112,8 @@ export class AdminController {
   }
 
   @Put('products/:id')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateProduct(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto, @Req() req) {
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
     const userAgent = req.get('User-Agent') || 'Unknown';
@@ -118,6 +121,8 @@ export class AdminController {
   }
 
   @Delete('products/:id')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   deleteProduct(@Param('id', ParseIntPipe) id: number, @Req() req) {
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
     const userAgent = req.get('User-Agent') || 'Unknown';
@@ -125,16 +130,22 @@ export class AdminController {
   }
 
   @Post('products/bulk')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   bulkCreateProducts(@Body() bulkProductDto: BulkProductDto, @Req() req) {
     return this.adminService.bulkCreateProducts(bulkProductDto.products, req.user?.id);
   }
 
   @Put('products/bulk')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   bulkUpdateProducts(@Body() bulkUpdateDto: BulkUpdateDto, @Req() req) {
     return this.adminService.bulkUpdateProducts(bulkUpdateDto, req.user?.id);
   }
 
   @Post('products/import/csv')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @UseInterceptors(FilesInterceptor('file', 1, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.includes('csv') && !file.mimetype.includes('text')) {
@@ -151,12 +162,16 @@ export class AdminController {
   }
 
   @Get('products/export/csv')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   exportProductsCsv() {
     return this.adminService.exportProductsCsv();
   }
 
   // Dedicated temp image upload endpoint
   @Post('products/temp/images')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @UseInterceptors(FilesInterceptor('images', 10, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
@@ -329,25 +344,29 @@ export class AdminController {
   }
 
   @Post('categories')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   createCategory(@Body() categoryData: any, @Req() req) {
     return this.adminService.createCategory(categoryData, req.user?.id);
   }
 
   @Put('categories/:id')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateCategory(@Param('id', ParseIntPipe) id: number, @Body() categoryData: any, @Req() req) {
     return this.adminService.updateCategory(id, categoryData, req.user?.id);
   }
 
   @Delete('categories/:id')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   deleteCategory(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.adminService.deleteCategory(id, req.user?.id);
   }
 
   @Post('categories/upload')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @UseInterceptors(FilesInterceptor('file', 1, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|bmp|tiff|svg|ico)$/)) {
@@ -367,6 +386,8 @@ export class AdminController {
   }
 
   @Post('categories/upload-image')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @UseInterceptors(FilesInterceptor('image', 1, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|bmp|tiff|svg|ico)$/)) {
@@ -472,6 +493,8 @@ export class AdminController {
   }
 
   @Put('categories/reorder')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   reorderCategories(@Body() orderData: { categoryId: number; sortOrder: number }[]) {
     return this.adminService.reorderCategories(orderData);
   }
@@ -532,6 +555,8 @@ export class AdminController {
   }
 
   @Post('promo-codes/validate')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   validatePromoCode(@Body() data: { code: string; orderAmount: number }, @Req() req) {
     return this.adminService.validatePromoCode(data.code, data.orderAmount, req.user?.id);
   }
