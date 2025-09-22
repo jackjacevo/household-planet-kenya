@@ -53,6 +53,7 @@ const categoryIcons: Record<string, string> = {
   'garden-outdoor': '🌱'
 };
 
+// Updated component
 export function FeaturedCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
