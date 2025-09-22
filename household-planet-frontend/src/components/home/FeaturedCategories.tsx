@@ -1,9 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Category {
@@ -13,15 +11,6 @@ interface Category {
   description?: string;
   image?: string;
 }
-
-const fallbackImages = [
-  'https://images.unsplash.com/photo-1600585152220-90363fe7e115?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Kitchen
-  'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Bathroom
-  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Cleaning
-  'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Bedding
-  'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Storage
-  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'  // Home Decor
-];
 
 
 
@@ -133,18 +122,25 @@ export function FeaturedCategories() {
                   className="block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-1"
                 >
                   <div className="relative">
-                    <div className="w-full h-48 overflow-hidden relative bg-gradient-to-br from-gray-50 to-gray-100">
-                      <Image 
-                        src={category.image || fallbackImages[index % fallbackImages.length]} 
-                        alt={category.name} 
-                        fill
-                        priority={index < 4}
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                        onError={() => {
-                          console.error(`Failed to load image: ${category.image}`);
-                        }}
-                      />
+                    <div className="w-full h-48 overflow-hidden relative">
+                      {category.image ? (
+                        <img 
+                          src={category.image} 
+                          alt={category.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                          <div className="text-blue-600 text-center">
+                            <div className="w-12 h-12 mx-auto mb-2 bg-blue-200 rounded-lg flex items-center justify-center">
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <span className="text-xs font-medium">{category.name}</span>
+                          </div>
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
                     <div className="p-4">
