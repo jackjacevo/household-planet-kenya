@@ -495,4 +495,18 @@ export class AdminController {
   validatePromoCode(@Body() data: { code: string; orderAmount: number }, @Req() req) {
     return this.adminService.validatePromoCode(data.code, data.orderAmount, req.user?.id);
   }
+
+  // Orders Management
+  @Get('orders')
+  @UseGuards(AuthGuard('jwt'))
+  getOrders(@Query() query: any) {
+    return this.adminService.getOrders(query);
+  }
+
+  // Customers Management  
+  @Get('customers')
+  @UseGuards(AuthGuard('jwt'))
+  getCustomers(@Query() query: any) {
+    return this.adminService.getCustomers(query);
+  }
 }

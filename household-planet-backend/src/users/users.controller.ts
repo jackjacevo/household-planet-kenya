@@ -9,6 +9,12 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @UseGuards(AuthGuard('jwt'))
+  @Get()
+  getUsers(@Request() req) {
+    return this.usersService.findAll();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   getProfile(@Request() req) {
     return this.usersService.findById(req.user.id);

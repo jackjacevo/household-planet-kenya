@@ -1658,4 +1658,84 @@ export class AdminService {
       throw new Error(error.message);
     }
   }
+
+  // Orders methods
+  async getOrders(query: any) {
+    try {
+      const { page = 1, limit = 20, status, search } = query;
+      const skip = (page - 1) * limit;
+      const where: any = {};
+      
+      if (status) {
+        where.status = status;
+      }
+      
+      if (search) {
+        where.OR = [
+          { orderNumber: { contains: search, mode: 'insensitive' } },
+          { user: { email: { contains: search, mode: 'insensitive' } } }
+        ];
+      }
+
+      const [orders, total] = await Promise.all([
+        this.prisma.order.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { name: true, email: true } },
+            items: {
+              include: {
+                product: { select: { name: true, price: true } }
+              }
+            }
+          }
+        }),
+        this.prisma.order.count({ where })
+      ]);
+
+      return { data: orders, total, page: parseInt(page), limit: parseInt(limit) };
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return { data: [], total: 0, page: 1, limit: 20 };
+    }
+  }
+
+  // Customers methods
+  async getCustomers(query: any) {
+    try {
+      const { page = 1, limit = 20, search } = query;
+      const skip = (page - 1) * limit;
+      const where: any = { role: 'CUSTOMER' };
+      
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } }
+        ];
+      }
+
+      const [customers, total] = await Promise.all([
+        this.prisma.user.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          orderBy: { createdAt: 'desc' },
+          include: {
+            _count: {
+              select: { orders: true }
+            }
+          }
+        }),
+        this.prisma.user.count({ where })
+      ]);
+
+      return { data: customers, total, page: parseInt(page), limit: parseInt(limit) };
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      return { data: [], total: 0, page: 1, limit: 20 };
+    }
+  }
 }
