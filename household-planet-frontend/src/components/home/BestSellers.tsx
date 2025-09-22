@@ -32,23 +32,18 @@ export function BestSellers() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await api.getProducts({ limit: 6, featured: true }) as any;
-        console.log('🔍 BestSellers API Response:', data);
+        const data = await api.getProducts({ limit: 8, featured: true }) as any;
         if (data && data.products && Array.isArray(data.products) && data.products.length > 0) {
-          console.log('📦 Products found:', data.products.length, data.products[0]);
           setProducts(data.products);
         } else if (data && Array.isArray(data) && data.length > 0) {
-          console.log('📦 Direct array:', data.length, data[0]);
           setProducts(data);
         } else if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
-          console.log('📦 Nested data:', data.data.length, data.data[0]);
           setProducts(data.data);
         } else {
-          console.log('❌ No products found in response');
           setProducts([]);
         }
       } catch (error) {
-        console.error('❌ Products API error:', error);
+        console.debug('Featured products API unavailable');
         setProducts([]);
       } finally {
         setLoading(false);
@@ -59,14 +54,14 @@ export function BestSellers() {
   }, [showToast]);
 
   return (
-    <section className="py-8 sm:py-12 bg-gray-50">
-      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 gap-4">
+    <section className="py-12 bg-white">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="flex justify-between items-center mb-10">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
-            <p className="text-gray-600 text-sm sm:text-base">Handpicked items just for you</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
+            <p className="text-gray-600">Handpicked items just for you</p>
           </div>
-          <Link href="/products" className="text-green-600 hover:text-green-700 font-semibold flex items-center group text-sm sm:text-base">
+          <Link href="/products?featured=true" className="text-green-600 hover:text-green-700 font-semibold flex items-center group">
             View All
             <svg className="ml-1 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -75,26 +70,26 @@ export function BestSellers() {
         </div>
         
         {loading ? (
-          <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="h-40 sm:h-56 bg-gray-200 animate-pulse" />
-                <div className="p-2 sm:p-4">
-                  <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse mb-2 sm:mb-3" />
-                  <div className="h-2 sm:h-3 bg-gray-200 rounded animate-pulse mb-2 sm:mb-3" />
-                  <div className="h-4 sm:h-6 bg-gray-200 rounded animate-pulse w-1/2" />
+                <div className="h-64 bg-gray-200 animate-pulse" />
+                <div className="p-5">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-3" />
+                  <div className="h-3 bg-gray-200 rounded animate-pulse mb-3" />
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : products.length === 0 ? (
           <motion.div 
-            className="col-span-full text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100"
+            className="col-span-full text-center py-20 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <div className="bg-gradient-to-r from-green-400 to-green-600 rounded-full p-8 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+            <div className="bg-gradient-to-r from-green-400 to-emerald-600 rounded-full p-8 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
@@ -104,7 +99,7 @@ export function BestSellers() {
           </motion.div>
         ) : (
           <motion.div 
-            className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+            className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
