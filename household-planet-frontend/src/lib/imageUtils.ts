@@ -32,8 +32,8 @@ export function getImageUrl(imagePath: string | null | undefined): string {
     return '/images/products/placeholder.svg';
   }
 
-  // If it's already a full URL (starts with http), return as is
-  if (cleanPath.startsWith('http')) {
+  // If it's already a full URL (starts with http) or base64 data, return as is
+  if (cleanPath.startsWith('http') || cleanPath.startsWith('data:')) {
     return cleanPath;
   }
 
