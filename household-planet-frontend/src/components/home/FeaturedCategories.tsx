@@ -12,6 +12,7 @@ interface Category {
   description?: string;
   image?: string;
   isActive: boolean;
+  products?: any[];
   _count?: {
     products: number;
   };
@@ -60,16 +61,23 @@ export function FeaturedCategories() {
       try {
         setLoading(true);
         const response = await api.getCategories() as any;
+        console.log('Categories API response:', response);
         
-        if (response && response.categories && Array.isArray(response.categories)) {
-          const activeCategories = response.categories
+        // Handle different response structures
+        let categoriesData = [];
+        if (Array.isArray(response)) {
+          categoriesData = response;
+        } else if (response && response.categories && Array.isArray(response.categories)) {
+          categoriesData = response.categories;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          categoriesData = response.data;
+        }
+        
+        if (categoriesData.length > 0) {
+          const activeCategories = categoriesData
             .filter((cat: Category) => cat.isActive)
             .slice(0, 6);
-          setCategories(activeCategories);
-        } else if (response && Array.isArray(response)) {
-          const activeCategories = response
-            .filter((cat: Category) => cat.isActive)
-            .slice(0, 6);
+          console.log('Active categories found:', activeCategories.length);
           setCategories(activeCategories);
         } else {
           console.log('No categories found in response');
@@ -157,9 +165,9 @@ export function FeaturedCategories() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
                         {/* Product count badge */}
-                        {category._count && category._count.products > 0 && (
+                        {((category._count && category._count.products > 0) || (category.products && category.products.length > 0)) && (
                           <div className="absolute top-2 right-2 bg-orange-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                            {category._count.products}
+                            {category._count?.products || category.products?.length || 0}
                           </div>
                         )}
                       </div>

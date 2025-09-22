@@ -18,8 +18,13 @@ export class CategoriesService {
       include: {
         children: true,
         parent: true,
+        _count: {
+          select: {
+            products: true
+          }
+        }
       },
-      orderBy: { name: 'asc' },
+      orderBy: { sortOrder: 'asc' },
     });
   }
 
