@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { getImageUrl } from '@/lib/imageUtils';
 
 interface Category {
   id: number;
@@ -145,17 +146,18 @@ export function FeaturedCategories() {
                       <div className="w-full h-32 sm:h-40 lg:h-48 overflow-hidden relative">
                         {category.image ? (
                           <img 
-                            src={category.image} 
+                            src={getImageUrl(category.image)} 
                             alt={category.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
-                          <div className="text-orange-600 text-center">
-                            <div className="text-3xl sm:text-4xl mb-2">
-                              {categoryIcons[category.slug] || '📦'}
+                            <div className="text-orange-600 text-center">
+                              <div className="text-3xl sm:text-4xl mb-2">
+                                {categoryIcons[category.slug] || '📦'}
+                              </div>
+                              <span className="text-xs font-medium">{category.name}</span>
                             </div>
-                            <span className="text-xs font-medium">{category.name}</span>
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

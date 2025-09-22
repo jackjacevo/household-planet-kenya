@@ -630,6 +630,23 @@ body {
   -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
 }
 
+/* Hide any unwanted green lines or borders on the right side */
+body::after,
+html::after,
+*::after {
+  border-right: none !important;
+}
+
+/* Remove any potential green right borders */
+* {
+  border-right-color: transparent !important;
+}
+
+/* Hide any fixed positioned green elements on the right */
+.fixed[class*="green"]:not(.social) {
+  display: none !important;
+}
+
 /* Fix for layout centering */
 main {
   width: 100%;

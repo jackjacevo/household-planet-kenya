@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Search, Package, ShoppingBag } from 'lucide-react';
+import { getImageUrl } from '@/lib/imageUtils';
 
 interface Category {
   id: number;
@@ -147,7 +148,7 @@ export default function CategoriesPage() {
                   <div className="aspect-square relative overflow-hidden">
                     {category.image ? (
                       <img 
-                        src={category.image} 
+                        src={getImageUrl(category.image)} 
                         alt={category.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
