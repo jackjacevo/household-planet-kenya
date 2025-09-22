@@ -193,8 +193,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const removeImage = (index: number) => {
     setImages(prev => {
       const newImages = [...prev];
-      newImages[index] = undefined;
-      return newImages.filter(img => img !== undefined);
+      newImages.splice(index, 1);
+      return newImages;
     });
   };
 
