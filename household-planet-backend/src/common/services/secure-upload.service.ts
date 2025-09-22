@@ -8,7 +8,7 @@ import { AppLogger } from './logger.service';
 export class SecureUploadService {
   private readonly logger = new AppLogger(SecureUploadService.name);
   private readonly uploadPath = './uploads';
-  private readonly allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+  private readonly allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff', '.tif', '.svg', '.ico', '.avif', '.heic', '.heif'];
   private readonly maxFileSize = 5 * 1024 * 1024; // 5MB
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
@@ -104,20 +104,22 @@ export class SecureUploadService {
       jpg: [0xFF, 0xD8, 0xFF],
       png: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
       gif: [0x47, 0x49, 0x46, 0x38],
-      webp: [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50]
+      webp: [0x52, 0x49, 0x46, 0x46],
+      bmp: [0x42, 0x4D],
+      tiff1: [0x49, 0x49, 0x2A, 0x00],
+      tiff2: [0x4D, 0x4D, 0x00, 0x2A],
+      svg: [0x3C, 0x3F, 0x78, 0x6D, 0x6C], // <?xml
+      ico: [0x00, 0x00, 0x01, 0x00]
     };
 
-    // Check JPG signature
-    if (this.checkSignature(buffer, signatures.jpg)) return true;
-    
-    // Check PNG signature
-    if (this.checkSignature(buffer, signatures.png)) return true;
-    
-    // Check GIF signature
-    if (this.checkSignature(buffer, signatures.gif)) return true;
-    
-    // Check WebP signature
-    if (this.checkSignature(buffer, signatures.webp)) return true;
+    // Check all signatures
+    for (const [format, signature] of Object.entries(signatures)) {
+      if (this.checkSignature(buffer, signature)) return true;
+    }
+
+    // Additional check for SVG (can start with <svg)
+    const svgStart = Buffer.from('<svg', 'utf8');
+    if (buffer.length >= 4 && buffer.subarray(0, 4).equals(svgStart)) return true;
 
     return false;
   }
@@ -126,7 +128,10 @@ export class SecureUploadService {
     if (buffer.length < signature.length) return false;
     
     for (let i = 0; i < signature.length; i++) {
-      if (buffer[i] !== signature[i]) return false;
+      // Skip wildcard bytes (0x00 in signature means any byte is acceptable)
+      if (signature[i] !== 0x00 && buffer[i] !== signature[i]) {
+        return false;
+      }
     }
     
     return true;

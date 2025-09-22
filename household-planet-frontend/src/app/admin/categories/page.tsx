@@ -92,25 +92,35 @@ export default function AdminCategoriesPage() {
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
     try {
-      // Convert to base64 for immediate use
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        setFormData(prev => ({ ...prev, image: base64 }));
-        showToast({
-          title: 'Success',
-          description: 'Image loaded successfully',
-          variant: 'success'
-        });
-        setUploadingImage(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/categories/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      const imageUrl = response.data.url;
+      setFormData(prev => ({ ...prev, image: imageUrl }));
+      showToast({
+        title: 'Success',
+        description: 'Image uploaded successfully',
+        variant: 'success'
+      });
+    } catch (error: any) {
       showToast({
         title: 'Error',
-        description: 'Failed to load image',
+        description: error.response?.data?.message || 'Failed to upload image',
         variant: 'destructive'
       });
+    } finally {
       setUploadingImage(false);
     }
   };
@@ -283,7 +293,7 @@ export default function AdminCategoriesPage() {
                   <div className="space-y-3">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.bmp,.tiff,.tif,.svg,.ico,.avif,.heic,.heif"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) handleImageUpload(file);
@@ -302,12 +312,12 @@ export default function AdminCategoriesPage() {
                     {formData.image && (
                       <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                         <img 
-                          src={formData.image} 
+                          src={formData.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${formData.image}` : formData.image} 
                           alt="Category preview" 
                           className="h-16 w-16 object-cover rounded-lg border border-gray-200" 
                         />
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Image loaded</p>
+                          <p className="text-sm font-medium text-gray-900">Image uploaded</p>
                           <Button
                             type="button"
                             variant="outline"
@@ -382,7 +392,7 @@ export default function AdminCategoriesPage() {
                     <div className="flex items-center space-x-4">
                       {parentCategory.image ? (
                         <img 
-                          src={parentCategory.image} 
+                          src={parentCategory.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${parentCategory.image}` : parentCategory.image} 
                           alt={parentCategory.name}
                           className="h-12 w-12 object-cover rounded-lg border-2 border-blue-200 shadow-sm"
                         />
@@ -445,7 +455,7 @@ export default function AdminCategoriesPage() {
                         <div key={subcategory.id} className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-lg px-3 py-2 border border-gray-200 group transition-colors">
                           {subcategory.image ? (
                             <img 
-                              src={subcategory.image} 
+                              src={subcategory.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${subcategory.image}` : subcategory.image} 
                               alt={subcategory.name}
                               className="h-5 w-5 object-cover rounded mr-2"
                             />
