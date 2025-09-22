@@ -79,11 +79,12 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(response.data.categories || response.data || []);
     } catch (error) {
+      console.error('Error fetching categories:', error);
       setCategories([]);
     }
   };
@@ -91,11 +92,12 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBrands(response.data || []);
+      setBrands(response.data.brands || response.data || []);
     } catch (error) {
+      console.error('Error fetching brands:', error);
       setBrands([]);
     }
   };
@@ -115,7 +117,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       });
         
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/upload/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/upload/products`,
         formData,
         {
           headers: {
@@ -156,7 +158,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       formData.append('file', file);
         
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/upload/product`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/upload/product`,
         formData,
         {
           headers: {

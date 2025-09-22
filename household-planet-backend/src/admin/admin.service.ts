@@ -1068,33 +1068,106 @@ export class AdminService {
 
   // Product methods
   async createProduct(data: any, userId: number, ip: string, ua: string) {
-    const product = await this.prisma.product.create({
-      data: {
-        name: data.name,
-        slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        description: data.description,
-        shortDescription: data.shortDescription,
-        sku: data.sku,
-        price: data.price,
-        comparePrice: data.comparePrice,
-        categoryId: data.categoryId,
-        brandId: data.brandId,
-        stock: data.stock || 0,
-        isActive: data.isActive !== false,
-        isFeatured: data.isFeatured || false,
-        images: JSON.stringify(data.images || []),
-        tags: JSON.stringify(data.tags || [])
-      }
-    });
-    return { product };
+    try {
+      console.log('📝 AdminService: Creating product with data:', data);
+      
+      // Generate slug if not provided
+      const slug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      
+      // Generate SKU if not provided
+      const sku = data.sku || `HP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      
+      const product = await this.prisma.product.create({
+        data: {
+          name: data.name,
+          slug: slug,
+          description: data.description,
+          shortDescription: data.shortDescription,
+          sku: sku,
+          price: parseFloat(data.price),
+          comparePrice: data.comparePrice ? parseFloat(data.comparePrice) : null,
+          categoryId: parseInt(data.categoryId),
+          brandId: data.brandId ? parseInt(data.brandId) : null,
+          stock: parseInt(data.stock) || 0,
+          lowStockThreshold: parseInt(data.lowStockThreshold) || 5,
+          weight: data.weight ? parseFloat(data.weight) : null,
+          dimensions: data.dimensions || null,
+          trackStock: Boolean(data.trackStock),
+          isActive: Boolean(data.isActive),
+          isFeatured: Boolean(data.isFeatured),
+          images: JSON.stringify(data.images || []),
+          tags: JSON.stringify(data.tags || [])
+        },
+        include: {
+          category: true,
+          brand: true
+        }
+      });
+      
+      console.log('✅ Product created successfully:', product.id);
+      return { product };
+    } catch (error) {
+      console.error('❌ Product creation failed:', error);
+      throw new Error(`Failed to create product: ${error.message}`);
+    }
   }
 
   async updateProduct(id: number, data: any, userId: number, ip: string, ua: string) {
-    return { message: 'Product updated' };
+    try {
+      console.log('📝 AdminService: Updating product', id, 'with data:', data);
+      
+      const updateData: any = {
+        name: data.name,
+        description: data.description,
+        shortDescription: data.shortDescription,
+        price: parseFloat(data.price),
+        comparePrice: data.comparePrice ? parseFloat(data.comparePrice) : null,
+        categoryId: parseInt(data.categoryId),
+        brandId: data.brandId ? parseInt(data.brandId) : null,
+        stock: parseInt(data.stock) || 0,
+        lowStockThreshold: parseInt(data.lowStockThreshold) || 5,
+        weight: data.weight ? parseFloat(data.weight) : null,
+        dimensions: data.dimensions || null,
+        trackStock: Boolean(data.trackStock),
+        isActive: Boolean(data.isActive),
+        isFeatured: Boolean(data.isFeatured),
+        images: JSON.stringify(data.images || []),
+        tags: JSON.stringify(data.tags || [])
+      };
+      
+      const product = await this.prisma.product.update({
+        where: { id },
+        data: updateData,
+        include: {
+          category: true,
+          brand: true
+        }
+      });
+      
+      console.log('✅ Product updated successfully:', product.id);
+      return { product };
+    } catch (error) {
+      console.error('❌ Product update failed:', error);
+      throw new Error(`Failed to update product: ${error.message}`);
+    }
   }
 
   async deleteProduct(id: number, userId: number, ip: string, ua: string) {
-    return { message: 'Product deleted' };
+    try {
+      console.log('🗑️ AdminService: Deleting product', id);
+      
+      // Soft delete by setting isActive to false
+      const product = await this.prisma.product.update({
+        where: { id },
+        data: { isActive: false }
+      });
+      
+      console.log('✅ Product deleted (deactivated) successfully:', product.id);
+      return { message: 'Product deleted successfully' };
+    } catch (error) {
+      console.error('❌ Product deletion failed:', error);
+      throw new Error(`Failed to delete product: ${error.message}`);
+    }
   }
 
   async bulkCreateProducts(products: any[], userId: number) {

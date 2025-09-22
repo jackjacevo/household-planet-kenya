@@ -32,15 +32,17 @@ export default function AdminProductsPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      console.log('🔍 Fetching admin products...');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       const data = response.data;
+      console.log('📦 Admin products response:', data);
       setProducts(data.products || data.data || data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('❌ Error fetching admin products:', error);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -51,7 +53,7 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/categories`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/categories`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCategories(response.data || []);
@@ -64,12 +66,14 @@ export default function AdminProductsPage() {
   const handleCreateProduct = async (productData: any) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
+      console.log('📝 Creating product:', productData);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      console.log('✅ Product created:', response.data);
       showToast({
         title: 'Success',
         description: 'Product created successfully',
@@ -79,6 +83,7 @@ export default function AdminProductsPage() {
       setShowForm(false);
       fetchProducts();
     } catch (error: any) {
+      console.error('❌ Product creation failed:', error.response?.data || error.message);
       showToast({
         title: 'Error',
         description: error.response?.data?.message || 'Failed to create product',
@@ -90,12 +95,14 @@ export default function AdminProductsPage() {
   const handleUpdateProduct = async (productData: any) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/${editingProduct.id}`,
+      console.log('📝 Updating product:', editingProduct.id, productData);
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      console.log('✅ Product updated:', response.data);
       showToast({
         title: 'Success',
         description: 'Product updated successfully',
@@ -106,6 +113,7 @@ export default function AdminProductsPage() {
       setEditingProduct(null);
       fetchProducts();
     } catch (error: any) {
+      console.error('❌ Product update failed:', error.response?.data || error.message);
       showToast({
         title: 'Error',
         description: error.response?.data?.message || 'Failed to update product',
@@ -119,11 +127,13 @@ export default function AdminProductsPage() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`,
+      console.log('🗑️ Deleting product:', productId);
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      console.log('✅ Product deleted:', response.data);
       showToast({
         title: 'Success',
         description: 'Product deleted successfully',
@@ -132,6 +142,7 @@ export default function AdminProductsPage() {
       
       fetchProducts();
     } catch (error: any) {
+      console.error('❌ Product deletion failed:', error.response?.data || error.message);
       showToast({
         title: 'Error',
         description: error.response?.data?.message || 'Failed to delete product',
@@ -179,7 +190,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Product Management</h1>
           <p className="mt-2 text-gray-600">
-            Manage your product catalog ({products.length} products)
+            Manage your product catalog ({products.length} {products.length === 1 ? 'product' : 'products'})
           </p>
         </div>
         <Button 
@@ -292,22 +303,38 @@ export default function AdminProductsPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Plus className="h-8 w-8 text-gray-400" />
+            <div className="text-center py-12">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <Plus className="h-10 w-10 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {products.length === 0 ? 'No products yet' : 'No products match your filters'}
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                {products.length === 0 ? 'No products in your catalog' : 'No products match your filters'}
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 {products.length === 0 
-                  ? 'Get started by adding your first product to the catalog.'
-                  : 'Try adjusting your search or filter criteria.'
+                  ? 'Start building your product catalog by adding your first product. You can add product details, images, pricing, and inventory information.'
+                  : 'Try adjusting your search terms or filter criteria to find the products you\'re looking for.'
                 }
               </p>
               {products.length === 0 && (
-                <Button onClick={() => setShowForm(true)} className="bg-green-600 hover:bg-green-700">
+                <Button 
+                  onClick={() => setShowForm(true)} 
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
                   Add Your First Product
+                </Button>
+              )}
+              {products.length > 0 && filteredProducts.length === 0 && (
+                <Button 
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setCategoryFilter('all');
+                  }} 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                >
+                  Clear All Filters
                 </Button>
               )}
             </div>
