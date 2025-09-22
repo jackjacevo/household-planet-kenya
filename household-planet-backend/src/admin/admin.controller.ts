@@ -31,52 +31,72 @@ export class AdminController {
   }
 
   @Get('analytics/sales')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getSalesAnalytics(@Query('period') period: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'daily') {
     return this.adminService.getSalesAnalytics(period);
   }
 
   @Get('analytics/performance')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getPerformanceMetrics() {
     return this.adminService.getPerformanceMetrics();
   }
 
   @Get('analytics/conversion')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getConversionRates(@Query('period') period: string = 'monthly') {
     return this.adminService.getConversionRates(period);
   }
 
   @Get('analytics/revenue')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getRevenueAnalytics(@Query('period') period: string = 'monthly') {
     return this.adminService.getRevenueAnalytics(period);
   }
 
   @Get('analytics/geographic')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getGeographicSales() {
     return this.adminService.getGeographicSales();
   }
 
   @Get('inventory/alerts')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getInventoryAlerts() {
     return this.adminService.getInventoryAlerts();
   }
 
   @Get('customers/insights')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getCustomerInsights() {
     return this.adminService.getCustomerInsights();
   }
 
   @Get('customers/behavior')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getCustomerBehavior() {
     return this.adminService.getCustomerBehavior();
   }
 
   @Get('activities/recent')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getRecentActivities() {
     return this.adminService.getRecentActivities();
   }
 
   // Product Management
   @Get('products')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getProducts(@Query() query: any) {
     return this.adminService.getProducts(query);
   }
@@ -265,33 +285,45 @@ export class AdminController {
   }
 
   @Get('products/analytics')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getProductAnalytics(@Query() query: ProductAnalyticsDto) {
     return this.adminService.getProductAnalytics(query);
   }
 
   @Get('products/popular')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getPopularProducts(@Query('period') period: string = 'monthly') {
     return this.adminService.getPopularProducts(period);
   }
 
   @Get('categories/popular')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getPopularCategories(@Query('period') period: string = 'monthly') {
     return this.adminService.getPopularCategories(period);
   }
 
   // Activities endpoints
   @Get('activities')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getActivities(@Query() query: any) {
     return this.adminService.getActivities(query);
   }
 
   @Get('activity-stats')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getActivitiesStats() {
     return this.adminService.getActivitiesStats();
   }
 
   // Category Management
   @Get('categories')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getCategories() {
     return this.adminService.getCategories();
   }
@@ -446,21 +478,29 @@ export class AdminController {
 
   // Brand Management
   @Get('brands')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.STAFF)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   getBrands() {
     return this.adminService.getBrands();
   }
 
   @Post('brands')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   createBrand(@Body() brandData: any) {
     return this.adminService.createBrand(brandData);
   }
 
   @Put('brands/:id')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateBrand(@Param('id', ParseIntPipe) id: number, @Body() brandData: any) {
     return this.adminService.updateBrand(id, brandData);
   }
 
   @Delete('brands/:id')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   deleteBrand(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.deleteBrand(id);
   }
