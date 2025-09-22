@@ -148,20 +148,16 @@ export function FeaturedCategories() {
                             src={category.image} 
                             alt={category.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
                           />
-                        ) : null}
-                        <div className={`w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center ${category.image ? 'hidden' : ''}`}>
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
                           <div className="text-orange-600 text-center">
                             <div className="text-3xl sm:text-4xl mb-2">
                               {categoryIcons[category.slug] || '📦'}
                             </div>
                             <span className="text-xs font-medium">{category.name}</span>
                           </div>
-                        </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
                         {/* Product count badge */}
@@ -192,7 +188,7 @@ export function FeaturedCategories() {
         <div className="text-center mt-6 sm:mt-10">
           <Link 
             href="/categories" 
-            className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold text-sm sm:text-base transition-colors group"
+            className="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition-colors group shadow-md hover:shadow-lg"
           >
             View all categories
             <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
