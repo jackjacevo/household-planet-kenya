@@ -1,4 +1,4 @@
-Deployment trigger: Fix missing authentication guards on admin analytics endpoints
-Timestamp: 2025-09-22 19:32:00
-Fix: Added @Roles and @UseGuards decorators to analytics/revenue and other admin endpoints
-Resolves: 404 error on /admin/analytics/revenue endpoint
+Deployment trigger: Comprehensive fix for admin controller guard conflicts
+Timestamp: 2025-09-22 19:35:00
+Fix: Removed global guard and added proper endpoint-level guards
+Resolves: Route registration issues causing 404 on analytics endpoints
