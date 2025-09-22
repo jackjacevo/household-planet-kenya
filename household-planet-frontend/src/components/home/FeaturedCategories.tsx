@@ -57,7 +57,7 @@ export function FeaturedCategories() {
     
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/categories`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
         
         if (!response.ok) {
           console.debug('Categories API unavailable');
@@ -67,8 +67,8 @@ export function FeaturedCategories() {
         const data = await response.json();
         
         if (data && Array.isArray(data) && data.length > 0) {
-          const parentCategories = (Array.isArray(data) ? data : []).filter((cat: any) => !cat.parentId && cat.isActive);
-          const mappedCategories = (Array.isArray(parentCategories) ? parentCategories : []).slice(0, 6).map((cat: any) => ({
+          const parentCategories = data.filter((cat: any) => !cat.parentId && cat.isActive);
+          const mappedCategories = parentCategories.slice(0, 6).map((cat: any) => ({
             id: cat.id.toString(),
             name: cat.name,
             slug: cat.slug,
@@ -98,7 +98,7 @@ export function FeaturedCategories() {
           <p className="text-gray-600">Discover our wide range of household essentials</p>
         </div>
         
-        <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {loading ? (
             [...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
@@ -121,7 +121,7 @@ export function FeaturedCategories() {
               viewport={{ once: true }}
               className="contents"
             >
-              {(Array.isArray(categories) ? categories : []).map((category, index) => (
+              {categories.map((category, index) => (
               <motion.div
                 key={category.slug}
                 variants={itemVariants}
@@ -129,7 +129,7 @@ export function FeaturedCategories() {
                 whileTap={{ scale: 0.98 }}
               >
                 <Link 
-                  href={`/products?category=${category.slug}`} 
+                  href={`/categories/${category.slug}`} 
                   className="block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-1"
                 >
                   <div className="relative">

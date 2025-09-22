@@ -68,6 +68,32 @@ export class UploadController {
     }
   }
 
+  @Post('products')
+  @RateLimit(10, 60000)
+  @UseGuards(FileUploadGuard)
+  @UseInterceptors(FilesInterceptor('images', 10))
+  async uploadProductImages(@UploadedFiles() files: Express.Multer.File[], @Request() req) {
+    try {
+      if (!files || files.length === 0) {
+        throw new BadRequestException('No files uploaded');
+      }
+      
+      this.logger.log(`Product images upload by user ${req.user?.userId}, ${files.length} files`);
+      
+      const uploadPromises = files.map(file => 
+        this.secureUpload.uploadFile(file, 'products')
+      );
+      
+      const results = await Promise.all(uploadPromises);
+      const images = results.map(result => typeof result === 'string' ? result : (result as any).url);
+      
+      return { images };
+    } catch (error) {
+      this.logger.error(`Product images upload failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
   @Post('category')
   @RateLimit(10, 60000)
   @UseGuards(FileUploadGuard)
@@ -83,6 +109,25 @@ export class UploadController {
       return { url: typeof result === 'string' ? result : (result as any).url };
     } catch (error) {
       this.logger.error(`Category image upload failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Post('category-image')
+  @RateLimit(10, 60000)
+  @UseGuards(FileUploadGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadCategoryImageAlt(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    try {
+      if (!file) {
+        throw new BadRequestException('No file uploaded');
+      }
+      
+      this.logger.log(`Category image upload (alt) by user ${req.user?.userId}`);
+      const result = await this.secureUpload.uploadFile(file, 'categories');
+      return { url: typeof result === 'string' ? result : (result as any).url };
+    } catch (error) {
+      this.logger.error(`Category image upload (alt) failed: ${error.message}`, error.stack);
       throw error;
     }
   }

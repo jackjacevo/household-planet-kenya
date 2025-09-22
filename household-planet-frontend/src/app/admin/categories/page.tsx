@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, FolderOpen, Folder, Tag, X } from 'lucide-react';
+import { Plus, Edit, Trash2, FolderOpen, Folder, Tag, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import axios from 'axios';
 import { useToast } from '@/contexts/ToastContext';
@@ -34,6 +34,8 @@ export default function AdminCategoriesPage() {
     parentId: '',
     isActive: true
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
+
 
   useEffect(() => {
     fetchCategories();
@@ -85,6 +87,32 @@ export default function AdminCategoriesPage() {
       name,
       slug: prev.slug === generateSlug(prev.name) || !prev.slug ? generateSlug(name) : prev.slug
     }));
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      // Convert to base64 for immediate use
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        setFormData(prev => ({ ...prev, image: base64 }));
+        showToast({
+          title: 'Success',
+          description: 'Image loaded successfully',
+          variant: 'success'
+        });
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      showToast({
+        title: 'Error',
+        description: 'Failed to load image',
+        variant: 'destructive'
+      });
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -193,40 +221,27 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-1 text-sm text-gray-600">
             {parentCategories.length} parent categories, {categories.filter(cat => cat.parentId).length} subcategories
           </p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowForm(true)} disabled={loading}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Parent Category
-          </Button>
-          <Button 
-            onClick={() => { 
-              setFormData({ name: '', slug: '', description: '', image: '', parentId: parentCategories[0]?.id.toString() || '', isActive: true });
-              setEditingCategory(null);
-              setShowForm(true);
-            }} 
-            disabled={loading || parentCategories.length === 0}
-            variant="outline"
-            className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Subcategory
+            Add Category
           </Button>
         </div>
       </div>
 
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">
-                {editingCategory ? 'Edit Category' : formData.parentId ? 'Add Subcategory' : 'Add Parent Category'}
+                {editingCategory ? 'Edit Category' : 'Add Category'}
               </h3>
               <Button variant="outline" size="sm" onClick={resetForm}>
                 <X className="h-4 w-4" />
@@ -263,37 +278,48 @@ export default function AdminCategoriesPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const formData = new FormData();
-                      formData.append('file', file);
-                      try {
-                        const token = localStorage.getItem('token');
-                        const response = await axios.post(
-                          `${process.env.NEXT_PUBLIC_API_URL}/api/upload/category`,
-                          formData,
-                          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
-                        );
-                        setFormData(prev => ({ ...prev, image: response.data.url }));
-                        showToast({ title: 'Success', description: 'Image uploaded successfully', variant: 'success' });
-                      } catch (error) {
-                        showToast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
-                      }
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={loading}
-                />
-                {formData.image && (
-                  <div className="mt-2">
-                    <img src={formData.image} alt="Preview" className="h-20 w-20 object-cover rounded" />
-                  </div>
-                )}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(file);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={loading || uploadingImage}
+                  />
+                  
+                  {uploadingImage && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      Loading image...
+                    </div>
+                  )}
+                  
+                  {formData.image && (
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <img 
+                        src={formData.image} 
+                        alt="Category preview" 
+                        className="h-16 w-16 object-cover rounded-lg border border-gray-200" 
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">Image loaded</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                          className="mt-1 text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div>
@@ -342,55 +368,66 @@ export default function AdminCategoriesPage() {
           <p className="text-gray-500">No categories found. Create your first category to get started.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {parentCategories.map((parentCategory) => {
             const subcategories = getSubcategories(parentCategory.id);
+            
             return (
-              <div key={parentCategory.id} className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-6 py-6">
+              <div key={parentCategory.id} className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                {/* Parent Category Header */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-4">
                       {parentCategory.image ? (
-                        <div className="relative">
-                          <img 
-                            src={parentCategory.image} 
-                            alt={parentCategory.name}
-                            className="h-20 w-20 object-cover rounded-xl border-2 border-blue-300 shadow-lg"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
-                        </div>
+                        <img 
+                          src={parentCategory.image} 
+                          alt={parentCategory.name}
+                          className="h-12 w-12 object-cover rounded-lg border-2 border-blue-200 shadow-sm"
+                        />
                       ) : (
-                        <div className="h-20 w-20 bg-blue-100 rounded-xl flex items-center justify-center border-2 border-blue-300 shadow-lg">
-                          <FolderOpen className="h-10 w-10 text-blue-600" />
+                        <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center border-2 border-blue-200">
+                          <FolderOpen className="h-6 w-6 text-blue-600" />
                         </div>
                       )}
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-blue-900 mb-1">{parentCategory.name}</h3>
-                        <p className="text-sm text-blue-700 mb-2">{parentCategory.description}</p>
-                        <div className="flex items-center space-x-4 text-xs text-blue-600">
-                          <span className="bg-blue-100 px-2 py-1 rounded-full">
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-900">{parentCategory.name}</h3>
+                        <p className="text-sm text-blue-700">{parentCategory.description}</p>
+                        <div className="flex items-center space-x-3 mt-1">
+                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                             {subcategories.length} subcategories
                           </span>
-                          <span className="bg-blue-100 px-2 py-1 rounded-full">
+                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                             {parentCategory._count?.products || 0} products
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                         parentCategory.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {parentCategory.isActive ? 'Active' : 'Inactive'}
                       </span>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(parentCategory)}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => {
+                          setFormData({ name: '', slug: '', description: '', image: '', parentId: parentCategory.id.toString(), isActive: true });
+                          setEditingCategory(null);
+                          setShowForm(true);
+                        }}
+                        className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(parentCategory)} className="bg-white">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
                         onClick={() => handleDelete(parentCategory)}
-                        className="hover:bg-red-50 hover:text-red-600"
+                        className="bg-white text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -398,53 +435,41 @@ export default function AdminCategoriesPage() {
                   </div>
                 </div>
                 
+                {/* Subcategories */}
                 {subcategories.length > 0 && (
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="p-4">
+                    <div className="flex flex-wrap gap-2">
                       {subcategories.map((subcategory) => (
-                        <div key={subcategory.id} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-200 hover:border-blue-200">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center space-x-3">
-                              {subcategory.image ? (
-                                <img 
-                                  src={subcategory.image} 
-                                  alt={subcategory.name}
-                                  className="h-12 w-12 object-cover rounded-lg border border-gray-200"
-                                />
-                              ) : (
-                                <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                  <Folder className="h-6 w-6 text-gray-500" />
-                                </div>
-                              )}
-                              <div>
-                                <h4 className="font-semibold text-gray-900 text-base">{subcategory.name}</h4>
-                                <p className="text-sm text-gray-600 mt-1">{subcategory.description}</p>
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                              subcategory.isActive ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
-                            }`}>
-                              {subcategory.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                            <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                              {subcategory._count?.products || 0} products
-                            </span>
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleEdit(subcategory)}
-                                className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded border border-blue-200 hover:border-blue-300 transition-colors"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(subcategory)}
-                                className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
+                        <div key={subcategory.id} className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-lg px-3 py-2 border border-gray-200 group transition-colors">
+                          {subcategory.image ? (
+                            <img 
+                              src={subcategory.image} 
+                              alt={subcategory.name}
+                              className="h-5 w-5 object-cover rounded mr-2"
+                            />
+                          ) : (
+                            <Folder className="h-4 w-4 text-gray-500 mr-2" />
+                          )}
+                          <span className="text-sm font-medium text-gray-700 mr-2">{subcategory.name}</span>
+                          <span className={`px-2 py-0.5 text-xs rounded-full mr-2 ${
+                            subcategory.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {subcategory.isActive ? '✓' : '✗'}
+                          </span>
+                          <span className="text-xs text-gray-500 mr-2">({subcategory._count?.products || 0})</span>
+                          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleEdit(subcategory)}
+                              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(subcategory)}
+                              className="p-1 text-red-600 hover:bg-red-100 rounded"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -453,20 +478,20 @@ export default function AdminCategoriesPage() {
                 )}
                 
                 {subcategories.length === 0 && (
-                  <div className="p-6 text-center text-gray-500">
-                    <p className="text-sm">No subcategories yet.</p>
+                  <div className="p-4 text-center text-gray-500">
+                    <p className="text-sm mb-2">No subcategories yet</p>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="mt-2"
                       onClick={() => {
                         setFormData({ name: '', slug: '', description: '', image: '', parentId: parentCategory.id.toString(), isActive: true });
                         setEditingCategory(null);
                         setShowForm(true);
                       }}
+                      className="text-blue-600"
                     >
                       <Plus className="h-4 w-4 mr-1" />
-                      Add Subcategory
+                      Add First Subcategory
                     </Button>
                   </div>
                 )}
