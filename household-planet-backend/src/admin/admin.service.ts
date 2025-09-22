@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SecureUploadService } from '../common/services/secure-upload.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
@@ -318,9 +319,9 @@ export class AdminService {
       
       if (search) {
         where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { sku: { contains: search, mode: 'insensitive' } }
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { description: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { sku: { contains: search, mode: Prisma.QueryMode.insensitive } }
         ];
       }
       
@@ -1542,8 +1543,8 @@ export class AdminService {
       const skip = (page - 1) * limit;
       const where: any = search ? {
         OR: [
-          { code: { contains: search, mode: 'insensitive' as any } },
-          { name: { contains: search, mode: 'insensitive' as any } },
+          { code: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
         ]
       } : {};
 
@@ -1672,8 +1673,8 @@ export class AdminService {
       
       if (search) {
         where.OR = [
-          { orderNumber: { contains: search, mode: 'insensitive' } },
-          { user: { email: { contains: search, mode: 'insensitive' } } }
+          { orderNumber: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { user: { email: { contains: search, mode: Prisma.QueryMode.insensitive } } }
         ];
       }
 
@@ -1711,9 +1712,9 @@ export class AdminService {
       
       if (search) {
         where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } }
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { phone: { contains: search, mode: Prisma.QueryMode.insensitive } }
         ];
       }
 

@@ -107,7 +107,7 @@ export default function AdminDashboard() {
       console.log('✅ Dashboard API response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Dashboard API error:', error.response?.data || error.message);
+      console.error('❌ Dashboard API error:', error instanceof Error ? error.message : 'Unknown error');
       console.warn('Using fallback data');
       return fallbackStats;
     }
