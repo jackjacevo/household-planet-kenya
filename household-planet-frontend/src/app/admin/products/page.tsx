@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ProductForm from '@/components/admin/ProductForm';
 import axios from 'axios';
 import { useToast } from '@/contexts/ToastContext';
@@ -13,9 +18,14 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
@@ -23,7 +33,7 @@ export default function AdminProductsPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -37,11 +47,25 @@ export default function AdminProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/categories`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCategories(response.data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategories([]);
+    }
+  };
+
   const handleCreateProduct = async (productData: any) => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -67,7 +91,7 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${editingProduct.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${editingProduct.id}`,
         productData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -96,7 +120,7 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${productId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -116,6 +140,26 @@ export default function AdminProductsPage() {
     }
   };
 
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && product.isActive) ||
+                         (statusFilter === 'inactive' && !product.isActive);
+    const matchesCategory = categoryFilter === 'all' || product.categoryId === parseInt(categoryFilter);
+    
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
+
+  const stats = {
+    totalProducts: products.length,
+    activeProducts: products.filter(p => p.isActive).length,
+    inactiveProducts: products.filter(p => !p.isActive).length,
+    lowStockProducts: products.filter(p => p.stock <= p.lowStockThreshold).length,
+    outOfStockProducts: products.filter(p => p.stock === 0).length,
+    featuredProducts: products.filter(p => p.isFeatured).length
+  };
+
   if (showForm) {
     return (
       <ProductForm
@@ -130,78 +174,159 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-              <p className="mt-2 text-gray-600">
-                Manage your product catalog ({products.length} products)
-              </p>
-            </div>
-            <Button 
-              onClick={() => setShowForm(true)} 
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
-            >
-              <Plus className="h-5 w-5" />
-              Add Product
-            </Button>
-          </div>
+    <div className="px-2 sm:px-4 lg:px-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Product Management</h1>
+          <p className="mt-2 text-gray-600">
+            Manage your product catalog ({products.length} products)
+          </p>
         </div>
+        <Button 
+          onClick={() => setShowForm(true)} 
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+        >
+          <Plus className="h-5 w-5" />
+          Add Product
+        </Button>
+      </div>
 
-        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">All Products</h2>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-2xl font-bold">{stats.totalProducts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Active</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.activeProducts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Inactive</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.inactiveProducts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Low Stock</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.lowStockProducts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Out of Stock</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.outOfStockProducts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Featured</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-2xl font-bold text-blue-600">{stats.featuredProducts}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="relative">
+              <Input
+                placeholder="Search by product name or SKU..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        
-        {loading ? (
-          <div className="px-6 py-16 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading products...</p>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <div className="max-w-sm mx-auto">
+        </CardContent>
+      </Card>
+
+      {/* Products Table */}
+      <Card>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8">
               <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <Plus className="h-8 w-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-              <p className="text-gray-500 mb-6">Get started by adding your first product to the catalog.</p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Add Your First Product
-              </button>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {products.length === 0 ? 'No products yet' : 'No products match your filters'}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {products.length === 0 
+                  ? 'Get started by adding your first product to the catalog.'
+                  : 'Try adjusting your search or filter criteria.'
+                }
+              </p>
+              {products.length === 0 && (
+                <Button onClick={() => setShowForm(true)} className="bg-green-600 hover:bg-green-700">
+                  Add Your First Product
+                </Button>
+              )}
             </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Product
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Price
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Stock
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td className="px-6 py-4">
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
                       <div className="flex items-center">
                         <div className="h-12 w-12 flex-shrink-0">
                           <img
@@ -214,59 +339,89 @@ export default function AdminProductsPage() {
                           <div className="text-sm font-semibold text-gray-900">
                             {product.name}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-500">
                             SKU: {product.sku}
                           </div>
+                          {product.isFeatured && (
+                            <Badge className="bg-blue-100 text-blue-800 text-xs mt-1">
+                              Featured
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      KSh {product.price?.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <span className={`font-medium ${
-                        (product.stock || 0) > 10 ? 'text-green-600' : 
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-gray-900">
+                        {product.category?.name || 'Uncategorized'}
+                      </div>
+                      {product.brand && (
+                        <div className="text-xs text-gray-500">
+                          {product.brand.name}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium text-gray-900">
+                        KSh {product.price?.toLocaleString()}
+                      </div>
+                      {product.comparePrice && product.comparePrice > product.price && (
+                        <div className="text-xs text-gray-500 line-through">
+                          KSh {product.comparePrice.toLocaleString()}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className={`text-sm font-medium ${
+                        (product.stock || 0) > product.lowStockThreshold ? 'text-green-600' : 
                         (product.stock || 0) > 0 ? 'text-yellow-600' : 'text-red-600'
                       }`}>
                         {product.stock || 0}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                        product.isActive 
-                          ? 'bg-green-100 text-green-700 border border-green-200' 
-                          : 'bg-red-100 text-red-700 border border-red-200'
-                      }`}>
+                      </div>
+                      {product.stock <= product.lowStockThreshold && product.stock > 0 && (
+                        <div className="text-xs text-yellow-600">Low Stock</div>
+                      )}
+                      {product.stock === 0 && (
+                        <div className="text-xs text-red-600">Out of Stock</div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={product.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                      }>
                         {product.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex space-x-2">
-                        <button
-                          className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded border border-blue-200 hover:border-blue-300 transition-colors"
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => {
                             setEditingProduct(product);
                             setShowForm(true);
                           }}
+                          className="p-2"
                         >
-                          Edit
-                        </button>
-                        <button
-                          className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 transition-colors"
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleDeleteProduct(product.id)}
+                          className="p-2 text-red-600 hover:text-red-800"
                         >
-                          Delete
-                        </button>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        </div>
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

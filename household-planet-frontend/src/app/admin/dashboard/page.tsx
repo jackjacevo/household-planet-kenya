@@ -97,7 +97,7 @@ export default function AdminDashboard() {
     
     try {
       const response = await axios.get(
-        `${apiUrl}/api/admin/dashboard`,
+        `${apiUrl}/admin/dashboard`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       return (response as any).data;

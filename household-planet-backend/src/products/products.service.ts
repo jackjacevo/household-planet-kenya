@@ -538,11 +538,40 @@ export class ProductsService {
   // Admin methods (simplified)
   async create(createProductDto: any, files?: any[]) {
     try {
-      const { categoryId, brandId, images, stock, lowStockThreshold, trackStock, slug, sku, ...data } = createProductDto;
+      console.log('🔍 Creating product with data:', createProductDto);
+      
+      const { 
+        categoryId, 
+        brandId, 
+        images, 
+        stock, 
+        lowStockThreshold, 
+        trackStock, 
+        slug, 
+        sku,
+        tags,
+        price,
+        comparePrice,
+        weight,
+        isActive,
+        isFeatured,
+        isOnSale,
+        ...data 
+      } = createProductDto;
+      
+      // Validate required fields
+      if (!data.name || !data.name.trim()) {
+        throw new Error('Product name is required');
+      }
       
       const validatedCategoryId = parseInt(String(categoryId));
       if (isNaN(validatedCategoryId)) {
-        throw new Error('Invalid category ID');
+        throw new Error('Valid category ID is required');
+      }
+      
+      const validatedPrice = parseFloat(String(price));
+      if (isNaN(validatedPrice) || validatedPrice <= 0) {
+        throw new Error('Valid price is required');
       }
       
       // Generate SKU if not provided
@@ -582,15 +611,46 @@ export class ProductsService {
       }
       
       const productData: any = {
-        ...data,
+        name: data.name.trim(),
         sku: finalSku,
         slug: finalSlug,
+        price: validatedPrice,
         categoryId: validatedCategoryId,
         stock: stock !== undefined ? parseInt(String(stock)) : 0,
         lowStockThreshold: lowStockThreshold !== undefined ? parseInt(String(lowStockThreshold)) : 5,
         trackStock: trackStock !== undefined ? Boolean(trackStock) : true,
         images: images ? JSON.stringify(images) : JSON.stringify([]),
+        tags: tags ? JSON.stringify(Array.isArray(tags) ? tags : []) : JSON.stringify([]),
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
+        isFeatured: isFeatured !== undefined ? Boolean(isFeatured) : false,
       };
+      
+      // Optional fields
+      if (data.description) {
+        productData.description = data.description.trim();
+      }
+      
+      if (data.shortDescription) {
+        productData.shortDescription = data.shortDescription.trim();
+      }
+      
+      if (comparePrice !== undefined && comparePrice !== null && comparePrice !== '') {
+        const validatedComparePrice = parseFloat(String(comparePrice));
+        if (!isNaN(validatedComparePrice) && validatedComparePrice > 0) {
+          productData.comparePrice = validatedComparePrice;
+        }
+      }
+      
+      if (weight !== undefined && weight !== null && weight !== '') {
+        const validatedWeight = parseFloat(String(weight));
+        if (!isNaN(validatedWeight) && validatedWeight >= 0) {
+          productData.weight = validatedWeight;
+        }
+      }
+      
+      if (data.dimensions) {
+        productData.dimensions = data.dimensions.trim();
+      }
       
       if (brandId) {
         const validatedBrandId = parseInt(String(brandId));
@@ -599,11 +659,19 @@ export class ProductsService {
         }
       }
       
-      return await this.prisma.product.create({
+      console.log('💾 Final product data:', productData);
+      
+      const createdProduct = await this.prisma.product.create({
         data: productData,
         include: { category: true, brand: true },
       });
+      
+      console.log('✅ Product created successfully:', createdProduct.id);
+      
+      return createdProduct;
     } catch (error) {
+      console.error('❌ Product creation failed:', error);
+      this.logger.error(`Product creation failed: ${error.message}`, error.stack);
       throw new Error(`Failed to create product: ${error.message}`);
     }
   }

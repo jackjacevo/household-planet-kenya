@@ -58,7 +58,12 @@ export class CategoriesController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  updatePut(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto) {
+  @UseInterceptors(FileInterceptor('image', { dest: './uploads/categories' }))
+  async updatePut(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto, @UploadedFile() file?: Express.Multer.File) {
+    if (file) {
+      const imageUrl = await this.secureUpload.uploadFile(file, 'categories');
+      updateCategoryDto.image = imageUrl;
+    }
     return this.categoriesService.update(id, updateCategoryDto);
   }
 

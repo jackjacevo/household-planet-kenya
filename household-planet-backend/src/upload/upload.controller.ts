@@ -51,18 +51,28 @@ export class UploadController {
 
   @Post('product')
   @RateLimit(10, 60000)
-  @UseGuards(FileUploadGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadProductImage(@UploadedFile() file: Express.Multer.File, @Request() req) {
     try {
+      console.log('🔍 Upload product endpoint called');
+      console.log('📁 File received:', file ? { name: file.originalname, size: file.size, type: file.mimetype } : 'No file');
+      console.log('👤 User:', req.user ? { id: req.user.userId, email: req.user.email } : 'No user');
+      
       if (!file) {
+        console.log('❌ No file uploaded');
         throw new BadRequestException('No file uploaded');
       }
       
       this.logger.log(`Product image upload by user ${req.user?.userId}`);
       const result = await this.secureUpload.uploadFile(file, 'products');
-      return { url: typeof result === 'string' ? result : (result as any).url };
+      console.log('✅ Upload successful:', result);
+      return { 
+        success: true,
+        url: typeof result === 'string' ? result : (result as any).url,
+        message: 'Image uploaded successfully'
+      };
     } catch (error) {
+      console.error('❌ Product image upload failed:', error);
       this.logger.error(`Product image upload failed: ${error.message}`, error.stack);
       throw error;
     }
@@ -70,11 +80,15 @@ export class UploadController {
 
   @Post('products')
   @RateLimit(10, 60000)
-  @UseGuards(FileUploadGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
   async uploadProductImages(@UploadedFiles() files: Express.Multer.File[], @Request() req) {
     try {
+      console.log('🔍 Upload products endpoint called');
+      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
+      console.log('👤 User:', req.user ? { id: req.user.userId, email: req.user.email } : 'No user');
+      
       if (!files || files.length === 0) {
+        console.log('❌ No files uploaded');
         throw new BadRequestException('No files uploaded');
       }
       
@@ -87,8 +101,14 @@ export class UploadController {
       const results = await Promise.all(uploadPromises);
       const images = results.map(result => typeof result === 'string' ? result : (result as any).url);
       
-      return { images };
+      console.log('✅ Upload successful:', images);
+      return { 
+        success: true,
+        images,
+        message: `Successfully uploaded ${images.length} image(s)`
+      };
     } catch (error) {
+      console.error('❌ Product images upload failed:', error);
       this.logger.error(`Product images upload failed: ${error.message}`, error.stack);
       throw error;
     }
@@ -96,18 +116,27 @@ export class UploadController {
 
   @Post('category')
   @RateLimit(10, 60000)
-  @UseGuards(FileUploadGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadCategoryImage(@UploadedFile() file: Express.Multer.File, @Request() req) {
     try {
+      console.log('🔍 Upload category endpoint called');
+      console.log('📁 File received:', file ? { name: file.originalname, size: file.size, type: file.mimetype } : 'No file');
+      
       if (!file) {
+        console.log('❌ No file uploaded');
         throw new BadRequestException('No file uploaded');
       }
       
       this.logger.log(`Category image upload by user ${req.user?.userId}`);
       const result = await this.secureUpload.uploadFile(file, 'categories');
-      return { url: typeof result === 'string' ? result : (result as any).url };
+      console.log('✅ Category upload successful:', result);
+      return { 
+        success: true,
+        url: typeof result === 'string' ? result : (result as any).url,
+        message: 'Category image uploaded successfully'
+      };
     } catch (error) {
+      console.error('❌ Category image upload failed:', error);
       this.logger.error(`Category image upload failed: ${error.message}`, error.stack);
       throw error;
     }
@@ -134,11 +163,14 @@ export class UploadController {
 
   @Post('images')
   @RateLimit(5, 60000)
-  @UseGuards(FileUploadGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
   async uploadImages(@UploadedFiles() files: Express.Multer.File[], @Request() req) {
     try {
+      console.log('🔍 Upload images endpoint called');
+      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
+      
       if (!files || files.length === 0) {
+        console.log('❌ No images uploaded');
         throw new BadRequestException('No images uploaded');
       }
       
@@ -151,8 +183,14 @@ export class UploadController {
       const results = await Promise.all(uploadPromises);
       const images = results.map(result => typeof result === 'string' ? result : (result as any).url);
       
-      return { images };
+      console.log('✅ Multiple images upload successful:', images);
+      return { 
+        success: true,
+        images,
+        message: `Successfully uploaded ${images.length} image(s)`
+      };
     } catch (error) {
+      console.error('❌ Multiple image upload failed:', error);
       this.logger.error(`Multiple image upload failed: ${error.message}`, error.stack);
       throw error;
     }

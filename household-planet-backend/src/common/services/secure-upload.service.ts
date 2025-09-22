@@ -13,25 +13,40 @@ export class SecureUploadService {
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
     try {
+      console.log('🔍 SecureUploadService.uploadFile called with:', {
+        originalname: file.originalname,
+        size: file.size,
+        mimetype: file.mimetype,
+        folder: folder
+      });
+      
       this.validateFile(file);
       
       const uploadDir = join(this.uploadPath, this.sanitizeFolder(folder));
+      console.log('📁 Upload directory:', uploadDir);
+      
       await this.ensureDirectory(uploadDir);
       
       const filename = this.generateSecureFilename(file.originalname);
       const filepath = resolve(uploadDir, filename);
+      console.log('📄 File path:', filepath);
       
       this.validatePath(filepath, uploadDir);
       
+      console.log('💾 Writing file...');
       await fs.writeFile(filepath, file.buffer);
+      console.log('✅ File written successfully');
       
       const publicPath = `/uploads/${folder}/${filename}`;
       this.logger.logFileOperation('upload', filename, true);
       
+      console.log('🎯 Returning public path:', publicPath);
       return publicPath;
     } catch (error) {
-      this.logger.logFileOperation('upload', file.originalname, false);
-      throw error;
+      console.error('❌ Upload failed:', error);
+      this.logger.error(`Upload failed for ${file?.originalname}: ${error.message}`, error.stack);
+      this.logger.logFileOperation('upload', file?.originalname || 'unknown', false);
+      throw new BadRequestException(`Upload failed: ${error.message}`);
     }
   }
 
@@ -40,13 +55,22 @@ export class SecureUploadService {
       throw new BadRequestException('No file provided');
     }
     
+    if (!file.buffer || file.buffer.length === 0) {
+      throw new BadRequestException('File is empty or corrupted');
+    }
+    
     if (file.size > this.maxFileSize) {
-      throw new BadRequestException('File too large');
+      throw new BadRequestException(`File too large: ${file.size} bytes (max: ${this.maxFileSize})`);
     }
     
     const ext = extname(file.originalname).toLowerCase();
     if (!this.allowedExtensions.includes(ext)) {
-      throw new BadRequestException('Invalid file type');
+      throw new BadRequestException(`Invalid file type: ${ext}`);
+    }
+    
+    // Check for valid image headers
+    if (!this.isValidImageBuffer(file.buffer)) {
+      throw new BadRequestException('File is not a valid image');
     }
   }
 
@@ -72,5 +96,39 @@ export class SecureUploadService {
     } catch {
       await fs.mkdir(dir, { recursive: true });
     }
+  }
+
+  private isValidImageBuffer(buffer: Buffer): boolean {
+    // Check for common image file signatures (magic numbers)
+    const signatures = {
+      jpg: [0xFF, 0xD8, 0xFF],
+      png: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+      gif: [0x47, 0x49, 0x46, 0x38],
+      webp: [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50]
+    };
+
+    // Check JPG signature
+    if (this.checkSignature(buffer, signatures.jpg)) return true;
+    
+    // Check PNG signature
+    if (this.checkSignature(buffer, signatures.png)) return true;
+    
+    // Check GIF signature
+    if (this.checkSignature(buffer, signatures.gif)) return true;
+    
+    // Check WebP signature
+    if (this.checkSignature(buffer, signatures.webp)) return true;
+
+    return false;
+  }
+
+  private checkSignature(buffer: Buffer, signature: number[]): boolean {
+    if (buffer.length < signature.length) return false;
+    
+    for (let i = 0; i < signature.length; i++) {
+      if (buffer[i] !== signature[i]) return false;
+    }
+    
+    return true;
   }
 }

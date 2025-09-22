@@ -266,7 +266,7 @@ export default function AdminCategoriesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
                 <select
                   value={formData.parentId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value, image: e.target.value ? '' : prev.image }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={loading}
                 >
@@ -277,50 +277,52 @@ export default function AdminCategoriesPage() {
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageUpload(file);
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={loading || uploadingImage}
-                  />
-                  
-                  {uploadingImage && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      Loading image...
-                    </div>
-                  )}
-                  
-                  {formData.image && (
-                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <img 
-                        src={formData.image} 
-                        alt="Category preview" 
-                        className="h-16 w-16 object-cover rounded-lg border border-gray-200" 
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Image loaded</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                          className="mt-1 text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </Button>
+              {!formData.parentId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={loading || uploadingImage}
+                    />
+                    
+                    {uploadingImage && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        Loading image...
                       </div>
-                    </div>
-                  )}
+                    )}
+                    
+                    {formData.image && (
+                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <img 
+                          src={formData.image} 
+                          alt="Category preview" 
+                          className="h-16 w-16 object-cover rounded-lg border border-gray-200" 
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">Image loaded</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                            className="mt-1 text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>

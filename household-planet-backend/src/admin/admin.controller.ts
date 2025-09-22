@@ -142,10 +142,23 @@ export class AdminController {
     },
   }))
   uploadTempImages(@UploadedFiles() files: Express.Multer.File[], @Req() req) {
-    if (!files || files.length === 0) {
-      throw new BadRequestException('No files uploaded');
+    try {
+      console.log('🔍 Admin temp images upload endpoint called');
+      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
+      console.log('👤 User:', req.user ? { id: req.user.id, email: req.user.email } : 'No user');
+      
+      if (!files || files.length === 0) {
+        console.log('❌ No files uploaded to temp endpoint');
+        throw new BadRequestException('No files uploaded');
+      }
+      
+      const result = this.adminService.uploadTempImages(files);
+      console.log('✅ Temp images upload successful');
+      return result;
+    } catch (error) {
+      console.error('❌ Admin temp images upload failed:', error);
+      throw error;
     }
-    return this.adminService.uploadTempImages(files);
   }
 
   @Post('products/:id/images')
@@ -161,10 +174,22 @@ export class AdminController {
     },
   }))
   uploadProductImages(@Param('id', ParseIntPipe) id: number, @UploadedFiles() files: Express.Multer.File[], @Req() req) {
-    if (!files || files.length === 0) {
-      throw new BadRequestException('No files uploaded');
+    try {
+      console.log(`🔍 Admin product ${id} images upload endpoint called`);
+      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
+      
+      if (!files || files.length === 0) {
+        console.log('❌ No files uploaded to product images endpoint');
+        throw new BadRequestException('No files uploaded');
+      }
+      
+      const result = this.adminService.uploadProductImages(id, files, req.user?.id);
+      console.log('✅ Product images upload successful');
+      return result;
+    } catch (error) {
+      console.error('❌ Admin product images upload failed:', error);
+      throw error;
     }
-    return this.adminService.uploadProductImages(id, files, req.user?.id);
   }
 
   @Post('products/images/crop')
