@@ -1,66 +1,81 @@
 const axios = require('axios');
 
-const API_URL = process.env.API_URL || 'http://localhost:3001';
+const API_URL = 'https://api.householdplanetkenya.co.ke';
 
 async function testOrderCreation() {
+  console.log('📝 Testing Order Creation...');
+  
   try {
-    console.log('Testing order creation flow...');
-    
-    // 1. Test authentication
-    console.log('\n1. Testing authentication...');
+    // Login
     const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'test@example.com',
-      password: 'password123'
+      email: 'admin@householdplanet.co.ke',
+      password: 'Admin@2025'
     });
-    
-    const token = loginResponse.data.token;
-    console.log('✓ Authentication successful');
-    
-    // 2. Test cart functionality
-    console.log('\n2. Testing cart functionality...');
-    const cartResponse = await axios.get(`${API_URL}/api/cart`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    console.log('✓ Cart fetch successful:', cartResponse.data);
-    
-    // 3. Test order creation (if cart has items)
-    if (cartResponse.data.items && cartResponse.data.items.length > 0) {
-      console.log('\n3. Testing order creation...');
-      const orderData = {
-        items: cartResponse.data.items.map(item => ({
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          price: item.product.price
-        })),
-        deliveryLocationId: 'nairobi-cbd',
-        paymentMethod: 'CASH',
-        notes: 'Test order'
-      };
-      
-      const orderResponse = await axios.post(`${API_URL}/api/orders`, orderData, {
-        headers: { 'Authorization': `Bearer ${token}` }
+    const token = loginResponse.data.accessToken;
+    console.log('✅ Login successful');
+
+    // Test orders endpoint
+    console.log('\n📋 Testing orders GET...');
+    try {
+      const ordersResponse = await axios.get(`${API_URL}/api/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('✓ Order created successfully:', orderResponse.data);
-      
-      // 4. Test fetching user orders
-      console.log('\n4. Testing order retrieval...');
-      const ordersResponse = await axios.get(`${API_URL}/api/orders/my-orders`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      console.log('✓ Orders fetched successfully:', ordersResponse.data);
-      
-    } else {
-      console.log('\n3. No items in cart - skipping order creation test');
+      console.log('✅ Orders GET successful:', ordersResponse.data.length || 'Got orders');
+    } catch (error) {
+      console.log('❌ Orders GET failed:', error.response?.status, error.response?.data?.message);
     }
+
+    // Get a product for order items
+    const productsResponse = await axios.get(`${API_URL}/api/products?limit=1`);
+    const products = productsResponse.data.products || productsResponse.data;
     
-    console.log('\n✅ All tests passed!');
-    
+    if (products.length === 0) {
+      console.log('❌ No products available for testing');
+      return;
+    }
+
+    // Test simple order creation
+    console.log('\n📝 Testing simple order creation...');
+    const simpleOrder = {
+      items: [{
+        productId: products[0].id,
+        quantity: 1,
+        price: products[0].price
+      }],
+      paymentMethod: 'MPESA',
+      customerName: 'Test User',
+      customerPhone: '+254700000000',
+      deliveryLocation: 'Nairobi',
+      promoCode: 'WELCOME10',
+      discountAmount: 50
+    };
+
+    try {
+      const orderResponse = await axios.post(`${API_URL}/api/orders`, simpleOrder, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('✅ Simple order created:', orderResponse.data);
+    } catch (error) {
+      console.log('❌ Simple order failed:', error.response?.status, error.response?.data?.message);
+      console.log('Error details:', error.response?.data);
+    }
+
+    // Test admin orders endpoint
+    console.log('\n📋 Testing admin orders...');
+    try {
+      const adminOrdersResponse = await axios.get(`${API_URL}/api/admin/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('✅ Admin orders successful');
+    } catch (error) {
+      console.log('❌ Admin orders failed:', error.response?.status, error.response?.data?.message);
+    }
+
   } catch (error) {
-    console.error('\n❌ Test failed:', error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      console.log('Note: Make sure you have a test user account or update the credentials');
-    }
+    console.error('❌ Test failed:', error.response?.data || error.message);
   }
 }
 
