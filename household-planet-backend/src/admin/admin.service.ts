@@ -1540,10 +1540,10 @@ export class AdminService {
     try {
       const { page = 1, limit = 20, search } = query;
       const skip = (page - 1) * limit;
-      const where = search ? {
+      const where: any = search ? {
         OR: [
-          { code: { contains: search, mode: 'insensitive' } },
-          { name: { contains: search, mode: 'insensitive' } },
+          { code: { contains: search, mode: 'insensitive' as any } },
+          { name: { contains: search, mode: 'insensitive' as any } },
         ]
       } : {};
 
