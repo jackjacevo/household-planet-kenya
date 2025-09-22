@@ -297,21 +297,25 @@ export class AdminController {
   }
 
   @Post('categories')
+  @UseGuards(AuthGuard('jwt'))
   createCategory(@Body() categoryData: any, @Req() req) {
     return this.adminService.createCategory(categoryData, req.user?.id);
   }
 
   @Put('categories/:id')
+  @UseGuards(AuthGuard('jwt'))
   updateCategory(@Param('id', ParseIntPipe) id: number, @Body() categoryData: any, @Req() req) {
     return this.adminService.updateCategory(id, categoryData, req.user?.id);
   }
 
   @Delete('categories/:id')
+  @UseGuards(AuthGuard('jwt'))
   deleteCategory(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.adminService.deleteCategory(id, req.user?.id);
   }
 
   @Post('categories/upload')
+  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FilesInterceptor('file', 1, {
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|bmp|tiff|svg|ico)$/)) {
