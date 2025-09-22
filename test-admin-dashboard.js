@@ -1,62 +1,53 @@
-#!/usr/bin/env node
-
 const axios = require('axios');
 
+const API_URL = 'https://api.householdplanetkenya.co.ke';
+
 async function testAdminDashboard() {
-  console.log('🔧 Testing Admin Dashboard Pages...\n');
+  console.log('📊 Testing Admin Dashboard API...');
   
-  const BASE_URL = 'https://householdplanetkenya.co.ke';
-  const adminPages = [
-    '/admin',
-    '/admin/login',
-    '/admin/dashboard',
-    '/admin/products',
-    '/admin/categories',
-    '/admin/orders',
-    '/admin/customers',
-    '/admin/delivery',
-    '/admin/settings',
-    '/admin/analytics',
-    '/admin/staff'
-  ];
+  try {
+    // Login
+    const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
+      email: 'admin@householdplanet.co.ke',
+      password: 'Admin@2025'
+    });
+    const token = loginResponse.data.accessToken;
+    console.log('✅ Login successful');
 
-  let passed = 0;
-  let total = adminPages.length;
-
-  for (const page of adminPages) {
+    // Test admin dashboard endpoint
+    console.log('\n📊 Testing /api/admin/dashboard...');
     try {
-      const response = await axios.get(`${BASE_URL}${page}`, { 
-        timeout: 10000,
-        validateStatus: (status) => status < 500 // Accept redirects and auth errors
+      const dashboardResponse = await axios.get(`${API_URL}/api/admin/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      if (response.status === 200) {
-        console.log(`✅ ${page}: ${response.status} (Accessible)`);
-        passed++;
-      } else if (response.status === 401 || response.status === 403) {
-        console.log(`🔒 ${page}: ${response.status} (Auth Required - Normal)`);
-        passed++;
-      } else if (response.status === 302 || response.status === 307) {
-        console.log(`↩️ ${page}: ${response.status} (Redirect - Normal)`);
-        passed++;
-      } else {
-        console.log(`⚠️ ${page}: ${response.status}`);
-      }
+      console.log('✅ Admin dashboard working:', Object.keys(dashboardResponse.data));
     } catch (error) {
-      console.log(`❌ ${page}: ${error.response?.status || error.message}`);
+      console.log('❌ Admin dashboard failed:', error.response?.status, error.response?.data?.message);
     }
-  }
 
-  console.log(`\n📊 Admin Dashboard Results:`);
-  console.log(`✅ Working: ${passed}/${total}`);
-  console.log(`📈 Success Rate: ${Math.round((passed/total)*100)}%`);
-  
-  if (passed >= total * 0.8) {
-    console.log('\n🎉 Admin Dashboard is operational!');
-    console.log(`🔗 Access: ${BASE_URL}/admin`);
-  } else {
-    console.log('\n⚠️ Admin Dashboard needs attention');
+    // Test alternative endpoints
+    console.log('\n🔍 Testing alternative endpoints...');
+    
+    const endpoints = [
+      '/api/dashboard',
+      '/api/admin/stats',
+      '/api/admin/analytics'
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await axios.get(`${API_URL}${endpoint}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log(`✅ ${endpoint} working`);
+      } catch (error) {
+        console.log(`❌ ${endpoint} failed:`, error.response?.status);
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Test failed:', error.response?.data || error.message);
   }
 }
 
-testAdminDashboard().catch(console.error);
+testAdminDashboard();

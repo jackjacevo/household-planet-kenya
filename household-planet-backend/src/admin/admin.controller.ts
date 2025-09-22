@@ -465,6 +465,19 @@ export class AdminController {
     return this.adminService.deleteBrand(id);
   }
 
+  // Additional admin endpoints for compatibility
+  @Get('stats')
+  @UseGuards(AuthGuard('jwt'))
+  getStats() {
+    return this.adminService.getDashboardStats();
+  }
+
+  @Get('analytics')
+  @UseGuards(AuthGuard('jwt'))
+  getAnalytics() {
+    return this.adminService.getDashboardStats();
+  }
+
   // Promo Codes Management
   @Get('promo-codes')
   @UseGuards(AuthGuard('jwt'))
