@@ -10,6 +10,8 @@ img, video, iframe {
 /* Remove any fixed widths globally */
 * {
   max-width: 100%;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* Fluid grid utilities */
@@ -618,6 +620,9 @@ body {
   overflow-x: hidden;
   /* Improve touch scrolling */
   -webkit-overflow-scrolling: touch;
+  /* Optimize scrolling performance */
+  scroll-behavior: smooth;
+  will-change: scroll-position;
 }
 
 /* Prevent zoom on double tap (iOS) */
@@ -731,32 +736,35 @@ section {
 
 /* Product card hover effects */
 .product-card {
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
+  will-change: transform;
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .product-card:hover .product-image-container img {
-  transform: scale(1.05);
+  transform: scale(1.02) translateZ(0);
 }
 
 /* Category card hover effects */
 .category-card {
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease;
+  will-change: transform;
 }
 
 .category-card:hover img {
-  transform: scale(1.05);
+  transform: scale(1.02) translateZ(0);
 }
 
 .category-card img {
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
+  will-change: transform;
 }
 
 .category-overlay {
@@ -781,12 +789,13 @@ section {
 
 /* Card hover effects */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
 }
 
 .card-hover:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* Image overlay effects */
@@ -1072,7 +1081,7 @@ section {
 
 /* Icon preloading and caching */
 .lucide {
-  will-change: transform;
+  will-change: auto;
   backface-visibility: hidden;
   transform: translateZ(0);
 }
