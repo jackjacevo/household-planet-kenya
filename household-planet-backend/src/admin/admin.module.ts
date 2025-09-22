@@ -8,6 +8,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ProductsModule } from '../products/products.module';
 import { CommonModule } from '../common/common.module';
 import { ActivityModule } from '../activity/activity.module';
+import { PromoCodesModule } from '../promo-codes/promo-codes.module';
 import { memoryStorage } from 'multer';
 
 @Module({
@@ -16,6 +17,7 @@ import { memoryStorage } from 'multer';
     ProductsModule,
     CommonModule,
     ActivityModule,
+    PromoCodesModule,
     MulterModule.register({
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 } // 10MB

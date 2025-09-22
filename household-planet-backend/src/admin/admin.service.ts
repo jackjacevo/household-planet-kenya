@@ -1417,11 +1417,32 @@ export class AdminService {
   }
 
   async updateCategory(id: number, data: any, userId: number) {
-    return { category: {} };
+    try {
+      const category = await this.prisma.category.update({
+        where: { id },
+        data: {
+          name: data.name,
+          slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          description: data.description,
+          image: data.image,
+          parentId: data.parentId,
+          isActive: data.isActive !== false,
+          sortOrder: data.sortOrder || 0
+        }
+      });
+      return { category };
+    } catch (error) {
+      throw new Error(`Failed to update category: ${error.message}`);
+    }
   }
 
   async deleteCategory(id: number, userId: number) {
-    return { message: 'Category deleted' };
+    try {
+      await this.prisma.category.delete({ where: { id } });
+      return { message: 'Category deleted successfully' };
+    } catch (error) {
+      throw new Error(`Failed to delete category: ${error.message}`);
+    }
   }
 
   async uploadCategoryImage(file: any) {
@@ -1511,6 +1532,130 @@ export class AdminService {
     } catch (error) {
       console.error('Error deleting brand:', error);
       throw new Error(`Failed to delete brand: ${error.message}`);
+    }
+  }
+
+  // Promo Codes methods
+  async getPromoCodes(query: any) {
+    try {
+      const { page = 1, limit = 20, search } = query;
+      const skip = (page - 1) * limit;
+      const where = search ? {
+        OR: [
+          { code: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+        ]
+      } : {};
+
+      const [promoCodes, total] = await Promise.all([
+        this.prisma.promoCode.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          orderBy: { createdAt: 'desc' },
+          include: {
+            _count: {
+              select: { usages: true }
+            }
+          }
+        }),
+        this.prisma.promoCode.count({ where })
+      ]);
+
+      return {
+        data: promoCodes,
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit)
+      };
+    } catch (error) {
+      console.error('Error fetching promo codes:', error);
+      return { data: [], total: 0, page: 1, limit: 20 };
+    }
+  }
+
+  async createPromoCode(data: any, userId: number) {
+    try {
+      const existing = await this.prisma.promoCode.findUnique({
+        where: { code: data.code.toUpperCase() }
+      });
+      
+      if (existing) {
+        throw new Error('Promo code already exists');
+      }
+
+      const promoCode = await this.prisma.promoCode.create({
+        data: {
+          code: data.code.toUpperCase(),
+          name: data.name || data.description,
+          description: data.description,
+          discountType: data.type || data.discountType,
+          discountValue: parseFloat(data.value || data.discountValue),
+          minOrderAmount: data.minimumAmount ? parseFloat(data.minimumAmount) : null,
+          maxDiscount: data.maximumDiscount ? parseFloat(data.maximumDiscount) : null,
+          usageLimit: data.usageLimit ? parseInt(data.usageLimit) : null,
+          userUsageLimit: data.userUsageLimit ? parseInt(data.userUsageLimit) : null,
+          isActive: data.isActive !== false,
+          validFrom: new Date(),
+          validUntil: data.expiresAt ? new Date(data.expiresAt) : null,
+          usageCount: 0
+        }
+      });
+      
+      return { promoCode };
+    } catch (error) {
+      console.error('Error creating promo code:', error);
+      throw new Error(`Failed to create promo code: ${error.message}`);
+    }
+  }
+
+  async validatePromoCode(code: string, orderAmount: number, userId?: number) {
+    try {
+      const promoCode = await this.prisma.promoCode.findUnique({
+        where: { code: code.toUpperCase() }
+      });
+
+      if (!promoCode) {
+        throw new Error('Invalid promo code');
+      }
+
+      if (!promoCode.isActive) {
+        throw new Error('Promo code is not active');
+      }
+
+      const now = new Date();
+      if (promoCode.validUntil && promoCode.validUntil < now) {
+        throw new Error('Promo code has expired');
+      }
+
+      if (promoCode.minOrderAmount && orderAmount < promoCode.minOrderAmount) {
+        throw new Error(`Minimum order amount of KES ${promoCode.minOrderAmount} required`);
+      }
+
+      if (promoCode.usageLimit && promoCode.usageCount >= promoCode.usageLimit) {
+        throw new Error('Promo code usage limit reached');
+      }
+
+      let discountAmount = 0;
+      if (promoCode.discountType === 'PERCENTAGE') {
+        discountAmount = (orderAmount * promoCode.discountValue) / 100;
+        if (promoCode.maxDiscount && discountAmount > promoCode.maxDiscount) {
+          discountAmount = promoCode.maxDiscount;
+        }
+      } else {
+        discountAmount = Math.min(promoCode.discountValue, orderAmount);
+      }
+
+      return {
+        valid: true,
+        code: promoCode.code,
+        discountAmount,
+        finalAmount: orderAmount - discountAmount,
+        discountType: promoCode.discountType,
+        discountValue: promoCode.discountValue
+      };
+    } catch (error) {
+      throw new Error(error.message);
     }
   }
 }

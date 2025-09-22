@@ -14,7 +14,7 @@ async function testNewCategoryUpload() {
       email: 'admin@householdplanet.co.ke',
       password: 'Admin@2025'
     });
-    const token = loginResponse.data.access_token;
+    const token = loginResponse.data.accessToken;
     console.log('✅ Admin login successful');
 
     // Create a minimal test PNG image (1x1 pixel)

@@ -464,4 +464,22 @@ export class AdminController {
   deleteBrand(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.deleteBrand(id);
   }
+
+  // Promo Codes Management
+  @Get('promo-codes')
+  @UseGuards(AuthGuard('jwt'))
+  getPromoCodes(@Query() query: any) {
+    return this.adminService.getPromoCodes(query);
+  }
+
+  @Post('promo-codes')
+  @UseGuards(AuthGuard('jwt'))
+  createPromoCode(@Body() promoCodeData: any, @Req() req) {
+    return this.adminService.createPromoCode(promoCodeData, req.user?.id);
+  }
+
+  @Post('promo-codes/validate')
+  validatePromoCode(@Body() data: { code: string; orderAmount: number }, @Req() req) {
+    return this.adminService.validatePromoCode(data.code, data.orderAmount, req.user?.id);
+  }
 }
