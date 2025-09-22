@@ -71,7 +71,9 @@ export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [categoryLoading, setCategoryLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -85,7 +87,22 @@ export default function CategoryPage() {
     sortBy: 'newest',
   });
 
-  const categoryInfo = categoryDescriptions[slug as keyof typeof categoryDescriptions];
+  const categoryInfo = categoryDescriptions[slug as keyof typeof categoryDescriptions] || {
+    title: category?.name || 'Category',
+    description: category?.description || 'Browse our collection of quality products.',
+    features: [
+      'Quality products at great prices',
+      'Fast and reliable delivery',
+      'Excellent customer service',
+      'Secure payment options'
+    ],
+    seoKeywords: [
+      'household items Kenya',
+      'quality products',
+      'online shopping Kenya',
+      'home essentials'
+    ]
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -97,8 +114,23 @@ export default function CategoryPage() {
   }, []);
 
   useEffect(() => {
+    fetchCategory();
     fetchProducts();
   }, [slug, currentPage, filters]);
+
+  const fetchCategory = async () => {
+    try {
+      setCategoryLoading(true);
+      const response = await api.getCategories();
+      const categories = response.categories || response.data || response || [];
+      const foundCategory = categories.find((cat: any) => cat.slug === slug);
+      setCategory(foundCategory);
+    } catch (error) {
+      console.error('Error fetching category:', error);
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -126,12 +158,12 @@ export default function CategoryPage() {
     setCurrentPage(1);
   };
 
-  if (!categoryInfo) {
+  if (categoryLoading) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Category not found</h1>
-          <p>The category you're looking for doesn't exist.</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading category...</p>
         </div>
       </div>
     );
@@ -164,8 +196,8 @@ export default function CategoryPage() {
   return (
     <>
       <SEOHead
-        title={`${categoryInfo.title} - Quality Products in Kenya`}
-        description={categoryInfo.description}
+        title={`${category?.name || categoryInfo.title} - Quality Products in Kenya`}
+        description={category?.description || categoryInfo.description}
         keywords={categoryInfo.seoKeywords}
         url={`/categories/${slug}`}
         type="website"
@@ -179,7 +211,7 @@ export default function CategoryPage() {
             <Breadcrumbs
               items={[
                 { name: 'Categories', url: '/categories' },
-                { name: categoryInfo.title, url: `/categories/${slug}` }
+                { name: category?.name || categoryInfo.title, url: `/categories/${slug}` }
               ]}
             />
           </div>
@@ -201,7 +233,7 @@ export default function CategoryPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                {categoryInfo.title}
+                {category?.name || categoryInfo.title}
               </motion.h1>
               <motion.p 
                 className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6"
@@ -209,7 +241,7 @@ export default function CategoryPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
               >
-                {categoryInfo.description}
+                {category?.description || categoryInfo.description}
               </motion.p>
             </motion.div>
 
@@ -333,11 +365,29 @@ export default function CategoryPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                       >
-                        <div className="bg-gradient-to-r from-gray-400 to-gray-600 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                        <div className="bg-gradient-to-r from-orange-400 to-amber-600 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                           <Package className="h-10 w-10 text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">No Products Found</h3>
-                        <p className="text-gray-600 mb-6">Try adjusting your filters or check back later</p>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          No Products in {category?.name || 'This Category'} Yet
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          We're working on adding products to this category. Check back soon or browse our other categories!
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                          <button
+                            onClick={() => window.location.href = '/products'}
+                            className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+                          >
+                            Browse All Products
+                          </button>
+                          <button
+                            onClick={() => window.location.href = '/categories'}
+                            className="px-6 py-3 border border-orange-600 text-orange-600 rounded-xl hover:bg-orange-50 transition-all duration-300"
+                          >
+                            View All Categories
+                          </button>
+                        </div>
                       </motion.div>
                     ) : (
                       <motion.div 
