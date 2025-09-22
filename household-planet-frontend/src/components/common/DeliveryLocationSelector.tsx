@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDownIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useDeliveryLocations } from '@/hooks/useDeliveryLocations';
+import { MobileDeliverySelector } from './MobileDeliverySelector';
 
 interface DeliveryLocationSelectorProps {
   value?: string;
@@ -29,6 +30,17 @@ export function DeliveryLocationSelector({
   const { locations, loading, reload } = useDeliveryLocations();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Listen for location updates and force refresh
   useEffect(() => {
@@ -59,6 +71,28 @@ export function DeliveryLocationSelector({
     setSearchTerm('');
   };
 
+  const handleMobileLocationChange = (locationId: string) => {
+    const location = locations.find(loc => loc.id === locationId);
+    if (location) {
+      onChange(location.name, location.price);
+    }
+  };
+
+  // Use mobile selector on small screens
+  if (isMobile) {
+    const selectedLocationId = locations.find(loc => loc.name === value)?.id || '';
+    return (
+      <div className={className}>
+        <MobileDeliverySelector
+          locations={locations}
+          selectedLocation={selectedLocationId}
+          onLocationChange={handleMobileLocationChange}
+          loading={loading}
+        />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className={`relative ${className}`}>
@@ -71,6 +105,8 @@ export function DeliveryLocationSelector({
       </div>
     );
   }
+
+  // Desktop version continues below
 
   return (
     <div className={`relative ${className}`}>
@@ -107,7 +143,7 @@ export function DeliveryLocationSelector({
               placeholder="Search locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
             />
           </div>
           <div className="max-h-48 overflow-y-auto">

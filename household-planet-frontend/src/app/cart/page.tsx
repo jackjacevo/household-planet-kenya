@@ -11,6 +11,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils';
 import { getImageUrl } from '@/lib/imageUtils';
+import { MobileDeliverySelector } from '@/components/common/MobileDeliverySelector';
 
 
 export default function CartPage() {
@@ -405,53 +406,26 @@ export default function CartPage() {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-3 text-gray-700">📍 Select Delivery Location *</label>
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => handleLocationChange(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
-                  disabled={deliveryLocations.length === 0}
-                >
-                  <option value="">
-                    {deliveryLocations.length === 0 ? 'Loading locations...' : 'Choose your delivery location'}
-                  </option>
-                  {deliveryLocations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name} - {formatPrice(location.price)}
-                      {location.estimatedDays && ` (${location.estimatedDays} days)`}
-                    </option>
-                  ))}
-                </select>
-                {deliveryLocations.length === 0 && (
-                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
-                    ⚠️ Loading delivery locations... If this persists, please refresh the page or contact support.
-                    {locationsError && (
-                      <div className="mt-1 text-red-600">
-                        Error: {locationsError}
-                      </div>
-                    )}
+                <MobileDeliverySelector
+                  locations={deliveryLocations}
+                  selectedLocation={selectedLocation}
+                  onLocationChange={handleLocationChange}
+                  loading={locationsLoading}
+                />
+                {deliveryLocations.length === 0 && locationsError && (
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    ❌ Error loading locations: {locationsError}
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="ml-2 text-red-800 underline hover:no-underline"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
                 {deliveryLocations.length > 0 && (
-                  <div className="mt-1 text-xs text-green-600">
-                    ✅ {deliveryLocations.length} locations loaded
-                  </div>
-                )}
-                {selectedLocation && (
-                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    {(() => {
-                      const location = deliveryLocations.find(loc => loc.id === selectedLocation);
-                      return location ? (
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center text-blue-700">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Estimated: {location.estimatedDays} day{location.estimatedDays > 1 ? 's' : ''}
-                          </div>
-                          <div className="text-blue-800 font-semibold">
-                            {formatPrice(location.price)}
-                          </div>
-                        </div>
-                      ) : null;
-                    })()} 
+                  <div className="mt-2 text-xs text-green-600 flex items-center">
+                    ✅ {deliveryLocations.length} locations available
                   </div>
                 )}
               </div>
