@@ -1,2 +1,4 @@
-Force deployment timestamp: 2024-12-19 15:45:00
-TypeScript fix confirmed in admin brands page line 64
+FORCE_DEPLOY=true
+TIMESTAMP=2025-09-22T19:32:00Z
+REASON=Fix missing authentication guards on admin analytics endpoints
+COMMIT=3ab28d4

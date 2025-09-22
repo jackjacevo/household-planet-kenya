@@ -1,3 +1,4 @@
-Deployment trigger: TypeScript fix for admin brands page
-Timestamp: 2024-12-19 14:30:00
-Fix: Properly handle unknown error type in catch block
+Deployment trigger: Fix missing authentication guards on admin analytics endpoints
+Timestamp: 2025-09-22 19:32:00
+Fix: Added @Roles and @UseGuards decorators to analytics/revenue and other admin endpoints
+Resolves: 404 error on /admin/analytics/revenue endpoint
