@@ -103,7 +103,7 @@ export function SimpleLineChart() {
 
   const data = salesData || [];
   const chartData = {
-    labels: data.map((item) => {
+    labels: data.map((item: SalesData) => {
       if (item.period === 'No Data') return item.period;
       if (item.period.includes('-')) {
         const [year, month] = item.period.split('-');
@@ -117,7 +117,7 @@ export function SimpleLineChart() {
     datasets: [
       {
         label: 'Revenue (KSh)',
-        data: data.map((item) => Number(item.revenue) || 0),
+        data: data.map((item: SalesData) => Number(item.revenue) || 0),
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         tension: 0.4,
@@ -217,10 +217,10 @@ export function SimplePieChart() {
 
   const data = categoryData || [];
   const chartData = {
-    labels: data.map((item) => item.category),
+    labels: data.map((item: CategoryData) => item.category),
     datasets: [
       {
-        data: data.map((item) => Number(item.sales) || 0),
+        data: data.map((item: CategoryData) => Number(item.sales) || 0),
         backgroundColor: [
           '#FF6B6B',
           '#4ECDC4',
@@ -320,7 +320,7 @@ export function SimpleBarChart() {
 
   const data = salesData || [];
   const chartData = {
-    labels: data.map((item) => {
+    labels: data.map((item: SalesData) => {
       if (item.period === 'No Data') return item.period;
       if (item.period.includes('-')) {
         const [year, month] = item.period.split('-');
@@ -334,7 +334,7 @@ export function SimpleBarChart() {
     datasets: [
       {
         label: 'Orders',
-        data: data.map((item) => Number(item.orders) || 0),
+        data: data.map((item: SalesData) => Number(item.orders) || 0),
         backgroundColor: '#10B981',
         borderRadius: 8,
         borderSkipped: false,
@@ -450,11 +450,11 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
   const dataToUse = growthData?.length ? growthData : (customerGrowth?.length ? customerGrowth : [{ month: 'No Data', customers: 0 }]);
   
   const chartData = {
-    labels: dataToUse.map(item => item.month),
+    labels: dataToUse.map((item: { month: string; customers: number }) => item.month),
     datasets: [
       {
         label: 'New Customers',
-        data: dataToUse.map(item => item.customers),
+        data: dataToUse.map((item: { month: string; customers: number }) => item.customers),
         borderColor: 'rgb(168, 85, 247)',
         backgroundColor: 'rgba(168, 85, 247, 0.1)',
         tension: 0.4,
