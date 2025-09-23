@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Search, Filter, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -190,7 +190,7 @@ export default function EnhancedSearch() {
               className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
             <div className="absolute left-2 top-2.5 bg-orange-500 rounded-full p-1.5 flex items-center justify-center">
-              <MagnifyingGlassIcon className="h-5 w-5 text-white" />
+              <Search className="h-5 w-5 text-white" />
             </div>
           </div>
           
@@ -201,7 +201,7 @@ export default function EnhancedSearch() {
               hasActiveFilters ? 'text-green-600 bg-green-50' : 'text-gray-600'
             }`}
           >
-            <FunnelIcon className="h-5 w-5" />
+            <Filter className="h-5 w-5" />
           </button>
           
           <button
@@ -231,7 +231,7 @@ export default function EnhancedSearch() {
                 onClick={() => setShowFilters(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
           </div>
