@@ -1,4 +1,1 @@
-Deployment trigger: Comprehensive fix for admin controller guard conflicts
-Timestamp: 2025-09-22 19:35:00
-Fix: Removed global guard and added proper endpoint-level guards
-Resolves: Route registration issues causing 404 on analytics endpoints
+Force deployment trigger
