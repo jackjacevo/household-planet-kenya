@@ -11,7 +11,7 @@ const getApiUrl = () => {
   // In production, use the environment variable or fallback to production API
   if (process.env.NODE_ENV === 'production') {
     return {
-      BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
+      BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke/api',
       SITE_URL: PRODUCTION_SITE_URL,
       ENVIRONMENT: 'production'
     };
@@ -42,7 +42,7 @@ export const debugConfig = () => {
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
   if (API_CONFIG.BASE_URL.includes('localhost')) {
     console.error('❌ LOCALHOST DETECTED IN PRODUCTION!');
-  } else if (API_CONFIG.BASE_URL === 'https://api.householdplanetkenya.co.ke') {
+  } else if (API_CONFIG.BASE_URL === 'https://api.householdplanetkenya.co.ke/api') {
     console.log('✅ Production API URL configured correctly');
   }
 }
