@@ -4,6 +4,7 @@ import '../styles/mobile-optimizations.css'
 
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ToastProvider } from '@/contexts/ToastContext'
+import { AuthProvider } from '@/contexts/AuthContext'
 import { StructuredData } from '@/components/SEO/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
@@ -67,9 +68,11 @@ export default function RootLayout({
         <ErrorBoundary>
           <QueryProvider>
             <ToastProvider>
-              <ClientLayout>
-                {children}
-              </ClientLayout>
+              <AuthProvider>
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
+              </AuthProvider>
               <ToastContainer />
             </ToastProvider>
           </QueryProvider>
