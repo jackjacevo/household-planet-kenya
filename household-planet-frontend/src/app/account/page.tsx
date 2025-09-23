@@ -277,6 +277,5 @@ export default function AccountDashboard() {
         </div>
       </div>
     </div>
-    </div>
   );
 }
