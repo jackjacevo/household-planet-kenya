@@ -18,6 +18,32 @@ import { SessionConfig } from './config/session.config';
 import { join } from 'path';
 
 async function bootstrap() {
+  // Filter console output to hide base64 data
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
+  
+  const filterBase64 = (args: any[]) => {
+    return args.map(arg => {
+      if (typeof arg === 'string' && arg.includes('data:image/')) {
+        return arg.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+\/=]+/g, 'data:image/[BASE64_HIDDEN]');
+      }
+      return arg;
+    });
+  };
+  
+  console.log = (...args: any[]) => {
+    originalConsoleLog(...filterBase64(args));
+  };
+  
+  console.error = (...args: any[]) => {
+    originalConsoleError(...filterBase64(args));
+  };
+  
+  console.warn = (...args: any[]) => {
+    originalConsoleWarn(...filterBase64(args));
+  };
+  
   // Initialize database
   const logger = new Logger('Bootstrap');
   logger.log('Initializing database...');

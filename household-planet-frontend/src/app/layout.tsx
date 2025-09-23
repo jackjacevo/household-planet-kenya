@@ -36,10 +36,34 @@ export default function RootLayout({
           __html: `
             (function() {
               const orig = console.log;
+              const origError = console.error;
+              const origWarn = console.warn;
+              
+              const filterBase64 = (args) => {
+                return args.map(arg => {
+                  if (typeof arg === 'string') {
+                    if (arg.includes('websocket') || arg.includes('connection disabled')) return null;
+                    if (arg.includes('data:image/')) {
+                      return arg.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+\/=]+/g, 'data:image/[BASE64_HIDDEN]');
+                    }
+                  }
+                  return arg;
+                }).filter(arg => arg !== null);
+              };
+              
               console.log = function(...args) {
-                const msg = String(args[0] || '').toLowerCase();
-                if (msg.includes('websocket') || msg.includes('connection disabled')) return;
-                orig.apply(console, args);
+                const filtered = filterBase64(args);
+                if (filtered.length > 0) orig.apply(console, filtered);
+              };
+              
+              console.error = function(...args) {
+                const filtered = filterBase64(args);
+                if (filtered.length > 0) origError.apply(console, filtered);
+              };
+              
+              console.warn = function(...args) {
+                const filtered = filterBase64(args);
+                if (filtered.length > 0) origWarn.apply(console, filtered);
               };
             })();
           `
