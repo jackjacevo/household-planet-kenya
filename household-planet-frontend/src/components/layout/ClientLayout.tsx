@@ -6,6 +6,7 @@ import { Header } from './Header'
 import { Footer } from './Footer'
 import { PersistentDataSync } from '@/components/ui/PersistentDataSync'
 import { socketService } from '@/lib/socket'
+import { setupAuthInterceptor } from '@/lib/auth-interceptor'
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -25,10 +26,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    // Setup auth interceptor for API calls
+    setupAuthInterceptor()
+
     // Initialize WebSocket connection for real-time updates (disabled for production)
     if (process.env.NODE_ENV === 'development') {
       socketService.connect()
-      
+
       return () => {
         socketService.disconnect()
       }

@@ -49,7 +49,7 @@ export function NewArrivals() {
     };
 
     fetchProducts();
-  }, [showToast]);
+  }, []); // Remove showToast dependency
 
   return (
     <section className="py-12 bg-white">

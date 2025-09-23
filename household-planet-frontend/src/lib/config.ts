@@ -1,18 +1,18 @@
 // Environment-based configuration
 const getApiUrl = () => {
   // Production URLs (matches your production env)
-  const PRODUCTION_API_URL = 'https://api.householdplanetkenya.co.ke';
+  const PRODUCTION_API_URL = '/api';  // Use relative path for Next.js rewrite
   const PRODUCTION_SITE_URL = 'https://householdplanetkenya.co.ke';
-  
+
   // Development URLs
-  const DEV_API_URL = 'http://localhost:3001';
+  const DEV_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   const DEV_SITE_URL = 'http://localhost:3000';
-  
-  // Use environment variable if available, otherwise use production URLs
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
+
+  // Use environment variable if available, otherwise use relative path for production
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : DEV_API_URL);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || PRODUCTION_SITE_URL;
-  
-  // Force production URLs in production environment
+
+  // Use relative API path in production to leverage Next.js rewrites
   if (process.env.NODE_ENV === 'production') {
     return {
       BASE_URL: PRODUCTION_API_URL,
@@ -20,17 +20,16 @@ const getApiUrl = () => {
       ENVIRONMENT: 'production'
     };
   }
-  
-  // Fallback for development when production APIs are not available
-  if (process.env.NODE_ENV === 'development' && apiUrl.includes('householdplanetkenya.co.ke')) {
-    console.warn('⚠️ Production API not available, using fallback');
+
+  // Development - check if we can reach localhost backend
+  if (process.env.NODE_ENV === 'development') {
     return {
-      BASE_URL: DEV_API_URL,
+      BASE_URL: apiUrl.startsWith('http') ? apiUrl : DEV_API_URL,
       SITE_URL: DEV_SITE_URL,
-      ENVIRONMENT: 'development-fallback'
+      ENVIRONMENT: 'development'
     };
   }
-  
+
   return {
     BASE_URL: apiUrl,
     SITE_URL: siteUrl,

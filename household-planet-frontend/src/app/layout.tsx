@@ -10,7 +10,6 @@ import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
 import IconPreloader from '@/components/ui/IconPreloader'
 import SmoothScrollProvider from '@/components/ui/SmoothScrollProvider'
-import { setupAuthInterceptor } from '@/lib/auth-interceptor'
 import ToastContainer from '@/components/ui/Toast'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 
@@ -59,7 +58,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{
           __html: `
             if (typeof window !== 'undefined') {
-              import('/lib/auth-interceptor').then(module => module.setupAuthInterceptor());
+              // Auth interceptor will be set up by the client components
             }
           `
         }} />
