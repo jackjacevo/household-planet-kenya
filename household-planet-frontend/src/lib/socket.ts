@@ -23,6 +23,10 @@ export class SocketManager {
   on(event: string, callback: (data: any) => void) {
     console.log('Socket listener added for:', event);
   }
+
+  off(event: string, callback: (data: any) => void) {
+    console.log('Socket listener removed for:', event);
+  }
 }
 
 export const socket = SocketManager.getInstance();
