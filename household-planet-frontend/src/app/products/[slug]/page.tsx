@@ -111,9 +111,8 @@ export default function ProductDetailPage() {
       
       // Show error message
       showToast({
-        variant: 'destructive',
-        title: 'Review Failed ❌',
-        description: (error as Error).message || 'Failed to submit review. Please try again.',
+        type: 'error',
+        message: 'Review Failed ❌ - ' + ((error as Error).message || 'Failed to submit review. Please try again.'),
       });
       
       throw error;
@@ -176,9 +175,8 @@ export default function ProductDetailPage() {
     const maxStock = selectedVariant?.stock || product.stock || 0;
     if (quantity > maxStock) {
       showToast({
-        variant: 'destructive',
-        title: 'Insufficient Stock ⚠️',
-        description: `Only ${maxStock} items available`,
+        type: 'warning',
+        message: `Insufficient Stock ⚠️ - Only ${maxStock} items available`,
       });
       return;
     }
@@ -194,15 +192,13 @@ export default function ProductDetailPage() {
     
     if (wasAdded) {
       showToast({
-        variant: 'cart',
-        title: 'Added to Cart! 🛒',
-        description: `${quantity}x ${product.name} • Ready for checkout`,
+        type: 'success',
+        message: `Added to Cart! 🛒 - ${quantity}x ${product.name} • Ready for checkout`,
       });
     } else {
       showToast({
-        variant: 'info',
-        title: 'Already in Cart 📦',
-        description: `${product.name} • Check your cart`,
+        type: 'info',
+        message: `Already in Cart 📦 - ${product.name} • Check your cart`,
       });
     }
   };
@@ -211,23 +207,20 @@ export default function ProductDetailPage() {
     if (isInWishlist(product.id.toString())) {
       await removeFromWishlist(product.id.toString());
       showToast({
-        variant: 'wishlist',
-        title: 'Removed from Wishlist 💔',
-        description: `${product.name} • No longer saved`,
+        type: 'info',
+        message: `Removed from Wishlist 💔 - ${product.name} • No longer saved`,
       });
     } else {
       const added = await addToWishlist(product);
       if (added) {
         showToast({
-          variant: 'wishlist',
-          title: 'Added to Wishlist! ❤️',
-          description: `${product.name} • Saved for later`,
+          type: 'success',
+          message: `Added to Wishlist! ❤️ - ${product.name} • Saved for later`,
         });
       } else {
         showToast({
-          variant: 'info',
-          title: 'Already in Wishlist 💖',
-          description: `${product.name} • Already saved`,
+          type: 'info',
+          message: `Already in Wishlist 💖 - ${product.name} • Already saved`,
         });
       }
     }
