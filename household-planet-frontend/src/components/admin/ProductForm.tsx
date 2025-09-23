@@ -136,9 +136,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     
     if (validationErrors.length > 0) {
       showToast({
-        title: 'Invalid Files',
-        description: validationErrors.join(' '),
-        variant: 'destructive'
+        type: 'error',
+        message: `Invalid Files: ${validationErrors.join(' ')}`
       });
       e.target.value = ''; // Clear the input
       return;
@@ -171,17 +170,15 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       setImages(prev => [...prev, ...uploadedUrls]);
       
       showToast({
-        title: 'Success',
-        description: `${uploadedUrls.length} image(s) uploaded successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `${uploadedUrls.length} image(s) uploaded successfully`
       });
     } catch (error: any) {
       console.error('Image upload error:', error);
       const errorMessage = error.response?.data?.message || 'Failed to upload images';
       showToast({
-        title: 'Upload Failed',
-        description: errorMessage.includes('Only') ? errorMessage : 'Failed to upload images. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: errorMessage.includes('Only') ? errorMessage : 'Failed to upload images. Please try again.'
       });
     } finally {
       setUploading(false);
@@ -197,9 +194,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     const validationError = validateFile(file);
     if (validationError) {
       showToast({
-        title: 'Invalid File',
-        description: validationError,
-        variant: 'destructive'
+        type: 'error',
+        message: `Invalid File: ${validationError}`
       });
       e.target.value = ''; // Clear the input
       return;
@@ -231,17 +227,15 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       });
       
       showToast({
-        title: 'Success',
-        description: `Image ${targetIndex + 1} uploaded successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `Image ${targetIndex + 1} uploaded successfully`
       });
     } catch (error: any) {
       console.error('Single image upload error:', error);
       const errorMessage = error.response?.data?.message || 'Failed to upload image';
       showToast({
-        title: 'Upload Failed',
-        description: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.'
       });
     } finally {
       setUploading(false);
@@ -260,27 +254,24 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const handleFormSubmit = async (data: any) => {
     if (!data.name?.trim()) {
       showToast({
-        title: 'Validation Error',
-        description: 'Product name is required',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Validation Error: Product name is required'
       });
       return;
     }
 
     if (!data.categoryId) {
       showToast({
-        title: 'Validation Error',
-        description: 'Category is required',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Validation Error: Category is required'
       });
       return;
     }
 
     if (!data.price || data.price <= 0) {
       showToast({
-        title: 'Validation Error',
-        description: 'Valid price is required',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Validation Error: Valid price is required'
       });
       return;
     }
@@ -288,9 +279,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     const validImages = images.filter(img => img);
     if (validImages.length === 0) {
       showToast({
-        title: 'Validation Error',
-        description: 'At least one product image is required',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Validation Error: At least one product image is required'
       });
       return;
     }
