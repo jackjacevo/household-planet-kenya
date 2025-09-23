@@ -224,6 +224,15 @@ const config: Config = {
         '90': '90',
         '100': '100',
       },
+      scrollBehavior: {
+        'smooth': 'smooth',
+        'auto': 'auto',
+      },
+      scrollPadding: {
+        '16': '4rem',
+        '20': '5rem',
+        '24': '6rem',
+      },
     },
   },
   plugins: [

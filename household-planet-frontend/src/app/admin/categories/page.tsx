@@ -89,15 +89,44 @@ export default function AdminCategoriesPage() {
     }));
   };
 
+  const validateCategoryFile = (file: File): string | null => {
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
+      'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml', 'image/x-icon'
+    ];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!allowedTypes.includes(file.type)) {
+      return `"${file.name}" is not supported. Allowed formats: JPG, PNG, WebP, GIF, BMP, TIFF, SVG, ICO.`;
+    }
+    
+    if (file.size > maxSize) {
+      return `"${file.name}" is too large. Maximum file size is 5MB.`;
+    }
+    
+    return null;
+  };
+
   const handleImageUpload = async (file: File) => {
+    // Validate file before upload
+    const validationError = validateCategoryFile(file);
+    if (validationError) {
+      showToast({
+        title: 'Invalid File',
+        description: validationError,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setUploadingImage(true);
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('image', file);
       
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload-image`,
         formData,
         {
           headers: {
@@ -115,9 +144,10 @@ export default function AdminCategoriesPage() {
         variant: 'success'
       });
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Failed to upload image';
       showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to upload image',
+        title: 'Upload Failed',
+        description: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -247,15 +277,32 @@ export default function AdminCategoriesPage() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4" 
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+            zIndex: 9999 
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) resetForm();
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" 
+            style={{ zIndex: 10000 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900">
                 {editingCategory ? 'Edit Category' : 'Add Category'}
               </h3>
-              <Button variant="outline" size="sm" onClick={resetForm}>
-                <X className="h-4 w-4" />
-              </Button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="h-4 w-4 text-gray-500" />
+              </button>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -293,14 +340,20 @@ export default function AdminCategoriesPage() {
                   <div className="space-y-3">
                     <input
                       type="file"
-                      accept="image/*,.bmp,.tiff,.tif,.svg,.ico,.avif,.heic,.heif"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/svg+xml,image/x-icon"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleImageUpload(file);
+                        if (file) {
+                          handleImageUpload(file);
+                          e.target.value = ''; // Clear input after processing
+                        }
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       disabled={loading || uploadingImage}
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Supported: JPG, PNG, WebP, GIF, BMP, TIFF, SVG, ICO • Max size: 5MB
+                    </p>
                     
                     {uploadingImage && (
                       <div className="flex items-center text-sm text-gray-600">
@@ -312,7 +365,11 @@ export default function AdminCategoriesPage() {
                     {formData.image && (
                       <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                         <img 
-                          src={formData.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${formData.image}` : formData.image} 
+                          src={(() => {
+                            if (formData.image.startsWith('http')) return formData.image;
+                            if (formData.image.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${formData.image}`;
+                            return `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/image/${formData.image}`;
+                          })()} 
                           alt="Category preview" 
                           className="h-16 w-16 object-cover rounded-lg border border-gray-200" 
                         />
@@ -392,7 +449,11 @@ export default function AdminCategoriesPage() {
                     <div className="flex items-center space-x-4">
                       {parentCategory.image ? (
                         <img 
-                          src={parentCategory.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${parentCategory.image}` : parentCategory.image} 
+                          src={(() => {
+                            if (parentCategory.image.startsWith('http')) return parentCategory.image;
+                            if (parentCategory.image.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${parentCategory.image}`;
+                            return `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/image/${parentCategory.image}`;
+                          })()} 
                           alt={parentCategory.name}
                           className="h-12 w-12 object-cover rounded-lg border-2 border-blue-200 shadow-sm"
                         />
@@ -455,7 +516,11 @@ export default function AdminCategoriesPage() {
                         <div key={subcategory.id} className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-lg px-3 py-2 border border-gray-200 group transition-colors">
                           {subcategory.image ? (
                             <img 
-                              src={subcategory.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${subcategory.image}` : subcategory.image} 
+                              src={(() => {
+                                if (subcategory.image.startsWith('http')) return subcategory.image;
+                                if (subcategory.image.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${subcategory.image}`;
+                                return `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/image/${subcategory.image}`;
+                              })()} 
                               alt={subcategory.name}
                               className="h-5 w-5 object-cover rounded mr-2"
                             />

@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4">
+      <div className="w-full px-2 sm:px-4 lg:max-w-4xl lg:mx-auto">
         <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="flex items-center space-x-4 mb-4 sm:mb-0">

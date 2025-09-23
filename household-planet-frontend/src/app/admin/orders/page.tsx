@@ -298,10 +298,14 @@ export default function AdminOrdersPage() {
   };
 
   const handleBulkDelete = async () => {
+    console.log('Bulk delete started', { selectedOrders, orders: orders.length });
+    
     // Filter orders that can be deleted (only PENDING and CANCELLED)
     const deletableOrders = orders.filter(order => 
       selectedOrders.includes(order.id) && ['PENDING', 'CANCELLED'].includes(order.status)
     );
+    
+    console.log('Deletable orders:', deletableOrders.map(o => ({ id: o.id, status: o.status })));
     
     const nonDeletableCount = selectedOrders.length - deletableOrders.length;
     
@@ -326,6 +330,8 @@ export default function AdminOrdersPage() {
     setBulkDeleting(true);
     
     try {
+      console.log('Making API request to delete orders:', deletableOrders.map(o => o.id));
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/delete`, {
         method: 'POST',
         headers: {
@@ -335,11 +341,17 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({ orderIds: deletableOrders.map(order => order.id) }),
       });
       
+      console.log('API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
       
       const result = await response.json();
+      console.log('Bulk delete result:', result);
+      
       setOrders(prev => prev.filter(o => !selectedOrders.includes(o.id)));
       setSelectedOrders([]);
       setShowBulkDeleteDialog(false);
@@ -354,7 +366,7 @@ export default function AdminOrdersPage() {
       console.error('Error deleting orders:', error);
       showToast({
         title: 'Error',
-        description: 'Failed to delete orders. Please try again.',
+        description: `Failed to delete orders: ${error.message}`,
         variant: 'destructive'
       });
     } finally {
@@ -1942,42 +1954,24 @@ export default function AdminOrdersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-1">
-                            <div className="flex gap-1">
+                          <div className="flex flex-col gap-2 min-w-[120px]">
+                            <div className="flex flex-wrap gap-1">
                               {order.id && (
                                 <Link href={`/admin/orders/${order.id}`}>
-                                  <Button variant="outline" size="sm" title="View Order Details" className="p-2">
-                                    <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <Button variant="outline" size="sm" title="View Order Details" className="h-8 w-8 p-0">
+                                    <Eye className="h-4 w-4" />
                                   </Button>
                                 </Link>
                               )}
-
-                              {/* STK Push temporarily disabled */}
-                              {/* {order.status === 'CONFIRMED' && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: (order as any).user?.phone || '' })}
-                                  disabled={actionLoading[`stk-${order.id}`]}
-                                  title="Send M-Pesa STK Push"
-                                  className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 p-2"
-                                >
-                                  {actionLoading[`stk-${order.id}`] ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-green-600"></div>
-                                  ) : (
-                                    <Smartphone className="h-3 w-3 sm:h-4 sm:w-4" />
-                                  )}
-                                </Button>
-                              )} */}
                               {order.id && order.status === 'DELIVERED' && (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => viewReceipt(order.id)}
                                   title="View Receipt"
-                                  className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 p-2"
+                                  className="h-8 w-8 p-0 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                                 >
-                                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <FileText className="h-4 w-4" />
                                 </Button>
                               )}
                               {['PENDING', 'CANCELLED'].includes(order.status) && (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') && (
@@ -1987,12 +1981,12 @@ export default function AdminOrdersPage() {
                                   onClick={() => confirmDeleteOrder(order.id)}
                                   disabled={actionLoading[`delete-${order.id}`]}
                                   title="Delete Order"
-                                  className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 p-2"
+                                  className="h-8 w-8 p-0 bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
                                 >
                                   {actionLoading[`delete-${order.id}`] ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-red-600"></div>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
                                   ) : (
-                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <Trash2 className="h-4 w-4" />
                                   )}
                                 </Button>
                               )}
@@ -2003,10 +1997,10 @@ export default function AdminOrdersPage() {
                                 updateOrderStatus(order.id, status);
                               }}
                             >
-                              <SelectTrigger className="w-full sm:w-32 text-xs">
+                              <SelectTrigger className="w-full h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="z-50">
                                 <SelectItem value="PENDING">Pending</SelectItem>
                                 <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                                 <SelectItem value="PROCESSING">Processing</SelectItem>
@@ -2088,7 +2082,7 @@ export default function AdminOrdersPage() {
 
 
       <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />

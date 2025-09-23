@@ -37,7 +37,7 @@ export default function AccountLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <div className="w-full px-2 sm:px-4 lg:max-w-7xl lg:mx-auto py-4 sm:py-8">
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-8">
           <div className="lg:hidden">
             <button

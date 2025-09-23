@@ -273,42 +273,33 @@ export default function OrderConfirmationPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const headers: any = {};
+      const headers: any = { 'Content-Type': 'application/json' };
       
-      // Add auth header if token exists and is valid
       if (token && token !== 'null' && token !== 'undefined') {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      console.log('Downloading receipt for order:', order.id);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${order.id}/invoice`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${order.id}/receipt`, {
+        method: 'GET',
         headers
       });
       
-      console.log('Receipt API response status:', response.status);
-      
       if (response.ok) {
         const blob = await response.blob();
-        console.log('Receipt blob size:', blob.size);
-        
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `receipt-${order.orderNumber}.pdf`;
+        a.download = `receipt-${order.orderNumber || order.id}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
-        console.log('Receipt downloaded successfully');
       } else {
-        const errorText = await response.text();
-        console.error('Receipt API error:', response.status, errorText);
-        alert('Unable to download receipt. Please try again later.');
+        window.print();
       }
     } catch (error) {
       console.error('Error downloading receipt:', error);
-      alert('Unable to download receipt. Please try again later.');
+      window.print();
     }
   };
 
@@ -485,7 +476,7 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 -mt-4">
+      <div className="w-full px-2 sm:px-4 lg:max-w-7xl lg:mx-auto py-4 sm:py-8 -mt-4">
 
         {/* Quick Actions Bar */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-8 border border-green-100">
@@ -552,39 +543,28 @@ export default function OrderConfirmationPage() {
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     <p><span className="text-gray-600">Name:</span> 
                       <span className="font-medium">
-                        {orderCompletionData?.customerInfo?.name || 
-                         order.customerName || 
-                         order.shippingAddress?.fullName || 
-                         (order as any).user?.name || 
-                         (order as any).user?.fullName || 'Not provided'}
+                        {order.customerInfo?.name || order.customerName || order.shippingAddress?.fullName || (order as any).user?.name || 'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Phone:</span> 
                       <span className="font-medium">
-                        {(orderCompletionData?.customerInfo?.phone && orderCompletionData.customerInfo.phone !== 'Not provided') ? orderCompletionData.customerInfo.phone :
-                         (order.customerPhone && order.customerPhone !== 'Not provided') ? order.customerPhone :
-                         (order.shippingAddress?.phone && order.shippingAddress.phone !== 'Not provided') ? order.shippingAddress.phone :
-                         ((order as any).user?.phone && (order as any).user.phone !== 'Not provided') ? (order as any).user.phone : 'Not provided'}
+                        {order.customerInfo?.phone || order.customerPhone || order.shippingAddress?.phone || (order as any).user?.phone || 'Not provided'}
                       </span>
                     </p>
-                    {(orderCompletionData?.customerInfo?.email || order.customerEmail || (order as any).user?.email) && (
-                      <p><span className="text-gray-600">Email:</span> 
-                        <span className="font-medium">
-                          {orderCompletionData?.customerInfo?.email || order.customerEmail || (order as any).user?.email}
-                        </span>
-                      </p>
-                    )}
+                    <p><span className="text-gray-600">Email:</span> 
+                      <span className="font-medium">
+                        {order.customerInfo?.email || order.customerEmail || order.shippingAddress?.email || (order as any).user?.email || 'Not provided'}
+                      </span>
+                    </p>
                     <p><span className="text-gray-600">Location:</span> 
                       <span className="font-medium">
-                        {typeof order.deliveryLocation === 'string' 
-                          ? order.deliveryLocation 
-                          : order.deliveryLocation?.name || 'N/A'}
+                        {order.deliveryLocation?.name || order.deliveryLocation || 'Not provided'}
                       </span>
                     </p>
-                    {orderCompletionData?.deliveryInfo?.notes && (
+                    {order.deliveryInfo?.notes && (
                       <p><span className="text-gray-600">Notes:</span> 
                         <span className="font-medium text-xs">
-                          {orderCompletionData.deliveryInfo.notes}
+                          {order.deliveryInfo.notes}
                         </span>
                       </p>
                     )}
@@ -707,7 +687,7 @@ export default function OrderConfirmationPage() {
                           : order.deliveryLocation?.name || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Delivery Cost: <span className="font-medium text-orange-600">{formatPrice(order.deliveryPrice || order.shippingCost || 0)}</span>
+                        Delivery Cost: <span className="font-medium text-orange-600">{formatPrice(order.deliveryPrice || order.shippingCost || order.deliveryCost || 0)}</span>
                       </p>
                       {order.shippingAddress && (
                         <div className="text-sm text-gray-600">
@@ -830,7 +810,7 @@ export default function OrderConfirmationPage() {
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">Subtotal ({order.items?.length || 0})</span>
-                    <span className="font-medium">{formatPrice(order.subtotal)}</span>
+                    <span className="font-medium">{formatPrice(order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || order.subtotal || 0)}</span>
                   </div>
                   {(order as any).promoCode && (order as any).discountAmount && (order as any).discountAmount > 0 && (
                     <div className="flex justify-between text-sm bg-green-50 -mx-2 px-2 py-1 rounded">
@@ -840,16 +820,16 @@ export default function OrderConfirmationPage() {
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Delivery Cost</span>
-                    <span className="font-medium">{formatPrice(order.deliveryPrice || order.shippingCost || 0)}</span>
+                    <span className="font-medium">{formatPrice(order.deliveryPrice || order.shippingCost || order.deliveryCost || 0)}</span>
                   </div>
                   <div className="border-t border-green-200 pt-2 sm:pt-3">
                     <div className="flex justify-between">
                       <span className="text-sm sm:text-lg font-bold text-gray-800">Total</span>
                       <span className="text-lg sm:text-2xl font-bold text-green-600">
                         {formatPrice(
-                          order.subtotal - 
+                          (order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || order.subtotal || 0) - 
                           ((order as any).discountAmount || 0) + 
-                          (order.deliveryPrice || order.shippingCost || 0)
+                          (order.deliveryPrice || order.shippingCost || order.deliveryCost || 0)
                         )}
                       </span>
                     </div>

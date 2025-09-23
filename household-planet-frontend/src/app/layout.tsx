@@ -8,6 +8,7 @@ import { StructuredData } from '@/components/SEO/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
 import IconPreloader from '@/components/ui/IconPreloader'
+import SmoothScrollProvider from '@/components/ui/SmoothScrollProvider'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -26,7 +27,7 @@ export default function RootLayout({
   ]
 
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <head>
         <script dangerouslySetInnerHTML={{
           __html: `
@@ -50,8 +51,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/logo/hp_logo.jpeg" />
         <StructuredData data={globalStructuredData} />
       </head>
-      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.className} antialiased scroll-smooth`} suppressHydrationWarning>
         <IconPreloader />
+        <SmoothScrollProvider />
         <QueryProvider>
           <AuthProvider>
             <ToastProvider>

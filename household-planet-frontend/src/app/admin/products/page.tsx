@@ -22,6 +22,7 @@ export default function AdminProductsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [categories, setCategories] = useState<any[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   useEffect(() => {
     fetchProducts();
@@ -123,17 +124,30 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (productId: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
     
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        showToast({
+          title: 'Error',
+          description: 'Authentication required',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       console.log('🗑️ Deleting product:', productId);
-      const response = await axios.delete(
+      await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
       
-      console.log('✅ Product deleted:', response.data);
       showToast({
         title: 'Success',
         description: 'Product deleted successfully',
@@ -142,10 +156,55 @@ export default function AdminProductsPage() {
       
       fetchProducts();
     } catch (error: any) {
-      console.error('❌ Product deletion failed:', error.response?.data || error.message);
+      console.error('❌ Product deletion failed:', error);
       showToast({
         title: 'Error',
         description: error.response?.data?.message || 'Failed to delete product',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProducts.length === 0) return;
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedProducts.length} products? This action cannot be undone.`)) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showToast({
+          title: 'Error',
+          description: 'Authentication required',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/bulk-delete`,
+        { productIds: selectedProducts },
+        { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+      
+      showToast({
+        title: 'Success',
+        description: `${selectedProducts.length} products deleted successfully`,
+        variant: 'success'
+      });
+      
+      setSelectedProducts([]);
+      fetchProducts();
+    } catch (error: any) {
+      console.error('❌ Bulk deletion failed:', error);
+      showToast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to delete products',
         variant: 'destructive'
       });
     }
@@ -193,13 +252,24 @@ export default function AdminProductsPage() {
             Manage your product catalog ({products.length} {products.length === 1 ? 'product' : 'products'})
           </p>
         </div>
-        <Button 
-          onClick={() => setShowForm(true)} 
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
-        >
-          <Plus className="h-5 w-5" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          {selectedProducts.length > 0 && (
+            <Button 
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete ({selectedProducts.length})
+            </Button>
+          )}
+          <Button 
+            onClick={() => setShowForm(true)} 
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Plus className="h-5 w-5" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -342,6 +412,20 @@ export default function AdminProductsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProducts(filteredProducts.map(p => p.id));
+                        } else {
+                          setSelectedProducts([]);
+                        }
+                      }}
+                      className="rounded"
+                    />
+                  </TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
@@ -354,12 +438,39 @@ export default function AdminProductsPage() {
                 {filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedProducts.includes(product.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProducts(prev => [...prev, product.id]);
+                          } else {
+                            setSelectedProducts(prev => prev.filter(id => id !== product.id));
+                          }
+                        }}
+                        className="rounded"
+                      />
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center">
                         <div className="h-12 w-12 flex-shrink-0">
                           <img
                             className="h-12 w-12 rounded-lg object-cover border border-gray-200"
-                            src={product.images?.[0] || '/placeholder.jpg'}
+                            src={(() => {
+                              const images = product.images;
+                              if (Array.isArray(images) && images.length > 0) {
+                                const imageName = images[0];
+                                if (imageName.startsWith('http')) {
+                                  return imageName;
+                                }
+                                return `${process.env.NEXT_PUBLIC_API_URL}/admin/products/image/${imageName}`;
+                              }
+                              return '/images/products/placeholder.svg';
+                            })()}
                             alt={product.name}
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/products/placeholder.svg';
+                            }}
                           />
                         </div>
                         <div className="ml-4">
@@ -424,19 +535,27 @@ export default function AdminProductsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setEditingProduct(product);
                             setShowForm(true);
                           }}
-                          className="p-2"
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          title="Edit product"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="p-2 text-red-600 hover:text-red-800"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteProduct(product.id);
+                          }}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50"
+                          title="Delete product"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

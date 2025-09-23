@@ -17,12 +17,17 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div 
-        className="fixed inset-0 bg-black/50" 
-        onClick={() => onOpenChange?.(false)}
-      />
-      {children}
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ 
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+        zIndex: 9999 
+      }}
+      onClick={() => onOpenChange?.(false)}
+    >
+      <div onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
     </div>
   );
 };
@@ -33,9 +38,10 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       <div
         ref={ref}
         className={cn(
-          'relative z-50 w-full max-w-lg bg-background p-6 shadow-lg rounded-lg',
+          'relative w-full max-w-lg bg-white p-6 shadow-2xl rounded-lg border',
           className
         )}
+        style={{ zIndex: 10000 }}
         {...props}
       >
         {children}

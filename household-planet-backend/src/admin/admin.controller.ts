@@ -129,6 +129,15 @@ export class AdminController {
     return this.adminService.deleteProduct(id, req.user?.id, ipAddress, userAgent);
   }
 
+  @Post('products/bulk-delete')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  bulkDeleteProducts(@Body() body: { productIds: number[] }, @Req() req) {
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    return this.adminService.bulkDeleteProducts(body.productIds, req.user?.id, ipAddress, userAgent);
+  }
+
   @Post('products/bulk')
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @UseGuards(AuthGuard('jwt'), RolesGuard)

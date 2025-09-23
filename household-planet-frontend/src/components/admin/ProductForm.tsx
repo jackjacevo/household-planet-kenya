@@ -102,22 +102,62 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     }
   };
 
+  const validateFile = (file: File): string | null => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!allowedTypes.includes(file.type)) {
+      return `"${file.name}" is not supported. Only JPG, PNG, and WebP images are allowed.`;
+    }
+    
+    if (file.size > maxSize) {
+      return `"${file.name}" is too large. Maximum file size is 5MB.`;
+    }
+    
+    return null;
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    // Validate files before upload
+    const validationErrors: string[] = [];
+    const validFiles: File[] = [];
+    
+    Array.from(files).forEach(file => {
+      const error = validateFile(file);
+      if (error) {
+        validationErrors.push(error);
+      } else {
+        validFiles.push(file);
+      }
+    });
+    
+    if (validationErrors.length > 0) {
+      showToast({
+        title: 'Invalid Files',
+        description: validationErrors.join(' '),
+        variant: 'destructive'
+      });
+      e.target.value = ''; // Clear the input
+      return;
+    }
+    
+    if (validFiles.length === 0) return;
 
     setUploading(true);
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       
-      // Append all files to FormData for batch upload
-      Array.from(files).forEach(file => {
+      // Append valid files to FormData for batch upload
+      validFiles.forEach(file => {
         formData.append('images', file);
       });
         
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/upload/products`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/temp/images`,
         formData,
         {
           headers: {
@@ -137,13 +177,15 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       });
     } catch (error: any) {
       console.error('Image upload error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to upload images';
       showToast({
         title: 'Upload Failed',
-        description: error.response?.data?.message || 'Failed to upload images',
+        description: errorMessage.includes('Only') ? errorMessage : 'Failed to upload images. Please try again.',
         variant: 'destructive'
       });
     } finally {
       setUploading(false);
+      e.target.value = ''; // Clear the input
     }
   };
 
@@ -151,14 +193,26 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file before upload
+    const validationError = validateFile(file);
+    if (validationError) {
+      showToast({
+        title: 'Invalid File',
+        description: validationError,
+        variant: 'destructive'
+      });
+      e.target.value = ''; // Clear the input
+      return;
+    }
+
     setUploading(true);
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('images', file);
         
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/upload/product`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/temp/images`,
         formData,
         {
           headers: {
@@ -168,7 +222,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         }
       );
       
-      const uploadedUrl = response.data.url;
+      const uploadedUrls = response.data.images || [];
+      const uploadedUrl = uploadedUrls[0] || response.data.url;
       setImages(prev => {
         const newImages = [...prev];
         newImages[targetIndex] = uploadedUrl;
@@ -182,13 +237,15 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       });
     } catch (error: any) {
       console.error('Single image upload error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to upload image';
       showToast({
         title: 'Upload Failed',
-        description: error.response?.data?.message || 'Failed to upload image',
+        description: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.',
         variant: 'destructive'
       });
     } finally {
       setUploading(false);
+      e.target.value = ''; // Clear the input
     }
   };
 
@@ -537,7 +594,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
                       </div>
                       <input
                         type="file"
-                        accept="image/png,image/jpg,image/jpeg,image/webp,image/gif"
+                        accept="image/png,image/jpg,image/jpeg,image/webp"
                         onChange={(e) => handleSingleImageUpload(e, index)}
                         className="hidden"
                         disabled={uploading}
@@ -572,10 +629,11 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
                 <div className="flex-1">
                   <h4 className="text-sm font-medium text-gray-900 mb-1">Image Guidelines</h4>
                   <ul className="text-xs text-gray-600 space-y-1">
-                    <li>• Upload up to 5 high-quality images (PNG, JPG, JPEG, WebP)</li>
-                    <li>• Maximum file size: 5MB per image</li>
-                    <li>• First image will be the main product image on your store</li>
-                    <li>• Additional images will appear in the product gallery</li>
+                    <li>• <strong>Supported formats:</strong> JPG, PNG, WebP only</li>
+                    <li>• <strong>File size limit:</strong> Maximum 5MB per image</li>
+                    <li>• <strong>Image limit:</strong> Up to 5 images per product</li>
+                    <li>• <strong>Main image:</strong> First image becomes your product's main photo</li>
+                    <li>• <strong>Quality tip:</strong> Use high-resolution images for best results</li>
                   </ul>
                 </div>
               </div>

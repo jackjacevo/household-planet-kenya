@@ -92,7 +92,7 @@ export default function AccountDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 w-full">
-      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="w-full px-2 sm:px-4 lg:max-w-7xl lg:mx-auto py-4 sm:py-8">
         <div className="space-y-4 sm:space-y-8">
       <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
         <div className="flex items-center space-x-3 sm:space-x-4">

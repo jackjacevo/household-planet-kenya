@@ -136,8 +136,14 @@ export function FeaturedCategories() {
                             src={getImageUrl(category.image)} 
                             alt={category.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            onError={(e) => {
+                              console.log('Image failed to load:', category.image);
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
                           />
-                        ) : (
+                        ) : null}
+                        <div className={`w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center ${category.image ? 'hidden' : ''}`}>
                           <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
                             <div className="text-orange-600 text-center">
                               <div className="text-3xl sm:text-4xl mb-2">
@@ -146,7 +152,7 @@ export function FeaturedCategories() {
                               <span className="text-xs font-medium">{category.name}</span>
                             </div>
                           </div>
-                        )}
+                        </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
                         {/* Product count badge */}

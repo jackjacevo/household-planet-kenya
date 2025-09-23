@@ -46,8 +46,9 @@ export function getImageUrl(imagePath: string | null | undefined): string {
   }
 
   // Handle category images with proper endpoint
-  if (cleanPath.includes('category-') && cleanPath.includes('.jpeg')) {
-    return `${apiUrl}/uploads/categories/${cleanPath.split('/').pop()}`;
+  if (cleanPath.includes('category-') || cleanPath.includes('categories/')) {
+    const filename = cleanPath.split('/').pop();
+    return `${apiUrl}/uploads/categories/${filename}`;
   }
 
   // If it starts with /uploads/, prepend the API URL
