@@ -113,70 +113,49 @@ export function DeliveryLocationSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-orange-500"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <MapPinIcon className="h-4 w-4 text-gray-400 mr-2" />
+          <div className="flex items-center min-w-0">
+            <MapPinIcon className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
             {selectedLocation ? (
-              <div className="flex items-center">
-                <span className="text-gray-900">{selectedLocation.name}</span>
+              <div className="flex items-center space-x-2 min-w-0">
+                <span className="text-sm text-gray-900 truncate">{selectedLocation.name}</span>
                 {showPrice && (
-                  <span className={`ml-2 text-sm font-medium ${TIER_COLORS[selectedLocation.tier as keyof typeof TIER_COLORS]}`}>
+                  <span className="text-xs font-medium text-orange-600 flex-shrink-0">
                     Ksh {selectedLocation.price}
                   </span>
                 )}
               </div>
             ) : (
-              <span className="text-gray-500">{placeholder}</span>
+              <span className="text-sm text-gray-500">{placeholder}</span>
             )}
           </div>
-          <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDownIcon className={`h-4 w-4 text-gray-400 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b">
-            <input
-              type="text"
-              placeholder="Search locations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
-            />
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {filteredLocations.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-gray-500">No locations found</div>
-            ) : (
-              filteredLocations.map((location) => (
-                <button
-                  key={location.id}
-                  type="button"
-                  onClick={() => handleSelect(location)}
-                  className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{location.name}</div>
-                      {location.description && (
-                        <div className="text-xs text-gray-500">{location.description}</div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-sm font-medium ${TIER_COLORS[location.tier as keyof typeof TIER_COLORS]}`}>
-                        Ksh {location.price}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Tier {location.tier} • {location.estimatedDays}d
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+          {filteredLocations.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-gray-500">No locations found</div>
+          ) : (
+            filteredLocations.map((location) => (
+              <button
+                key={location.id}
+                type="button"
+                onClick={() => handleSelect(location)}
+                className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-900 truncate">{location.name}</span>
+                  <span className="text-xs font-medium text-orange-600 ml-2">
+                    Ksh {location.price}
+                  </span>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>

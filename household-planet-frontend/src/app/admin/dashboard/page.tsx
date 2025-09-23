@@ -96,9 +96,9 @@ export default function AdminDashboard() {
     };
     
     try {
-      console.log('🔍 Fetching dashboard data from:', `${apiUrl}/api/admin/dashboard`);
+      console.log('🔍 Fetching dashboard data from:', `${apiUrl}/api/admin/stats`);
       const response = await axios.get(
-        `${apiUrl}/api/admin/dashboard`,
+        `${apiUrl}/api/admin/stats`,
         { 
           headers: { 'Authorization': `Bearer ${token}` },
           timeout: 10000
@@ -485,7 +485,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {(stats.recentOrders || []).slice(0, 5).map((order: any) => (
+            {Array.isArray(stats.recentOrders) && stats.recentOrders.length > 0 ? stats.recentOrders.slice(0, 5).map((order: any) => (
               <div key={order.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -511,7 +511,11 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="px-4 py-8 text-center text-gray-500">
+                No recent orders
+              </div>
+            )}
           </div>
         </div>
 
@@ -525,15 +529,14 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {(stats.topProducts || []).map((product: any) => (
+            {Array.isArray(stats.topProducts) && stats.topProducts.length > 0 ? stats.topProducts.map((product: any) => (
               <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center">
                   <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <img
                       className="h-8 w-8 sm:h-10 sm:w-10 rounded object-cover"
-                      src={(product.images && product.images.length > 0 && product.images[0] && !product.images[0].includes('[')) ? product.images[0] : '/images/products/placeholder.svg'}
+                      src={'/images/products/placeholder.svg'}
                       alt={product.name}
-                      onError={(e) => { e.currentTarget.src = '/images/products/placeholder.svg'; }}
                     />
                   </div>
                   <div className="ml-3 sm:ml-4 flex-1 min-w-0">
@@ -547,7 +550,11 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="px-4 py-8 text-center text-gray-500">
+                No top products
+              </div>
+            )}
           </div>
         </div>
 
@@ -561,7 +568,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {stats.salesByCounty?.slice(0, 5).map((county: any, index: number) => (
+            {Array.isArray(stats.salesByCounty) && stats.salesByCounty.length > 0 ? stats.salesByCounty.slice(0, 5).map((county: any, index: number) => (
               <div key={county.county} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -587,7 +594,11 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="px-4 py-8 text-center text-gray-500">
+                No sales data
+              </div>
+            )}
           </div>
         </div>
       </div>

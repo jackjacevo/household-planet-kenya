@@ -24,19 +24,20 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
+      staggerChildren: 0.05,
+      delayChildren: 0.1
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6
+      duration: 0.3,
+      ease: "easeOut"
     }
   }
 };
@@ -62,31 +63,22 @@ export function FeaturedCategories() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await api.getCategories() as any;
-        console.log('Categories API response:', response);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
         
-        // Handle different response structures
-        let categoriesData = [];
-        if (Array.isArray(response)) {
-          categoriesData = response;
-        } else if (response && response.categories && Array.isArray(response.categories)) {
-          categoriesData = response.categories;
-        } else if (response && response.data && Array.isArray(response.data)) {
-          categoriesData = response.data;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        if (categoriesData.length > 0) {
-          const activeCategories = categoriesData
-            .filter((cat: Category) => cat.isActive)
+        const data = await response.json();
+        
+        if (data && Array.isArray(data)) {
+          const activeCategories = data
+            .filter((cat: Category) => cat.isActive && !cat.parentId)
             .slice(0, 6);
-          console.log('Active categories found:', activeCategories.length);
           setCategories(activeCategories);
-        } else {
-          console.log('No categories found in response');
-          setCategories([]);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Failed to fetch categories:', error);
         setCategories([]);
       } finally {
         setLoading(false);
@@ -136,11 +128,11 @@ export function FeaturedCategories() {
                 <motion.div
                   key={category.id}
                   variants={itemVariants}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ y: -2, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                 >
                   <Link 
-                    href={`/categories/${category.slug}`} 
+                    href={`/products?category=${category.slug}`} 
                     className="block bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-1 w-full"
                   >
                     <div className="relative">

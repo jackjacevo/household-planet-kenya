@@ -18,11 +18,11 @@ import { getHomepageLinks } from '@/lib/internal-links'
 
 
 const sectionVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 },
   visible: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.6 }
+    transition: { duration: 0.3, ease: "easeOut" }
   }
 };
 
@@ -84,7 +84,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-4 sm:py-8"
         >
@@ -95,7 +95,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-4 sm:py-8"
         >
@@ -106,7 +106,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-4 sm:py-8"
         >
@@ -117,7 +117,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-8"
         >
@@ -128,7 +128,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-8"
         >
@@ -139,7 +139,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-8"
         >
@@ -150,7 +150,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="py-8 sm:py-16 px-2 sm:px-4"
         >
@@ -166,7 +166,7 @@ export default function HomePage() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={sectionVariants}
           className="pb-16"
         >

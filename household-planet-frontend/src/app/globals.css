@@ -10,6 +10,8 @@ img, video, iframe {
 /* Remove any fixed widths globally */
 * {
   max-width: 100%;
+  will-change: auto;
+  backface-visibility: hidden;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
 }
@@ -736,35 +738,37 @@ section {
 
 /* Product card hover effects */
 .product-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 .product-card:hover {
-  transform: translateY(-2px) translateZ(0);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px) translateZ(0);
 }
 
 .product-card:hover .product-image-container img {
-  transform: scale(1.02) translateZ(0);
+  transform: scale(1.01) translateZ(0);
 }
 
 /* Category card hover effects */
 .category-card {
-  transition: transform 0.2s ease;
-  will-change: transform;
+  transition: transform 0.15s ease;
+  will-change: auto;
+  backface-visibility: hidden;
 }
 
 .category-card:hover img {
-  transform: scale(1.02) translateZ(0);
+  transform: scale(1.01) translateZ(0);
 }
 
 .category-card img {
-  transition: transform 0.2s ease;
-  will-change: transform;
+  transition: transform 0.15s ease;
+  will-change: auto;
+  backface-visibility: hidden;
 }
 
 .category-overlay {
