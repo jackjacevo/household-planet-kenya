@@ -1303,9 +1303,8 @@ export default function AdminOrdersPage() {
   const triggerSTKPush = async (orderId: number, phoneNumber: string) => {
     if (!phoneNumber.trim()) {
       showToast({
-        title: 'Phone Number Required',
-        description: 'Please enter a valid phone number to send M-Pesa payment prompt.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Phone Number Required: Please enter a valid phone number to send M-Pesa payment prompt.'
       });
       return;
     }
@@ -1330,9 +1329,8 @@ export default function AdminOrdersPage() {
       
       const data = await response.json();
       showToast({
-        title: '✅ STK Push Sent Successfully!',
-        description: `Payment prompt sent to ${phoneNumber}. Customer will receive M-Pesa prompt on their phone.`,
-        variant: 'success'
+        type: 'success',
+        message: `✅ STK Push Sent Successfully! Payment prompt sent to ${phoneNumber}. Customer will receive M-Pesa prompt on their phone.`
       });
       
       // Check payment status and view receipt if successful
@@ -1343,9 +1341,8 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error sending STK push:', error);
       showToast({
-        title: '❌ STK Push Failed',
-        description: `Failed to send payment prompt: ${(error as Error).message}`,
-        variant: 'destructive'
+        type: 'error',
+        message: `❌ STK Push Failed: Failed to send payment prompt: ${(error as Error).message}`
       });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));

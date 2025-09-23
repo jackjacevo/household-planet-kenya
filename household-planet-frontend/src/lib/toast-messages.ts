@@ -1,99 +1,82 @@
 export const toastMessages = {
   cart: {
     added: (productName: string, quantity: number = 1) => ({
-      variant: 'cart' as const,
-      title: 'Added to Cart! 🛒',
-      description: `${quantity > 1 ? `${quantity}x ` : ''}${productName} • Ready for checkout`,
+      type: 'success' as const,
+      message: `Added to Cart! 🛒 ${quantity > 1 ? `${quantity}x ` : ''}${productName} • Ready for checkout`,
     }),
     alreadyExists: (productName: string) => ({
-      variant: 'info' as const,
-      title: 'Already in Cart 📦',
-      description: `${productName} • Check your cart`,
+      type: 'info' as const,
+      message: `Already in Cart 📦 ${productName} • Check your cart`,
     }),
     removed: (productName: string) => ({
-      variant: 'destructive' as const,
-      title: 'Removed from Cart 🗑️',
-      description: `${productName} • Item removed`,
+      type: 'warning' as const,
+      message: `Removed from Cart 🗑️ ${productName} • Item removed`,
     }),
     updated: (productName: string, quantity: number) => ({
-      variant: 'info' as const,
-      title: 'Cart Updated 📝',
-      description: `${productName} • Quantity: ${quantity}`,
+      type: 'info' as const,
+      message: `Cart Updated 📝 ${productName} • Quantity: ${quantity}`,
     }),
   },
   wishlist: {
     added: (productName: string) => ({
-      variant: 'wishlist' as const,
-      title: 'Added to Wishlist! ❤️',
-      description: `${productName} • Saved for later`,
+      type: 'success' as const,
+      message: `Added to Wishlist! ❤️ ${productName} • Saved for later`,
     }),
     alreadyExists: (productName: string) => ({
-      variant: 'info' as const,
-      title: 'Already in Wishlist 💖',
-      description: `${productName} • Already saved`,
+      type: 'info' as const,
+      message: `Already in Wishlist 💖 ${productName} • Already saved`,
     }),
     removed: (productName: string) => ({
-      variant: 'wishlist' as const,
-      title: 'Removed from Wishlist 💔',
-      description: `${productName} • No longer saved`,
+      type: 'warning' as const,
+      message: `Removed from Wishlist 💔 ${productName} • No longer saved`,
     }),
   },
   order: {
     placed: (orderId: string) => ({
-      variant: 'success' as const,
-      title: 'Order Placed! 🎉',
-      description: `Order #${orderId} • We'll process it soon`,
+      type: 'success' as const,
+      message: `Order Placed! 🎉 Order #${orderId} • We'll process it soon`,
     }),
     cancelled: (orderId: string) => ({
-      variant: 'destructive' as const,
-      title: 'Order Cancelled ❌',
-      description: `Order #${orderId} • Successfully cancelled`,
+      type: 'error' as const,
+      message: `Order Cancelled ❌ Order #${orderId} • Successfully cancelled`,
     }),
   },
   auth: {
     loginSuccess: () => ({
-      variant: 'success' as const,
-      title: 'Welcome Back! 👋',
-      description: 'Successfully logged in',
+      type: 'success' as const,
+      message: 'Welcome Back! 👋 Successfully logged in',
     }),
     logoutSuccess: () => ({
-      variant: 'info' as const,
-      title: 'Logged Out 👋',
-      description: 'See you next time!',
+      type: 'info' as const,
+      message: 'Logged Out 👋 See you next time!',
     }),
     registerSuccess: () => ({
-      variant: 'success' as const,
-      title: 'Account Created! 🎉',
-      description: 'Welcome to Household Planet Kenya',
+      type: 'success' as const,
+      message: 'Account Created! 🎉 Welcome to Household Planet Kenya',
     }),
   },
   error: {
     generic: (message?: string) => ({
-      variant: 'destructive' as const,
-      title: 'Something went wrong ⚠️',
-      description: message || 'Please try again later',
+      type: 'error' as const,
+      message: `Something went wrong ⚠️ ${message || 'Please try again later'}`,
     }),
     network: () => ({
-      variant: 'destructive' as const,
-      title: 'Connection Error 📡',
-      description: 'Please check your internet connection',
+      type: 'error' as const,
+      message: 'Connection Error 📡 Please check your internet connection',
     }),
     outOfStock: (availableStock: number) => ({
-      variant: 'destructive' as const,
-      title: 'Insufficient Stock ⚠️',
-      description: `Only ${availableStock} items available`,
+      type: 'error' as const,
+      message: `Insufficient Stock ⚠️ Only ${availableStock} items available`,
     }),
   },
   success: {
     saved: (itemName?: string) => ({
-      variant: 'success' as const,
-      title: 'Saved Successfully! ✅',
-      description: itemName ? `${itemName} has been saved` : 'Changes saved',
+      type: 'success' as const,
+      message: `Saved Successfully! ✅ ${itemName ? `${itemName} has been saved` : 'Changes saved'}`,
     }),
     updated: (itemName?: string) => ({
-      variant: 'success' as const,
-      title: 'Updated Successfully! ✅',
-      description: itemName ? `${itemName} has been updated` : 'Changes updated',
+      type: 'success' as const,
+      message: `Updated Successfully! ✅ ${itemName ? `${itemName} has been updated` : 'Changes updated'}`,
     }),
   },
 };

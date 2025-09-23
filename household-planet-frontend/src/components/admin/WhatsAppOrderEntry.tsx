@@ -72,9 +72,8 @@ export default function WhatsAppOrderEntry() {
     try {
       await api.post('/api/orders/whatsapp', data);
       showToast({
-        title: 'Success',
-        description: 'WhatsApp order created successfully',
-        variant: 'success',
+        type: 'success',
+        message: 'WhatsApp order created successfully',
       });
       reset();
       setSelectedLocation('');
@@ -82,9 +81,8 @@ export default function WhatsAppOrderEntry() {
       setDeliveryType('');
     } catch (error) {
       showToast({
-        title: 'Error',
-        description: 'Failed to create WhatsApp order',
-        variant: 'destructive',
+        type: 'error',
+        message: 'Failed to create WhatsApp order',
       });
     } finally {
       setIsSubmitting(false);
