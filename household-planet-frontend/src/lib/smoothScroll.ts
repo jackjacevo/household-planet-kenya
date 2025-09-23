@@ -36,9 +36,9 @@ export const smoothScrollToElement = (element: HTMLElement, offset: number = 80)
 export const initializeSmoothScrolling = () => {
   // Add smooth scrolling to all anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
+    anchor.addEventListener('click', (e) => {
       e.preventDefault();
-      const href = this.getAttribute('href');
+      const href = (e.currentTarget as HTMLAnchorElement).getAttribute('href');
       if (href && href !== '#') {
         const targetId = href.substring(1);
         smoothScrollTo(targetId);
