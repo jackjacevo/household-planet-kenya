@@ -8,17 +8,35 @@ const getApiUrl = () => {
   const DEV_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   const DEV_SITE_URL = 'http://localhost:3000';
 
-  // In production, use the environment variable directly or fallback to production API
+  // In production, determine the best API URL
   if (process.env.NODE_ENV === 'production') {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
-    // Ensure we have the /api path
-    const baseUrl = apiUrl.includes('/api') ? apiUrl : `${apiUrl}/api`;
+    // If we have the environment variable, use it directly with /api
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL.includes('/api')
+        ? process.env.NEXT_PUBLIC_API_URL
+        : `${process.env.NEXT_PUBLIC_API_URL}/api`;
 
-    return {
-      BASE_URL: baseUrl,
-      SITE_URL: PRODUCTION_SITE_URL,
-      ENVIRONMENT: 'production'
-    };
+      // Debug logging
+      console.log('🔧 Config Debug:', {
+        NODE_ENV: process.env.NODE_ENV,
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+        baseUrl
+      });
+
+      return {
+        BASE_URL: baseUrl,
+        SITE_URL: PRODUCTION_SITE_URL,
+        ENVIRONMENT: 'production'
+      };
+    } else {
+      // Fallback to production API URL
+      console.log('🔧 Config Debug: Using fallback API URL:', PRODUCTION_API_URL);
+      return {
+        BASE_URL: PRODUCTION_API_URL,
+        SITE_URL: PRODUCTION_SITE_URL,
+        ENVIRONMENT: 'production'
+      };
+    }
   }
 
   // Development

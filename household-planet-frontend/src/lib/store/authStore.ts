@@ -40,9 +40,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const data = await api.login(email, password) as any;
           
-          if (data.access_token && data.user) {
-            const token = data.access_token;
-            const refreshToken = data.refresh_token;
+          if (data.accessToken && data.user) {
+            const token = data.accessToken;
+            const refreshToken = data.refreshToken;
             const user = data.user;
             
             // Store tokens and create session
