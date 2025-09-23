@@ -94,15 +94,15 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       const allowedOrigins = [
-        ...process.env.CORS_ORIGIN?.split(',') || [],
+        'https://householdplanetkenya.co.ke',
+        'https://www.householdplanetkenya.co.ke',
         'https://api.householdplanetkenya.co.ke',
+        ...process.env.CORS_ORIGIN?.split(',') || [],
         ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
       ];
       
-      // Fallback if no CORS_ORIGIN env
-      if (!process.env.CORS_ORIGIN) {
-        allowedOrigins.push('https://householdplanetkenya.co.ke', 'https://www.householdplanetkenya.co.ke');
-      }
+      // Remove duplicates
+      const uniqueOrigins = [...new Set(allowedOrigins)];
       
       console.log(`CORS check - Origin: ${origin}`);
       
@@ -112,7 +112,7 @@ async function bootstrap() {
         return callback(null, true);
       }
       
-      if (allowedOrigins.includes(origin)) {
+      if (uniqueOrigins.includes(origin)) {
         console.log(`CORS: Allowing origin: ${origin}`);
         callback(null, true);
       } else {
