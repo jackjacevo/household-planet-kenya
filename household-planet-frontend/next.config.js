@@ -9,12 +9,15 @@ const nextConfig = {
 
   // API rewrite for production - proxy /api/* to backend
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://household-planet-backend:3001/api/:path*',
-      },
-    ];
+    if (process.env.NODE_ENV === 'production') {
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'https://api.householdplanetkenya.co.ke/api/:path*',
+        },
+      ];
+    }
+    return [];
   },
 
   images: {
