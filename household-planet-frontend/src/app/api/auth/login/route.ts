@@ -70,7 +70,8 @@ export async function POST(request: NextRequest) {
         }
       } catch (backendError) {
         // Continue to next URL or fallback
-        console.log(`Backend ${backendUrl} unavailable:`, backendError.message);
+        const errorMessage = backendError instanceof Error ? backendError.message : 'Unknown error';
+        console.log(`Backend ${backendUrl} unavailable:`, errorMessage);
       }
     }
 
