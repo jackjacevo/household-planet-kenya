@@ -61,9 +61,11 @@ export default function AccountWishlistPage() {
     });
     
     if (wasAdded) {
-      showToast(toastMessages.cart.added(item.name));
+      const toast = toastMessages.cart.added(item.name);
+      showToast({ type: 'success', message: toast.description });
     } else {
-      showToast(toastMessages.cart.alreadyExists(item.name));
+      const toast = toastMessages.cart.alreadyExists(item.name);
+      showToast({ type: 'info', message: toast.description });
     }
   };
 
@@ -143,7 +145,8 @@ export default function AccountWishlistPage() {
                   <button
                     onClick={() => {
                       removeFromWishlist(item.id);
-                      showToast(toastMessages.wishlist.removed(item.name));
+                      const toast = toastMessages.wishlist.removed(item.name);
+                      showToast({ type: 'info', message: toast.description });
                     }}
                     className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
                     title="Remove from wishlist"
@@ -218,7 +221,8 @@ export default function AccountWishlistPage() {
                       variant="outline"
                       onClick={() => {
                         removeFromWishlist(item.id);
-                        showToast(toastMessages.wishlist.removed(item.name));
+                        const toast = toastMessages.wishlist.removed(item.name);
+                        showToast({ type: 'info', message: toast.description });
                       }}
                       className="flex-1 text-red-600 hover:bg-red-50"
                       size="sm"

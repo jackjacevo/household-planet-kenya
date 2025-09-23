@@ -24,6 +24,7 @@ const WhatsAppIcon = () => (
 import Link from 'next/link';
 import { useToast } from '@/hooks/useToast';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { secureApiClient } from '@/lib/secure-api';
 
 interface Order {
   id: number;
@@ -121,17 +122,14 @@ export default function AdminOrdersPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/admin/stats`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      }).then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
+      return secureApiClient.get('/api/orders/admin/stats').then(response => {
+        return response.data;
+      }).catch(error => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
         }
-        return response.json();
+        throw error;
       });
     },
     refetchInterval: 30000,
@@ -151,17 +149,14 @@ export default function AdminOrdersPage() {
         ...(searchTerm && { customerEmail: searchTerm })
       });
 
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      }).then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
+      return secureApiClient.get(`/api/orders?${params}`).then(response => {
+        return response.data;
+      }).catch(error => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
         }
-        return response.json();
+        throw error;
       });
     },
     refetchInterval: 60000,
@@ -191,29 +186,8 @@ export default function AdminOrdersPage() {
         return;
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Returns API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        });
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Response is not JSON');
-      }
-      
-      const data = await response.json();
-      setReturns(data);
+      const response = await secureApiClient.get('/api/orders/returns');
+      setReturns(response.data);
     } catch (error) {
       console.error('Error fetching returns:', error);
       setReturns([]);
@@ -222,32 +196,13 @@ export default function AdminOrdersPage() {
 
   const processReturn = async (returnId: string, status: string, notes?: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns/process`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ returnId, status, notes }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const response = await secureApiClient.put('/api/orders/returns/process', { returnId, status, notes });
       
       fetchReturns();
-      showToast({
-        title: 'Success!',
-        description: `Return ${status.toLowerCase()} successfully`,
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: `Return ${status.toLowerCase()} successfully` });
     } catch (error) {
       console.error('Error processing return:', error);
-      showToast({
-        title: 'Error',
-        description: 'Failed to process return. Please try again.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Failed to process return. Please try again.' });
     }
   };
 
@@ -256,27 +211,11 @@ export default function AdminOrdersPage() {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ status, notes }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
+      const response = await secureApiClient.put(`/api/orders/${orderId}/status`, { status, notes });
       
       // Show success message
       const orderNumber = orders.find(o => o.id === orderId)?.orderNumber || orderId;
-      showToast({
-        title: 'Success!',
-        description: `Order ${orderNumber} status updated to ${status} successfully!`,
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: `Order ${orderNumber} status updated to ${status} successfully!` });
       
       // Dispatch event to update pending orders badge
       window.dispatchEvent(new CustomEvent('orderStatusChanged', { 
@@ -287,11 +226,7 @@ export default function AdminOrdersPage() {
       refetchStats();
     } catch (error) {
       console.error('Error updating order status:', error);
-      showToast({
-        title: 'Error',
-        description: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -310,19 +245,11 @@ export default function AdminOrdersPage() {
     const nonDeletableCount = selectedOrders.length - deletableOrders.length;
     
     if (nonDeletableCount > 0) {
-      showToast({
-        title: 'Some orders cannot be deleted',
-        description: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.`,
-        variant: 'destructive'
-      });
+      showToast({ type: 'warning', message: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.` });
     }
     
     if (deletableOrders.length === 0) {
-      showToast({
-        title: 'No orders to delete',
-        description: 'Only pending or cancelled orders can be deleted.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Only pending or cancelled orders can be deleted.' });
       setShowBulkDeleteDialog(false);
       return;
     }
@@ -332,24 +259,11 @@ export default function AdminOrdersPage() {
     try {
       console.log('Making API request to delete orders:', deletableOrders.map(o => o.id));
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/delete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ orderIds: deletableOrders.map(order => order.id) }),
-      });
+      const response = await secureApiClient.post('/api/orders/bulk/delete', { orderIds: deletableOrders.map(order => order.id) });
       
       console.log('API response status:', response.status);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-      }
-      
-      const result = await response.json();
+      const result = response.data;
       console.log('Bulk delete result:', result);
       
       setOrders(prev => prev.filter(o => !selectedOrders.includes(o.id)));
@@ -357,18 +271,10 @@ export default function AdminOrdersPage() {
       setShowBulkDeleteDialog(false);
       refetchOrders();
       refetchStats();
-      showToast({
-        title: 'Success!',
-        description: `${result.deletedCount} orders deleted successfully`,
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: `${result.deletedCount} orders deleted successfully` });
     } catch (error) {
       console.error('Error deleting orders:', error);
-      showToast({
-        title: 'Error',
-        description: `Failed to delete orders: ${error.message}`,
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: `Failed to delete orders: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setBulkDeleting(false);
     }
@@ -381,33 +287,15 @@ export default function AdminOrdersPage() {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/shipping-label`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await secureApiClient.post(`/api/orders/${orderId}/shipping-label`);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      showToast({
-        title: 'Success!',
-        description: `Shipping label generated. Tracking: ${data.trackingNumber}`,
-        variant: 'success'
-      });
+      const data = response.data;
+      showToast({ type: 'success', message: `Shipping label generated. Tracking: ${data.trackingNumber}` });
       refetchOrders();
       refetchStats();
     } catch (error) {
       console.error('Error generating shipping label:', error);
-      showToast({
-        title: 'Error',
-        description: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -415,45 +303,22 @@ export default function AdminOrdersPage() {
 
   const sendCustomerEmail = async (orderId: number, template: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ template }),
-      });
+      const response = await secureApiClient.post(`/api/orders/${orderId}/email`, { template });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      showToast({
-        title: 'Success!',
-        description: 'Email sent successfully!',
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: 'Email sent successfully!' });
     } catch (error) {
       console.error('Error sending email:', error);
-      showToast({
-        title: 'Error',
-        description: 'Failed to send email. Please try again.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Failed to send email. Please try again.' });
     }
   };
 
   const checkPaymentAndViewReceipt = async (orderId: number) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/status/${orderId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const response = await secureApiClient.get(`/api/payments/status/${orderId}`);
       
-      if (response.ok) {
-        const paymentStatus = await response.json();
-        if (paymentStatus?.status === 'COMPLETED') {
-          await viewReceipt(orderId);
-        }
+      const paymentStatus = response.data;
+      if (paymentStatus?.status === 'COMPLETED') {
+        await viewReceipt(orderId);
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
@@ -462,24 +327,13 @@ export default function AdminOrdersPage() {
 
   const viewReceipt = async (orderId: number) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${orderId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const response = await secureApiClient.get(`/api/payments/receipt/${orderId}`);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || 'Failed to generate receipt');
-      }
-      
-      const receiptData = await response.json();
+      const receiptData = response.data;
       await generatePDFReceipt(receiptData);
     } catch (error) {
       console.error('Error viewing receipt:', error);
-      showToast({
-        title: 'Error',
-        description: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.' });
     }
   };
 
@@ -639,11 +493,7 @@ export default function AdminOrdersPage() {
       html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error('Error generating PDF:', error);
-      showToast({
-        title: 'Error',
-        description: 'Failed to generate PDF receipt. Please try again.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Failed to generate PDF receipt. Please try again.' });
     }
   };
 
@@ -1010,19 +860,11 @@ export default function AdminOrdersPage() {
         console.log('Statement window opened successfully');
       } else {
         console.error('Failed to open popup window - popup blocked?');
-        showToast({
-          title: 'Popup Blocked',
-          description: 'Please allow popups for this site to export the statement.',
-          variant: 'destructive'
-        });
+        showToast({ type: 'error', message: 'Please allow popups for this site to export the statement.' });
       }
     } catch (error) {
       console.error('Error generating statement:', error);
-      showToast({
-        title: 'Error',
-        description: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
     }
   };
 
@@ -1516,11 +1358,7 @@ export default function AdminOrdersPage() {
     if (!order) return;
 
     if (!['PENDING', 'CANCELLED'].includes(order.status)) {
-      showToast({
-        title: 'Cannot Delete Order',
-        description: 'Only pending or cancelled orders can be deleted.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Only pending or cancelled orders can be deleted.' });
       return;
     }
 
@@ -1535,23 +1373,9 @@ export default function AdminOrdersPage() {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/delete/${orderId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await secureApiClient.post(`/api/orders/delete/${orderId}`);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      showToast({
-        title: 'Success!',
-        description: `Order ${deleteDialog.order.orderNumber} deleted successfully!`,
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: `Order ${deleteDialog.order.orderNumber} deleted successfully!` });
       
       setDeleteDialog({ open: false, order: null });
       
@@ -1563,11 +1387,7 @@ export default function AdminOrdersPage() {
       refetchStats();
     } catch (error) {
       console.error('Error deleting order:', error);
-      showToast({
-        title: 'Error',
-        description: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -2000,7 +1820,7 @@ export default function AdminOrdersPage() {
                               <SelectTrigger className="w-full h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="z-50">
+                              <SelectContent>
                                 <SelectItem value="PENDING">Pending</SelectItem>
                                 <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                                 <SelectItem value="PROCESSING">Processing</SelectItem>

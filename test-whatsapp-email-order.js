@@ -6,7 +6,7 @@ async function testWhatsAppOrderWithEmail() {
   try {
     // First, get admin token
     const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2024!'
     });
 

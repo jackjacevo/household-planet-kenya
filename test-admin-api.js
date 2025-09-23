@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const API_URL = 'https://api.householdplanetkenya.co.ke';
-const ADMIN_EMAIL = 'admin@householdplanet.co.ke';
+const ADMIN_EMAIL = 'admin@householdplanetkenya.co.ke';
 const ADMIN_PASSWORD = 'Admin@2025';
 
 async function testAdminAPI() {

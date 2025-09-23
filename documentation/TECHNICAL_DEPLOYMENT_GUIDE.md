@@ -25,7 +25,7 @@ This guide provides step-by-step instructions for deploying the Household Planet
 - [x] Vercel account for frontend hosting
 - [x] Railway account for backend hosting
 - [x] Cloudflare account for DNS and CDN
-- [x] Domain name (householdplanet.co.ke)
+- [x] Domain name (householdplanetkenya.co.ke)
 - [x] GitHub repository access
 
 ### Required Tools
@@ -121,7 +121,7 @@ PORT=3001
 DATABASE_URL=postgresql://user:pass@host:port/db
 JWT_SECRET=your-super-secure-jwt-secret-key
 JWT_EXPIRES_IN=7d
-CORS_ORIGIN=https://householdplanet.co.ke
+CORS_ORIGIN=https://householdplanetkenya.co.ke
 
 # Payment Configuration
 MPESA_CONSUMER_KEY=your_mpesa_consumer_key
@@ -133,7 +133,7 @@ MPESA_ENVIRONMENT=production
 # Email Configuration
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_USER=noreply@householdplanet.co.ke
+EMAIL_USER=noreply@householdplanetkenya.co.ke
 EMAIL_PASS=your_app_password
 
 # File Storage
@@ -174,14 +174,14 @@ railway logs
 **Custom Domain Setup:**
 ```bash
 # Add custom domain
-railway domain add api.householdplanet.co.ke
+railway domain add api.householdplanetkenya.co.ke
 ```
 
 ### 3. Verify Backend Deployment
 
 **Health Check:**
 ```bash
-curl https://api.householdplanet.co.ke/health
+curl https://householdplanetkenya.co.ke/health
 ```
 
 **Expected Response:**
@@ -209,8 +209,8 @@ cp .env.local.example .env.production
 
 **Update .env.production:**
 ```env
-NEXT_PUBLIC_API_URL=https://api.householdplanet.co.ke
-NEXT_PUBLIC_SITE_URL=https://householdplanet.co.ke
+NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke
+NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
 NEXT_PUBLIC_MPESA_SHORTCODE=174379
 NEXT_PUBLIC_ENVIRONMENT=production
 NEXT_PUBLIC_ANALYTICS_ID=G-XXXXXXXXXX
@@ -245,13 +245,13 @@ vercel ls
 1. Go to Vercel dashboard
 2. Select project
 3. Go to Settings → Domains
-4. Add `householdplanet.co.ke` and `www.householdplanet.co.ke`
+4. Add `householdplanetkenya.co.ke` and `www.householdplanetkenya.co.ke`
 
 ### 3. Verify Frontend Deployment
 
 **Check Website:**
 ```bash
-curl -I https://householdplanet.co.ke
+curl -I https://householdplanetkenya.co.ke
 ```
 
 **Performance Test:**
@@ -260,7 +260,7 @@ curl -I https://householdplanet.co.ke
 npm install -g lighthouse
 
 # Run performance audit
-lighthouse https://householdplanet.co.ke --output html --output-path ./lighthouse-report.html
+lighthouse https://householdplanetkenya.co.ke --output html --output-path ./lighthouse-report.html
 ```
 
 ---
@@ -272,7 +272,7 @@ lighthouse https://householdplanet.co.ke --output html --output-path ./lighthous
 **Add Domain to Cloudflare:**
 1. Login to Cloudflare dashboard
 2. Click "Add a Site"
-3. Enter `householdplanet.co.ke`
+3. Enter `householdplanetkenya.co.ke`
 4. Choose plan (Free is sufficient)
 5. Update nameservers at domain registrar
 
@@ -284,7 +284,7 @@ Type    Name    Content                          Proxy
 A       @       76.76.19.123 (Vercel IP)       ✅ Proxied
 A       www     76.76.19.123 (Vercel IP)       ✅ Proxied
 CNAME   api     railway-production-url          ✅ Proxied
-MX      @       mail.householdplanet.co.ke      ❌ DNS Only
+MX      @       mail.householdplanetkenya.co.ke      ❌ DNS Only
 TXT     @       v=spf1 include:_spf.google.com  ❌ DNS Only
 ```
 
@@ -312,11 +312,11 @@ Rule 1: Static Assets
 - Edge Cache TTL: 1 month
 
 Rule 2: API Endpoints
-- URL Pattern: api.householdplanet.co.ke/*
+- URL Pattern: api.householdplanetkenya.co.ke/*
 - Cache Level: Bypass
 
 Rule 3: HTML Pages
-- URL Pattern: householdplanet.co.ke/*
+- URL Pattern: householdplanetkenya.co.ke/*
 - Cache Level: Standard
 - Edge Cache TTL: 2 hours
 ```
@@ -359,8 +359,8 @@ Sentry.init({
 **UptimeRobot Setup:**
 1. Create account at uptimerobot.com
 2. Add monitors:
-   - https://householdplanet.co.ke (HTTP)
-   - https://api.householdplanet.co.ke/health (HTTP)
+   - https://householdplanetkenya.co.ke (HTTP)
+   - https://householdplanetkenya.co.ke/health (HTTP)
 3. Set alert contacts (email, SMS, Slack)
 4. Configure 5-minute check intervals
 
@@ -408,7 +408,7 @@ app.use('/api/', limiter);
 **CORS Configuration:**
 ```javascript
 app.enableCors({
-  origin: ['https://householdplanet.co.ke'],
+  origin: ['https://householdplanetkenya.co.ke'],
   credentials: true,
 });
 ```
@@ -461,16 +461,16 @@ aws s3 cp $BACKUP_DIR/db_backup_$DATE.sql.gz s3://household-planet-backups/
 **Critical Path Testing:**
 ```bash
 # Test homepage
-curl -f https://householdplanet.co.ke
+curl -f https://householdplanetkenya.co.ke
 
 # Test API health
-curl -f https://api.householdplanet.co.ke/health
+curl -f https://householdplanetkenya.co.ke/health
 
 # Test product API
-curl -f https://api.householdplanet.co.ke/api/products
+curl -f https://householdplanetkenya.co.ke/api/products
 
 # Test authentication
-curl -X POST https://api.householdplanet.co.ke/api/auth/login \
+curl -X POST https://householdplanetkenya.co.ke/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"test123"}'
 ```
@@ -555,7 +555,7 @@ npm run build
 railway logs
 
 # Test API endpoints
-curl -v https://api.householdplanet.co.ke/health
+curl -v https://householdplanetkenya.co.ke/health
 ```
 
 ### Rollback Procedures

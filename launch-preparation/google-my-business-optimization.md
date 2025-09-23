@@ -7,7 +7,7 @@
 - **Category**: Home Goods Store
 - **Address**: [Physical address if available, or service area]
 - **Phone**: +254700000000
-- **Website**: https://householdplanet.co.ke
+- **Website**: https://householdplanetkenya.co.ke
 - **Hours**: Monday-Saturday 8:00 AM - 6:00 PM
 
 ### Business Description
@@ -123,7 +123,7 @@
 
 💰 Special Price: KES 2,500 (was KES 3,200)
 🚚 Free delivery in Nairobi
-🛒 Order now: householdplanet.co.ke
+🛒 Order now: householdplanetkenya.co.ke
 
 #KitchenEssentials #CookwareSet #HouseholdPlanetKenya"
 
@@ -144,7 +144,7 @@ Thank you Sarah! We're thrilled you love your new cleaning kit! 🧽✨
 "Hi [Name], thank you for the great review! We're glad you enjoyed your [product]. We'd love to know how we can earn that 5th star next time. Feel free to reach out with any suggestions!"
 
 **3-Star or Below**:
-"Hi [Name], thank you for your feedback. We're sorry your experience wasn't perfect. We'd like to make this right - please contact us at support@householdplanet.co.ke or WhatsApp +254700000000 so we can resolve this for you."
+"Hi [Name], thank you for your feedback. We're sorry your experience wasn't perfect. We'd like to make this right - please contact us at support@householdplanetkenya.co.ke or WhatsApp +254700000000 so we can resolve this for you."
 
 ### Review Generation
 **Strategies**:

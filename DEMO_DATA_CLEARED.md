@@ -17,7 +17,7 @@
 - **Testimonials Component**: Removed demo testimonials, added empty state
 
 ### 3. Admin Account Preserved
-- **Email**: admin@householdplanet.co.ke
+- **Email**: admin@householdplanetkenya.co.ke
 - **Password**: admin123
 - **Role**: ADMIN
 - **Status**: Active and ready for use
@@ -40,7 +40,7 @@
 
 1. **Login to Admin Dashboard**
    - Go to `/admin/login`
-   - Use credentials: admin@householdplanet.co.ke / admin123
+   - Use credentials: admin@householdplanetkenya.co.ke / admin123
 
 2. **Add Real Products**
    - Navigate to Products section

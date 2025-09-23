@@ -8,7 +8,7 @@ async function testAdminDashboard() {
   try {
     // First login to get a fresh token
     const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
 

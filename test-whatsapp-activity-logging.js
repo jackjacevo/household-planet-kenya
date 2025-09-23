@@ -6,7 +6,7 @@ async function testWhatsAppOrderActivityLogging() {
     
     // First, login as admin to get token
     const loginResponse = await axios.post('http://localhost:3001/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2024!'
     });
     

@@ -10,7 +10,7 @@ async function testCategoryManagement() {
     // 1. Login as admin to get token
     console.log('1. Logging in as admin...');
     const loginResponse = await axios.post(`${API_URL}/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin123!@#'
     });
     authToken = loginResponse.data.access_token;

@@ -27,7 +27,7 @@ export class DeprecationInterceptor implements NestInterceptor {
       // Add deprecation headers
       response.setHeader('Deprecation', 'true');
       response.setHeader('Sunset', deprecationInfo.sunset || 'TBD');
-      response.setHeader('Link', '<https://docs.householdplanet.co.ke/api/migration>; rel="successor-version"');
+      response.setHeader('Link', '<https://docs.householdplanetkenya.co.ke/api/migration>; rel="successor-version"');
 
       // Log deprecation usage
       this.logger.warn(`Deprecated endpoint accessed: ${request.method} ${request.url}`, {

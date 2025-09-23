@@ -30,7 +30,7 @@ async function completeProductionSeed() {
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -182,7 +182,7 @@ async function completeProductionSeed() {
     // 7. Create Settings
     const settings = [
       { category: 'company', key: 'site_name', value: 'Household Planet Kenya', type: 'string', description: 'Website name', isPublic: true },
-      { category: 'company', key: 'contact_email', value: 'info@householdplanet.co.ke', type: 'string', description: 'Contact email', isPublic: true },
+      { category: 'company', key: 'contact_email', value: 'info@householdplanetkenya.co.ke', type: 'string', description: 'Contact email', isPublic: true },
       { category: 'payment', key: 'tax_rate', value: '16', type: 'number', description: 'VAT rate', isPublic: true },
       { category: 'payment', key: 'free_shipping_threshold', value: '5000', type: 'number', description: 'Free shipping threshold', isPublic: true }
     ];
@@ -279,7 +279,7 @@ async function completeProductionSeed() {
 
     console.log('✅ Complete production seeding successful!');
     console.log('📊 Summary:');
-    console.log(`- 1 Admin user (admin@householdplanet.co.ke / Admin@2025)`);
+    console.log(`- 1 Admin user (admin@householdplanetkenya.co.ke / Admin@2025)`);
     console.log(`- ${createdCustomers.length} customers`);
     console.log(`- ${createdBrands.length} brands`);
     console.log(`- ${createdCategories.length} categories`);

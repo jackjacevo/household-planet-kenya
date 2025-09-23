@@ -9,7 +9,7 @@ async function testAdminLoginLogging() {
     // Test admin login
     console.log('1. Testing admin login...');
     const loginResponse = await axios.post(`${API_BASE}/auth/login`, {
-      email: 'jack@householdplanet.co.ke',
+      email: 'jack@householdplanetkenya.co.ke',
       password: 'Admin123!'
     }, {
       headers: {

@@ -7,7 +7,7 @@ async function createAdminUser() {
   try {
     console.log('Creating admin user...');
     
-    const email = 'admin@householdplanet.co.ke';
+    const email = 'admin@householdplanetkenya.co.ke';
     const password = 'Admin@2025';
     
     // Check if admin already exists

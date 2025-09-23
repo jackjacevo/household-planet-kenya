@@ -28,7 +28,7 @@ class PerformanceTracker {
 
   async collectSystemMetrics() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/metrics/system');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/metrics/system');
       const metrics = response.data;
       
       this.metrics.cpuUsage = metrics.cpu.usage;
@@ -44,7 +44,7 @@ class PerformanceTracker {
 
   async collectApplicationMetrics() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/metrics/application');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/metrics/application');
       const metrics = response.data;
       
       this.metrics.responseTime = metrics.responseTime || [];
@@ -60,7 +60,7 @@ class PerformanceTracker {
 
   async collectDatabaseMetrics() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/metrics/database');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/metrics/database');
       const metrics = response.data;
       
       this.metrics.databasePerformance = {
@@ -79,7 +79,7 @@ class PerformanceTracker {
 
   async collectWebVitals() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/metrics/web-vitals');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/metrics/web-vitals');
       const vitals = response.data;
       
       this.metrics.coreWebVitals = {
@@ -99,10 +99,10 @@ class PerformanceTracker {
 
   async measureEndpointPerformance() {
     const endpoints = [
-      { url: 'https://householdplanet.co.ke', name: 'Homepage' },
-      { url: 'https://householdplanet.co.ke/products', name: 'Products Page' },
-      { url: 'https://api.householdplanet.co.ke/api/products', name: 'Products API' },
-      { url: 'https://api.householdplanet.co.ke/api/categories', name: 'Categories API' }
+      { url: 'https://householdplanetkenya.co.ke', name: 'Homepage' },
+      { url: 'https://householdplanetkenya.co.ke/products', name: 'Products Page' },
+      { url: 'https://householdplanetkenya.co.ke/api/products', name: 'Products API' },
+      { url: 'https://householdplanetkenya.co.ke/api/categories', name: 'Categories API' }
     ];
     
     const endpointMetrics = [];
@@ -297,7 +297,7 @@ class PerformanceTracker {
     );
     
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/reports/performance', report);
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/reports/performance', report);
       console.log('✅ Performance report saved');
     } catch (error) {
       console.error('Failed to save performance report:', error);

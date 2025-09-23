@@ -9,7 +9,7 @@ async function testFrontendAPIRoutes() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: 'Admin@2025'
       })
     });

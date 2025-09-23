@@ -6,14 +6,14 @@ async function seedProduction() {
     
     // Create admin user via setup endpoint
     const response = await axios.post('https://api.householdplanetkenya.co.ke/api/setup/admin', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025',
       firstName: 'Admin',
       lastName: 'User'
     });
     
     console.log('✅ Admin user created successfully');
-    console.log('📧 Email: admin@householdplanet.co.ke');
+    console.log('📧 Email: admin@householdplanetkenya.co.ke');
     console.log('🔑 Password: Admin@2025');
     
   } catch (error) {

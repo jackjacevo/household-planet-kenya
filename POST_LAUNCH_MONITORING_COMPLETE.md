@@ -255,7 +255,7 @@ node performance-metrics.js
 
 ## Monitoring Dashboard Access
 
-- **URL**: https://householdplanet.co.ke/admin/monitoring
+- **URL**: https://householdplanetkenya.co.ke/admin/monitoring
 - **Real-time Metrics**: System health, active alerts, key performance indicators
 - **Historical Data**: Performance trends, error patterns, business metrics
 - **Alert Management**: Active alerts, alert history, escalation status

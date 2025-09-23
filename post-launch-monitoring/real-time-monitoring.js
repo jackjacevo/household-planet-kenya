@@ -21,9 +21,9 @@ class RealTimeMonitor {
 
   async checkSystemHealth() {
     const endpoints = [
-      { url: 'https://householdplanet.co.ke', name: 'Frontend' },
-      { url: 'https://api.householdplanet.co.ke/health', name: 'API' },
-      { url: 'https://api.householdplanet.co.ke/api/products', name: 'Products API' }
+      { url: 'https://householdplanetkenya.co.ke', name: 'Frontend' },
+      { url: 'https://householdplanetkenya.co.ke/health', name: 'API' },
+      { url: 'https://householdplanetkenya.co.ke/api/products', name: 'Products API' }
     ];
 
     for (const endpoint of endpoints) {
@@ -53,7 +53,7 @@ class RealTimeMonitor {
   async checkDatabasePerformance() {
     try {
       const startTime = Date.now();
-      await axios.get('https://api.householdplanet.co.ke/api/admin/db-health');
+      await axios.get('https://householdplanetkenya.co.ke/api/admin/db-health');
       const queryTime = Date.now() - startTime;
       
       if (queryTime > 1000) {
@@ -68,7 +68,7 @@ class RealTimeMonitor {
 
   async checkPaymentSystem() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/payments/health');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/payments/health');
       const { successRate, failureRate } = response.data;
       
       if (failureRate > this.thresholds.paymentFailure) {
@@ -118,8 +118,8 @@ class RealTimeMonitor {
     // Send email for critical alerts
     if (alert.severity === 'CRITICAL') {
       try {
-        await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-          to: 'admin@householdplanet.co.ke',
+        await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+          to: 'admin@householdplanetkenya.co.ke',
           subject: `CRITICAL ALERT: ${alert.type}`,
           body: `${alert.message}\n\nTime: ${alert.timestamp}`
         });

@@ -117,7 +117,7 @@ class MonitoringDashboard {
 
   async checkAPIHealth() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/health', { timeout: 5000 });
+      const response = await axios.get('https://householdplanetkenya.co.ke/health', { timeout: 5000 });
       return { status: response.status === 200 ? 'healthy' : 'unhealthy' };
     } catch (error) {
       return { status: 'unhealthy', error: error.message };
@@ -126,7 +126,7 @@ class MonitoringDashboard {
 
   async checkDatabaseHealth() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/db-health', { timeout: 5000 });
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/db-health', { timeout: 5000 });
       return { status: response.data.healthy ? 'healthy' : 'unhealthy' };
     } catch (error) {
       return { status: 'unhealthy', error: error.message };
@@ -135,7 +135,7 @@ class MonitoringDashboard {
 
   async checkPaymentHealth() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/payments/health', { timeout: 5000 });
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/payments/health', { timeout: 5000 });
       return { status: response.data.healthy ? 'healthy' : 'unhealthy' };
     } catch (error) {
       return { status: 'unhealthy', error: error.message };
@@ -144,7 +144,7 @@ class MonitoringDashboard {
 
   async checkStorageHealth() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/storage-health', { timeout: 5000 });
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/storage-health', { timeout: 5000 });
       return { status: response.data.healthy ? 'healthy' : 'unhealthy' };
     } catch (error) {
       return { status: 'unhealthy', error: error.message };
@@ -153,7 +153,7 @@ class MonitoringDashboard {
 
   async checkEmailHealth() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/email-health', { timeout: 5000 });
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/email-health', { timeout: 5000 });
       return { status: response.data.healthy ? 'healthy' : 'unhealthy' };
     } catch (error) {
       return { status: 'unhealthy', error: error.message };
@@ -162,7 +162,7 @@ class MonitoringDashboard {
 
   async getActiveAlerts() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/alerts/active');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/alerts/active');
       return response.data.alerts || [];
     } catch (error) {
       console.error('Failed to get active alerts:', error);
@@ -172,7 +172,7 @@ class MonitoringDashboard {
 
   async getKeyMetrics() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/metrics/summary');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/metrics/summary');
       return response.data.metrics || {};
     } catch (error) {
       console.error('Failed to get key metrics:', error);
@@ -182,7 +182,7 @@ class MonitoringDashboard {
 
   async updateDashboardAPI(data) {
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/dashboard/update', data);
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/dashboard/update', data);
     } catch (error) {
       console.error('Failed to update dashboard API:', error);
     }
@@ -221,7 +221,7 @@ class MonitoringDashboard {
     };
     
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/reports/comprehensive', report);
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/reports/comprehensive', report);
       
       // Send to management
       await this.sendComprehensiveReport(report);
@@ -281,8 +281,8 @@ class MonitoringDashboard {
 
   async sendComprehensiveReport(report) {
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-        to: 'management@householdplanet.co.ke',
+      await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+        to: 'management@householdplanetkenya.co.ke',
         subject: `Household Planet Kenya - 6-Hour Monitoring Report`,
         body: `
 6-Hour Monitoring Report
@@ -305,7 +305,7 @@ Key Metrics:
 Recommendations:
 ${report.recommendations.map(r => `- ${r}`).join('\n')}
 
-Dashboard: https://householdplanet.co.ke/admin/monitoring
+Dashboard: https://householdplanetkenya.co.ke/admin/monitoring
         `
       });
     } catch (error) {
@@ -329,8 +329,8 @@ Dashboard: https://householdplanet.co.ke/admin/monitoring
       });
       
       // Send email for critical alerts
-      await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-        to: 'admin@householdplanet.co.ke',
+      await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+        to: 'admin@householdplanetkenya.co.ke',
         subject: `CRITICAL ALERT: ${type}`,
         body: `Critical alert detected:\n\nType: ${type}\nMessage: ${message}\nTime: ${new Date().toISOString()}\n\nImmediate action required.`
       });

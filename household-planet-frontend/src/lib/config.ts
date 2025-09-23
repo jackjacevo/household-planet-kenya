@@ -1,6 +1,6 @@
 // Environment-based configuration
 const getApiUrl = () => {
-  // Production URLs
+  // Production URLs (matches your production env)
   const PRODUCTION_API_URL = 'https://api.householdplanetkenya.co.ke';
   const PRODUCTION_SITE_URL = 'https://householdplanetkenya.co.ke';
   
@@ -51,9 +51,11 @@ export const debugConfig = () => {
   });
 };
 
-// Warn about localhost URLs in production
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && API_CONFIG.BASE_URL.includes('localhost')) {
-  console.warn('⚠️ LOCALHOST DETECTED IN PRODUCTION BUILD!');
-  console.warn('Current API_BASE_URL:', API_CONFIG.BASE_URL);
-  console.warn('This should be updated to production URL');
+// Production validation
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  if (API_CONFIG.BASE_URL.includes('localhost')) {
+    console.error('❌ LOCALHOST DETECTED IN PRODUCTION!');
+  } else if (API_CONFIG.BASE_URL === 'https://api.householdplanetkenya.co.ke') {
+    console.log('✅ Production API URL configured correctly');
+  }
 }

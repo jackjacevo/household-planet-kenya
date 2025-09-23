@@ -22,7 +22,7 @@ class SalesTracker {
   async collectSalesData() {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const response = await axios.get(`https://api.householdplanet.co.ke/api/admin/analytics/sales`, {
+      const response = await axios.get(`https://householdplanetkenya.co.ke/api/admin/analytics/sales`, {
         params: { date: today }
       });
       
@@ -35,7 +35,7 @@ class SalesTracker {
 
   async collectTrafficData() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/analytics/traffic');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/analytics/traffic');
       return response.data;
     } catch (error) {
       console.error('Failed to collect traffic data:', error);
@@ -45,7 +45,7 @@ class SalesTracker {
 
   async collectConversionData() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/analytics/conversions');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/analytics/conversions');
       return response.data;
     } catch (error) {
       console.error('Failed to collect conversion data:', error);
@@ -63,7 +63,7 @@ class SalesTracker {
 
   async analyzeCustomerBehavior() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/analytics/customer-behavior');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/analytics/customer-behavior');
       const data = response.data;
       
       return {
@@ -81,7 +81,7 @@ class SalesTracker {
 
   async trackProductPerformance() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/analytics/products');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/analytics/products');
       const products = response.data.products;
       
       return {
@@ -227,7 +227,7 @@ class SalesTracker {
 
   async saveReport(report) {
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/reports/sales', report);
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/reports/sales', report);
       console.log('✅ Sales report saved');
     } catch (error) {
       console.error('Failed to save sales report:', error);
@@ -243,7 +243,7 @@ class SalesTracker {
 
   async trackRealTimeMetrics() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/analytics/realtime');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/analytics/realtime');
       const data = response.data;
       
       console.log('🔴 Real-time Metrics:');

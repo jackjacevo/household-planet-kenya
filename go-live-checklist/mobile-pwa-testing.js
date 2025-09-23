@@ -1,7 +1,7 @@
 // Mobile and PWA Testing Script
 const puppeteer = require('puppeteer');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://householdplanet.co.ke';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://householdplanetkenya.co.ke';
 
 async function testMobileResponsiveness() {
   console.log('🔄 Testing Mobile Responsiveness...');

@@ -20,7 +20,7 @@ async function seedAdminDashboard() {
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -36,7 +36,7 @@ async function seedAdminDashboard() {
     const staffPassword = await bcrypt.hash('Staff@2025', 12);
     const staff1 = await prisma.user.create({
       data: {
-        email: 'staff1@householdplanet.co.ke',
+        email: 'staff1@householdplanetkenya.co.ke',
         password: staffPassword,
         firstName: 'Jane',
         lastName: 'Smith',
@@ -50,7 +50,7 @@ async function seedAdminDashboard() {
 
     const staff2 = await prisma.user.create({
       data: {
-        email: 'staff2@householdplanet.co.ke',
+        email: 'staff2@householdplanetkenya.co.ke',
         password: staffPassword,
         firstName: 'Mike',
         lastName: 'Johnson',
@@ -278,8 +278,8 @@ async function seedAdminDashboard() {
     }
 
     console.log('✅ Admin dashboard seeding completed successfully:');
-    console.log(`- 1 Admin user (admin@householdplanet.co.ke / Admin@2025)`);
-    console.log(`- 2 Staff users (staff1@householdplanet.co.ke, staff2@householdplanet.co.ke / Staff@2025)`);
+    console.log(`- 1 Admin user (admin@householdplanetkenya.co.ke / Admin@2025)`);
+    console.log(`- 2 Staff users (staff1@householdplanetkenya.co.ke, staff2@householdplanetkenya.co.ke / Staff@2025)`);
     console.log(`- ${createdCategories.length} categories`);
     console.log(`- ${createdProducts.length} products with realistic sales data`);
     console.log(`- ${createdCustomers.length} customers`);

@@ -60,7 +60,7 @@ const contentPages = [
       <p>We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
       
       <h2>Contact Us</h2>
-      <p>If you have questions about this Privacy Policy, please contact us at privacy@householdplanet.co.ke</p>
+      <p>If you have questions about this Privacy Policy, please contact us at privacy@householdplanetkenya.co.ke</p>
     `,
     metaTitle: 'Privacy Policy - Household Planet Kenya',
     metaDescription: 'Read our privacy policy to understand how we collect, use, and protect your personal information.',
@@ -89,7 +89,7 @@ const contentPages = [
       <p>We accept returns within 7 days of delivery for unused items in original packaging.</p>
       
       <h2>Contact Information</h2>
-      <p>For questions about these Terms, contact us at legal@householdplanet.co.ke</p>
+      <p>For questions about these Terms, contact us at legal@householdplanetkenya.co.ke</p>
     `,
     metaTitle: 'Terms of Service - Household Planet Kenya',
     metaDescription: 'Read our terms of service to understand the rules and regulations for using our platform.',

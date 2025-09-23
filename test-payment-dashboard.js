@@ -4,7 +4,7 @@ const API_BASE = 'http://localhost:3001/api';
 
 // Test admin credentials (update as needed)
 const ADMIN_CREDENTIALS = {
-  email: 'admin@householdplanet.co.ke',
+  email: 'admin@householdplanetkenya.co.ke',
   password: 'Admin123!'
 };
 

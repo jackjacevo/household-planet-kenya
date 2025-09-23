@@ -47,7 +47,7 @@ async function checkAndCreateAdmin() {
       
       // Try to find existing admin by email
       let adminUser = await prisma.user.findUnique({
-        where: { email: 'admin@householdplanet.co.ke' }
+        where: { email: 'admin@householdplanetkenya.co.ke' }
       });
       
       const hashedPassword = await bcrypt.hash('HouseholdPlanet2024!', 12);
@@ -56,7 +56,7 @@ async function checkAndCreateAdmin() {
         // Update existing user
         console.log('📝 Updating existing admin user...');
         adminUser = await prisma.user.update({
-          where: { email: 'admin@householdplanet.co.ke' },
+          where: { email: 'admin@householdplanetkenya.co.ke' },
           data: {
             password: hashedPassword,
             role: 'SUPER_ADMIN',
@@ -71,7 +71,7 @@ async function checkAndCreateAdmin() {
         console.log('👤 Creating new admin user...');
         adminUser = await prisma.user.create({
           data: {
-            email: 'admin@householdplanet.co.ke',
+            email: 'admin@householdplanetkenya.co.ke',
             password: hashedPassword,
             name: 'System Administrator',
             role: 'SUPER_ADMIN',
@@ -111,7 +111,7 @@ async function checkAndCreateAdmin() {
     // Also check for any other common admin emails and update them
     const commonAdminEmails = [
       'admin@householdplanetkenya.co.ke',
-      'administrator@householdplanet.co.ke',
+      'administrator@householdplanetkenya.co.ke',
       'admin@householdplanetkenya.com'
     ];
     
@@ -137,7 +137,7 @@ async function checkAndCreateAdmin() {
     
     console.log('\n🎉 Admin setup complete!');
     console.log('\nAdmin Credentials:');
-    console.log('Email: admin@householdplanet.co.ke');
+    console.log('Email: admin@householdplanetkenya.co.ke');
     console.log('Password: HouseholdPlanet2024!');
     console.log('\nYou can now login to the admin panel.');
     

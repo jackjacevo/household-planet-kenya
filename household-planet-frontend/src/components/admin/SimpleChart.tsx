@@ -62,23 +62,9 @@ export function SimpleLineChart() {
           orders: 0 // We'll get this from sales analytics if needed
         }));
         
-        return result.length > 0 ? result.slice(-6) : [{ period: 'No Data', revenue: 0, orders: 0 }];
+        return result.length > 0 ? result.slice(-6) : [];
       } catch (error) {
-        console.warn('Revenue analytics API unavailable, using fallback data');
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-        const months = [];
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(currentYear, currentMonth - 1 - i, 1);
-          const period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          months.push({
-            period,
-            revenue: Math.floor(Math.random() * 50000) + 25000,
-            orders: Math.floor(Math.random() * 20) + 10
-          });
-        }
-        return months;
+        throw error;
       }
     },
     refetchInterval: 60000,
@@ -93,15 +79,15 @@ export function SimpleLineChart() {
     );
   }
 
-  if (error) {
+  if (error || !salesData || salesData.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-        Unable to load chart data
+        No data available
       </div>
     );
   }
 
-  const data = salesData || [];
+  const data = salesData;
   const chartData = {
     labels: data.map((item: SalesData) => {
       if (item.period === 'No Data') return item.period;
@@ -180,19 +166,9 @@ export function SimplePieChart() {
           sales: item.sales
         }));
         
-        return result.length > 0 ? result.slice(0, 8) : [{ category: 'No Data', sales: 1 }];
+        return result.length > 0 ? result.slice(0, 8) : [];
       } catch (error) {
-        console.warn('Popular categories API unavailable, using fallback data');
-        return [
-          { category: 'Kitchen Appliances', sales: 45 },
-          { category: 'Home Decor', sales: 32 },
-          { category: 'Cleaning Supplies', sales: 28 },
-          { category: 'Storage Solutions', sales: 22 },
-          { category: 'Bathroom Accessories', sales: 18 },
-          { category: 'Electronics', sales: 15 },
-          { category: 'Garden & Outdoor', sales: 12 },
-          { category: 'Health & Beauty', sales: 8 }
-        ];
+        throw error;
       }
     },
     refetchInterval: 60000,
@@ -207,15 +183,15 @@ export function SimplePieChart() {
     );
   }
 
-  if (error) {
+  if (error || !categoryData || categoryData.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-        Unable to load chart data
+        No data available
       </div>
     );
   }
 
-  const data = categoryData || [];
+  const data = categoryData;
   const chartData = {
     labels: data.map((item: CategoryData) => item.category),
     datasets: [
@@ -279,23 +255,9 @@ export function SimpleBarChart() {
           orders: item.orders
         }));
         
-        return result.length > 0 ? result.slice(-6) : [{ period: 'No Data', revenue: 0, orders: 0 }];
+        return result.length > 0 ? result.slice(-6) : [];
       } catch (error) {
-        console.warn('Sales analytics API unavailable, using fallback data');
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-        const months = [];
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(currentYear, currentMonth - 1 - i, 1);
-          const period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          months.push({
-            period,
-            revenue: Math.floor(Math.random() * 40000) + 30000,
-            orders: Math.floor(Math.random() * 25) + 15
-          });
-        }
-        return months;
+        throw error;
       }
     },
     refetchInterval: 60000,
@@ -310,15 +272,15 @@ export function SimpleBarChart() {
     );
   }
 
-  if (error) {
+  if (error || !salesData || salesData.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-        Unable to load chart data
+        No data available
       </div>
     );
   }
 
-  const data = salesData || [];
+  const data = salesData;
   const chartData = {
     labels: data.map((item: SalesData) => {
       if (item.period === 'No Data') return item.period;
@@ -409,22 +371,9 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
           return months;
         }
         
-        return [{ month: 'No Data', customers: 0 }];
+        return [];
       } catch (error) {
-        console.warn('Customer growth API unavailable, using fallback data');
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-        const months = [];
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(currentYear, currentMonth - 1 - i, 1);
-          const monthStr = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-          months.push({
-            month: monthStr,
-            customers: Math.floor(Math.random() * 15) + 8
-          });
-        }
-        return months;
+        throw error;
       }
     },
     refetchInterval: 60000,
@@ -439,15 +388,15 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
     );
   }
 
-  if (error) {
+  const dataToUse = growthData?.length ? growthData : (customerGrowth?.length ? customerGrowth : []);
+  
+  if (error || dataToUse.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-        Unable to load chart data
+        No data available
       </div>
     );
   }
-
-  const dataToUse = growthData?.length ? growthData : (customerGrowth?.length ? customerGrowth : [{ month: 'No Data', customers: 0 }]);
   
   const chartData = {
     labels: dataToUse.map((item: { month: string; customers: number }) => item.month),

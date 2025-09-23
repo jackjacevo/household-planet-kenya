@@ -28,7 +28,7 @@ async function seedAllPages() {
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -227,7 +227,7 @@ async function seedAllPages() {
     // 9. Create Settings
     const settings = [
       { category: 'company', key: 'site_name', value: 'Household Planet Kenya', type: 'string', isPublic: true },
-      { category: 'company', key: 'contact_email', value: 'info@householdplanet.co.ke', type: 'string', isPublic: true },
+      { category: 'company', key: 'contact_email', value: 'info@householdplanetkenya.co.ke', type: 'string', isPublic: true },
       { category: 'payment', key: 'free_shipping_threshold', value: '5000', type: 'number', isPublic: true }
     ];
 

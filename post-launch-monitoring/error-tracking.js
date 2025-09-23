@@ -56,7 +56,7 @@ class ErrorTracker {
 
   async getApplicationErrors() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/logs/errors', {
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/logs/errors', {
         params: { since: new Date(Date.now() - 3600000).toISOString() }
       });
       return response.data.errors || [];
@@ -67,7 +67,7 @@ class ErrorTracker {
 
   async getAPIErrors() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/metrics/errors');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/metrics/errors');
       return response.data.errors || [];
     } catch (error) {
       return [];
@@ -76,7 +76,7 @@ class ErrorTracker {
 
   async getPaymentErrors() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/payments/errors');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/payments/errors');
       return response.data.errors || [];
     } catch (error) {
       return [];
@@ -85,7 +85,7 @@ class ErrorTracker {
 
   async getDatabaseErrors() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/db-errors');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/db-errors');
       return response.data.errors || [];
     } catch (error) {
       return [];
@@ -169,8 +169,8 @@ class ErrorTracker {
     // Send email for critical errors
     if (type === '5xx' || type === 'database_errors') {
       try {
-        await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-          to: 'admin@householdplanet.co.ke',
+        await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+          to: 'admin@householdplanetkenya.co.ke',
           subject: `CRITICAL: ${count} ${type} errors detected`,
           body: `Error threshold exceeded for ${type}.\n\nCount: ${count}\nThreshold: ${this.errorThresholds[type]}\n\nSample errors:\n${errors.slice(0, 3).map(e => `- ${e.message}`).join('\n')}`
         });

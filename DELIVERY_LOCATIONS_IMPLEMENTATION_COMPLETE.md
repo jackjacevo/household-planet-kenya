@@ -36,7 +36,7 @@ DELETE /api/admin/delivery-locations/:id - Delete location
 ## 🔐 Admin Credentials
 
 ```
-Email: admin@householdplanet.co.ke
+Email: admin@householdplanetkenya.co.ke
 Password: Admin@2025
 ```
 

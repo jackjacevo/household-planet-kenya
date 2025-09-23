@@ -35,7 +35,7 @@ async function testNotificationSettings() {
       // This would normally require authentication, but let's see the structure
       const notificationData = {
         emailNotifications: true,
-        notificationEmail: 'info@householdplanet.co.ke'
+        notificationEmail: 'info@householdplanetkenya.co.ke'
       };
       
       console.log('Would create:', notificationData);

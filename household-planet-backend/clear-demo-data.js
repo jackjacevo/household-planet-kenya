@@ -20,10 +20,10 @@ async function clearDemoData() {
   // Reset admin password to default (create if doesn't exist)
   const hashedPassword = await bcrypt.hash('admin123', 10);
   await prisma.user.upsert({
-    where: { email: 'admin@householdplanet.co.ke' },
+    where: { email: 'admin@householdplanetkenya.co.ke' },
     update: { password: hashedPassword },
     create: {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       name: 'Admin User',
       role: 'ADMIN',
       password: hashedPassword,
@@ -32,7 +32,7 @@ async function clearDemoData() {
   });
   
   console.log('✅ Demo data cleared. Admin account preserved.');
-  console.log('📧 Admin: admin@householdplanet.co.ke');
+  console.log('📧 Admin: admin@householdplanetkenya.co.ke');
   console.log('🔑 Password: admin123');
 }
 

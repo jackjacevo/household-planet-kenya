@@ -285,8 +285,8 @@ export class LegalService {
         }
       ],
       contactInformation: {
-        dataProtectionOfficer: 'dpo@householdplanet.co.ke',
-        privacyInquiries: 'privacy@householdplanet.co.ke',
+        dataProtectionOfficer: 'dpo@householdplanetkenya.co.ke',
+        privacyInquiries: 'privacy@householdplanetkenya.co.ke',
         phone: '+254 700 000 000',
         responseTime: 'Within 48 hours for urgent matters'
       }

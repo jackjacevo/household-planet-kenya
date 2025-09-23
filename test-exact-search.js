@@ -3,7 +3,7 @@ const axios = require('axios');
 async function testExactSearch() {
   try {
     const loginResponse = await axios.post('http://localhost:3001/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'HouseholdAdmin2024!'
     });
 

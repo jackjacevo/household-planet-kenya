@@ -35,7 +35,7 @@ export default function HomePage() {
       '@type': 'Store',
       name: 'Household Planet Kenya',
       description: 'Quality household items, kitchen appliances, home decor, and more with fast delivery across Kenya',
-      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanet.co.ke',
+      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.co.ke',
       address: {
         '@type': 'PostalAddress',
         addressLocality: 'Nairobi',

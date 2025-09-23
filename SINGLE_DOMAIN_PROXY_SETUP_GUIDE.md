@@ -1,13 +1,13 @@
 # Single Domain Proxy Setup Guide for Dokploy
 
 ## Problem Identified
-The frontend was configured to make direct API calls to `http://158.220.99.195:3001`, but in a single domain setup with proxy, all API calls should go through the same domain (`https://householdplanet.co.ke`).
+The frontend was configured to make direct API calls to `http://158.220.99.195:3001`, but in a single domain setup with proxy, all API calls should go through the same domain (`https://householdplanetkenya.co.ke`).
 
 ## Solution Implemented
 
 ### 1. Frontend Configuration Fixed
 - **Before**: `NEXT_PUBLIC_API_URL=http://158.220.99.195:3001`
-- **After**: `NEXT_PUBLIC_API_URL=https://householdplanet.co.ke`
+- **After**: `NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke`
 
 ### 2. Next.js Proxy Configuration
 ```javascript
@@ -41,20 +41,20 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://householdplanet.co.ke
+      NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke
 ```
 
 ## How It Works
 
 ### Request Flow
-1. User visits `https://householdplanet.co.ke`
-2. Frontend makes API call to `https://householdplanet.co.ke/api/categories`
+1. User visits `https://householdplanetkenya.co.ke`
+2. Frontend makes API call to `https://householdplanetkenya.co.ke/api/categories`
 3. Next.js proxy intercepts `/api/*` requests
 4. Proxy forwards to `http://household-planet-backend:3001/api/categories`
 5. Backend responds through the proxy back to frontend
 
 ### Benefits
-- ✅ Single domain for users (householdplanet.co.ke)
+- ✅ Single domain for users (householdplanetkenya.co.ke)
 - ✅ Simplified SSL/DNS management
 - ✅ Backend is hidden from direct access
 - ✅ Faster client calls (no cross-domain requests)
@@ -65,8 +65,8 @@ services:
 ### 1. Update Environment Variables
 ```bash
 # In Dokploy dashboard, set these environment variables:
-NEXT_PUBLIC_API_URL=https://householdplanet.co.ke
-NEXT_PUBLIC_SITE_URL=https://householdplanet.co.ke
+NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke
+NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
 DATABASE_URL=postgresql://username:password@host:5432/database
 JWT_SECRET=your-super-secure-jwt-secret
 ```
@@ -77,7 +77,7 @@ JWT_SECRET=your-super-secure-jwt-secret
 - **Network**: Both containers on same Docker network
 
 ### 3. Domain Configuration
-- Point `householdplanet.co.ke` to the frontend container (port 3000)
+- Point `householdplanetkenya.co.ke` to the frontend container (port 3000)
 - Enable SSL/TLS certificate
 - No separate domain needed for backend
 

@@ -203,7 +203,7 @@ async function seedMissingModels() {
           timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
           userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
-          pageUrl: 'https://householdplanet.co.ke/products'
+          pageUrl: 'https://householdplanetkenya.co.ke/products'
         }
       });
     }

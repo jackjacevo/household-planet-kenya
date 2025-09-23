@@ -140,7 +140,7 @@ JWT_EXPIRES_IN=7d
 
 ### Admin Credentials
 ```
-Email: admin@householdplanet.co.ke
+Email: admin@householdplanetkenya.co.ke
 Password: HouseholdAdmin2024!
 ```
 

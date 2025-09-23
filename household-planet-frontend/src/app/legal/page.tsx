@@ -197,7 +197,7 @@ export default function LegalPage() {
               <h4 className="font-medium text-gray-900 mb-2">General Questions</h4>
               <p className="text-sm text-gray-600 mb-2">For questions about our policies</p>
               <p className="text-sm text-gray-900">
-                <strong>Email:</strong> legal@householdplanet.co.ke<br />
+                <strong>Email:</strong> legal@householdplanetkenya.co.ke<br />
                 <strong>Phone:</strong> +254 700 000 000
               </p>
             </div>
@@ -205,7 +205,7 @@ export default function LegalPage() {
               <h4 className="font-medium text-gray-900 mb-2">Privacy & Data Protection</h4>
               <p className="text-sm text-gray-600 mb-2">For GDPR requests and privacy concerns</p>
               <p className="text-sm text-gray-900">
-                <strong>Email:</strong> dpo@householdplanet.co.ke<br />
+                <strong>Email:</strong> dpo@householdplanetkenya.co.ke<br />
                 <strong>Response:</strong> Within 48 hours
               </p>
             </div>
@@ -213,7 +213,7 @@ export default function LegalPage() {
               <h4 className="font-medium text-gray-900 mb-2">Returns & Refunds</h4>
               <p className="text-sm text-gray-600 mb-2">For return and refund assistance</p>
               <p className="text-sm text-gray-900">
-                <strong>Email:</strong> returns@householdplanet.co.ke<br />
+                <strong>Email:</strong> returns@householdplanetkenya.co.ke<br />
                 <strong>WhatsApp:</strong> +254 700 000 000
               </p>
             </div>

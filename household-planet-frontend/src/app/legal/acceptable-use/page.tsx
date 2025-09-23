@@ -171,7 +171,7 @@ export default function AcceptableUsePolicyPage() {
                 <p className="text-blue-800 mb-2">If you encounter content or behavior that violates this policy:</p>
                 <ul className="list-disc pl-6 space-y-1 text-blue-800">
                   <li>Use the "Report" button on the specific content</li>
-                  <li>Email us at abuse@householdplanet.co.ke</li>
+                  <li>Email us at abuse@householdplanetkenya.co.ke</li>
                   <li>Contact customer support with details</li>
                   <li>Provide screenshots or evidence when possible</li>
                 </ul>
@@ -233,8 +233,8 @@ export default function AcceptableUsePolicyPage() {
               <div className="space-y-2 text-gray-700">
                 <p>For questions about this Acceptable Use Policy:</p>
                 <ul className="list-none space-y-2">
-                  <li><strong>Email:</strong> policy@householdplanet.co.ke</li>
-                  <li><strong>Abuse Reports:</strong> abuse@householdplanet.co.ke</li>
+                  <li><strong>Email:</strong> policy@householdplanetkenya.co.ke</li>
+                  <li><strong>Abuse Reports:</strong> abuse@householdplanetkenya.co.ke</li>
                   <li><strong>Phone:</strong> +254 700 000 000</li>
                   <li><strong>Address:</strong> Nairobi, Kenya</li>
                 </ul>

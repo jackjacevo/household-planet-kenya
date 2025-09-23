@@ -1,7 +1,7 @@
 // Payment System Testing Script
 const axios = require('axios');
 
-const API_BASE = process.env.API_URL || 'https://api.householdplanet.co.ke';
+const API_BASE = process.env.API_URL || 'https://householdplanetkenya.co.ke';
 
 async function testPaymentMethods() {
   console.log('🔄 Testing Payment Methods...');

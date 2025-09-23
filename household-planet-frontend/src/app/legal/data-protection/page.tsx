@@ -36,7 +36,7 @@ export default function DataProtectionAgreementPage() {
                   <li><strong>Company:</strong> Household Planet Kenya Limited</li>
                   <li><strong>Registration:</strong> [Company Registration Number]</li>
                   <li><strong>Address:</strong> Nairobi, Kenya</li>
-                  <li><strong>Data Protection Officer:</strong> dpo@householdplanet.co.ke</li>
+                  <li><strong>Data Protection Officer:</strong> dpo@householdplanetkenya.co.ke</li>
                   <li><strong>Contact:</strong> +254 700 000 000</li>
                 </ul>
               </div>
@@ -264,7 +264,7 @@ export default function DataProtectionAgreementPage() {
                 <h3 className="text-lg font-medium text-gray-900">How to Submit Requests</h3>
                 <ul className="list-disc pl-6 space-y-2 text-gray-700">
                   <li><strong>Online:</strong> Use our Privacy Dashboard in your account settings</li>
-                  <li><strong>Email:</strong> Send requests to dpo@householdplanet.co.ke</li>
+                  <li><strong>Email:</strong> Send requests to dpo@householdplanetkenya.co.ke</li>
                   <li><strong>Phone:</strong> Call +254 700 000 000 and ask for data protection</li>
                   <li><strong>Post:</strong> Write to our Data Protection Officer at our registered address</li>
                 </ul>
@@ -306,7 +306,7 @@ export default function DataProtectionAgreementPage() {
               <div className="space-y-2 text-gray-700">
                 <p>For all data protection matters, contact our DPO:</p>
                 <ul className="list-none space-y-2">
-                  <li><strong>Email:</strong> dpo@householdplanet.co.ke</li>
+                  <li><strong>Email:</strong> dpo@householdplanetkenya.co.ke</li>
                   <li><strong>Phone:</strong> +254 700 000 000</li>
                   <li><strong>Address:</strong> Data Protection Officer, Household Planet Kenya, Nairobi, Kenya</li>
                   <li><strong>Response Time:</strong> Within 48 hours for urgent matters</li>

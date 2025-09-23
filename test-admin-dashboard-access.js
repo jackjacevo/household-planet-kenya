@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const API_URL = 'https://api.householdplanetkenya.co.ke';
-const ADMIN_EMAIL = 'admin@householdplanet.co.ke';
+const ADMIN_EMAIL = 'admin@householdplanetkenya.co.ke';
 const ADMIN_PASSWORD = 'Admin@2025';
 
 async function testAdminDashboardAccess() {
@@ -57,7 +57,7 @@ async function testAdminDashboardAccess() {
         console.log('💡 Solution: Check admin credentials');
       } else if (error.response.status === 403) {
         console.log('💡 Solution: Update user role to SUPER_ADMIN in database');
-        console.log('   SQL: UPDATE users SET role = \'SUPER_ADMIN\' WHERE email = \'admin@householdplanet.co.ke\';');
+        console.log('   SQL: UPDATE users SET role = \'SUPER_ADMIN\' WHERE email = \'admin@householdplanetkenya.co.ke\';');
       }
     } else {
       console.error(error.message);

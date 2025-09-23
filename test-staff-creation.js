@@ -6,7 +6,7 @@ async function testStaffCreation() {
   try {
     // Login
     const loginResponse = await axios.post(`${API_URL}/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'HouseholdAdmin2024!'
     });
     
@@ -18,7 +18,7 @@ async function testStaffCreation() {
     // Test creating a new staff member
     const newStaff = {
       name: 'Test Staff Member',
-      email: `test.staff.${Date.now()}@householdplanet.co.ke`,
+      email: `test.staff.${Date.now()}@householdplanetkenya.co.ke`,
       password: 'testpass123',
       role: 'STAFF',
       permissions: ['manage_orders', 'view_analytics'],
@@ -33,7 +33,7 @@ async function testStaffCreation() {
     // Test creating an admin
     const newAdmin = {
       name: 'Test Admin User',
-      email: `test.admin.${Date.now()}@householdplanet.co.ke`,
+      email: `test.admin.${Date.now()}@householdplanetkenya.co.ke`,
       password: 'adminpass123',
       role: 'ADMIN',
       permissions: ['manage_products', 'manage_orders', 'manage_customers', 'view_analytics'],

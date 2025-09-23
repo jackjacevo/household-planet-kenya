@@ -14,7 +14,7 @@ async function fixAdminRole() {
     // Test admin access
     console.log('🔐 Testing admin access...');
     const loginResponse = await axios.post('https://api.householdplanetkenya.co.ke/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
     

@@ -22,7 +22,7 @@ export interface SEOConfig {
 
 const defaultConfig = {
   siteName: 'Household Planet Kenya',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanet.co.ke',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.co.ke',
   defaultTitle: 'Household Planet Kenya - Quality Home Products & Appliances',
   defaultDescription: 'Shop quality household items, kitchen appliances, home decor, and more at Household Planet Kenya. Fast delivery across Kenya with secure payment options.',
   defaultImage: '/images/og-default.jpg',

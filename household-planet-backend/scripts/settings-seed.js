@@ -14,7 +14,7 @@ async function seedSettings() {
       { category: 'company', key: 'site_name', value: 'Household Planet Kenya', type: 'string', description: 'Website name', isPublic: true },
       { category: 'company', key: 'site_description', value: 'Your one-stop shop for quality household items in Kenya', type: 'string', description: 'Website description', isPublic: true },
       { category: 'company', key: 'company_name', value: 'Household Planet Kenya Ltd', type: 'string', description: 'Legal company name', isPublic: true },
-      { category: 'company', key: 'contact_email', value: 'info@householdplanet.co.ke', type: 'string', description: 'Main contact email', isPublic: true },
+      { category: 'company', key: 'contact_email', value: 'info@householdplanetkenya.co.ke', type: 'string', description: 'Main contact email', isPublic: true },
       { category: 'company', key: 'contact_phone', value: '+254700000000', type: 'string', description: 'Main contact phone', isPublic: true },
       { category: 'company', key: 'address', value: 'Nairobi, Kenya', type: 'string', description: 'Company address', isPublic: true },
       { category: 'company', key: 'currency', value: 'KSh', type: 'string', description: 'Default currency', isPublic: true },
@@ -42,7 +42,7 @@ async function seedSettings() {
       { category: 'notification', key: 'sms_notifications', value: 'true', type: 'boolean', description: 'Enable SMS notifications', isPublic: false },
       { category: 'notification', key: 'low_stock_alerts', value: 'true', type: 'boolean', description: 'Enable low stock alerts', isPublic: false },
       { category: 'notification', key: 'order_notifications', value: 'true', type: 'boolean', description: 'Enable order notifications', isPublic: false },
-      { category: 'notification', key: 'admin_email', value: 'admin@householdplanet.co.ke', type: 'string', description: 'Admin notification email', isPublic: false },
+      { category: 'notification', key: 'admin_email', value: 'admin@householdplanetkenya.co.ke', type: 'string', description: 'Admin notification email', isPublic: false },
       { category: 'notification', key: 'notification_frequency', value: 'immediate', type: 'string', description: 'Notification frequency', isPublic: false }
     ];
 
@@ -79,9 +79,9 @@ async function seedSettings() {
     const emailSettings = [
       { category: 'email', key: 'smtp_host', value: 'smtp.gmail.com', type: 'string', description: 'SMTP server host', isPublic: false },
       { category: 'email', key: 'smtp_port', value: '587', type: 'number', description: 'SMTP server port', isPublic: false },
-      { category: 'email', key: 'smtp_username', value: 'noreply@householdplanet.co.ke', type: 'string', description: 'SMTP username', isPublic: false },
+      { category: 'email', key: 'smtp_username', value: 'noreply@householdplanetkenya.co.ke', type: 'string', description: 'SMTP username', isPublic: false },
       { category: 'email', key: 'smtp_password', value: 'your-app-password', type: 'string', description: 'SMTP password', isPublic: false },
-      { category: 'email', key: 'from_email', value: 'noreply@householdplanet.co.ke', type: 'string', description: 'Default from email', isPublic: false },
+      { category: 'email', key: 'from_email', value: 'noreply@householdplanetkenya.co.ke', type: 'string', description: 'Default from email', isPublic: false },
       { category: 'email', key: 'from_name', value: 'Household Planet Kenya', type: 'string', description: 'Default from name', isPublic: false }
     ];
 

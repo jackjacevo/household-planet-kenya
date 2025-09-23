@@ -47,7 +47,7 @@ export function NotificationSettingsTab({ settings, onSettingsChange }: Notifica
       lowStockAlerts: settings?.low_stock_alerts?.value ?? true,
       newCustomerNotifications: settings?.new_customer_notifications?.value ?? true,
       dailySalesReport: settings?.daily_sales_report?.value ?? false,
-      notificationEmail: settings?.notification_email?.value || settings?.contact_email?.value || 'info@householdplanet.co.ke',
+      notificationEmail: settings?.notification_email?.value || settings?.contact_email?.value || 'info@householdplanetkenya.co.ke',
     };
     setFormData(data);
   }, [settings]);

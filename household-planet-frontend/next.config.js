@@ -1,10 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker
+  output: 'standalone',
+
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
   },
+
+  // API rewrite for production - proxy /api/* to backend
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://household-planet-backend:3001/api/:path*',
+      },
+    ];
+  },
+
   images: {
-    domains: ['images.unsplash.com', 'api.householdplanetkenya.co.ke'],
+    domains: ['images.unsplash.com', 'householdplanetkenya.co.ke'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,11 +26,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.householdplanetkenya.co.ke',
+        hostname: 'householdplanetkenya.co.ke',
       },
     ],
     unoptimized: true,
   },
+
   experimental: {
     webVitalsAttribution: ['CLS', 'LCP']
   },

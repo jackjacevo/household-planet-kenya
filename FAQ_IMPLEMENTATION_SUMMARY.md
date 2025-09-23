@@ -65,7 +65,7 @@ Created a comprehensive FAQ page for Household Planet Kenya e-commerce platform 
 ### Contact Information Included
 - **Phone**: +254 700 000 000 (Mon-Fri 8AM-6PM)
 - **WhatsApp**: Quick responses via wa.me link
-- **Email**: support@householdplanet.co.ke (24hr response)
+- **Email**: support@householdplanetkenya.co.ke (24hr response)
 - **Contact Page**: Link to full contact form
 
 ### Key Features

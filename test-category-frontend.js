@@ -44,7 +44,7 @@ async function testCategoryFrontend() {
     console.log('\n🔐 Testing admin login...');
     try {
       const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: 'Admin@2025'
       });
       console.log('✅ Admin login successful');

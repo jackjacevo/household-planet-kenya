@@ -5,7 +5,7 @@ async function debugReceiptIssue() {
     // First, let's try to login as admin to get a valid token
     console.log('Logging in as admin...');
     const loginResponse = await axios.post('http://localhost:3001/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'HouseholdAdmin2024!'
     });
     

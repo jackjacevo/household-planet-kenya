@@ -38,7 +38,7 @@
 ### WhatsApp Business
 **Business Name**: Household Planet Kenya
 **Number**: +254700000000
-**About**: "Quality household items delivered to your door. Order via WhatsApp or visit householdplanet.co.ke"
+**About**: "Quality household items delivered to your door. Order via WhatsApp or visit householdplanetkenya.co.ke"
 
 **Setup Checklist**:
 - [ ] Create business profile

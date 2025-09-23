@@ -21,7 +21,7 @@ async function resetAndSeed() {
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -279,7 +279,7 @@ async function resetAndSeed() {
     }
 
     console.log('✅ Reset and seeding completed successfully:');
-    console.log(`- 1 Admin user (admin@householdplanet.co.ke / Admin@2025)`);
+    console.log(`- 1 Admin user (admin@householdplanetkenya.co.ke / Admin@2025)`);
     console.log(`- ${createdCategories.length} categories`);
     console.log(`- ${createdProducts.length} products`);
     console.log(`- ${createdCustomers.length} sample customers`);

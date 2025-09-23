@@ -14,7 +14,7 @@ This guide provides comprehensive instructions for integrating marketing tools, 
 
 1. **Create GA4 Property**
    - Go to Google Analytics
-   - Create new property for householdplanet.co.ke
+   - Create new property for householdplanetkenya.co.ke
    - Get Measurement ID (G-XXXXXXXXXX)
 
 2. **Frontend Integration**

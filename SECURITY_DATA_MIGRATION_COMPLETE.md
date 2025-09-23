@@ -94,9 +94,9 @@
   - Kisumu (KES 1200, 4 days)
 
 ### ✅ Staff Account Creation
-- **Admin Account**: admin@householdplanet.co.ke
-- **Manager Account**: manager@householdplanet.co.ke
-- **Support Account**: support@householdplanet.co.ke
+- **Admin Account**: admin@householdplanetkenya.co.ke
+- **Manager Account**: manager@householdplanetkenya.co.ke
+- **Support Account**: support@householdplanetkenya.co.ke
 - **Role-based Access**: ADMIN, MANAGER, SUPPORT roles
 - **Secure Passwords**: Bcrypt hashed passwords
 

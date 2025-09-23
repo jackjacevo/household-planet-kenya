@@ -181,7 +181,7 @@ export default function ReturnRefundPolicyPage() {
               <div className="space-y-2 text-gray-700">
                 <p>For return-related questions or assistance:</p>
                 <ul className="list-none space-y-2">
-                  <li><strong>Email:</strong> returns@householdplanet.co.ke</li>
+                  <li><strong>Email:</strong> returns@householdplanetkenya.co.ke</li>
                   <li><strong>Phone:</strong> +254 700 000 000</li>
                   <li><strong>WhatsApp:</strong> +254 700 000 000</li>
                   <li><strong>Live Chat:</strong> Available on our website 9 AM - 6 PM</li>

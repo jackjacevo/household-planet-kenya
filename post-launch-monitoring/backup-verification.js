@@ -31,7 +31,7 @@ class BackupVerifier {
     
     try {
       // Check if backup exists
-      const backupInfo = await axios.get('https://api.householdplanet.co.ke/api/admin/backups/database/latest');
+      const backupInfo = await axios.get('https://householdplanetkenya.co.ke/api/admin/backups/database/latest');
       
       if (!backupInfo.data.backup) {
         throw new Error('No database backup found');
@@ -46,7 +46,7 @@ class BackupVerifier {
       }
       
       // Verify backup integrity
-      const integrityCheck = await axios.post('https://api.householdplanet.co.ke/api/admin/backups/verify', {
+      const integrityCheck = await axios.post('https://householdplanetkenya.co.ke/api/admin/backups/verify', {
         type: 'database',
         backupId: backup.id
       });
@@ -56,7 +56,7 @@ class BackupVerifier {
       }
       
       // Test restore capability (on test database)
-      const restoreTest = await axios.post('https://api.householdplanet.co.ke/api/admin/backups/test-restore', {
+      const restoreTest = await axios.post('https://householdplanetkenya.co.ke/api/admin/backups/test-restore', {
         type: 'database',
         backupId: backup.id,
         testMode: true
@@ -92,7 +92,7 @@ class BackupVerifier {
     console.log('🔍 Verifying file system backup...');
     
     try {
-      const backupInfo = await axios.get('https://api.householdplanet.co.ke/api/admin/backups/files/latest');
+      const backupInfo = await axios.get('https://householdplanetkenya.co.ke/api/admin/backups/files/latest');
       
       if (!backupInfo.data.backup) {
         throw new Error('No file backup found');
@@ -107,7 +107,7 @@ class BackupVerifier {
       }
       
       // Verify backup completeness
-      const fileCount = await axios.get('https://api.householdplanet.co.ke/api/admin/files/count');
+      const fileCount = await axios.get('https://householdplanetkenya.co.ke/api/admin/files/count');
       const expectedFiles = fileCount.data.count;
       
       if (backup.fileCount < expectedFiles * 0.95) { // Allow 5% variance
@@ -115,7 +115,7 @@ class BackupVerifier {
       }
       
       // Verify checksum
-      const checksumVerification = await axios.post('https://api.householdplanet.co.ke/api/admin/backups/verify-checksum', {
+      const checksumVerification = await axios.post('https://householdplanetkenya.co.ke/api/admin/backups/verify-checksum', {
         type: 'files',
         backupId: backup.id
       });
@@ -149,7 +149,7 @@ class BackupVerifier {
     console.log('🔍 Verifying configuration backup...');
     
     try {
-      const backupInfo = await axios.get('https://api.householdplanet.co.ke/api/admin/backups/config/latest');
+      const backupInfo = await axios.get('https://householdplanetkenya.co.ke/api/admin/backups/config/latest');
       
       if (!backupInfo.data.backup) {
         throw new Error('No configuration backup found');
@@ -204,7 +204,7 @@ class BackupVerifier {
     console.log('🔍 Checking backup storage...');
     
     try {
-      const storageInfo = await axios.get('https://api.householdplanet.co.ke/api/admin/backups/storage-info');
+      const storageInfo = await axios.get('https://householdplanetkenya.co.ke/api/admin/backups/storage-info');
       const storage = storageInfo.data;
       
       const usagePercentage = (storage.used / storage.total) * 100;
@@ -235,7 +235,7 @@ class BackupVerifier {
       try {
         const cutoffDate = new Date(Date.now() - (retentionDays * 24 * 60 * 60 * 1000));
         
-        const cleanupResult = await axios.delete('https://api.householdplanet.co.ke/api/admin/backups/cleanup', {
+        const cleanupResult = await axios.delete('https://householdplanetkenya.co.ke/api/admin/backups/cleanup', {
           data: {
             type,
             cutoffDate: cutoffDate.toISOString()
@@ -272,8 +272,8 @@ class BackupVerifier {
     
     // Send email for critical backup failures
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-        to: 'admin@householdplanet.co.ke',
+      await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+        to: 'admin@householdplanetkenya.co.ke',
         subject: `Backup Failure: ${this.backupTypes[backupType]}`,
         body: `
 Backup verification failed:
@@ -303,7 +303,7 @@ Please investigate immediately.
     };
     
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/reports/backup', report);
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/reports/backup', report);
       console.log('✅ Backup report generated');
     } catch (error) {
       console.error('Failed to generate backup report:', error);

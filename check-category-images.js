@@ -76,7 +76,7 @@ async function checkCategoryImages() {
     console.log('\n🧪 Testing New Image Upload System...');
     try {
       const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: 'Admin@2025'
       });
       const token = loginResponse.data.accessToken;

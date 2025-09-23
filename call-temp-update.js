@@ -5,7 +5,7 @@ async function updateAdminRole() {
     console.log('🔧 Updating admin role via temporary endpoint...');
     
     const response = await axios.post('https://api.householdplanetkenya.co.ke/api/temp/update-admin-role', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       secretKey: 'temp-update-admin-2025'
     });
     
@@ -15,7 +15,7 @@ async function updateAdminRole() {
     // Test admin access
     console.log('🔐 Testing admin access...');
     const loginResponse = await axios.post('https://api.householdplanetkenya.co.ke/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
     

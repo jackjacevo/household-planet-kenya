@@ -21,8 +21,10 @@ import {
   Bell,
   ArrowRight
 } from 'lucide-react';
-import axios from 'axios';
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/lib/store/authStore';
+import { dashboardStatsSchema, validateApiResponse } from '@/lib/validation';
+import { getErrorMessage } from '@/lib/error-messages';
 import { SimpleLineChart, SimplePieChart, SimpleBarChart, CustomerGrowthChart } from '@/components/admin/SimpleChart';
 
 interface DashboardStats {
@@ -67,69 +69,43 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { refreshAll } = useRealtimeOrders();
+  const { user } = useAuthStore();
   
   const fetchDashboardStats = async () => {
     const token = localStorage.getItem('token');
-    if (!token) throw new Error('No token found');
+    if (!token) throw new Error('No authentication token');
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
-    
-    // Handle API unavailability with fallback data
-    const fallbackStats = {
-      overview: {
-        totalOrders: 156,
-        totalRevenue: 485000,
-        totalCustomers: 89,
-        totalProducts: 245,
-        activeProducts: 230,
-        outOfStockProducts: 8,
-        todayOrders: 5,
-        todayRevenue: 12500,
-        pendingOrders: 3,
-        lowStockProducts: 12
-      },
-      recentOrders: [],
-      topProducts: [],
-      customerGrowth: [],
-      salesByCounty: []
-    };
-    
-    try {
-      console.log('🔍 Fetching dashboard data from:', `${apiUrl}/api/admin/stats`);
-      const response = await axios.get(
-        `${apiUrl}/api/admin/stats`,
-        { 
-          headers: { 'Authorization': `Bearer ${token}` },
-          timeout: 10000
-        }
-      );
-      console.log('✅ Dashboard API response:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ Dashboard API error:', error instanceof Error ? error.message : 'Unknown error');
-      console.warn('Using fallback data');
-      return fallbackStats;
-    }
+    const response = await api.get('/admin/dashboard');
+    return validateApiResponse(dashboardStatsSchema, response.data);
   };
 
   const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: fetchDashboardStats,
-    refetchInterval: 30000,
+    refetchInterval: 10000, // Reduced for better real-time feel
     retry: (failureCount, error: any) => {
-      if (error?.response?.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+      if (error?.message?.includes('Authentication required')) {
         return false;
       }
+      if (error?.message?.includes('Network error')) {
+        return failureCount < 2;
+      }
       return failureCount < 3;
-    }
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
   if (loading) {
     return (
       <div className="px-4 sm:px-6 lg:px-8">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-center py-6 sm:py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">Loading dashboard...</p>
+            </div>
+          </div>
+        </div>
         <div className="animate-pulse">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
@@ -142,19 +118,38 @@ export default function AdminDashboard() {
   }
 
   if (error) {
+    const errorMessage = getErrorMessage(error);
+    const isNetworkError = errorMessage.includes('Network error');
+    const isServerError = errorMessage.includes('Server error');
+    
     return (
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="bg-red-50 border border-red-200 rounded-md p-3 sm:p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Error loading dashboard
+            <div className="ml-2 sm:ml-3">
+              <h3 className="text-xs sm:text-sm font-medium text-red-800">
+                {isNetworkError ? 'Connection Error' : isServerError ? 'Server Error' : 'Dashboard Error'}
               </h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>Unable to load dashboard data. Please try refreshing the page.</p>
+              <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-700">
+                <p>{errorMessage}</p>
+                {isNetworkError && <p className="mt-1">Check your internet connection and try again.</p>}
+                {isServerError && <p className="mt-1">Our servers are experiencing issues. Please try again in a few minutes.</p>}
+              </div>
+              <div className="mt-2 sm:mt-3">
+                <button 
+                  onClick={() => {
+                    import('@/lib/toast').then(({ showInfo }) => {
+                      showInfo('Refreshing dashboard...');
+                    });
+                    window.location.reload();
+                  }}
+                  className="text-xs sm:text-sm bg-red-100 hover:bg-red-200 text-red-800 px-2 sm:px-3 py-1 rounded transition-colors"
+                >
+                  Retry
+                </button>
               </div>
             </div>
           </div>
@@ -163,23 +158,22 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!stats) return <div>Loading dashboard...</div>;
+  if (!stats) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 sm:p-4">
+          <div className="text-sm sm:text-base text-yellow-800">No dashboard data available</div>
+        </div>
+      </div>
+    );
+  }
 
   const statCards = [
     {
       name: 'Revenue',
-      value: `KSh ${(() => {
-        // Calculate delivered revenue from recent orders if not provided by backend
-        if (stats.overview?.deliveredRevenue) {
-          return stats.overview.deliveredRevenue;
-        }
-        // Calculate from delivered orders in recentOrders
-        const deliveredTotal = (stats.recentOrders || []).filter((order: any) => order.status === 'DELIVERED').reduce((sum: number, order: any) => sum + order.total, 0);
-        return deliveredTotal || stats.overview?.totalRevenue || 0;
-      })().toLocaleString()}`,
-      subValue: `Total: KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
-      change: '+12.5%',
-      changeType: 'increase',
+      value: `KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
+      change: stats.overview?.revenueChange || 'N/A',
+      changeType: stats.overview?.revenueChangeType || 'neutral',
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
@@ -187,8 +181,8 @@ export default function AdminDashboard() {
     {
       name: 'Total Orders',
       value: (stats.overview?.totalOrders || 0).toLocaleString(),
-      change: '+8.2%',
-      changeType: 'increase',
+      change: stats.overview?.ordersChange || 'N/A',
+      changeType: stats.overview?.ordersChangeType || 'neutral',
       icon: ShoppingCart,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
@@ -196,8 +190,8 @@ export default function AdminDashboard() {
     {
       name: 'Total Customers',
       value: (stats.overview?.totalCustomers || 0).toLocaleString(),
-      change: '+15.3%',
-      changeType: 'increase',
+      change: stats.overview?.customersChange || 'N/A',
+      changeType: stats.overview?.customersChangeType || 'neutral',
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
@@ -205,8 +199,8 @@ export default function AdminDashboard() {
     {
       name: 'Total Products',
       value: (stats.overview?.totalProducts || 0).toLocaleString(),
-      change: '+2.1%',
-      changeType: 'increase',
+      change: stats.overview?.productsChange || 'N/A',
+      changeType: stats.overview?.productsChangeType || 'neutral',
       icon: Package,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
@@ -282,7 +276,7 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="hidden sm:inline">Live updates every 30s</span>
+            <span className="hidden sm:inline">Live updates every 10s</span>
             <span className="sm:hidden">Live updates</span>
           </div>
         </div>
@@ -343,18 +337,16 @@ export default function AdminDashboard() {
                       <div className="text-xl sm:text-3xl font-bold text-gray-900">
                         {item.value}
                       </div>
-                      {item.subValue && (
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          {item.subValue}
-                        </div>
-                      )}
                       <div className={`flex items-baseline text-xs sm:text-sm font-semibold sm:ml-2 ${
-                        item.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                        item.changeType === 'increase' ? 'text-green-600' : 
+                        item.changeType === 'decrease' ? 'text-red-600' : 'text-gray-500'
                       }`}>
                         {item.changeType === 'increase' ? (
                           <TrendingUp className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
-                        ) : (
+                        ) : item.changeType === 'decrease' ? (
                           <TrendingDown className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
+                        ) : (
+                          <div className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
                         )}
                         <span className="ml-1">{item.change}</span>
                       </div>

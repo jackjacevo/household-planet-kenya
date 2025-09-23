@@ -116,7 +116,7 @@ export default function TermsOfServicePage() {
               <div className="space-y-2 text-gray-700">
                 <p>For questions about these Terms of Service, contact us:</p>
                 <ul className="list-none space-y-2">
-                  <li><strong>Email:</strong> legal@householdplanet.co.ke</li>
+                  <li><strong>Email:</strong> legal@householdplanetkenya.co.ke</li>
                   <li><strong>Phone:</strong> +254 700 000 000</li>
                   <li><strong>Address:</strong> Nairobi, Kenya</li>
                 </ul>

@@ -11,7 +11,7 @@ async function testAdminCategoriesAPI() {
     // Login
     console.log('🔐 Logging in...');
     const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
     const token = loginResponse.data.access_token;

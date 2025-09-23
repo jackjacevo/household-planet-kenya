@@ -2,7 +2,7 @@
   "monitors": [
     {
       "friendly_name": "Household Planet - Homepage",
-      "url": "https://householdplanet.co.ke",
+      "url": "https://householdplanetkenya.co.ke",
       "type": 1,
       "interval": 300,
       "timeout": 30,
@@ -11,7 +11,7 @@
     },
     {
       "friendly_name": "Household Planet - API Health",
-      "url": "https://api.householdplanet.co.ke/health",
+      "url": "https://householdplanetkenya.co.ke/health",
       "type": 1,
       "interval": 300,
       "timeout": 30,
@@ -20,14 +20,14 @@
     },
     {
       "friendly_name": "Household Planet - Products API",
-      "url": "https://api.householdplanet.co.ke/api/products",
+      "url": "https://householdplanetkenya.co.ke/api/products",
       "type": 1,
       "interval": 600,
       "timeout": 30
     },
     {
       "friendly_name": "Household Planet - Auth API",
-      "url": "https://api.householdplanet.co.ke/api/auth/status",
+      "url": "https://householdplanetkenya.co.ke/api/auth/status",
       "type": 1,
       "interval": 600,
       "timeout": 30
@@ -36,7 +36,7 @@
   "alert_contacts": [
     {
       "type": 2,
-      "value": "admin@householdplanet.co.ke",
+      "value": "admin@householdplanetkenya.co.ke",
       "friendly_name": "Admin Email"
     },
     {

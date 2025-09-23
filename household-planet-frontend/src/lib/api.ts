@@ -35,73 +35,101 @@ class ApiClient {
       
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`
+        let errorCode = response.status
+        
         try {
           const errorData = await response.json()
-          errorMessage = errorData.message || errorData.error || errorMessage
+          if (typeof errorData === 'object' && errorData !== null) {
+            errorMessage = errorData.message || errorData.error || errorMessage
+          }
         } catch {
-          // If JSON parsing fails, use status text
           errorMessage = response.statusText || errorMessage
         }
+        
+        // Handle specific error cases
+        if (errorCode === 401) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          window.location.href = '/admin/login'
+          throw new Error('Authentication required')
+        }
+        
+        if (errorCode === 403) {
+          throw new Error('Access denied')
+        }
+        
+        if (errorCode >= 500) {
+          throw new Error('Server error')
+        }
+        
         throw new Error(errorMessage)
       }
 
       const data = await response.json()
+      
+      // Basic validation for response structure
+      if (typeof data !== 'object' || data === null) {
+        throw new Error('Invalid response format')
+      }
+      
       return data
     } catch (error) {
-      console.error('API request failed:', error)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error')
+      }
       throw error
     }
   }
 
   // Auth endpoints
   async login(email: string, password: string) {
-    return this.request('/api/auth/login', {
+    return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
   }
 
   async register(userData: any) {
-    return this.request('/api/auth/register', {
+    return this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     })
   }
 
   async getUserProfile() {
-    return this.request('/api/auth/profile')
+    return this.request('/auth/profile')
   }
 
   // Products endpoints
   async getProducts(params?: any) {
     const query = params ? `?${new URLSearchParams(params)}` : ''
-    return this.request(`/api/products${query}`)
+    return this.request(`/products${query}`)
   }
 
   async getProduct(id: string) {
-    return this.request(`/api/products/${id}`)
+    return this.request(`/products/${id}`)
   }
 
   async getProductBySlug(slug: string) {
-    return this.request(`/api/products/slug/${slug}`)
+    return this.request(`/products/slug/${slug}`)
   }
 
   // Categories endpoints
   async getCategories() {
-    return this.request('/api/categories')
+    return this.request('/categories')
   }
 
   async getCategoryHierarchy() {
-    return this.request('/api/categories/hierarchy')
+    return this.request('/categories/hierarchy')
   }
 
   // Cart endpoints
   async getCart() {
-    return this.request('/api/cart')
+    return this.request('/cart')
   }
 
   async addToCart(productId: number, quantity: number, variantId?: number) {
-    return this.request('/api/cart', {
+    return this.request('/cart', {
       method: 'POST',
       body: JSON.stringify({ productId, quantity, variantId }),
     })
@@ -109,63 +137,63 @@ class ApiClient {
 
   // Orders endpoints
   async createOrder(orderData: any) {
-    return this.request('/api/orders', {
+    return this.request('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
     })
   }
 
   async getOrders() {
-    return this.request('/api/orders')
+    return this.request('/orders')
   }
 
   // Delivery endpoints
   async getDeliveryLocations() {
-    return this.request('/api/delivery/locations')
+    return this.request('/delivery/locations')
   }
 
   async getDeliveryPrice(location: string) {
-    return this.request(`/api/delivery/price?location=${encodeURIComponent(location)}`)
+    return this.request(`/delivery/price?location=${encodeURIComponent(location)}`)
   }
 
   async getDeliveryEstimate(location: string) {
-    return this.request(`/api/delivery/estimate?location=${encodeURIComponent(location)}`)
+    return this.request(`/delivery/estimate?location=${encodeURIComponent(location)}`)
   }
 
   async getLocationsByTier(tier: number) {
-    return this.request(`/api/delivery/locations/tier?tier=${tier}`)
+    return this.request(`/delivery/locations/tier?tier=${tier}`)
   }
 
   async trackDelivery(trackingNumber: string) {
-    return this.request(`/api/delivery/track/${trackingNumber}`)
+    return this.request(`/delivery/track/${trackingNumber}`)
   }
 
   // Advanced product features
   async searchProducts(query: string, limit = 10) {
-    return this.request(`/api/products/search/autocomplete?q=${encodeURIComponent(query)}&limit=${limit}`)
+    return this.request(`/products/search/autocomplete?q=${encodeURIComponent(query)}&limit=${limit}`)
   }
 
   async getProductRecommendations(productId: string, type = 'RELATED', limit = 6) {
-    return this.request(`/api/products/${productId}/recommendations?type=${type}&limit=${limit}`)
+    return this.request(`/products/${productId}/recommendations?type=${type}&limit=${limit}`)
   }
 
   async getRecentlyViewed(limit = 10) {
-    return this.request(`/api/products/user/recently-viewed?limit=${limit}`)
+    return this.request(`/products/user/recently-viewed?limit=${limit}`)
   }
 
   async getLowStockAlerts() {
-    return this.request('/api/products/inventory/low-stock')
+    return this.request('/products/inventory/low-stock')
   }
 
   async generateRecommendations() {
-    return this.request('/api/products/admin/generate-recommendations', { method: 'POST' })
+    return this.request('/products/admin/generate-recommendations', { method: 'POST' })
   }
 
   async importProductsCsv(file: File) {
     const formData = new FormData()
     formData.append('file', file)
     
-    return fetch(`${this.baseURL}/api/products/import/csv`, {
+    return fetch(`${this.baseURL}/products/import/csv`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -177,7 +205,7 @@ class ApiClient {
   async exportProductsCsv() {
     const token = localStorage.getItem('token')
     
-    return fetch(`${this.baseURL}/api/products/export/csv`, {
+    return fetch(`${this.baseURL}/products/export/csv`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -186,13 +214,13 @@ class ApiClient {
 
   // Reviews endpoints
   async getProductReviews(productId: number | string) {
-    return this.request(`/api/reviews/product/${productId}`)
+    return this.request(`/reviews/product/${productId}`)
   }
 
   async createReview(formData: FormData) {
     const token = localStorage.getItem('token')
     
-    return fetch(`${this.baseURL}/api/reviews`, {
+    return fetch(`${this.baseURL}/reviews`, {
       method: 'POST',
       body: formData,
       headers: {

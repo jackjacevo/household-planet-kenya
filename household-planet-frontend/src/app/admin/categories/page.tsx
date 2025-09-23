@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, FolderOpen, Folder, Tag, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import axios from 'axios';
+import { secureApiClient } from '@/lib/secure-api';
 import { useToast } from '@/contexts/ToastContext';
 
 interface Category {
@@ -45,9 +45,7 @@ export default function AdminCategoriesPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await secureApiClient.get('/api/categories');
       
       const responseData = response.data;
       let categoriesData = [];
@@ -66,11 +64,7 @@ export default function AdminCategoriesPage() {
       
       setCategories(safeCategoriesData);
     } catch (error: any) {
-      showToast({
-        title: 'Error',
-        description: 'Failed to load categories',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Failed to load categories' });
       setCategories([]);
     } finally {
       setLoading(false);
@@ -111,11 +105,7 @@ export default function AdminCategoriesPage() {
     // Validate file before upload
     const validationError = validateCategoryFile(file);
     if (validationError) {
-      showToast({
-        title: 'Invalid File',
-        description: validationError,
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: validationError });
       return;
     }
 
@@ -125,31 +115,16 @@ export default function AdminCategoriesPage() {
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload-image`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      const response = await secureApiClient.post('/api/admin/categories/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       
       const imageUrl = response.data.url;
       setFormData(prev => ({ ...prev, image: imageUrl }));
-      showToast({
-        title: 'Success',
-        description: 'Image uploaded successfully',
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: 'Image uploaded successfully' });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to upload image';
-      showToast({
-        title: 'Upload Failed',
-        description: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.' });
     } finally {
       setUploadingImage(false);
     }
@@ -158,11 +133,7 @@ export default function AdminCategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      showToast({
-        title: 'Validation Error',
-        description: 'Category name is required',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: 'Category name is required' });
       return;
     }
 
@@ -179,33 +150,17 @@ export default function AdminCategoriesPage() {
       };
       
       if (editingCategory) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${editingCategory.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        showToast({
-          title: 'Success',
-          description: 'Category updated successfully',
-          variant: 'success'
-        });
+        await secureApiClient.put(`/api/admin/categories/${editingCategory.id}`, data);
+        showToast({ type: 'success', message: 'Category updated successfully' });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        showToast({
-          title: 'Success',
-          description: 'Category created successfully',
-          variant: 'success'
-        });
+        await secureApiClient.post('/api/admin/categories', data);
+        showToast({ type: 'success', message: 'Category created successfully' });
       }
 
       await fetchCategories();
       resetForm();
     } catch (error: any) {
-      showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to save category',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: error.response?.data?.message || 'Failed to save category' });
     } finally {
       setLoading(false);
     }
@@ -217,21 +172,11 @@ export default function AdminCategoriesPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${category.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      showToast({
-        title: 'Success',
-        description: `Category "${category.name}" deleted successfully`,
-        variant: 'success'
-      });
+      await secureApiClient.delete(`/api/admin/categories/${category.id}`);
+      showToast({ type: 'success', message: `Category "${category.name}" deleted successfully` });
       await fetchCategories();
     } catch (error: any) {
-      showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete category',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: error.response?.data?.message || 'Failed to delete category' });
     } finally {
       setLoading(false);
     }

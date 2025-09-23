@@ -1,7 +1,7 @@
 # Staff Training Guide - Admin Panel Usage
 
 ## Admin Panel Access
-- **URL**: https://householdplanet.co.ke/admin
+- **URL**: https://householdplanetkenya.co.ke/admin
 - **Login Credentials**: Provided individually
 - **Roles**: ADMIN, MANAGER, SUPPORT
 

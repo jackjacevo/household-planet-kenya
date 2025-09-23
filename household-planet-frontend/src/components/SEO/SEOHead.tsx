@@ -19,7 +19,7 @@ export default function SEOHead({
   image = '/images/logo/logo.png',
   structuredData
 }: SEOHeadProps) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanet.co.ke';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.co.ke';
   const fullUrl = url ? `${siteUrl}${url}` : siteUrl;
   const fullImageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
 

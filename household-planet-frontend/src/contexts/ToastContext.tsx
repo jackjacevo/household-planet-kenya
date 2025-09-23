@@ -1,36 +1,33 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { ToastContainer, ToastProps } from '@/components/ui/Toast';
+import { createContext, useContext, ReactNode } from 'react';
+import { ToastContainer } from '@/components/ui/Toast';
+import { showSuccess, showError, showInfo, showWarning } from '@/lib/toast';
 
 interface ToastContextType {
-  showToast: (toast: Omit<ToastProps, 'id' | 'onClose'>) => void;
-  removeToast: (id: string) => void;
+  showSuccess: (message: string) => void;
+  showError: (message: string) => void;
+  showInfo: (message: string) => void;
+  showWarning: (message: string) => void;
+  showToast: (toast: { type: 'success' | 'error' | 'info' | 'warning'; message: string }) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastProps[]>([]);
-
-  const showToast = (toast: Omit<ToastProps, 'id' | 'onClose'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newToast: ToastProps = {
-      ...toast,
-      id,
-      onClose: removeToast,
-    };
-    setToasts((prev) => [...prev, newToast]);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  const showToast = (toast: { type: 'success' | 'error' | 'info' | 'warning'; message: string }) => {
+    switch (toast.type) {
+      case 'success': showSuccess(toast.message); break;
+      case 'error': showError(toast.message); break;
+      case 'warning': showWarning(toast.message); break;
+      default: showInfo(toast.message);
+    }
   };
 
   return (
-    <ToastContext.Provider value={{ showToast, removeToast }}>
+    <ToastContext.Provider value={{ showSuccess, showError, showInfo, showWarning, showToast }}>
       {children}
-      <ToastContainer toasts={toasts} />
+      <ToastContainer />
     </ToastContext.Provider>
   );
 }

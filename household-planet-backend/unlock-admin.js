@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function unlockAdmin() {
   try {
     await prisma.user.update({
-      where: { email: 'admin@householdplanet.co.ke' },
+      where: { email: 'admin@householdplanetkenya.co.ke' },
       data: {
         loginAttempts: 0,
         lockedUntil: null

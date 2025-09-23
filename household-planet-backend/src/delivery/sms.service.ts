@@ -27,7 +27,7 @@ export class SmsService {
   }
 
   async sendDeliveryUpdate(phoneNumber: string, trackingNumber: string, status: string) {
-    const message = `Delivery Update: Your order ${trackingNumber} is now ${status.toLowerCase()}. Track: householdplanet.co.ke/track/${trackingNumber}`;
+    const message = `Delivery Update: Your order ${trackingNumber} is now ${status.toLowerCase()}. Track: householdplanetkenya.co.ke/track/${trackingNumber}`;
     return this.sendDeliveryNotification(phoneNumber, message);
   }
 

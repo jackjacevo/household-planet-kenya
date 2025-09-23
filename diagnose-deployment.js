@@ -29,13 +29,13 @@ async function runDiagnostics() {
   console.log('Testing endpoints...\n');
   
   // Test main site
-  await testEndpoint('https://householdplanet.co.ke', 'Main Site');
-  await testEndpoint('https://householdplanet.co.ke/health', 'Health Check');
+  await testEndpoint('https://householdplanetkenya.co.ke', 'Main Site');
+  await testEndpoint('https://householdplanetkenya.co.ke/health', 'Health Check');
   
   // Test API endpoints through proxy
-  await testEndpoint('https://householdplanet.co.ke/api/health', 'API Health (Proxy)');
-  await testEndpoint('https://householdplanet.co.ke/api/categories', 'Categories API');
-  await testEndpoint('https://householdplanet.co.ke/api/products', 'Products API');
+  await testEndpoint('https://householdplanetkenya.co.ke/api/health', 'API Health (Proxy)');
+  await testEndpoint('https://householdplanetkenya.co.ke/api/categories', 'Categories API');
+  await testEndpoint('https://householdplanetkenya.co.ke/api/products', 'Products API');
   
   console.log('\n🔧 If any tests fail, check:');
   console.log('1. Docker containers are running: docker ps');

@@ -23,7 +23,7 @@ async function completeAdminSeed() {
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -38,7 +38,7 @@ async function completeAdminSeed() {
     const staffPassword = await bcrypt.hash('Staff@2025', 12);
     const staff1 = await prisma.user.create({
       data: {
-        email: 'staff1@householdplanet.co.ke',
+        email: 'staff1@householdplanetkenya.co.ke',
         password: staffPassword,
         firstName: 'Jane',
         lastName: 'Smith',
@@ -343,8 +343,8 @@ async function completeAdminSeed() {
     }
 
     console.log('✅ Complete admin dashboard seeding successful:');
-    console.log(`- 1 Admin user (admin@householdplanet.co.ke / Admin@2025)`);
-    console.log(`- 1 Staff user (staff1@householdplanet.co.ke / Staff@2025)`);
+    console.log(`- 1 Admin user (admin@householdplanetkenya.co.ke / Admin@2025)`);
+    console.log(`- 1 Staff user (staff1@householdplanetkenya.co.ke / Staff@2025)`);
     console.log(`- ${createdBrands.length} brands`);
     console.log(`- ${createdCategories.length} categories`);
     console.log(`- ${createdProducts.length} products with brands`);

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanet.co.ke'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.co.ke'
 
 export async function GET() {
   const robotsTxt = `User-agent: *

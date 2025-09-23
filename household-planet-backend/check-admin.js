@@ -7,7 +7,7 @@ async function checkAndCreateAdmin() {
   try {
     // Check if admin user exists
     const adminUser = await prisma.user.findUnique({
-      where: { email: 'admin@householdplanet.co.ke' }
+      where: { email: 'admin@householdplanetkenya.co.ke' }
     });
 
     if (adminUser) {
@@ -36,7 +36,7 @@ async function checkAndCreateAdmin() {
       
       const admin = await prisma.user.create({
         data: {
-          email: 'admin@householdplanet.co.ke',
+          email: 'admin@householdplanetkenya.co.ke',
           password: hashedPassword,
           firstName: 'Admin',
           lastName: 'User',

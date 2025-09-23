@@ -8,7 +8,7 @@
 
 ## Communication Channels
 1. **WhatsApp Business**: +254700000000 (Primary)
-2. **Email**: support@householdplanet.co.ke
+2. **Email**: support@householdplanetkenya.co.ke
 3. **Phone**: +254700000000
 4. **Live Chat**: Website chat widget
 5. **Social Media**: Facebook, Instagram, Twitter

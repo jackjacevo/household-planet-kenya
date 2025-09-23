@@ -5,7 +5,7 @@
 ### ✅ Frontend Deployment (Vercel)
 - **Configuration**: `deployment/vercel.json`
 - **Environment**: `household-planet-frontend/.env.production`
-- **Domain**: householdplanet.co.ke
+- **Domain**: householdplanetkenya.co.ke
 - **Features**: 
   - Automatic HTTPS
   - Global CDN
@@ -173,7 +173,7 @@ household-planet-frontend/
 
 ## Next Steps for Launch
 
-1. **Domain Purchase**: Register householdplanet.co.ke
+1. **Domain Purchase**: Register householdplanetkenya.co.ke
 2. **DNS Setup**: Configure Cloudflare nameservers
 3. **SSL Certificates**: Run ssl-setup.sh script
 4. **Environment Variables**: Configure production secrets
@@ -186,10 +186,10 @@ household-planet-frontend/
 
 ## Production URLs
 
-- **Frontend**: https://householdplanet.co.ke
-- **API**: https://api.householdplanet.co.ke
-- **Admin**: https://householdplanet.co.ke/admin
-- **Monitoring**: https://monitoring.householdplanet.co.ke
+- **Frontend**: https://householdplanetkenya.co.ke
+- **API**: https://householdplanetkenya.co.ke
+- **Admin**: https://householdplanetkenya.co.ke/admin
+- **Monitoring**: https://monitoring.householdplanetkenya.co.ke
 
 ## Support & Maintenance
 

@@ -9,7 +9,7 @@ async function testUploadEndpoints() {
     // Login as admin
     console.log('🔐 Logging in as admin...');
     const loginResponse = await axios.post('https://api.householdplanetkenya.co.ke/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
     

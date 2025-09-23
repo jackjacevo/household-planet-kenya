@@ -17,10 +17,10 @@ async function autoSeed() {
     // Create admin user
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     await prisma.user.upsert({
-      where: { email: 'admin@householdplanet.co.ke' },
+      where: { email: 'admin@householdplanetkenya.co.ke' },
       update: {},
       create: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',

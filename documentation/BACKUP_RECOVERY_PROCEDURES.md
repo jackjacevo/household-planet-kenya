@@ -488,7 +488,7 @@ aws route53 change-resource-record-sets \
 docker-compose -f docker-compose.dr.yml up -d
 
 # Verify services
-curl -f https://dr.householdplanet.co.ke/health
+curl -f https://dr.householdplanetkenya.co.ke/health
 
 if [ $? -eq 0 ]; then
     echo "✅ DR site activated successfully"
@@ -748,7 +748,7 @@ echo "Recent Failures:" >> $REPORT_FILE
 grep "backup failed" /var/log/backup.log | tail -5 >> $REPORT_FILE
 
 # Email report
-mail -s "Weekly Backup Report" admin@householdplanet.co.ke < $REPORT_FILE
+mail -s "Weekly Backup Report" admin@householdplanetkenya.co.ke < $REPORT_FILE
 ```
 
 ---
@@ -786,19 +786,19 @@ mail -s "Weekly Backup Report" admin@householdplanet.co.ke < $REPORT_FILE
 
 **Primary Contact:**
 - Name: System Administrator
-- Email: admin@householdplanet.co.ke
+- Email: admin@householdplanetkenya.co.ke
 - Phone: +254700000001
 - Role: Backup operations and recovery
 
 **Secondary Contact:**
 - Name: Technical Lead
-- Email: tech@householdplanet.co.ke
+- Email: tech@householdplanetkenya.co.ke
 - Phone: +254700000002
 - Role: Technical escalation
 
 **Management Contact:**
 - Name: IT Manager
-- Email: manager@householdplanet.co.ke
+- Email: manager@householdplanetkenya.co.ke
 - Phone: +254700000003
 - Role: Business decisions and communication
 

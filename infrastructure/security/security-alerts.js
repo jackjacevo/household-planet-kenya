@@ -38,8 +38,8 @@ class SecurityMonitor {
     });
 
     await transporter.sendMail({
-      from: 'security@householdplanet.co.ke',
-      to: 'admin@householdplanet.co.ke',
+      from: 'security@householdplanetkenya.co.ke',
+      to: 'admin@householdplanetkenya.co.ke',
       subject: `Security Alert: ${type}`,
       text: `Security event detected: ${type}\nData: ${JSON.stringify(data)}`
     });

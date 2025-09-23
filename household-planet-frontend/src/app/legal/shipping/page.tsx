@@ -269,7 +269,7 @@ export default function ShippingDeliveryPolicyPage() {
               <div className="space-y-2 text-gray-700">
                 <p>For delivery-related questions or issues:</p>
                 <ul className="list-none space-y-2">
-                  <li><strong>Email:</strong> delivery@householdplanet.co.ke</li>
+                  <li><strong>Email:</strong> delivery@householdplanetkenya.co.ke</li>
                   <li><strong>Phone:</strong> +254 700 000 000</li>
                   <li><strong>WhatsApp:</strong> +254 700 000 000</li>
                   <li><strong>Live Chat:</strong> Available 24/7 on our website</li>

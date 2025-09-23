@@ -22,7 +22,7 @@ const nextConfig = {
   
   // Mobile-optimized image settings
   images: {
-    domains: ['images.unsplash.com', 'localhost', 'res.cloudinary.com', 'householdplanet.co.ke'],
+    domains: ['images.unsplash.com', 'localhost', 'res.cloudinary.com', 'householdplanetkenya.co.ke'],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 31536000,
     deviceSizes: [320, 420, 640, 750, 828, 1080, 1200, 1920],

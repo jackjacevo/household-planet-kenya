@@ -70,7 +70,7 @@ The "Customer Reviews" section is properly implemented and functioning correctly
 2. **Scroll to "Customer Reviews" section** at the bottom
 3. **Try to submit a review without logging in** - should show login prompt
 4. **Login with admin credentials**:
-   - Email: admin@householdplanet.co.ke
+   - Email: admin@householdplanetkenya.co.ke
    - Password: Admin123!
 5. **Submit a review** - should appear immediately in the reviews list
 6. **Verify the review displays** with all details (name, rating, comment, date)

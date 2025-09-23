@@ -12,7 +12,7 @@ export class SetupController {
       throw new Error('Invalid secret');
     }
 
-    const email = 'admin@householdplanet.co.ke';
+    const email = 'admin@householdplanetkenya.co.ke';
     const password = 'Admin@2025';
     const hashedPassword = await bcrypt.hash(password, 12);
 

@@ -3,7 +3,7 @@
 ## ✅ Configuration Fixed
 
 ### Frontend Configuration
-- [x] Updated `.env.production`: `NEXT_PUBLIC_API_URL=https://householdplanet.co.ke`
+- [x] Updated `.env.production`: `NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke`
 - [x] Fixed `next.config.js` proxy configuration
 - [x] Container name updated to `household-planet-backend:3001`
 
@@ -17,8 +17,8 @@
 
 ### 1. Environment Variables to Set in Dokploy
 ```
-NEXT_PUBLIC_API_URL=https://householdplanet.co.ke
-NEXT_PUBLIC_SITE_URL=https://householdplanet.co.ke
+NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke
+NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
 NEXT_PUBLIC_ENVIRONMENT=production
 DATABASE_URL=postgresql://username:password@host:5432/database
 JWT_SECRET=your-super-secure-jwt-secret-key
@@ -32,21 +32,21 @@ MPESA_PASSKEY=your-mpesa-passkey
   - `household-planet-frontend` (public, port 3000)
   - `household-planet-backend` (internal, port 3001)
 - **Network**: Same Docker network for both containers
-- **Domain**: Point `householdplanet.co.ke` to frontend container only
+- **Domain**: Point `householdplanetkenya.co.ke` to frontend container only
 
 ### 3. Verification After Deployment
 ```bash
 # Test the proxy setup
-curl https://householdplanet.co.ke/api/health
-curl https://householdplanet.co.ke/api/categories
-curl https://householdplanet.co.ke/api/products
+curl https://householdplanetkenya.co.ke/api/health
+curl https://householdplanetkenya.co.ke/api/categories
+curl https://householdplanetkenya.co.ke/api/products
 
 # Should return JSON responses, not errors
 ```
 
 ### 4. Expected Behavior
-- ✅ `https://householdplanet.co.ke` → Frontend
-- ✅ `https://householdplanet.co.ke/api/*` → Backend (via proxy)
+- ✅ `https://householdplanetkenya.co.ke` → Frontend
+- ✅ `https://householdplanetkenya.co.ke/api/*` → Backend (via proxy)
 - ❌ Direct backend access should be blocked
 - ✅ All API calls work through the single domain
 
@@ -66,16 +66,16 @@ curl https://householdplanet.co.ke/api/products
 
 1. **Backend Security**: Backend is not directly accessible from outside
 2. **CORS Configuration**: Backend CORS allows frontend container, not external domain
-3. **SSL/TLS**: Only needed for the main domain (householdplanet.co.ke)
+3. **SSL/TLS**: Only needed for the main domain (householdplanetkenya.co.ke)
 4. **Container Names**: Must match exactly in next.config.js proxy configuration
 
 ## 🎯 Success Criteria
 
 After deployment, these should work:
-- [ ] `https://householdplanet.co.ke` loads the frontend
-- [ ] `https://householdplanet.co.ke/api/health` returns backend health status
-- [ ] `https://householdplanet.co.ke/api/categories` returns categories
-- [ ] `https://householdplanet.co.ke/api/products` returns products
+- [ ] `https://householdplanetkenya.co.ke` loads the frontend
+- [ ] `https://householdplanetkenya.co.ke/api/health` returns backend health status
+- [ ] `https://householdplanetkenya.co.ke/api/categories` returns categories
+- [ ] `https://householdplanetkenya.co.ke/api/products` returns products
 - [ ] User can browse products, add to cart, and place orders
 - [ ] All functionality works through the single domain
 

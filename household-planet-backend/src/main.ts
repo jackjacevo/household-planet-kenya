@@ -96,7 +96,6 @@ async function bootstrap() {
       const allowedOrigins = [
         'https://householdplanetkenya.co.ke',
         'https://www.householdplanetkenya.co.ke',
-        'https://api.householdplanetkenya.co.ke',
         ...process.env.CORS_ORIGIN?.split(',') || [],
         ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
       ];
@@ -140,8 +139,7 @@ async function bootstrap() {
     const origin = req.headers.origin;
     const allowedOrigins = [
       'https://householdplanetkenya.co.ke',
-      'https://www.householdplanetkenya.co.ke',
-      'https://api.householdplanetkenya.co.ke'
+      'https://www.householdplanetkenya.co.ke'
     ];
     
     if (allowedOrigins.includes(origin)) {
@@ -161,8 +159,7 @@ async function bootstrap() {
     const origin = req.headers.origin;
     const allowedOrigins = [
       'https://householdplanetkenya.co.ke',
-      'https://www.householdplanetkenya.co.ke',
-      'https://api.householdplanetkenya.co.ke'
+      'https://www.householdplanetkenya.co.ke'
     ];
     
     if (allowedOrigins.includes(origin)) {

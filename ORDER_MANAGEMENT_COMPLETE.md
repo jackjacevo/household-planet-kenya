@@ -157,7 +157,7 @@ POST /api/orders/:id/shipping-label
 // Response:
 {
   "trackingNumber": "HP123456789",
-  "labelUrl": "https://api.householdplanet.co.ke/shipping/labels/HP123456789.pdf",
+  "labelUrl": "https://householdplanetkenya.co.ke/shipping/labels/HP123456789.pdf",
   "carrier": "Household Planet Delivery",
   "estimatedDelivery": "2024-01-15T10:00:00Z"
 }
@@ -388,7 +388,7 @@ Authorization: Bearer {{adminToken}}
 # Email service configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=noreply@householdplanet.co.ke
+SMTP_USER=noreply@householdplanetkenya.co.ke
 SMTP_PASS=your-app-password
 
 # Shipping service configuration

@@ -15,12 +15,12 @@
 ## Getting Started
 
 ### Accessing the Admin Panel
-1. Navigate to: `https://householdplanet.co.ke/admin`
+1. Navigate to: `https://householdplanetkenya.co.ke/admin`
 2. Enter your admin credentials
 3. Click "Sign In"
 
 **Default Admin Credentials:**
-- Email: admin@householdplanet.co.ke
+- Email: admin@householdplanetkenya.co.ke
 - Password: Admin123!@#
 
 ### First Login Setup
@@ -398,7 +398,7 @@
 ### Getting Help
 
 **Support Channels:**
-- Email: support@householdplanet.co.ke
+- Email: support@householdplanetkenya.co.ke
 - WhatsApp: +254700000000
 - Documentation: Available in admin panel
 - Video tutorials: Link in help section

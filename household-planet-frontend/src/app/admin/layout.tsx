@@ -3,30 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AdminRoute } from '@/components/auth/AdminRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import AdminAuthGuard from '@/components/admin/AdminAuthGuard';
+import { useAuthStore } from '@/lib/store/authStore';
+import { AdminErrorBoundary } from '@/components/error/AdminErrorBoundary';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
-import axios from 'axios';
+import { api } from '@/lib/api';
+import { useRealtimeOrders } from '@/lib/realtime';
 
-const navigationPermissions: { [key: string]: string } = {
-  '/admin/dashboard': 'view_dashboard',
-  '/admin/orders': 'manage_orders',
-  '/admin/whatsapp': 'manage_orders',
-  '/admin/products': 'manage_products',
-  '/admin/categories': 'manage_products',
-  '/admin/brands': 'manage_products',
-  '/admin/promo-codes': 'manage_products',
-  '/admin/customers': 'manage_customers',
-  '/admin/loyalty': 'manage_customers',
-  '/admin/analytics': 'view_analytics',
-  '/admin/payments': 'manage_payments',
-  '/admin/delivery': 'manage_orders',
-  '/admin/inventory': 'manage_products',
-  '/admin/staff': 'manage_staff',
-  '/admin/activities': 'view_analytics',
-  '/admin/settings': 'manage_content',
-};
+
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -43,7 +27,8 @@ import {
   Activity,
   FolderTree,
   Tag,
-  Percent
+  Percent,
+  LogOut
 } from 'lucide-react';
 
 const navigation = [
@@ -73,28 +58,27 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const { user, isAdmin, hasPermission } = useAuth();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const queryClient = useQueryClient();
   const { refreshAll } = useRealtimeOrders();
 
   const fetchPendingOrdersCount = async () => {
     const token = localStorage.getItem('token');
-    if (!token) return 0;
+    if (!token) throw new Error('No authentication token');
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
-    const response = await axios.get(
-      `${apiUrl}/api/admin/dashboard`,
-      { headers: { 'Authorization': `Bearer ${token}` } }
-    );
-    return (response as any).data?.overview?.pendingOrders || 0;
+    const response = await api.get('/admin/dashboard');
+    return (response.data as any)?.overview?.pendingOrders || 0;
   };
 
   const { data: pendingOrdersCount = 0 } = useQuery({
     queryKey: ['pendingOrdersCount'],
     queryFn: fetchPendingOrdersCount,
     refetchInterval: 10000,
-    enabled: mounted && (isAdmin() || hasPermission('manage_orders')),
-    retry: false
+    enabled: !!(mounted && isAuthenticated && user && ['ADMIN', 'SUPER_ADMIN', 'STAFF'].includes(user.role)),
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes('Authentication')) return false;
+      return failureCount < 2;
+    }
   });
 
   // Listen for order changes and invalidate the count
@@ -116,10 +100,21 @@ export default function AdminLayout({
   useEffect(() => {
     setMounted(true);
     // Also invalidate on mount to ensure fresh data
-    if (isAdmin() || hasPermission('manage_orders')) {
+    if (isAuthenticated && user && ['ADMIN', 'SUPER_ADMIN', 'STAFF'].includes(user.role)) {
       queryClient.invalidateQueries({ queryKey: ['pendingOrdersCount'] });
+      
+      // Start real-time sync
+      import('@/lib/realtime').then(({ realtimeSync }) => {
+        realtimeSync.connect(queryClient);
+      });
     }
-  }, [queryClient, isAdmin, hasPermission]);
+    
+    return () => {
+      import('@/lib/realtime').then(({ realtimeSync }) => {
+        realtimeSync.disconnect();
+      });
+    };
+  }, [queryClient, isAuthenticated, user]);
 
   if (!mounted) {
     return (
@@ -133,13 +128,10 @@ export default function AdminLayout({
 
   const getVisibleNavigation = () => {
     // Admin, Super Admin, and Staff can see all navigation items
-    if (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') {
+    if (user && ['ADMIN', 'SUPER_ADMIN', 'STAFF'].includes(user.role)) {
       return navigation;
     }
-    return navigation.filter(item => {
-      const requiredPermission = navigationPermissions[item.href];
-      return requiredPermission ? hasPermission(requiredPermission) : false;
-    });
+    return [];
   };
 
   const visibleNavigation = getVisibleNavigation();
@@ -185,6 +177,23 @@ export default function AdminLayout({
                   </Link>
                 );
               })}
+              {user && (
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {user.email}
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setSidebarOpen(false);
+                    }}
+                    className="group flex items-center w-full px-3 py-3 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  >
+                    <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">Logout</span>
+                  </button>
+                </div>
+              )}
             </nav>
           </div>
         </div>
@@ -220,6 +229,20 @@ export default function AdminLayout({
                 </Link>
               );
             })}
+            {user && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {user.email}
+                </div>
+                <button
+                  onClick={logout}
+                  className="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <LogOut className="mr-3 h-5 w-5" />
+                  Logout
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       </div>
@@ -236,9 +259,15 @@ export default function AdminLayout({
       {/* Main content */}
       <div className="lg:pl-64">
         <main className="py-4 px-2 sm:py-6 sm:px-4">
-          <AdminRoute>
-            {children}
-          </AdminRoute>
+          {pathname === '/admin/login' ? (
+            children
+          ) : (
+            <AdminAuthGuard>
+              <AdminErrorBoundary>
+                {children}
+              </AdminErrorBoundary>
+            </AdminAuthGuard>
+          )}
         </main>
       </div>
     </div>

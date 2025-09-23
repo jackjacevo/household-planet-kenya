@@ -8,7 +8,7 @@ async function createAdmin() {
     const hashedPassword = await bcrypt.hash('Admin@2025', 12);
     
     const user = await prisma.user.upsert({
-      where: { email: 'admin@householdplanet.co.ke' },
+      where: { email: 'admin@householdplanetkenya.co.ke' },
       update: {
         role: 'SUPER_ADMIN',
         permissions: JSON.stringify(['ADMIN_DASHBOARD', 'MANAGE_PRODUCTS', 'MANAGE_ORDERS', 'MANAGE_USERS', 'VIEW_ANALYTICS']),
@@ -16,7 +16,7 @@ async function createAdmin() {
         emailVerified: true
       },
       create: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: hashedPassword,
         firstName: 'Admin',
         lastName: 'User',

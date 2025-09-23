@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ProductForm from '@/components/admin/ProductForm';
-import axios from 'axios';
+import { secureApiClient } from '@/lib/secure-api';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminProductsPage() {
@@ -34,10 +34,7 @@ export default function AdminProductsPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       console.log('🔍 Fetching admin products...');
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await secureApiClient.get('/api/admin/products');
       
       const data = response.data;
       console.log('📦 Admin products response:', data);
@@ -53,10 +50,7 @@ export default function AdminProductsPage() {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/categories`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await secureApiClient.get('/api/categories');
       setCategories(response.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -68,28 +62,16 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       console.log('📝 Creating product:', productData);
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
-        productData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await secureApiClient.post('/api/admin/products', productData);
       
       console.log('✅ Product created:', response.data);
-      showToast({
-        title: 'Success',
-        description: 'Product created successfully',
-        variant: 'success'
-      });
+      showToast({ type: 'success', message: 'Product created successfully' });
       
       setShowForm(false);
       fetchProducts();
     } catch (error: any) {
       console.error('❌ Product creation failed:', error.response?.data || error.message);
-      showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to create product',
-        variant: 'destructive'
-      });
+      showToast({ type: 'error', message: error.response?.data?.message || 'Failed to create product' });
     }
   };
 
@@ -97,17 +79,12 @@ export default function AdminProductsPage() {
     try {
       const token = localStorage.getItem('token');
       console.log('📝 Updating product:', editingProduct.id, productData);
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`,
-        productData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await secureApiClient.put(`/api/admin/products/${editingProduct.id}`, productData);
       
       console.log('✅ Product updated:', response.data);
       showToast({
-        title: 'Success',
-        description: 'Product updated successfully',
-        variant: 'success'
+        type: 'success',
+        message: 'Product updated successfully'
       });
       
       setShowForm(false);
@@ -116,9 +93,8 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       console.error('❌ Product update failed:', error.response?.data || error.message);
       showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to update product',
-        variant: 'destructive'
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to update product'
       });
     }
   };
@@ -130,37 +106,26 @@ export default function AdminProductsPage() {
       const token = localStorage.getItem('token');
       if (!token) {
         showToast({
-          title: 'Error',
-          description: 'Authentication required',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication required'
         });
         return;
       }
 
       console.log('🗑️ Deleting product:', productId);
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
-        { 
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
+      await secureApiClient.delete(`/api/admin/products/${productId}`);
       
       showToast({
-        title: 'Success',
-        description: 'Product deleted successfully',
-        variant: 'success'
+        type: 'success',
+        message: 'Product deleted successfully'
       });
       
       fetchProducts();
     } catch (error: any) {
       console.error('❌ Product deletion failed:', error);
       showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete product',
-        variant: 'destructive'
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to delete product'
       });
     }
   };
@@ -174,28 +139,17 @@ export default function AdminProductsPage() {
       const token = localStorage.getItem('token');
       if (!token) {
         showToast({
-          title: 'Error',
-          description: 'Authentication required',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication required'
         });
         return;
       }
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/bulk-delete`,
-        { productIds: selectedProducts },
-        { 
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
+      await secureApiClient.post('/api/admin/products/bulk-delete', { productIds: selectedProducts });
       
       showToast({
-        title: 'Success',
-        description: `${selectedProducts.length} products deleted successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `${selectedProducts.length} products deleted successfully`
       });
       
       setSelectedProducts([]);
@@ -203,9 +157,8 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       console.error('❌ Bulk deletion failed:', error);
       showToast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete products',
-        variant: 'destructive'
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to delete products'
       });
     }
   };

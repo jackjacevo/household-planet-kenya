@@ -4,21 +4,21 @@ const prisma = new PrismaClient();
 
 const staffAccounts = [
   {
-    email: 'admin@householdplanet.co.ke',
+    email: 'admin@householdplanetkenya.co.ke',
     password: 'Admin123!@#',
     name: 'System Administrator',
     role: 'ADMIN',
     phone: '+254700000001'
   },
   {
-    email: 'manager@householdplanet.co.ke',
+    email: 'manager@householdplanetkenya.co.ke',
     password: 'Manager123!@#',
     name: 'Store Manager',
     role: 'MANAGER',
     phone: '+254700000002'
   },
   {
-    email: 'support@householdplanet.co.ke',
+    email: 'support@householdplanetkenya.co.ke',
     password: 'Support123!@#',
     name: 'Customer Support',
     role: 'SUPPORT',

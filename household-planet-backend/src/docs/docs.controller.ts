@@ -19,7 +19,7 @@ export class DocsController {
         sensitive: '10 requests per minute'
       },
       cors: {
-        allowedOrigins: ['localhost:3000', 'householdplanet.co.ke'],
+        allowedOrigins: ['localhost:3000', 'householdplanetkenya.co.ke'],
         credentials: true
       },
       headers: {

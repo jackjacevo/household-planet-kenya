@@ -9,7 +9,7 @@ async function testManualPayments() {
 
     // First, let's get an admin token (you'll need to replace with actual admin credentials)
     const loginResponse = await axios.post(`${API_URL}/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin123!'
     });
 

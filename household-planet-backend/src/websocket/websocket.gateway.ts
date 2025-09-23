@@ -9,7 +9,7 @@ import { Server, Socket } from 'socket.io';
 @WebSocketGateway({
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? ['https://householdplanet.co.ke', 'https://www.householdplanet.co.ke']
+      ? ['https://householdplanetkenya.co.ke', 'https://householdplanetkenya.co.ke']
       : process.env.CORS_ORIGIN || 'https://householdplanetkenya.co.ke',
     credentials: true,
   },

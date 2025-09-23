@@ -28,7 +28,7 @@ async function seedHomepage() {
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -324,7 +324,7 @@ async function seedHomepage() {
       // Company Settings
       { category: 'company', key: 'site_name', value: 'Household Planet Kenya', type: 'string', description: 'Website name', isPublic: true },
       { category: 'company', key: 'site_description', value: 'Your one-stop shop for quality household items in Kenya', type: 'string', description: 'Website description', isPublic: true },
-      { category: 'company', key: 'contact_email', value: 'info@householdplanet.co.ke', type: 'string', description: 'Contact email', isPublic: true },
+      { category: 'company', key: 'contact_email', value: 'info@householdplanetkenya.co.ke', type: 'string', description: 'Contact email', isPublic: true },
       { category: 'company', key: 'contact_phone', value: '+254700000000', type: 'string', description: 'Contact phone', isPublic: true },
       { category: 'company', key: 'whatsapp_number', value: '+254700000000', type: 'string', description: 'WhatsApp number', isPublic: true },
       
@@ -367,7 +367,7 @@ async function seedHomepage() {
 
     console.log('✅ Homepage seeding completed successfully!');
     console.log('📊 Homepage Data Summary:');
-    console.log(`- 1 Admin user (admin@householdplanet.co.ke / Admin@2025)`);
+    console.log(`- 1 Admin user (admin@householdplanetkenya.co.ke / Admin@2025)`);
     console.log(`- ${createdCustomers.length} customers (for testimonials)`);
     console.log(`- ${createdBrands.length} brands`);
     console.log(`- ${createdCategories.length} categories (with images)`);

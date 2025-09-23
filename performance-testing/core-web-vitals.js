@@ -2,11 +2,11 @@ const lighthouse = require('lighthouse')
 const chromeLauncher = require('chrome-launcher')
 
 const pages = [
-  'https://householdplanet.co.ke/',
-  'https://householdplanet.co.ke/products',
-  'https://householdplanet.co.ke/products/1',
-  'https://householdplanet.co.ke/cart',
-  'https://householdplanet.co.ke/checkout',
+  'https://householdplanetkenya.co.ke/',
+  'https://householdplanetkenya.co.ke/products',
+  'https://householdplanetkenya.co.ke/products/1',
+  'https://householdplanetkenya.co.ke/cart',
+  'https://householdplanetkenya.co.ke/checkout',
 ]
 
 async function runCoreWebVitalsTest() {

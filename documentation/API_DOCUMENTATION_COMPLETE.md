@@ -1,7 +1,7 @@
 # Household Planet Kenya - Complete API Documentation
 
 ## Base URL
-- **Production**: `https://api.householdplanet.co.ke`
+- **Production**: `https://householdplanetkenya.co.ke`
 - **Development**: `http://localhost:3001`
 
 ## Authentication
@@ -384,7 +384,7 @@ Send SMS notification (Internal).
 const axios = require('axios');
 
 const api = axios.create({
-  baseURL: 'https://api.householdplanet.co.ke',
+  baseURL: 'https://householdplanetkenya.co.ke',
   headers: {
     'Authorization': 'Bearer ' + token
   }
@@ -403,16 +403,16 @@ await api.post('/api/cart/add', {
 ### cURL Examples
 ```bash
 # Get products
-curl -X GET "https://api.householdplanet.co.ke/api/products?limit=10" \
+curl -X GET "https://householdplanetkenya.co.ke/api/products?limit=10" \
   -H "Content-Type: application/json"
 
 # Login
-curl -X POST "https://api.householdplanet.co.ke/api/auth/login" \
+curl -X POST "https://householdplanetkenya.co.ke/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password"}'
 
 # Create order
-curl -X POST "https://api.householdplanet.co.ke/api/orders" \
+curl -X POST "https://householdplanetkenya.co.ke/api/orders" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"deliveryAddress":"Nairobi","paymentMethod":"mpesa"}'
@@ -421,7 +421,7 @@ curl -X POST "https://api.householdplanet.co.ke/api/orders" \
 ## Testing
 
 ### Test Credentials
-- **Admin**: admin@householdplanet.co.ke / Admin123!@#
+- **Admin**: admin@householdplanetkenya.co.ke / Admin123!@#
 - **Customer**: test@example.com / Test123!@#
 
 ### Test Payment
@@ -429,4 +429,4 @@ curl -X POST "https://api.householdplanet.co.ke/api/orders" \
 - **Test Amount**: Any amount ending in 00 (e.g., 100, 200)
 
 ### Postman Collection
-Import the API collection: `https://api.householdplanet.co.ke/docs/postman.json`
+Import the API collection: `https://householdplanetkenya.co.ke/docs/postman.json`

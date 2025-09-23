@@ -30,7 +30,7 @@ class SecurityMonitor {
 
   async collectSecurityLogs() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/security/logs', {
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/security/logs', {
         params: { since: new Date(Date.now() - 300000).toISOString() } // Last 5 minutes
       });
       
@@ -43,7 +43,7 @@ class SecurityMonitor {
 
   async collectFailedLogins() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/security/failed-logins');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/security/failed-logins');
       return response.data.attempts || [];
     } catch (error) {
       console.error('Failed to collect failed login attempts:', error);
@@ -53,7 +53,7 @@ class SecurityMonitor {
 
   async collectSuspiciousRequests() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/admin/security/suspicious-requests');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/admin/security/suspicious-requests');
       return response.data.requests || [];
     } catch (error) {
       console.error('Failed to collect suspicious requests:', error);
@@ -288,7 +288,7 @@ class SecurityMonitor {
 
   async blockIP(ip, reason) {
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/security/block-ip', {
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/security/block-ip', {
         ip,
         reason,
         duration: 3600000, // 1 hour
@@ -330,8 +330,8 @@ class SecurityMonitor {
     // Send email for critical threats
     if (threat.severity >= this.threatLevels.CRITICAL) {
       try {
-        await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-          to: 'security@householdplanet.co.ke',
+        await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+          to: 'security@householdplanetkenya.co.ke',
           subject: `CRITICAL Security Alert: ${threat.type}`,
           body: `
 Critical security threat detected:
@@ -353,7 +353,7 @@ Immediate action may be required.
 
   async logThreat(threat) {
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/security/log-threat', {
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/security/log-threat', {
         ...threat,
         timestamp: new Date().toISOString()
       });

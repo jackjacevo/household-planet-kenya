@@ -194,10 +194,10 @@ src/app/legal/
 ## Contact Information
 
 ### Legal Inquiries
-- **General**: legal@householdplanet.co.ke
-- **Privacy**: privacy@householdplanet.co.ke
-- **Data Protection Officer**: dpo@householdplanet.co.ke
-- **Returns**: returns@householdplanet.co.ke
+- **General**: legal@householdplanetkenya.co.ke
+- **Privacy**: privacy@householdplanetkenya.co.ke
+- **Data Protection Officer**: dpo@householdplanetkenya.co.ke
+- **Returns**: returns@householdplanetkenya.co.ke
 
 ### Regulatory Contacts
 - **Kenya Data Protection Commissioner**: info@odpc.go.ke

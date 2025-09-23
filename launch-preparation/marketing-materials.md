@@ -51,7 +51,7 @@
 ✨ High quality, affordable price
 🚚 Fast delivery across Kenya
 💳 Pay with M-Pesa
-Shop now: householdplanet.co.ke
+Shop now: householdplanetkenya.co.ke
 #HouseholdPlanetKenya #HomeEssentials #QualityProducts"
 
 **Promotional Post**:

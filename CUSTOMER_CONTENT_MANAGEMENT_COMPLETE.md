@@ -187,7 +187,7 @@ await customersService.logCommunication(customerId, {
   subject: 'Order inquiry support',
   message: 'Customer called regarding order delay. Issue resolved.',
   channel: 'customer_service',
-  sentBy: 'support@householdplanet.co.ke',
+  sentBy: 'support@householdplanetkenya.co.ke',
   metadata: {
     callDuration: '5 minutes',
     orderId: 'ORD-12345',

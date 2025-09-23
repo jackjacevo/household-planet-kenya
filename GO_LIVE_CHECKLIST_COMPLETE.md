@@ -143,7 +143,7 @@ go-live-checklist/
 ## Manual Verification Checklist
 
 ### Admin Panel Testing
-- [ ] Login to admin panel: https://householdplanet.co.ke/admin
+- [ ] Login to admin panel: https://householdplanetkenya.co.ke/admin
 - [ ] Create and edit products
 - [ ] Process test orders
 - [ ] Generate sales reports

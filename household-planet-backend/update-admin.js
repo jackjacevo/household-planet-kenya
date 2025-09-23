@@ -7,7 +7,7 @@ async function updateAdminUser() {
   try {
     console.log('Updating admin user...');
     
-    const email = 'admin@householdplanet.co.ke';
+    const email = 'admin@householdplanetkenya.co.ke';
     const password = 'Admin@2025';
     
     // Hash password

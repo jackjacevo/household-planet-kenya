@@ -9,7 +9,7 @@ async function testAdminPromo() {
   console.log('1. Getting admin token...');
   try {
     const loginResponse = await axios.post(`${API_URL}/auth/login`, {
-      email: 'admin@householdplanet.co.ke', // Replace with your admin email
+      email: 'admin@householdplanetkenya.co.ke', // Replace with your admin email
       password: 'Admin@123' // Replace with your admin password
     });
     

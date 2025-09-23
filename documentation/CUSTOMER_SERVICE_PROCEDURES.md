@@ -28,7 +28,7 @@
 - Complaint resolution
 - Payment support
 
-**2. Email (support@householdplanet.co.ke)**
+**2. Email (support@householdplanetkenya.co.ke)**
 - Detailed inquiries
 - Order confirmations
 - Refund requests
@@ -300,7 +300,7 @@ We'll notify you when it's delivered!"
 Your order has been successfully delivered to [address].
 
 ⭐ How was your experience? Rate us: [link]
-🛍️ Shop again: householdplanet.co.ke
+🛍️ Shop again: householdplanetkenya.co.ke
 💬 Need help? Reply to this message
 
 Thank you for choosing Household Planet Kenya!"

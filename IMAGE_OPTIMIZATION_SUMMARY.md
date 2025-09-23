@@ -86,7 +86,7 @@ Already optimized with:
 ### Image Optimization Settings:
 ```javascript
 images: {
-  domains: ['images.unsplash.com', 'localhost', 'res.cloudinary.com', 'householdplanet.co.ke'],
+  domains: ['images.unsplash.com', 'localhost', 'res.cloudinary.com', 'householdplanetkenya.co.ke'],
   formats: ['image/avif', 'image/webp'],
   minimumCacheTTL: 31536000, // 1 year
   deviceSizes: [320, 420, 640, 750, 828, 1080, 1200, 1920],

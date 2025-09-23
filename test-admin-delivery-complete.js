@@ -15,7 +15,7 @@ async function testCompleteFlow() {
         'User-Agent': 'Test-Client/1.0'
       },
       body: JSON.stringify({
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: 'Admin@2025'
       })
     });

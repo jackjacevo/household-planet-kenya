@@ -407,8 +407,8 @@ export default function OrderConfirmationPage() {
   }
 
   const estimatedDelivery = new Date();
-  const estimatedDays = typeof order.deliveryLocation === 'object' && order.deliveryLocation?.estimatedDays 
-    ? order.deliveryLocation.estimatedDays 
+  const estimatedDays = typeof order.deliveryLocation === 'object' && (order.deliveryLocation as any)?.estimatedDays 
+    ? (order.deliveryLocation as any).estimatedDays 
     : 3;
   estimatedDelivery.setDate(estimatedDelivery.getDate() + estimatedDays);
 
@@ -543,28 +543,28 @@ export default function OrderConfirmationPage() {
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     <p><span className="text-gray-600">Name:</span> 
                       <span className="font-medium">
-                        {order.customerInfo?.name || order.customerName || order.shippingAddress?.fullName || (order as any).user?.name || 'Not provided'}
+                        {(order as any).customerInfo?.name || (order as any).customerName || order.shippingAddress?.fullName || (order as any).user?.name || 'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Phone:</span> 
                       <span className="font-medium">
-                        {order.customerInfo?.phone || order.customerPhone || order.shippingAddress?.phone || (order as any).user?.phone || 'Not provided'}
+                        {(order as any).customerInfo?.phone || (order as any).customerPhone || (order.shippingAddress as any)?.phone || (order as any).user?.phone || 'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Email:</span> 
                       <span className="font-medium">
-                        {order.customerInfo?.email || order.customerEmail || order.shippingAddress?.email || (order as any).user?.email || 'Not provided'}
+                        {(order as any).customerInfo?.email || (order as any).customerEmail || (order.shippingAddress as any)?.email || (order as any).user?.email || 'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Location:</span> 
                       <span className="font-medium">
-                        {order.deliveryLocation?.name || order.deliveryLocation || 'Not provided'}
+                        {(order.deliveryLocation as any)?.name || order.deliveryLocation || 'Not provided'}
                       </span>
                     </p>
-                    {order.deliveryInfo?.notes && (
+                    {(order as any).deliveryInfo?.notes && (
                       <p><span className="text-gray-600">Notes:</span> 
                         <span className="font-medium text-xs">
-                          {order.deliveryInfo.notes}
+                          {(order as any).deliveryInfo.notes}
                         </span>
                       </p>
                     )}
@@ -684,10 +684,10 @@ export default function OrderConfirmationPage() {
                       <p className="font-semibold text-gray-800">
                         {typeof order.deliveryLocation === 'string' 
                           ? order.deliveryLocation 
-                          : order.deliveryLocation?.name || 'N/A'}
+                          : (order.deliveryLocation as any)?.name || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Delivery Cost: <span className="font-medium text-orange-600">{formatPrice(order.deliveryPrice || order.shippingCost || order.deliveryCost || 0)}</span>
+                        Delivery Cost: <span className="font-medium text-orange-600">{formatPrice(order.deliveryPrice || order.shippingCost || (order as any).deliveryCost || 0)}</span>
                       </p>
                       {order.shippingAddress && (
                         <div className="text-sm text-gray-600">
@@ -820,7 +820,7 @@ export default function OrderConfirmationPage() {
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Delivery Cost</span>
-                    <span className="font-medium">{formatPrice(order.deliveryPrice || order.shippingCost || order.deliveryCost || 0)}</span>
+                    <span className="font-medium">{formatPrice(order.deliveryPrice || order.shippingCost || (order as any).deliveryCost || 0)}</span>
                   </div>
                   <div className="border-t border-green-200 pt-2 sm:pt-3">
                     <div className="flex justify-between">
@@ -829,7 +829,7 @@ export default function OrderConfirmationPage() {
                         {formatPrice(
                           (order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || order.subtotal || 0) - 
                           ((order as any).discountAmount || 0) + 
-                          (order.deliveryPrice || order.shippingCost || order.deliveryCost || 0)
+                          (order.deliveryPrice || order.shippingCost || (order as any).deliveryCost || 0)
                         )}
                       </span>
                     </div>

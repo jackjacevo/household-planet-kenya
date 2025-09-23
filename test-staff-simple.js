@@ -6,7 +6,7 @@ async function testStaffEndpoint() {
   try {
     // Login
     const loginResponse = await axios.post(`${API_URL}/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'HouseholdAdmin2024!'
     });
     

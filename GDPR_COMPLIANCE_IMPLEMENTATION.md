@@ -186,7 +186,7 @@ curl -X PUT http://localhost:3001/gdpr/privacy-settings \
 ```env
 # Backend
 GDPR_RETENTION_DAYS=2555  # 7 years default
-BREACH_NOTIFICATION_EMAIL=security@householdplanet.co.ke
+BREACH_NOTIFICATION_EMAIL=security@householdplanetkenya.co.ke
 
 # Frontend
 NEXT_PUBLIC_PRIVACY_POLICY_URL=/privacy
@@ -229,6 +229,6 @@ npx prisma migrate deploy
 ## Support
 
 For GDPR-related questions or issues:
-- **Email**: privacy@householdplanet.co.ke
+- **Email**: privacy@householdplanetkenya.co.ke
 - **Documentation**: This implementation guide
 - **Code Location**: `/src/gdpr/` (backend), `/src/components/gdpr/` (frontend)

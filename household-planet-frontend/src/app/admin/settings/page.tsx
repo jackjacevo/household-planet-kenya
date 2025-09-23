@@ -99,7 +99,7 @@ export default function AdminSettingsPage() {
               site_name: { value: 'Household Planet Kenya' },
               site_description: { value: 'Your one-stop shop for household items in Kenya' },
               company_name: { value: 'Household Planet Kenya Ltd' },
-              contact_email: { value: 'info@householdplanet.co.ke' },
+              contact_email: { value: 'info@householdplanetkenya.co.ke' },
               contact_phone: { value: '+254700000000' },
               currency: { value: 'KSh' },
             },

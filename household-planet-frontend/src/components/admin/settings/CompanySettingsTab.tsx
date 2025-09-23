@@ -44,7 +44,7 @@ export function CompanySettingsTab({ settings, onSettingsChange }: CompanySettin
       siteName: settings?.site_name?.value || settings?.siteName?.value || 'Household Planet Kenya',
       siteDescription: settings?.site_description?.value || settings?.siteDescription?.value || 'Your one-stop shop for household items',
       companyName: settings?.company_name?.value || settings?.companyName?.value || 'Household Planet Kenya Ltd',
-      contactEmail: settings?.contact_email?.value || settings?.contactEmail?.value || 'info@householdplanet.co.ke',
+      contactEmail: settings?.contact_email?.value || settings?.contactEmail?.value || 'info@householdplanetkenya.co.ke',
       contactPhone: settings?.contact_phone?.value || settings?.contactPhone?.value || '+254700000000',
       address: settings?.address?.value || 'Nairobi, Kenya',
       city: settings?.city?.value || 'Nairobi',

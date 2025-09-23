@@ -10,13 +10,13 @@ async function comprehensiveSeed() {
     // Create admin user with proper role
     const adminPassword = await bcrypt.hash('Admin@2025', 12);
     const admin = await prisma.user.upsert({
-      where: { email: 'admin@householdplanet.co.ke' },
+      where: { email: 'admin@householdplanetkenya.co.ke' },
       update: {
         role: 'SUPER_ADMIN',
         permissions: JSON.stringify(['admin:read', 'admin:write', 'admin:delete', 'orders:read', 'orders:write'])
       },
       create: {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         password: adminPassword,
         firstName: 'Admin',
         lastName: 'User',
@@ -193,7 +193,7 @@ async function comprehensiveSeed() {
     }
 
     console.log('✅ Comprehensive seeding completed:');
-    console.log(`- 1 Admin user (admin@householdplanet.co.ke / Admin@2025)`);
+    console.log(`- 1 Admin user (admin@householdplanetkenya.co.ke / Admin@2025)`);
     console.log(`- ${createdCategories.length} categories`);
     console.log(`- ${createdProducts.length} products`);
     console.log(`- ${createdCustomers.length} sample customers`);

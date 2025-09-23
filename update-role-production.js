@@ -7,7 +7,7 @@ async function updateRoleInProduction() {
     // Method 1: Try direct database update via API (if endpoint exists)
     try {
       const response = await axios.post('https://api.householdplanetkenya.co.ke/api/setup/update-admin-role', {
-        email: 'admin@householdplanet.co.ke',
+        email: 'admin@householdplanetkenya.co.ke',
         role: 'SUPER_ADMIN'
       });
       console.log('✅ Role updated successfully via API');
@@ -20,7 +20,7 @@ async function updateRoleInProduction() {
     console.log('\n📋 Manual Database Update Required:');
     console.log('1. Access your production database (Railway/Render/etc.)');
     console.log('2. Run this SQL command:');
-    console.log('   UPDATE users SET role = \'SUPER_ADMIN\' WHERE email = \'admin@householdplanet.co.ke\';');
+    console.log('   UPDATE users SET role = \'SUPER_ADMIN\' WHERE email = \'admin@householdplanetkenya.co.ke\';');
     console.log('\n🔗 Common database access methods:');
     console.log('• Railway: railway connect <service-name>');
     console.log('• Render: Use database dashboard');

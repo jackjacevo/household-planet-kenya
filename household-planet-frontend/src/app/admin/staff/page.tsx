@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Users, UserPlus, Shield, Activity, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
-import axios from 'axios';
+import { secureApiClient } from '@/lib/secure-api';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Staff {
@@ -58,10 +58,7 @@ export default function AdminManagementPage() {
     try {
       const token = localStorage.getItem('token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
-      const response = await axios.get(
-        `${apiUrl}/api/admin/staff`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
+      const response = await secureApiClient.get('/api/admin/staff');
       // Filter to show ADMIN and SUPER_ADMIN users
       setStaff((response as any).data.filter((member: Staff) => 
         member.role === 'ADMIN' || member.role === 'SUPER_ADMIN'
@@ -79,11 +76,7 @@ export default function AdminManagementPage() {
     try {
       setError('');
       const token = localStorage.getItem('token');
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
-        { ...formData, role: 'ADMIN' },
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
+      await secureApiClient.post('/api/admin/staff', { ...formData, role: 'ADMIN' });
       setShowCreateDialog(false);
       resetForm();
       fetchStaff();
@@ -116,11 +109,7 @@ export default function AdminManagementPage() {
       if (!updateData.password) {
         delete updateData.password;
       }
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff/${editingStaff.id}`,
-        updateData,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
+      await secureApiClient.put(`/api/admin/staff/${editingStaff.id}`, updateData);
       setShowEditDialog(false);
       setShowPasswordConfirm(false);
       setEditingStaff(null);
@@ -136,10 +125,7 @@ export default function AdminManagementPage() {
     if (!deletingStaff) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff/${deletingStaff.id}`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
+      await secureApiClient.delete(`/api/admin/staff/${deletingStaff.id}`);
       setShowDeleteDialog(false);
       setDeletingStaff(null);
       fetchStaff();

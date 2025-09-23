@@ -49,7 +49,7 @@
 
 ### SMTP Configuration
 - **Provider**: SendGrid/Mailgun
-- **Test Email**: test@householdplanet.co.ke
+- **Test Email**: test@householdplanetkenya.co.ke
 
 ### Email Templates
 1. **Registration Confirmation**
@@ -91,7 +91,7 @@
 
 ### WhatsApp Business API
 - **Phone**: +254700000000
-- **Webhook**: https://api.householdplanet.co.ke/whatsapp
+- **Webhook**: https://householdplanetkenya.co.ke/whatsapp
 
 ### Message Templates
 1. **Order Confirmation**

@@ -9,7 +9,7 @@ const adminAccounts = [
     password: 'HouseholdPlanet2024!'
   },
   {
-    email: 'admin@householdplanet.co.ke', 
+    email: 'admin@householdplanetkenya.co.ke', 
     password: 'HouseholdPlanet2024!'
   }
 ];

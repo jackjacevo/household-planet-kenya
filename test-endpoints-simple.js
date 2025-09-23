@@ -4,7 +4,7 @@ async function testEndpoints() {
   const API_URL = 'https://api.householdplanetkenya.co.ke';
   
   const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-    email: 'admin@householdplanet.co.ke',
+    email: 'admin@householdplanetkenya.co.ke',
     password: 'Admin@2025'
   });
   const token = loginResponse.data.accessToken;

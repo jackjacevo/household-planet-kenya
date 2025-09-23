@@ -1,7 +1,7 @@
 // Delivery System Testing Script
 const axios = require('axios');
 
-const API_BASE = process.env.API_URL || 'https://api.householdplanet.co.ke';
+const API_BASE = process.env.API_URL || 'https://householdplanetkenya.co.ke';
 
 const testLocations = [
   { name: 'Nairobi CBD', coordinates: { lat: -1.2921, lng: 36.8219 } },

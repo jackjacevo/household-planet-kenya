@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function resetAdmin() {
   console.log('🔄 Resetting admin user...');
   
-  const adminEmail = 'admin@householdplanet.co.ke';
+  const adminEmail = 'admin@householdplanetkenya.co.ke';
   const adminPassword = 'HouseholdAdmin2024!';
   
   try {

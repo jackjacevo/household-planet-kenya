@@ -8,7 +8,7 @@ async function testAdminAuth() {
   
   // First, let's test if we can get a valid admin token
   const loginData = {
-    email: 'admin@householdplanet.co.ke',
+    email: 'admin@householdplanetkenya.co.ke',
     password: 'HouseholdPlanet2024!'
   };
   

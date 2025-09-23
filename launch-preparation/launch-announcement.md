@@ -28,16 +28,16 @@ The platform addresses the growing demand for online shopping in Kenya, particul
 - Free delivery on orders over KES 2,000
 - Special bundle deals across all categories
 
-Household Planet Kenya is now live at householdplanet.co.ke and available for orders via WhatsApp at +254700000000.
+Household Planet Kenya is now live at householdplanetkenya.co.ke and available for orders via WhatsApp at +254700000000.
 
 **About Household Planet Kenya**
 Founded in 2024, Household Planet Kenya is an e-commerce platform specializing in quality household items for Kenyan families. The company is committed to providing affordable, high-quality products with exceptional customer service and fast delivery across Kenya.
 
 **Media Contact:**
 [Contact Name]
-Email: media@householdplanet.co.ke
+Email: media@householdplanetkenya.co.ke
 Phone: +254700000000
-Website: householdplanet.co.ke
+Website: householdplanetkenya.co.ke
 
 ---
 
@@ -56,7 +56,7 @@ Household Planet Kenya is now open for business! Your one-stop shop for quality 
 ✅ 7-day return guarantee
 🎁 20% OFF first orders with LAUNCH20
 
-Ready to transform your home? Visit householdplanet.co.ke or WhatsApp us at +254700000000
+Ready to transform your home? Visit householdplanetkenya.co.ke or WhatsApp us at +254700000000
 
 Thank you Kenya for the warm welcome! Let's make every home a better place together! ❤️
 
@@ -98,7 +98,7 @@ Link in bio to start shopping! 🛒
 
 4/5 We're not just another online store - we're your neighbors, committed to making every Kenyan home more comfortable and functional.
 
-5/5 Ready to shop? Visit householdplanet.co.ke or WhatsApp +254700000000
+5/5 Ready to shop? Visit householdplanetkenya.co.ke or WhatsApp +254700000000
 
 Thank you Kenya! Let's build better homes together! 🏠❤️
 
@@ -116,7 +116,7 @@ Your trusted source for quality household items is here! 🏠
 
 From kitchen essentials to home decor, we have everything you need!
 
-Visit: householdplanet.co.ke
+Visit: householdplanetkenya.co.ke
 Or reply to this message to place your order!
 
 Thank you for being part of our journey! ❤️"
@@ -145,7 +145,7 @@ After months of preparation, we're thrilled to introduce you to Kenya's newest d
 As one of our early supporters, enjoy 20% OFF your first order with code LAUNCH20! Plus, get FREE delivery on orders over KES 2,000.
 
 **Ready to start shopping?**
-Visit householdplanet.co.ke or WhatsApp us at +254700000000
+Visit householdplanetkenya.co.ke or WhatsApp us at +254700000000
 
 Thank you for believing in our vision. We can't wait to help you create the perfect home!
 
@@ -186,7 +186,7 @@ Looking forward to hearing from you!
 Best regards,
 [Your Name]
 Household Planet Kenya
-Email: partnerships@householdplanet.co.ke
+Email: partnerships@householdplanetkenya.co.ke
 WhatsApp: +254700000000"
 
 ## Media Kit Contents

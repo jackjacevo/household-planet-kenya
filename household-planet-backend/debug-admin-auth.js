@@ -8,7 +8,7 @@ async function debugAdminAuth() {
     
     // Test login first
     const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'HouseholdAdmin2024!'
     });
     

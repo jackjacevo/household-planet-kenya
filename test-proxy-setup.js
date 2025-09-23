@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Test configuration for single domain proxy setup
-const DOMAIN = 'https://householdplanet.co.ke';
+const DOMAIN = 'https://householdplanetkenya.co.ke';
 const LOCAL_FRONTEND = 'http://localhost:3000';
 
 async function testProxyEndpoint(baseUrl, endpoint, description) {
@@ -107,7 +107,7 @@ async function testProxyConfiguration() {
   }
   
   console.log(`\n🔧 Configuration Check:`);
-  console.log(`   Frontend .env.production: NEXT_PUBLIC_API_URL=https://householdplanet.co.ke`);
+  console.log(`   Frontend .env.production: NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke`);
   console.log(`   Next.js proxy: /api/* → http://household-planet-backend:3001/api/*`);
   console.log(`   Docker container names: household-planet-frontend, household-planet-backend`);
 }
@@ -119,7 +119,7 @@ async function testDirectBackendAccess() {
   
   const directBackendUrls = [
     'http://158.220.99.195:3001/api/health',
-    'https://householdplanet.co.ke:3001/api/health'
+    'https://householdplanetkenya.co.ke:3001/api/health'
   ];
   
   for (const url of directBackendUrls) {
@@ -145,7 +145,7 @@ async function main() {
   console.log('2. Ensure container names match: household-planet-frontend, household-planet-backend');
   console.log('3. Backend should only expose port 3001 internally (no external access)');
   console.log('4. Frontend should be the only service with external port 3000');
-  console.log('5. Set NEXT_PUBLIC_API_URL=https://householdplanet.co.ke in production');
+  console.log('5. Set NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke in production');
   console.log('6. Verify Next.js proxy rewrites are working correctly');
 }
 

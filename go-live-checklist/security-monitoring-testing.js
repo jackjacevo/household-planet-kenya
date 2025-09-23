@@ -2,8 +2,8 @@
 const axios = require('axios');
 const https = require('https');
 
-const API_BASE = process.env.API_URL || 'https://api.householdplanet.co.ke';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://householdplanet.co.ke';
+const API_BASE = process.env.API_URL || 'https://householdplanetkenya.co.ke';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://householdplanetkenya.co.ke';
 
 async function testSSLCertificate() {
   console.log('🔄 Testing SSL Certificate...');
@@ -98,7 +98,7 @@ async function testCORSPolicy() {
     });
     
     const corsHeader = response.headers['access-control-allow-origin'];
-    if (corsHeader === FRONTEND_URL || corsHeader === 'https://householdplanet.co.ke') {
+    if (corsHeader === FRONTEND_URL || corsHeader === 'https://householdplanetkenya.co.ke') {
       console.log('✅ CORS Policy: Properly configured');
     } else {
       console.log('⚠️ CORS Policy: May be too permissive');

@@ -145,7 +145,7 @@ export function SEOSettingsTab({ settings, onSettingsChange }: SEOSettingsTabPro
               type="url"
               value={formData.canonicalUrl || ''}
               onChange={(e) => handleInputChange('canonicalUrl', e.target.value)}
-              placeholder="https://householdplanet.co.ke"
+              placeholder="https://householdplanetkenya.co.ke"
               className="w-full"
             />
             <p className="text-xs text-gray-500 mt-1">

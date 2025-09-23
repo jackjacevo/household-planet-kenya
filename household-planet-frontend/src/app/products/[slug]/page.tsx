@@ -96,9 +96,8 @@ export default function ProductDetailPage() {
       
       // Show success message
       showToast({
-        variant: 'success',
-        title: 'Review Submitted! ⭐',
-        description: 'Thank you for your feedback. Your review has been posted.',
+        type: 'success',
+        message: 'Review Submitted! ⭐ Thank you for your feedback. Your review has been posted.'
       });
       
       // Refresh reviews after submission

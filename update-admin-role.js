@@ -6,7 +6,7 @@ async function updateAdminRole() {
     
     // First, try to login with the registered user
     const loginResponse = await axios.post('https://api.householdplanetkenya.co.ke/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
     
@@ -16,7 +16,7 @@ async function updateAdminRole() {
     console.log('⚠️ Manual step required:');
     console.log('1. Access your production database');
     console.log('2. Update the user role:');
-    console.log("   UPDATE users SET role = 'SUPER_ADMIN' WHERE email = 'admin@householdplanet.co.ke';");
+    console.log("   UPDATE users SET role = 'SUPER_ADMIN' WHERE email = 'admin@householdplanetkenya.co.ke';");
     
   } catch (error) {
     console.error('❌ Error:', error.response?.data?.message || error.message);

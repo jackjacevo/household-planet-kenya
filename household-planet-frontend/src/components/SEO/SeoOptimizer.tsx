@@ -197,7 +197,7 @@ export default function SeoOptimizer({ type, itemId, currentData }: SeoOptimizer
                 {seoData.metaTitle}
               </div>
               <div className="text-green-600 text-sm">
-                https://householdplanet.co.ke/{type}s/{currentData?.slug}
+                https://householdplanetkenya.co.ke/{type}s/{currentData?.slug}
               </div>
               <div className="text-gray-600 text-sm mt-1">
                 {seoData.metaDescription}

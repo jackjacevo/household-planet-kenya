@@ -21,6 +21,7 @@ services:
       POSTGRES_PASSWORD: your_secure_password_123
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - postgres_backups:/app/backups
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -41,10 +42,10 @@ services:
       DATABASE_URL: postgresql://household_user:your_secure_password_123@postgres:5432/household_planet
       JWT_SECRET: ${JWT_SECRET:-household-planet-jwt-secret-key-2024-production-secure}
       JWT_EXPIRES_IN: 7d
-      CORS_ORIGIN: https://householdplanet.co.ke
+      CORS_ORIGIN: https://householdplanetkenya.co.ke
       BASE_URL: http://household-planet-backend:3001
       MPESA_BASE_URL: https://api.safaricom.co.ke
-      MPESA_CALLBACK_URL: https://householdplanet.co.ke/api/payments/mpesa/callback
+      MPESA_CALLBACK_URL: https://householdplanetkenya.co.ke/api/payments/mpesa/callback
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,8 +70,8 @@ services:
       - household-planet
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://householdplanet.co.ke
-      NEXT_PUBLIC_SITE_URL: https://householdplanet.co.ke
+      NEXT_PUBLIC_API_URL: https://householdplanetkenya.co.ke
+      NEXT_PUBLIC_SITE_URL: https://householdplanetkenya.co.ke
       NEXT_PUBLIC_ENVIRONMENT: production
     depends_on:
       - household-planet-backend
@@ -78,13 +79,15 @@ services:
       - "3000:3000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.household-planet.rule=Host(`householdplanet.co.ke`)"
+      - "traefik.http.routers.household-planet.rule=Host(`householdplanetkenya.co.ke`)"
       - "traefik.http.routers.household-planet.tls=true"
       - "traefik.http.routers.household-planet.tls.certresolver=letsencrypt"
       - "traefik.http.services.household-planet.loadbalancer.server.port=3000"
 
 volumes:
   postgres_data:
+    driver: local
+  postgres_backups:
     driver: local
   uploads_data:
     driver: local

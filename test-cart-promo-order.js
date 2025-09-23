@@ -9,7 +9,7 @@ async function testCartPromoOrder() {
     // Login as customer
     console.log('\n🔐 Logging in as customer...');
     const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin@2025'
     });
     const token = loginResponse.data.accessToken;

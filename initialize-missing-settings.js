@@ -21,7 +21,7 @@ async function initializeMissingSettings() {
         whatsappNotifications: true,
         orderConfirmationEmail: true,
         lowStockAlerts: true,
-        notificationEmail: 'info@householdplanet.co.ke'
+        notificationEmail: 'info@householdplanetkenya.co.ke'
       };
 
       // This will fail due to auth, but shows the structure

@@ -7,7 +7,7 @@ async function testAdminDeliveryLocations() {
     // First, login as admin to get token
     console.log('1. Logging in as admin...');
     const loginResponse = await axios.post('http://localhost:3001/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin123!@#'
     });
 

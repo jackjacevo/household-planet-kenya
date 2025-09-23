@@ -1,7 +1,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import '../styles/mobile-optimizations.css'
-import { AuthProvider } from '@/contexts/AuthContext'
+
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { StructuredData } from '@/components/SEO/StructuredData'
@@ -9,6 +9,9 @@ import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
 import IconPreloader from '@/components/ui/IconPreloader'
 import SmoothScrollProvider from '@/components/ui/SmoothScrollProvider'
+import { setupAuthInterceptor } from '@/lib/auth-interceptor'
+import ToastContainer from '@/components/ui/Toast'
+import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -52,17 +55,25 @@ export default function RootLayout({
         <StructuredData data={globalStructuredData} />
       </head>
       <body className={`${inter.className} antialiased scroll-smooth`} suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if (typeof window !== 'undefined') {
+              import('/lib/auth-interceptor').then(module => module.setupAuthInterceptor());
+            }
+          `
+        }} />
         <IconPreloader />
         <SmoothScrollProvider />
-        <QueryProvider>
-          <AuthProvider>
+        <ErrorBoundary>
+          <QueryProvider>
             <ToastProvider>
               <ClientLayout>
                 {children}
               </ClientLayout>
+              <ToastContainer />
             </ToastProvider>
-          </AuthProvider>
-        </QueryProvider>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

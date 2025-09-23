@@ -47,7 +47,7 @@ This document outlines the comprehensive security measures implemented in the Ho
 ### Allowed Origins
 - `http://localhost:3000` (development)
 - `https://household-planet-kenya.vercel.app`
-- `https://www.householdplanet.co.ke`
+- `https://householdplanetkenya.co.ke`
 
 ### Security Headers
 - `X-Content-Type-Options: nosniff`
@@ -145,7 +145,7 @@ ENABLE_AUDIT_LOGGING=true
 5. **Recovery**: System restoration and hardening
 
 ### Contact Information
-- Security Team: security@householdplanet.co.ke
+- Security Team: security@householdplanetkenya.co.ke
 - Emergency: +254-XXX-XXXX-XXX
 
 ## Compliance

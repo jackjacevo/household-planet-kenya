@@ -4,7 +4,7 @@ const API_URL = 'http://localhost:3001/api';
 
 // Test credentials - using actual admin credentials
 const ADMIN_CREDENTIALS = {
-  email: 'admin@householdplanet.co.ke',
+  email: 'admin@householdplanetkenya.co.ke',
   password: 'HouseholdAdmin2024!'
 };
 
@@ -33,7 +33,7 @@ async function testStaffManagement() {
     console.log('3. Creating new staff member...');
     const newStaff = {
       name: 'Jane Smith',
-      email: 'jane.smith@householdplanet.co.ke',
+      email: 'jane.smith@householdplanetkenya.co.ke',
       password: 'staff123',
       role: 'STAFF',
       permissions: ['manage_orders', 'view_analytics'],
@@ -59,7 +59,7 @@ async function testStaffManagement() {
     console.log('4. Creating new admin...');
     const newAdmin = {
       name: 'John Admin',
-      email: 'john.admin@householdplanet.co.ke',
+      email: 'john.admin@householdplanetkenya.co.ke',
       password: 'admin456',
       role: 'ADMIN',
       permissions: ['manage_products', 'manage_orders', 'manage_customers', 'view_analytics', 'manage_content', 'manage_payments'],

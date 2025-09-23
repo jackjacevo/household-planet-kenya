@@ -9,10 +9,10 @@ async function main() {
   // Create admin user
   const adminPassword = await bcrypt.hash('Admin@2025', 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@householdplanet.co.ke' },
+    where: { email: 'admin@householdplanetkenya.co.ke' },
     update: {},
     create: {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: adminPassword,
       firstName: 'Admin',
       lastName: 'User',
@@ -295,7 +295,7 @@ async function main() {
   }
 
   console.log('✅ Database seeding completed successfully!');
-  console.log(`👤 Admin user: admin@householdplanet.co.ke / Admin@2025`);
+  console.log(`👤 Admin user: admin@householdplanetkenya.co.ke / Admin@2025`);
   console.log(`📦 Created ${createdCategories.length} categories`);
   console.log(`🏷️ Created ${createdBrands.length} brands`);
   console.log(`🛍️ Created ${createdProducts.length} products`);

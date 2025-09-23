@@ -34,7 +34,7 @@ async function testPromoCodesEndpoint() {
   try {
     console.log('\nTesting with admin credentials...');
     const loginResponse = await axios.post(`${baseURL}/api/auth/login`, {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'Admin123!@#'
     });
     

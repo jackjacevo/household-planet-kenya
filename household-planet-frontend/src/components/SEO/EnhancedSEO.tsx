@@ -31,7 +31,7 @@ export function EnhancedSEO({
   structuredData = []
 }: EnhancedSEOProps) {
   const pathname = usePathname();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanet.co.ke';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://householdplanetkenya.co.ke';
   const fullUrl = `${baseUrl}${pathname}`;
   const defaultImage = `${baseUrl}/images/og-default.jpg`;
 

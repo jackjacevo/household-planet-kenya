@@ -1171,20 +1171,99 @@ export class AdminService {
     }
   }
 
+  async bulkDeleteProducts(productIds: number[], userId: number, ip: string, ua: string) {
+    try {
+      console.log('🗑️ AdminService: Bulk deleting products', productIds);
+      
+      // Soft delete by setting isActive to false for all products
+      const result = await this.prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { isActive: false }
+      });
+      
+      console.log('✅ Products bulk deleted (deactivated) successfully:', result.count);
+      return { message: `${result.count} products deleted successfully` };
+    } catch (error) {
+      console.error('❌ Bulk product deletion failed:', error);
+      throw new Error(`Failed to delete products: ${error.message}`);
+    }
+  }
+
   async bulkCreateProducts(products: any[], userId: number) {
-    return { message: 'Products created' };
+    try {
+      const createdProducts = [];
+      
+      for (const productData of products) {
+        const slug = productData.slug || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const sku = productData.sku || `HP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        
+        const product = await this.prisma.product.create({
+          data: {
+            name: productData.name,
+            slug: slug,
+            description: productData.description,
+            shortDescription: productData.shortDescription,
+            sku: sku,
+            price: parseFloat(productData.price),
+            comparePrice: productData.comparePrice ? parseFloat(productData.comparePrice) : null,
+            categoryId: parseInt(productData.categoryId),
+            brandId: productData.brandId ? parseInt(productData.brandId) : null,
+            stock: parseInt(productData.stock) || 0,
+            lowStockThreshold: parseInt(productData.lowStockThreshold) || 5,
+            weight: productData.weight ? parseFloat(productData.weight) : null,
+            dimensions: productData.dimensions || null,
+            trackStock: Boolean(productData.trackStock),
+            isActive: Boolean(productData.isActive),
+            isFeatured: Boolean(productData.isFeatured),
+            images: JSON.stringify(productData.images || []),
+            tags: JSON.stringify(productData.tags || [])
+          }
+        });
+        
+        createdProducts.push(product);
+      }
+      
+      return { products: createdProducts, message: `${createdProducts.length} products created successfully` };
+    } catch (error) {
+      console.error('❌ Bulk product creation failed:', error);
+      throw new Error(`Failed to create products: ${error.message}`);
+    }
   }
 
   async bulkUpdateProducts(data: any, userId: number) {
-    return { message: 'Products updated' };
+    try {
+      const { productIds, updates } = data;
+      
+      const result = await this.prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: updates
+      });
+      
+      return { message: `${result.count} products updated successfully` };
+    } catch (error) {
+      console.error('❌ Bulk product update failed:', error);
+      throw new Error(`Failed to update products: ${error.message}`);
+    }
   }
 
   async importProductsCsv(file: any) {
-    return { message: 'CSV imported' };
+    try {
+      // Basic CSV import implementation
+      console.log('📁 Importing products from CSV:', file.originalname);
+      return { message: 'CSV import functionality not yet implemented' };
+    } catch (error) {
+      throw new Error(`CSV import failed: ${error.message}`);
+    }
   }
 
   async exportProductsCsv() {
-    return { message: 'CSV exported' };
+    try {
+      // Basic CSV export implementation
+      console.log('📁 Exporting products to CSV');
+      return { message: 'CSV export functionality not yet implemented' };
+    } catch (error) {
+      throw new Error(`CSV export failed: ${error.message}`);
+    }
   }
 
   async uploadTempImages(files: any[]) {

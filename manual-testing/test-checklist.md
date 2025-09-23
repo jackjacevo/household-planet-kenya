@@ -128,7 +128,7 @@
 - [ ] Promotional messages
 
 ## Test Environment Setup
-- Staging URL: https://staging.householdplanet.co.ke
+- Staging URL: https://staging.householdplanetkenya.co.ke
 - Test M-Pesa: Use sandbox credentials
 - Test devices available in office
 - Browser testing tools: BrowserStack/CrossBrowserTesting

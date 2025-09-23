@@ -4,13 +4,13 @@
 
 ### Frontend Deployment (Vercel)
 - **Platform**: Vercel
-- **Domain**: householdplanet.co.ke
+- **Domain**: householdplanetkenya.co.ke
 - **CDN**: Automatic global CDN
 - **SSL**: Automatic Let's Encrypt
 
 ### Backend Deployment (Railway/DigitalOcean)
 - **Platform**: Railway or DigitalOcean Droplet
-- **Domain**: api.householdplanet.co.ke
+- **Domain**: api.householdplanetkenya.co.ke
 - **Database**: PostgreSQL with replication
 - **Cache**: Redis
 - **SSL**: Let's Encrypt via Nginx
@@ -25,7 +25,7 @@
 
 ### 1. Domain Setup
 ```bash
-# Purchase domain: householdplanet.co.ke
+# Purchase domain: householdplanetkenya.co.ke
 # Configure nameservers to Cloudflare
 # Import DNS records from cloudflare-dns.json
 ```
@@ -38,8 +38,8 @@ vercel login
 vercel --prod
 
 # Configure environment variables in Vercel dashboard:
-# NEXT_PUBLIC_API_URL=https://api.householdplanet.co.ke
-# NEXT_PUBLIC_SITE_URL=https://householdplanet.co.ke
+# NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke
+# NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
 ```
 
 ### 3. Backend Deployment (Railway)
@@ -89,8 +89,8 @@ docker-compose -f monitoring/docker-compose.monitoring.yml up -d
 
 ### Frontend (.env.production)
 ```env
-NEXT_PUBLIC_API_URL=https://api.householdplanet.co.ke
-NEXT_PUBLIC_SITE_URL=https://householdplanet.co.ke
+NEXT_PUBLIC_API_URL=https://householdplanetkenya.co.ke
+NEXT_PUBLIC_SITE_URL=https://householdplanetkenya.co.ke
 NEXT_PUBLIC_MPESA_SHORTCODE=174379
 NEXT_PUBLIC_ENVIRONMENT=production
 ```
@@ -101,7 +101,7 @@ NODE_ENV=production
 PORT=3001
 DATABASE_URL=postgresql://user:pass@host:5432/db
 JWT_SECRET=your_secure_secret
-CORS_ORIGIN=https://householdplanet.co.ke
+CORS_ORIGIN=https://householdplanetkenya.co.ke
 ```
 
 ## Security Checklist

@@ -40,7 +40,7 @@
 {
   expiresIn: '15m', // Access token
   refreshExpiresIn: '7d', // Refresh token
-  issuer: 'householdplanet.co.ke',
+  issuer: 'householdplanetkenya.co.ke',
   audience: 'householdplanet-users'
 }
 ```
@@ -515,7 +515,7 @@ Next Steps:
 - Review access logs
 - Update security measures
 
-Contact: security@householdplanet.co.ke
+Contact: security@householdplanetkenya.co.ke
 ```
 
 **Customer Communication:**
@@ -563,13 +563,13 @@ Household Planet Kenya Security Team
 #!/bin/bash
 
 # OWASP ZAP scan
-zap-baseline.py -t https://householdplanet.co.ke
+zap-baseline.py -t https://householdplanetkenya.co.ke
 
 # Nmap port scan
-nmap -sS -O householdplanet.co.ke
+nmap -sS -O householdplanetkenya.co.ke
 
 # SSL/TLS testing
-testssl.sh householdplanet.co.ke
+testssl.sh householdplanetkenya.co.ke
 
 # Generate report
 echo "Security scan completed: $(date)" >> security-scan.log

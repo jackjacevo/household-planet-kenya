@@ -4,7 +4,7 @@ async function testPromoReceipt() {
   try {
     // Login as admin
     const loginResponse = await axios.post('http://localhost:3001/api/auth/login', {
-      email: 'admin@householdplanet.co.ke',
+      email: 'admin@householdplanetkenya.co.ke',
       password: 'HouseholdAdmin2024!'
     });
     

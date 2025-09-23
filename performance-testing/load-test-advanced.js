@@ -20,7 +20,7 @@ export const options = {
   },
 }
 
-const BASE_URL = 'https://householdplanet.co.ke'
+const BASE_URL = 'https://householdplanetkenya.co.ke'
 
 export default function () {
   // Homepage load test

@@ -66,7 +66,7 @@ async function createTestUsers() {
     
     console.log('\n🎉 Test users setup completed!');
     console.log('\n📋 Login credentials:');
-    console.log('Admin: admin@householdplanet.co.ke / Admin@2025');
+    console.log('Admin: admin@householdplanetkenya.co.ke / Admin@2025');
     console.log('Customer 1: john.doe@example.com / Password123!');
     console.log('Customer 2: jane.smith@example.com / Password123!');
     console.log('Customer 3: customer@test.com / Test123!');

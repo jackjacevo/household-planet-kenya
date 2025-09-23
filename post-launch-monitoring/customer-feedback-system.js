@@ -19,7 +19,7 @@ class FeedbackCollector {
 
   async collectWebsiteFeedback() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/feedback/website');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/feedback/website');
       return response.data.feedback || [];
     } catch (error) {
       console.error('Failed to collect website feedback:', error);
@@ -29,7 +29,7 @@ class FeedbackCollector {
 
   async collectEmailSurveys() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/feedback/surveys');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/feedback/surveys');
       return response.data.surveys || [];
     } catch (error) {
       console.error('Failed to collect email surveys:', error);
@@ -55,7 +55,7 @@ class FeedbackCollector {
 
   async collectSupportTickets() {
     try {
-      const response = await axios.get('https://api.householdplanet.co.ke/api/support/tickets/feedback');
+      const response = await axios.get('https://householdplanetkenya.co.ke/api/support/tickets/feedback');
       return response.data.tickets || [];
     } catch (error) {
       console.error('Failed to collect support tickets:', error);
@@ -203,7 +203,7 @@ class FeedbackCollector {
     // Create support tickets for urgent issues
     for (const feedback of negativeFeedback.slice(0, 5)) {
       try {
-        await axios.post('https://api.householdplanet.co.ke/api/support/tickets', {
+        await axios.post('https://householdplanetkenya.co.ke/api/support/tickets', {
           subject: `Negative Feedback Follow-up: ${feedback.channel}`,
           description: feedback.message,
           priority: 'high',
@@ -230,15 +230,15 @@ class FeedbackCollector {
 
     // Save report
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/admin/reports/feedback', report);
+      await axios.post('https://householdplanetkenya.co.ke/api/admin/reports/feedback', report);
     } catch (error) {
       console.error('Failed to save feedback report:', error);
     }
 
     // Send daily summary to management
     try {
-      await axios.post('https://api.householdplanet.co.ke/api/notifications/email', {
-        to: 'management@householdplanet.co.ke',
+      await axios.post('https://householdplanetkenya.co.ke/api/notifications/email', {
+        to: 'management@householdplanetkenya.co.ke',
         subject: `Daily Feedback Report - ${report.date}`,
         body: `
 Daily Feedback Summary:

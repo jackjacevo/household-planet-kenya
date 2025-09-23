@@ -1,8 +1,8 @@
 // End-to-End Order Testing Script
 const axios = require('axios');
 
-const API_BASE = process.env.API_URL || 'https://api.householdplanet.co.ke';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://householdplanet.co.ke';
+const API_BASE = process.env.API_URL || 'https://householdplanetkenya.co.ke';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://householdplanetkenya.co.ke';
 
 async function testCompleteOrderFlow() {
   console.log('🔄 Testing Complete Order Flow...');

@@ -4,7 +4,7 @@ const API_BASE_URL = 'http://localhost:3001';
 const FRONTEND_URL = 'http://localhost:3000';
 
 // Admin credentials for testing
-const ADMIN_EMAIL = 'admin@householdplanet.co.ke';
+const ADMIN_EMAIL = 'admin@householdplanetkenya.co.ke';
 const ADMIN_PASSWORD = 'Admin@2024!';
 
 let adminToken = null;
