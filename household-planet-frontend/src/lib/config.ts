@@ -8,10 +8,10 @@ const getApiUrl = () => {
   const DEV_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   const DEV_SITE_URL = 'http://localhost:3000';
 
-  // In production, always use the frontend environment variable if set, otherwise use relative path
+  // In production, use the environment variable or fallback to production API
   if (process.env.NODE_ENV === 'production') {
     return {
-      BASE_URL: process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : PRODUCTION_API_URL,
+      BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
       SITE_URL: PRODUCTION_SITE_URL,
       ENVIRONMENT: 'production'
     };

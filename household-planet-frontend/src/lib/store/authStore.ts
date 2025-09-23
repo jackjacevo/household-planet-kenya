@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '../api';
+import { API_CONFIG } from '../config';
 
 interface User {
   id: number;
@@ -37,17 +38,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true });
         try {
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
-          
-          const data = await response.json();
-          
-          if (!response.ok) {
-            throw new Error(data.error || 'Login failed');
-          }
+          const data = await api.login(email, password);
           
           if (data.access_token && data.user) {
             const token = data.access_token;
@@ -105,7 +96,7 @@ export const useAuthStore = create<AuthState>()(
         if (!token) return false;
         
         try {
-          const response = await fetch('/api/auth/validate', {
+          const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/validate`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           return response.ok;
@@ -119,7 +110,7 @@ export const useAuthStore = create<AuthState>()(
         if (!refreshToken) return false;
         
         try {
-          const response = await fetch('/api/auth/refresh', {
+          const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken })
@@ -143,7 +134,7 @@ export const useAuthStore = create<AuthState>()(
         const token = localStorage.getItem('token');
         if (token) {
           try {
-            await fetch('/api/auth/session', {
+            await fetch(`${API_CONFIG.BASE_URL}/api/auth/session`, {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${token}` }
             });

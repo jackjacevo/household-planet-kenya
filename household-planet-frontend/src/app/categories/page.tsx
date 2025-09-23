@@ -138,7 +138,7 @@ export default function CategoriesPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+          className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5"
         >
           {filteredCategories.map((category) => (
             <motion.div key={category.id} variants={itemVariants}>

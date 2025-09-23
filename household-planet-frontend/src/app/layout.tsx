@@ -30,7 +30,7 @@ export default function RootLayout({
   ]
 
   return (
-    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
+    <html lang="en">
       <head>
         <script dangerouslySetInnerHTML={{
           __html: `
@@ -54,7 +54,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/logo/hp_logo.jpeg" />
         <StructuredData data={globalStructuredData} />
       </head>
-      <body className={`${inter.className} antialiased scroll-smooth`} suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{
           __html: `
             if (typeof window !== 'undefined') {

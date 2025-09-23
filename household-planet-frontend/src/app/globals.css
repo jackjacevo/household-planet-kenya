@@ -477,35 +477,21 @@ img, video, iframe {
   animation: swipeRight 0.3s ease-out;
 }
 
-/* Enhanced smooth scrolling for all elements */
-* {
-  scroll-behavior: smooth;
-}
-
 /* Mobile-optimized scrolling */
 .mobile-scroll {
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   overscroll-behavior: contain;
 }
 
 /* Smooth scrolling containers */
 .smooth-scroll {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-}
-
-/* Enhanced scrolling for specific elements */
-main, section, div[role="main"] {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent scroll chaining on mobile */
 .scroll-container {
   overscroll-behavior: contain;
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -636,11 +622,6 @@ main, section, div[role="main"] {
 }
 
 /* Ensure proper centering for all main content */
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 80px; /* Account for fixed header */
-}
-
 body {
   background: #ffffff;
   color: #171717;
@@ -653,9 +634,6 @@ body {
   overflow-x: hidden;
   /* Improve touch scrolling */
   -webkit-overflow-scrolling: touch;
-  /* Optimize scrolling performance */
-  scroll-behavior: smooth;
-  will-change: scroll-position;
 }
 
 /* Prevent zoom on double tap (iOS) */
@@ -1000,42 +978,29 @@ section {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
-/* Enhanced smooth scrolling optimizations */
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth !important;
-  }
-  
-  * {
-    scroll-behavior: smooth !important;
-  }
-}
-
 /* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  html, * {
-    scroll-behavior: auto !important;
+  * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-/* Optimize scroll performance */
+/* Optimize scroll performance - Next.js compatible */
 html {
+  scroll-behavior: smooth;
   scroll-padding-top: 80px;
   scroll-padding-bottom: 20px;
 }
 
-body {
-  overscroll-behavior: contain;
-  scroll-snap-type: y proximity;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
-/* Smooth scrolling for containers */
-.scroll-container {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
+body {
   overscroll-behavior: contain;
 }
 
@@ -1044,12 +1009,6 @@ body {
   body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-  }
-  
-  .mobile-scroll {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
   }
 }
 
