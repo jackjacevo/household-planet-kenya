@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/contexts/ToastContext';
 import { api } from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -73,9 +73,8 @@ export default function WhatsAppMessages() {
       setInquiries(inquiriesResponse.data as any[]);
     } catch (error) {
       showToast({
-        title: 'Error',
-        description: 'Failed to fetch WhatsApp data',
-        variant: 'destructive',
+        type: 'error',
+        message: 'Failed to fetch WhatsApp data'
       });
     } finally {
       setLoading(false);
@@ -86,16 +85,14 @@ export default function WhatsAppMessages() {
     try {
       await api.patch(`/api/orders/whatsapp/${messageId}/processed`, { orderId });
       showToast({
-        title: 'Success',
-        description: 'Message marked as processed',
-        variant: 'success',
+        type: 'success',
+        message: 'Message marked as processed'
       });
       fetchData();
     } catch (error) {
       showToast({
-        title: 'Error',
-        description: 'Failed to update message status',
-        variant: 'destructive',
+        type: 'error',
+        message: 'Failed to update message status'
       });
     }
   };
