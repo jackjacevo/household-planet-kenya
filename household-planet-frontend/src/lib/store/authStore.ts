@@ -60,8 +60,7 @@ export const useAuthStore = create<AuthState>()(
             
             // Import and start session manager
             import('../session-manager').then(({ sessionManager }) => {
-              sessionManager.createSession();
-              sessionManager.start();
+              sessionManager.init();
             });
             
             set({
@@ -86,8 +85,7 @@ export const useAuthStore = create<AuthState>()(
         
         // Destroy session
         import('../session-manager').then(({ sessionManager }) => {
-          sessionManager.destroySession();
-          sessionManager.stop();
+          sessionManager.destroy();
         });
         
         set({
@@ -165,7 +163,7 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         if (state?.isAuthenticated) {
           import('../session-manager').then(({ sessionManager }) => {
-            sessionManager.start();
+            sessionManager.init();
           });
         }
       },
