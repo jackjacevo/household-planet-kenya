@@ -12,6 +12,7 @@ interface Category {
   slug: string;
   description?: string;
   image?: string;
+  parentId?: number;
   isActive: boolean;
   products?: any[];
   _count?: {
