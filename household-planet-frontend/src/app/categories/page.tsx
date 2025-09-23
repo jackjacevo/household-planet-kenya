@@ -124,22 +124,23 @@ export default function CategoriesPage() {
       </div>
 
       {/* Categories Section */}
-      <div className="w-full px-2 sm:px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-600 font-medium">
-              {filteredCategories.length} Main {filteredCategories.length === 1 ? 'Category' : 'Categories'}
-            </span>
+      <div className="py-8 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-600 font-medium">
+                {filteredCategories.length} Main {filteredCategories.length === 1 ? 'Category' : 'Categories'}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Categories Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5"
-        >
+          {/* Categories Grid */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          >
           {filteredCategories.map((category) => (
             <motion.div key={category.id} variants={itemVariants}>
               <Link href={`/products?category=${category.slug}`}>
@@ -185,14 +186,14 @@ export default function CategoriesPage() {
               </Link>
             </motion.div>
           ))}
-        </motion.div>
-        
-        {filteredCategories.length === 0 && !loading && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
-          >
+          </motion.div>
+          
+          {filteredCategories.length === 0 && !loading && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <Search className="w-8 h-8 text-gray-400" />
             </div>
@@ -210,8 +211,9 @@ export default function CategoriesPage() {
                 Clear Search
               </button>
             )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );
