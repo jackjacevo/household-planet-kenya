@@ -44,7 +44,7 @@ export default function RootLayout({
                   if (typeof arg === 'string') {
                     if (arg.includes('websocket') || arg.includes('connection disabled')) return null;
                     if (arg.includes('data:image/')) {
-                      return arg.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+\/=]+/g, 'data:image/[BASE64_HIDDEN]');
+                      return arg.replace(/data:image\/[\w\/]+;base64,[A-Za-z0-9+\/=]+/g, 'data:image/[BASE64_HIDDEN]');
                     }
                   }
                   return arg;
