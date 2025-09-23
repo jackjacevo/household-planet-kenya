@@ -11,13 +11,17 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
-    
+
+    // Debug logging in production
+    if (process.env.NODE_ENV === 'production') {
+      console.log('API Request:', { url, baseURL: this.baseURL, endpoint });
+    }
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      credentials: 'include',
       mode: 'cors',
       ...options,
     }

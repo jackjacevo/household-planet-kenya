@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Search, Package, ShoppingBag } from 'lucide-react';
 import { getImageUrl } from '@/lib/imageUtils';
+import { api } from '@/lib/api';
 
 interface Category {
   id: number;
@@ -39,14 +40,8 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
+        const data = await api.getCategories();
+
         if (data && Array.isArray(data)) {
           // Only show main categories (no parentId)
           const mainCategories = data.filter((cat: any) => !cat.parentId && cat.isActive);

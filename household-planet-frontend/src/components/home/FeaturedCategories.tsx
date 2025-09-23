@@ -57,14 +57,8 @@ export function FeaturedCategories() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
+        const data = await api.getCategories();
+
         if (data && Array.isArray(data)) {
           const activeCategories = data
             .filter((cat: Category) => cat.isActive && !cat.parentId)
