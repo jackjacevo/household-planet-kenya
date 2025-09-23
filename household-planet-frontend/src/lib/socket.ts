@@ -26,3 +26,4 @@ export class SocketManager {
 }
 
 export const socket = SocketManager.getInstance();
+export const socketService = socket;

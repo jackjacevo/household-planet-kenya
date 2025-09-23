@@ -20,6 +20,7 @@ export const usePWA = () => {
   return {
     isOnline,
     isInstallable,
-    install: () => console.log('PWA install triggered')
+    install: () => console.log('PWA install triggered'),
+    getCachedProducts: () => []
   };
 };

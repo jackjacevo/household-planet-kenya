@@ -30,6 +30,7 @@ export const useRealtimeOrders = () => {
   return {
     orders,
     loading,
-    refetch: fetchOrders
+    refetch: fetchOrders,
+    refreshAll: fetchOrders
   };
 };
