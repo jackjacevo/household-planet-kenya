@@ -43,6 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      setLoading(false)
+      return
+    }
+
     const token = localStorage.getItem('token')
     if (token) {
       // Check if token is expired before making API call
@@ -76,7 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
     } catch (error) {
       console.error('Failed to fetch user profile:', error)
-      localStorage.removeItem('token')
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token')
+      }
       setUser(null)
     } finally {
       setLoading(false)
@@ -86,17 +93,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
-      // Clear any existing user data first
-      localStorage.removeItem('cart-storage')
-      localStorage.removeItem('wishlist-storage')
-      localStorage.removeItem('guestCart')
-      localStorage.removeItem('checkoutData')
-      // useCart.getState().clearOnLogout()
-      // useWishlist.getState().clearOnLogout()
+      if (typeof window !== 'undefined') {
+        // Clear any existing user data first
+        localStorage.removeItem('cart-storage')
+        localStorage.removeItem('wishlist-storage')
+        localStorage.removeItem('guestCart')
+        localStorage.removeItem('checkoutData')
+      }
       
       const response = await api.login(email, password) as any
       const token = response.accessToken || response.access_token
-      localStorage.setItem('token', token)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', token)
+      }
       setUser(response.user)
       setLoading(false)
       return response
@@ -109,8 +118,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (userData: any) => {
     try {
       const response = await api.register(userData) as any
-      // Registration successful, but user needs to verify email
-      // Don't log them in automatically, redirect to login with success message
       return response
     } catch (error) {
       throw error
@@ -118,26 +125,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('cart-storage')
-    localStorage.removeItem('wishlist-storage')
-    localStorage.removeItem('guestCart')
-    localStorage.removeItem('checkoutData')
-    
-    // Clear cart and wishlist state
-    // useCart.getState().clearOnLogout()
-    // useWishlist.getState().clearOnLogout()
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('cart-storage')
+      localStorage.removeItem('wishlist-storage')
+      localStorage.removeItem('guestCart')
+      localStorage.removeItem('checkoutData')
+    }
     
     setUser(null)
   }
 
   const updateProfile = async (data: any) => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
       })
