@@ -43,9 +43,13 @@ function LoginContent() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.email, data.password)
+      console.log('Attempting login with:', data.email)
+      const result = await login(data.email, data.password)
+      console.log('Login result:', result)
+      console.log('Redirecting to home...')
       router.push('/')
     } catch (err) {
+      console.error('Login error:', err)
       setError('root', {
         message: 'Invalid email or password. Please try again.'
       })
