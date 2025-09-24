@@ -33,7 +33,7 @@ export const useWishlist = create<WishlistStore>()(
         
         try {
           if (isAuthenticated) {
-            await api.post(`/api/wishlist/${product.id}`);
+            await api.post(`/wishlist/${product.id}`);
             await get().syncWithBackend();
           } else {
             set((state) => ({ items: [...state.items, product] }));
@@ -57,7 +57,7 @@ export const useWishlist = create<WishlistStore>()(
           const shouldUseBackend = isAuthenticated || token;
           
           if (shouldUseBackend) {
-            await api.delete(`/api/wishlist/${numericId}`);
+            await api.delete(`/wishlist/${numericId}`);
             await get().syncWithBackend();
           } else {
             set((state) => ({
@@ -86,7 +86,7 @@ export const useWishlist = create<WishlistStore>()(
         
         if (isAuthenticated) {
           try {
-            await api.delete('/api/wishlist');
+            await api.delete('/wishlist');
           } catch (error) {
             console.error('Failed to clear wishlist:', error);
           }
@@ -97,7 +97,7 @@ export const useWishlist = create<WishlistStore>()(
 
       syncWithBackend: async () => {
         try {
-          const response = await api.get('/api/wishlist');
+          const response = await api.get('/wishlist');
           const wishlistData = (response as any).data;
           // Handle different response structures
           let itemsArray = [];
@@ -125,7 +125,7 @@ export const useWishlist = create<WishlistStore>()(
         
         for (const item of state.items) {
           try {
-            await api.post(`/api/wishlist/${item.id}`);
+            await api.post(`/wishlist/${item.id}`);
           } catch (error) {
             console.warn(`Failed to sync wishlist item ${item.id}:`, error);
           }

@@ -70,7 +70,7 @@ export default function WhatsAppOrderEntry() {
   const onSubmit = async (data: WhatsAppOrderForm) => {
     setIsSubmitting(true);
     try {
-      await api.post('/api/orders/whatsapp', data);
+      await api.post('/orders/whatsapp', data);
       showToast({
         type: 'success',
         message: 'WhatsApp order created successfully',

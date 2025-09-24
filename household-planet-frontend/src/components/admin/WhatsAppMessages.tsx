@@ -64,9 +64,9 @@ export default function WhatsAppMessages() {
   const fetchData = async () => {
     try {
       const [messagesResponse, ordersResponse, inquiriesResponse] = await Promise.all([
-        api.get('/api/orders/whatsapp/pending'),
-        api.get('/api/orders/whatsapp/orders'),
-        api.get('/api/analytics/whatsapp-inquiries')
+        api.get('/orders/whatsapp/pending'),
+        api.get('/orders/whatsapp/orders'),
+        api.get('/analytics/whatsapp-inquiries')
       ]);
       setMessages(messagesResponse.data as WhatsAppMessage[]);
       setOrders(ordersResponse.data as WhatsAppOrder[]);
@@ -83,7 +83,7 @@ export default function WhatsAppMessages() {
 
   const markAsProcessed = async (messageId: string, orderId?: number) => {
     try {
-      await api.patch(`/api/orders/whatsapp/${messageId}/processed`, { orderId });
+      await api.patch(`/orders/whatsapp/${messageId}/processed`, { orderId });
       showToast({
         type: 'success',
         message: 'Message marked as processed'
