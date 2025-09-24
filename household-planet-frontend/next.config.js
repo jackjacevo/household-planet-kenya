@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable standalone output for Docker
   output: 'standalone',
 
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
   },
 
-  // API rewrite for production - proxy /api/* to backend
   async rewrites() {
     if (process.env.NODE_ENV === 'production') {
       return [
@@ -35,10 +33,7 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  experimental: {
-    webVitalsAttribution: ['CLS', 'LCP']
-  },
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -47,16 +42,6 @@ const nextConfig = {
         tls: false,
         crypto: false,
       };
-      
-      // Suppress all WebSocket related warnings
-      config.ignoreWarnings = [
-        /Critical dependency: the request of a dependency is an expression/,
-        /Module not found: Can't resolve 'ws'/,
-        /WebSocket connection disabled/,
-        /Failed to construct 'WebSocket'/,
-      ];
-      
-
     }
     return config;
   },

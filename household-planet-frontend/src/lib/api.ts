@@ -12,11 +12,6 @@ class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
-    // Debug logging in production
-    if (process.env.NODE_ENV === 'production') {
-      console.log('API Request:', { url, baseURL: this.baseURL, endpoint });
-    }
-
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -39,46 +34,25 @@ class ApiClient {
       
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`
-        let errorCode = response.status
         
         try {
           const errorData = await response.json()
-          if (typeof errorData === 'object' && errorData !== null) {
-            errorMessage = errorData.message || errorData.error || errorMessage
-          }
+          errorMessage = errorData.message || errorData.error || errorMessage
         } catch {
           errorMessage = response.statusText || errorMessage
         }
         
-        // Handle specific error cases
-        if (errorCode === 401) {
+        if (response.status === 401) {
           localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-          window.location.href = '/admin/login'
           throw new Error('Authentication required')
-        }
-        
-        if (errorCode === 403) {
-          throw new Error('Access denied')
-        }
-        
-        if (errorCode >= 500) {
-          throw new Error('Server error')
         }
         
         throw new Error(errorMessage)
       }
 
-      const data = await response.json()
-      
-      // Basic validation for response structure
-      if (typeof data !== 'object' || data === null) {
-        throw new Error('Invalid response format')
-      }
-      
-      return data
+      return await response.json()
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError) {
         throw new Error('Network error')
       }
       throw error

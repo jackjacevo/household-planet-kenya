@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { api } from '@/lib/api'
-import { useCart } from '@/hooks/useCart'
-import { useWishlist } from '@/hooks/useWishlist'
 
 interface User {
   id: number
@@ -16,9 +14,6 @@ interface User {
   avatar?: string
   emailVerified: boolean
   phoneVerified: boolean
-  permissions?: string[]
-  notificationSettings?: any
-  privacySettings?: any
 }
 
 interface AuthContextType {
@@ -31,12 +26,10 @@ interface AuthContextType {
   updateUser: (userData: User) => void
   isAdmin: () => boolean
   isStaff: () => boolean
-  hasPermission: (permission: string) => boolean
   fetchUserProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-export { AuthContext }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -50,7 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const token = localStorage.getItem('token')
     if (token) {
-      // Check if token is expired before making API call
       try {
         const payload = JSON.parse(atob(token.split('.')[1]))
         const isExpired = payload.exp * 1000 < Date.now()
@@ -63,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchUserProfile()
         }
       } catch (error) {
-        // Invalid token format
         localStorage.removeItem('token')
         setUser(null)
         setLoading(false)
@@ -76,11 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUserProfile = async () => {
     try {
       const response = await api.getUserProfile() as any
-      // Handle both direct user object and wrapped response
       const userData = response.user || response
       setUser(userData)
     } catch (error) {
-      console.error('Failed to fetch user profile:', error)
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token')
       }
@@ -94,7 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       if (typeof window !== 'undefined') {
-        // Clear any existing user data first
         localStorage.removeItem('cart-storage')
         localStorage.removeItem('wishlist-storage')
         localStorage.removeItem('guestCart')
@@ -161,21 +149,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isAdmin = () => {
-    return user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff'
+    return user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin'
   }
 
   const isStaff = () => {
-    return user?.role === 'STAFF' || user?.role === 'staff' || user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin'
-  }
-
-  const hasPermission = (permission: string) => {
-    // Admin, Super Admin, and Staff have all permissions
-    if (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') return true
-    return user?.permissions?.includes(permission) || false
+    return user?.role === 'STAFF' || user?.role === 'staff' || isAdmin()
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, updateProfile, updateUser, isAdmin, isStaff, hasPermission, fetchUserProfile }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      register, 
+      logout, 
+      loading, 
+      updateProfile, 
+      updateUser, 
+      isAdmin, 
+      isStaff, 
+      fetchUserProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   )
