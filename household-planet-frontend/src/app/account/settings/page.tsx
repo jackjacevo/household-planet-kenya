@@ -44,11 +44,11 @@ export default function SettingsPage() {
       });
       
       // Load notification settings if available
-      if (user.notificationSettings) {
+      if ((user as any).notificationSettings) {
         try {
-          const settings = typeof user.notificationSettings === 'string' 
-            ? JSON.parse(user.notificationSettings) 
-            : user.notificationSettings;
+          const settings = typeof (user as any).notificationSettings === 'string' 
+            ? JSON.parse((user as any).notificationSettings) 
+            : (user as any).notificationSettings;
           setNotifications(prev => ({ ...prev, ...settings }));
         } catch (e) {
           console.error('Error parsing notification settings:', e);
@@ -56,11 +56,11 @@ export default function SettingsPage() {
       }
       
       // Load privacy settings if available
-      if (user.privacySettings) {
+      if ((user as any).privacySettings) {
         try {
-          const settings = typeof user.privacySettings === 'string' 
-            ? JSON.parse(user.privacySettings) 
-            : user.privacySettings;
+          const settings = typeof (user as any).privacySettings === 'string' 
+            ? JSON.parse((user as any).privacySettings) 
+            : (user as any).privacySettings;
           setPrivacy(prev => ({ ...prev, ...settings }));
         } catch (e) {
           console.error('Error parsing privacy settings:', e);
