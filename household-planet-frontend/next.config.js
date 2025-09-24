@@ -55,7 +55,7 @@ const nextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'https://api.householdplanetkenya.co.ke/api/:path*',
+          destination: 'https://api.householdplanetkenya.co.ke/:path*',
         },
       ];
     }
@@ -77,68 +77,7 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  webpack: (config, { isServer, dev }) => {
-    // Client-side fallbacks
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        ws: false,
-        net: false,
-        tls: false,
-        crypto: false,
-      };
-    }
 
-    // Optimize bundle splitting in production
-    if (!dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          cacheGroups: {
-            ...config.optimization.splitChunks.cacheGroups,
-            // Vendor chunk for large libraries
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              enforce: true,
-            },
-            // Admin-specific chunk
-            admin: {
-              test: /[\\/]src[\\/].*admin.*[\\/]/,
-              name: 'admin',
-              chunks: 'all',
-              priority: 10,
-            },
-            // UI components chunk
-            ui: {
-              test: /[\\/]src[\\/]components[\\/]ui[\\/]/,
-              name: 'ui',
-              chunks: 'all',
-              priority: 9,
-            },
-            // Chart libraries chunk
-            charts: {
-              test: /[\\/]node_modules[\\/](chart\.js|recharts|react-chartjs-2)[\\/]/,
-              name: 'charts',
-              chunks: 'all',
-              priority: 8,
-            },
-            // React Query chunk
-            reactQuery: {
-              test: /[\\/]node_modules[\\/]@tanstack[\\/]react-query[\\/]/,
-              name: 'react-query',
-              chunks: 'all',
-              priority: 7,
-            },
-          },
-        },
-      };
-    }
-
-    return config;
-  },
 
   // Enable static optimization
   trailingSlash: false,
