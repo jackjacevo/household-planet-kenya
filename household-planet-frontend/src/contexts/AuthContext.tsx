@@ -44,29 +44,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('token')
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]))
+        // Check if token format is valid
+        const parts = token.split('.')
+        if (parts.length !== 3) {
+          throw new Error('Invalid token format')
+        }
+        
+        const payload = JSON.parse(atob(parts[1]))
         const isExpired = payload.exp * 1000 < Date.now()
         
         if (isExpired) {
           localStorage.removeItem('token')
+          localStorage.removeItem('user')
           setUser(null)
           setLoading(false)
         } else {
-          // Only fetch profile if we don't have user data
+          // Load cached user data first for faster loading
           const cachedUser = localStorage.getItem('user')
           if (cachedUser) {
             try {
-              setUser(JSON.parse(cachedUser))
+              const userData = JSON.parse(cachedUser)
+              setUser(userData)
               setLoading(false)
             } catch {
+              // If cached data is corrupted, fetch fresh data
               fetchUserProfile()
             }
           } else {
+            // No cached user data, fetch from API
             fetchUserProfile()
           }
         }
       } catch (error) {
+        // Token is invalid, clear everything
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
         setUser(null)
         setLoading(false)
       }
@@ -100,23 +112,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       const response = await api.login(email, password) as any
+      
+      // Validate response structure
+      if (!response || (!response.accessToken && !response.access_token)) {
+        throw new Error('Invalid login response - no token received')
+      }
+      
+      if (!response.user) {
+        throw new Error('Invalid login response - no user data received')
+      }
+      
       const token = response.accessToken || response.access_token
       
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token)
-      }
-      
-      setUser(response.user)
-      
-      // Cache user data
-      if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(response.user))
       }
       
+      setUser(response.user)
       setLoading(false)
+      
       return response
     } catch (error) {
       setLoading(false)
+      // Clear any partial data on login failure
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
+      setUser(null)
       throw error
     }
   }
