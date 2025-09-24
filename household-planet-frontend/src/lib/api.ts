@@ -42,10 +42,8 @@ class ApiClient {
           errorMessage = response.statusText || errorMessage
         }
         
-        // Only clear auth data for actual auth endpoints, not all 401s
-        if (response.status === 401 && (endpoint.includes('/auth/') || endpoint.includes('/profile'))) {
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
+        // Don't automatically clear auth data on 401s - let components handle it
+        if (response.status === 401) {
           throw new Error('Authentication required')
         }
         

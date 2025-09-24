@@ -107,8 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.user)
       setLoading(false)
       
+      console.log('Login successful:', response.user.email, 'Role:', response.user.role)
       return response
     } catch (error) {
+      console.error('Login error:', error)
+      
       // Mock login for demo purposes when backend is down
       if (email === 'demo@demo.com' && password === 'demo123') {
         const mockUser = {
@@ -134,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       setLoading(false)
+      // Don't clear existing auth data on login failure
       throw error
     }
   }
