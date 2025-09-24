@@ -13,6 +13,10 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/cart',
   '/dashboard',
+  '/admin',
+  '/admin/dashboard',
+  '/admin/orders',
+  '/admin/products',
   '/icons/icon.svg',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
@@ -21,8 +25,28 @@ const STATIC_ASSETS = [
 const API_CACHE_PATTERNS = [
   /\/api\/products/,
   /\/api\/categories/,
-  /\/api\/content/
+  /\/api\/content/,
+  /\/api\/admin\/dashboard/,
+  /\/api\/admin\/orders/,
+  /\/api\/admin\/analytics/
 ];
+
+// Admin-specific cache patterns for Phase 3
+const ADMIN_CACHE_PATTERNS = {
+  dashboard: /\/api\/admin\/dashboard/,
+  orders: /\/api\/admin\/orders/,
+  products: /\/api\/admin\/products/,
+  analytics: /\/api\/admin\/analytics/,
+  customers: /\/api\/admin\/customers/
+};
+
+const ADMIN_CACHE_CONFIG = {
+  dashboard: { maxAge: 2 * 60 * 1000, strategy: 'stale-while-revalidate' }, // 2 minutes
+  orders: { maxAge: 30 * 1000, strategy: 'network-first' }, // 30 seconds
+  products: { maxAge: 5 * 60 * 1000, strategy: 'stale-while-revalidate' }, // 5 minutes
+  analytics: { maxAge: 10 * 60 * 1000, strategy: 'cache-first' }, // 10 minutes
+  customers: { maxAge: 5 * 60 * 1000, strategy: 'stale-while-revalidate' } // 5 minutes
+};
 
 // Install event
 self.addEventListener('install', event => {
@@ -81,37 +105,184 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Handle API requests - Network first, cache fallback
+// Enhanced API request handling with admin-specific caching
 async function handleApiRequest(request) {
   const url = new URL(request.url);
-  
+
+  // Check if this is an admin API request
+  const adminCacheType = getAdminCacheType(url.pathname);
+
+  if (adminCacheType) {
+    return handleAdminApiRequest(request, adminCacheType);
+  }
+
+  // Default API handling
   try {
     const response = await fetch(request);
-    
+
     if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, response.clone());
     }
-    
+
     return response;
   } catch (error) {
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       return cachedResponse;
     }
-    
+
     // Return offline data for specific endpoints
     if (API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
-      return new Response(JSON.stringify({ 
-        offline: true, 
-        data: [], 
-        message: 'Offline mode - showing cached data' 
+      return new Response(JSON.stringify({
+        offline: true,
+        data: [],
+        message: 'Offline mode - showing cached data'
       }), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     throw error;
+  }
+}
+
+// Get admin cache type based on URL pattern
+function getAdminCacheType(pathname) {
+  for (const [type, pattern] of Object.entries(ADMIN_CACHE_PATTERNS)) {
+    if (pattern.test(pathname)) {
+      return type;
+    }
+  }
+  return null;
+}
+
+// Handle admin API requests with specific strategies
+async function handleAdminApiRequest(request, cacheType) {
+  const config = ADMIN_CACHE_CONFIG[cacheType];
+  const cacheName = `admin-${cacheType}-cache`;
+
+  try {
+    switch (config.strategy) {
+      case 'cache-first':
+        return await cacheFirstStrategy(request, cacheName, config.maxAge);
+      case 'network-first':
+        return await networkFirstStrategy(request, cacheName, config.maxAge);
+      case 'stale-while-revalidate':
+        return await staleWhileRevalidateStrategy(request, cacheName, config.maxAge);
+      default:
+        return await networkFirstStrategy(request, cacheName, config.maxAge);
+    }
+  } catch (error) {
+    console.error(`Admin API request failed for ${cacheType}:`, error);
+
+    // Return cached response if available
+    const cachedResponse = await caches.match(request, { cacheName });
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    // Return offline response
+    return new Response(JSON.stringify({
+      offline: true,
+      data: getOfflineData(cacheType),
+      message: `Offline mode - ${cacheType} data unavailable`
+    }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Cache strategies
+async function cacheFirstStrategy(request, cacheName, maxAge) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  if (cachedResponse && !isCacheExpired(cachedResponse, maxAge)) {
+    return cachedResponse;
+  }
+
+  const networkResponse = await fetch(request);
+  if (networkResponse.ok) {
+    cache.put(request, networkResponse.clone());
+  }
+
+  return networkResponse;
+}
+
+async function networkFirstStrategy(request, cacheName, maxAge) {
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    throw error;
+  }
+}
+
+async function staleWhileRevalidateStrategy(request, cacheName, maxAge) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  // Start network request (don't await)
+  const fetchPromise = fetch(request).then(networkResponse => {
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  }).catch(() => {});
+
+  // Return cached response if available and fresh
+  if (cachedResponse && !isCacheExpired(cachedResponse, maxAge)) {
+    return cachedResponse;
+  }
+
+  // Return cached response while fetching in background
+  if (cachedResponse) {
+    fetchPromise; // Let it update cache in background
+    return cachedResponse;
+  }
+
+  // No cache, wait for network
+  return await fetchPromise;
+}
+
+// Check if cache is expired
+function isCacheExpired(response, maxAge) {
+  const cacheDate = new Date(response.headers.get('date') || response.headers.get('sw-cache-date') || 0);
+  return Date.now() - cacheDate.getTime() > maxAge;
+}
+
+// Get offline data based on cache type
+function getOfflineData(cacheType) {
+  switch (cacheType) {
+    case 'dashboard':
+      return {
+        overview: { totalOrders: 0, totalRevenue: 0, totalCustomers: 0, totalProducts: 0 },
+        recentOrders: [],
+        topProducts: []
+      };
+    case 'orders':
+      return [];
+    case 'products':
+      return [];
+    case 'analytics':
+      return { customerGrowth: [], salesByCounty: [] };
+    case 'customers':
+      return [];
+    default:
+      return [];
   }
 }
 
@@ -323,11 +494,11 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// Enhanced message handling with error handling
+// Enhanced message handling with admin-specific features
 self.addEventListener('message', event => {
   try {
     const { type, data } = event.data || {};
-    
+
     switch (type) {
       case 'SKIP_WAITING':
         self.skipWaiting();
@@ -344,11 +515,84 @@ self.addEventListener('message', event => {
           console.error('Error getting cached products:', error);
         });
         break;
+      case 'INVALIDATE_ADMIN_CACHE':
+        invalidateAdminCache(data.cacheType);
+        break;
+      case 'PRELOAD_ADMIN_DATA':
+        preloadAdminData(data.routes);
+        break;
+      case 'GET_CACHE_STATS':
+        getCacheStats().then(stats => {
+          if (event.ports && event.ports[0]) {
+            event.ports[0].postMessage({ stats });
+          }
+        }).catch(error => {
+          console.error('Error getting cache stats:', error);
+        });
+        break;
     }
   } catch (error) {
     console.error('Service worker message handling error:', error);
   }
 });
+
+// Admin-specific cache operations
+async function invalidateAdminCache(cacheType) {
+  try {
+    const cacheName = `admin-${cacheType}-cache`;
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+
+    for (const key of keys) {
+      await cache.delete(key);
+    }
+
+    console.log(`Invalidated admin cache: ${cacheType}`);
+  } catch (error) {
+    console.error('Failed to invalidate admin cache:', error);
+  }
+}
+
+async function preloadAdminData(routes) {
+  try {
+    for (const route of routes) {
+      const cacheType = getAdminCacheType(route);
+      if (cacheType) {
+        const cacheName = `admin-${cacheType}-cache`;
+        const cache = await caches.open(cacheName);
+
+        const response = await fetch(route);
+        if (response.ok) {
+          await cache.put(route, response);
+          console.log(`Preloaded admin data: ${route}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to preload admin data:', error);
+  }
+}
+
+async function getCacheStats() {
+  try {
+    const cacheNames = await caches.keys();
+    const stats = {};
+
+    for (const cacheName of cacheNames) {
+      const cache = await caches.open(cacheName);
+      const keys = await cache.keys();
+      stats[cacheName] = {
+        entries: keys.length,
+        lastAccess: Date.now()
+      };
+    }
+
+    return stats;
+  } catch (error) {
+    console.error('Failed to get cache stats:', error);
+    return {};
+  }
+}
 
 async function cacheCartUpdate(updateData) {
   try {
