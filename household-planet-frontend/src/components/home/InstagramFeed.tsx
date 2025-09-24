@@ -46,34 +46,6 @@ const instagramPosts = [
     caption: 'Professional cleaning supplies for a spotless home ✨',
     likes: 178,
     comments: 11
-  },
-  {
-    id: 7,
-    image: 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    caption: 'Cozy living room essentials for family time 🛋️',
-    likes: 267,
-    comments: 22
-  },
-  {
-    id: 8,
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    caption: 'Elegant dining sets for memorable meals 🍽️',
-    likes: 194,
-    comments: 16
-  },
-  {
-    id: 9,
-    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    caption: 'Modern appliances for efficient living ⚡',
-    likes: 231,
-    comments: 19
-  },
-  {
-    id: 10,
-    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    caption: 'Garden tools for your outdoor paradise 🌱',
-    likes: 142,
-    comments: 8
   }
 ];
 
@@ -129,13 +101,13 @@ export function InstagramFeed() {
           </p>
           
           <Link 
-            href="https://instagram.com/householdplanetkenya" 
+            href="https://www.instagram.com/household_planet_kenya?igsh=MXI0dnd6NmM5YjFqYQ==" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="group inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             <Instagram className="w-5 h-5" />
-            @householdplanetkenya
+            @household_planet_kenya
             <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>
@@ -151,7 +123,7 @@ export function InstagramFeed() {
           {instagramPosts.map((post, index) => (
             <motion.div key={post.id} variants={itemVariants}>
               <Link 
-                href="https://instagram.com/householdplanetkenya" 
+                href="https://www.instagram.com/household_planet_kenya?igsh=MXI0dnd6NmM5YjFqYQ==" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="group block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
