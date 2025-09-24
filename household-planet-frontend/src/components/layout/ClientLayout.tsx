@@ -14,7 +14,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isAdminPage = pathname.startsWith('/admin')
 
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
+    <div className="min-h-screen flex flex-col w-full">
       {!isAuthPage && <Header />}
       <main className="flex-1 w-full">
         {children}

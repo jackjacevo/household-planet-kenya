@@ -387,22 +387,22 @@ img, video, iframe {
   box-shadow: 0 0 20px rgba(22, 163, 74, 0.3);
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - hidden by default */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #16a34a;
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #15803d;
+  background: transparent;
 }
 
 /* Loading states */
