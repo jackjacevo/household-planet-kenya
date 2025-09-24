@@ -5,6 +5,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig = {
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
+  generateBuildId: async () => {
+    return `build-${Date.now()}`
+  },
 
   // Optimize build performance
   poweredByHeader: false,
