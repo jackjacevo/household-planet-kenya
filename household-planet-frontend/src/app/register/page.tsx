@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -74,7 +74,7 @@ export default function RegisterPage() {
       })
       
       // Registration successful, redirect to login with success message
-      window.location.href = '/login?message=' + encodeURIComponent((response as any)?.message || 'Registration successful! Please check your email to verify your account.')
+      router.push('/login?message=' + encodeURIComponent((response as any)?.message || 'Registration successful! Please check your email to verify your account.'))
     } catch (err: any) {
       setError('root', {
         message: err?.message || 'Registration failed. Please try again or contact support.'

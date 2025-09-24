@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from 'framer-motion';
 import { HeroSection } from '@/components/home/HeroSection'
+import { CategoriesSection } from '@/components/home/CategoriesSection'
 
 import { BestSellers } from '@/components/home/BestSellers'
 import { NewArrivals } from '@/components/home/NewArrivals'
@@ -79,7 +80,16 @@ export default function HomePage() {
         >
           <HeroSection />
         </motion.section>
-        
+
+        {/* Categories Section */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={sectionVariants}
+        >
+          <CategoriesSection />
+        </motion.section>
 
         {/* Featured Products */}
         <motion.section

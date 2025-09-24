@@ -1,0 +1,215 @@
+/* Scroll Performance Optimizations */
+
+/* Native scrolling for best performance */
+html {
+  scroll-behavior: auto;
+}
+
+/* Only enable smooth scrolling on desktop with proper hover support */
+@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimize body scrolling */
+body {
+  /* Use native momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent scroll chaining */
+  overscroll-behavior-y: contain;
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+}
+
+/* Optimize scroll containers */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Mobile-specific scroll optimizations */
+@media (max-width: 768px) {
+  /* Disable expensive CSS properties on mobile */
+  * {
+    /* Remove hardware acceleration unless needed */
+    will-change: auto;
+    backface-visibility: visible;
+  }
+  
+  /* Only apply hardware acceleration to specific elements */
+  .hw-accelerated {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+  
+  /* Optimize scrollable areas */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Disable hover effects on mobile */
+  .hover-effect {
+    transition: none;
+  }
+  
+  /* Optimize images for scrolling */
+  img {
+    will-change: auto;
+    backface-visibility: visible;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 769px) {
+  /* Enable smooth interactions on desktop */
+  .smooth-interaction {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  /* Hardware acceleration for specific interactive elements */
+  .interactive:hover {
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+}
+
+/* Optimize animations for scroll performance */
+@keyframes fadeInOptimized {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+/* Use transform3d for better performance when needed */
+@keyframes slideInOptimized {
+  from { 
+    transform: translate3d(-100%, 0, 0); 
+  }
+  to { 
+    transform: translate3d(0, 0, 0); 
+  }
+}
+
+/* Optimized loading states */
+.loading-optimized {
+  animation: fadeInOptimized 0.3s ease-out;
+}
+
+/* Prevent layout thrashing */
+.stable-layout {
+  contain: layout style paint;
+}
+
+/* Optimize fixed elements */
+.fixed-optimized {
+  position: fixed;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Optimize sticky elements */
+.sticky-optimized {
+  position: sticky;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Remove transforms from non-interactive elements on mobile */
+@media (max-width: 768px) {
+  .card, .product-card, .category-card {
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  /* Only allow transforms on buttons and links */
+  button, .btn, a[role="button"] {
+    transform: initial;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+
+/* Optimize scroll indicators */
+.scroll-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(to right, #16a34a, #22c55e);
+  transform-origin: 0%;
+  will-change: transform;
+  z-index: 9999;
+}
+
+/* Optimize infinite scroll containers */
+.infinite-scroll {
+  contain: layout style paint;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Optimize grid layouts for scrolling */
+.scroll-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  contain: layout;
+}
+
+@media (max-width: 640px) {
+  .scroll-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* Optimize text rendering during scroll */
+.scroll-text {
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize images during scroll */
+.scroll-image {
+  image-rendering: optimizeSpeed;
+  will-change: auto;
+}
+
+/* Critical performance fixes */
+@media (max-width: 768px) {
+  /* Disable expensive filters on mobile */
+  .backdrop-blur {
+    backdrop-filter: none !important;
+    filter: none !important;
+  }
+  
+  /* Simplify shadows on mobile */
+  .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Optimize gradients on mobile */
+  .bg-gradient-to-r, .bg-gradient-to-l, .bg-gradient-to-t, .bg-gradient-to-b {
+    background: var(--fallback-color, #f3f4f6) !important;
+  }
+}

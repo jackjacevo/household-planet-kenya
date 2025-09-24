@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import '../styles/mobile-optimizations.css'
+import '../styles/scroll-performance.css'
 
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ToastProvider } from '@/contexts/ToastContext'
@@ -9,7 +10,6 @@ import { StructuredData } from '@/components/SEO/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { ClientLayout } from '@/components/layout/ClientLayout'
 import IconPreloader from '@/components/ui/IconPreloader'
-import SmoothScrollProvider from '@/components/ui/SmoothScrollProvider'
 import ToastContainer from '@/components/ui/Toast'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 
@@ -84,7 +84,6 @@ export default function RootLayout({
           `
         }} />
         <IconPreloader />
-        <SmoothScrollProvider />
         <ErrorBoundary>
           <QueryProvider>
             <ToastProvider>

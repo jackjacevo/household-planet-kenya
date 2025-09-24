@@ -33,18 +33,18 @@ class ApiClient {
       const response = await fetch(url, config)
       
       if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`
+        if (response.status === 401) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          throw new Error('Authentication required')
+        }
         
+        let errorMessage = `HTTP ${response.status}`
         try {
           const errorData = await response.json()
           errorMessage = errorData.message || errorData.error || errorMessage
         } catch {
           errorMessage = response.statusText || errorMessage
-        }
-        
-        if (response.status === 401) {
-          localStorage.removeItem('token')
-          throw new Error('Authentication required')
         }
         
         throw new Error(errorMessage)

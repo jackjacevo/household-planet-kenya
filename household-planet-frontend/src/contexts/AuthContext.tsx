@@ -52,7 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null)
           setLoading(false)
         } else {
-          fetchUserProfile()
+          // Only fetch profile if we don't have user data
+          const cachedUser = localStorage.getItem('user')
+          if (cachedUser) {
+            try {
+              setUser(JSON.parse(cachedUser))
+              setLoading(false)
+            } catch {
+              fetchUserProfile()
+            }
+          } else {
+            fetchUserProfile()
+          }
         }
       } catch (error) {
         localStorage.removeItem('token')
@@ -69,9 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.getUserProfile() as any
       const userData = response.user || response
       setUser(userData)
+      
+      // Cache user data
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(userData))
+      }
     } catch (error) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
       }
       setUser(null)
     } finally {
@@ -82,19 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('cart-storage')
-        localStorage.removeItem('wishlist-storage')
-        localStorage.removeItem('guestCart')
-        localStorage.removeItem('checkoutData')
-      }
-      
       const response = await api.login(email, password) as any
       const token = response.accessToken || response.access_token
+      
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token)
       }
+      
       setUser(response.user)
+      
+      // Cache user data
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(response.user))
+      }
+      
       setLoading(false)
       return response
     } catch (error) {
@@ -115,10 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token')
-      localStorage.removeItem('cart-storage')
-      localStorage.removeItem('wishlist-storage')
-      localStorage.removeItem('guestCart')
-      localStorage.removeItem('checkoutData')
+      localStorage.removeItem('user')
     }
     
     setUser(null)

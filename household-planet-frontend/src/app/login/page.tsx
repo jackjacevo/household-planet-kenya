@@ -44,7 +44,7 @@ function LoginContent() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password)
-      window.location.href = '/'
+      router.push('/')
     } catch (err) {
       setError('root', {
         message: 'Invalid email or password. Please try again.'

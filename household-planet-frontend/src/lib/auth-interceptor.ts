@@ -17,7 +17,7 @@ export const setupAuthInterceptor = () => {
         const refreshed = await refreshAccessToken();
         if (!refreshed) {
           logout();
-          window.location.href = '/admin/login';
+          window.location.href = '/login';
           return Promise.reject(new Error('Authentication failed'));
         }
         
