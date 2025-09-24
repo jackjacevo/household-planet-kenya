@@ -109,7 +109,7 @@ export default function AdminPaymentsPage() {
       setTotalTransactions((response as any).data.total || (response as any).data.length);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      showToast({ type: 'error', message: 'Failed to fetch transactions' });
+      showToast({ title: 'Error', description: 'Failed to fetch transactions', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -138,14 +138,14 @@ export default function AdminPaymentsPage() {
       const orderInfo = selectedTransaction.order?.orderNumber ? ` for order ${selectedTransaction.order.orderNumber}` : '';
       const customerInfo = selectedTransaction.order?.user?.name ? ` to ${(selectedTransaction.order as any).user.name}` : '';
       
-      showToast({ type: 'success', message: `💰 Refund of KSh ${selectedTransaction.amount.toLocaleString()}${orderInfo}${customerInfo} has been processed. Reference: ${refundNumber}` });
+      showToast({ title: 'Success', description: `💰 Refund of KSh ${selectedTransaction.amount.toLocaleString()}${orderInfo}${customerInfo} has been processed. Reference: ${refundNumber}`, variant: 'success' });
       setShowRefundDialog(false);
       setSelectedTransaction(null);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error processing refund:', error);
-      showToast({ type: 'error', message: '❌ Failed to process refund. Please try again or contact support.' });
+      showToast({ title: 'Error', description: '❌ Failed to process refund. Please try again or contact support.', variant: 'destructive' });
     }
   };
 
@@ -322,24 +322,24 @@ export default function AdminPaymentsPage() {
       a.click();
       URL.revokeObjectURL(url);
 
-      showToast({ type: 'success', message: `Invoice ${invoiceData.invoiceNumber} downloaded successfully` });
+      showToast({ title: 'Success', description: `Invoice ${invoiceData.invoiceNumber} downloaded successfully`, variant: 'success' });
     } catch (error) {
       console.error('Error generating invoice:', error);
-      showToast({ type: 'error', message: 'Failed to generate invoice' });
+      showToast({ title: 'Error', description: 'Failed to generate invoice', variant: 'destructive' });
     }
   };
 
   const recordCashPayment = async () => {
     // Validate form data
     if (!cashForm.orderId || !cashForm.amount || !cashForm.receivedBy) {
-      showToast({ type: 'error', message: 'Please fill in all required fields (Order ID, Amount, Received By)' });
+      showToast({ title: 'Error', description: 'Please fill in all required fields (Order ID, Amount, Received By)', variant: 'destructive' });
       return;
     }
 
     // Validate order ID format
     const orderValidation = validateOrderId(cashForm.orderId);
     if (!orderValidation.isValid) {
-      showToast({ type: 'error', message: orderValidation.message || 'Invalid Order ID format' });
+      showToast({ title: 'Error', description: orderValidation.message || 'Invalid Order ID format', variant: 'destructive' });
       return;
     }
 
@@ -350,7 +350,7 @@ export default function AdminPaymentsPage() {
 
     const amount = parseFloat(cashForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      showToast({ type: 'error', message: 'Please enter a valid amount' });
+      showToast({ title: 'Error', description: 'Please enter a valid amount', variant: 'destructive' });
       return;
     }
 
@@ -379,26 +379,26 @@ export default function AdminPaymentsPage() {
       );
       
       const orderInfo = (response as any).data.orderNumber ? ` for order ${(response as any).data.orderNumber}` : '';
-      showToast({ type: 'success', message: `Cash payment recorded successfully${orderInfo}` });
+      showToast({ title: 'Success', description: `Cash payment recorded successfully${orderInfo}`, variant: 'success' });
       setCashForm({ orderId: '', amount: '', receivedBy: '', notes: '' });
       setShowCashForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error recording cash payment:', error);
-      showToast({ type: 'error', message: 'Failed to record cash payment. Please check if the order exists.' });
+      showToast({ title: 'Error', description: 'Failed to record cash payment. Please check if the order exists.', variant: 'destructive' });
     }
   };
 
   const createPendingPayment = async () => {
     if (!pendingForm.orderId || !pendingForm.amount || !pendingForm.phoneNumber) {
-      showToast({ type: 'error', message: 'Please fill in Order ID, Amount, and Phone Number' });
+      showToast({ title: 'Error', description: 'Please fill in Order ID, Amount, and Phone Number', variant: 'destructive' });
       return;
     }
 
     const amount = parseFloat(pendingForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      showToast({ type: 'error', message: 'Please enter a valid amount' });
+      showToast({ title: 'Error', description: 'Please enter a valid amount', variant: 'destructive' });
       return;
     }
 
@@ -415,27 +415,27 @@ export default function AdminPaymentsPage() {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      showToast({ type: 'success', message: `⏳ Pending payment of KSh ${amount.toLocaleString()} created for tracking` });
+      showToast({ title: 'Success', description: `⏳ Pending payment of KSh ${amount.toLocaleString()} created for tracking`, variant: 'success' });
       setPendingForm({ orderId: '', amount: '', phoneNumber: '', notes: '' });
       setShowPendingForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error creating pending payment:', error);
-      showToast({ type: 'error', message: 'Failed to create pending payment' });
+      showToast({ title: 'Error', description: 'Failed to create pending payment', variant: 'destructive' });
     }
   };
 
   const recordPaybillPayment = async () => {
     // Validate form data
     if (!paybillForm.phoneNumber || !paybillForm.amount || !paybillForm.mpesaCode) {
-      showToast({ type: 'error', message: 'Please fill in all required fields (Phone Number, Amount, M-Pesa Code)' });
+      showToast({ title: 'Error', description: 'Please fill in all required fields (Phone Number, Amount, M-Pesa Code)', variant: 'destructive' });
       return;
     }
 
     const amount = parseFloat(paybillForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      showToast({ type: 'error', message: 'Please enter a valid amount' });
+      showToast({ title: 'Error', description: 'Please enter a valid amount', variant: 'destructive' });
       return;
     }
 
@@ -444,7 +444,7 @@ export default function AdminPaymentsPage() {
     if (paybillForm.orderId.trim()) {
       const orderValidation = validateOrderId(paybillForm.orderId);
       if (!orderValidation.isValid) {
-        showToast({ type: 'error', message: orderValidation.message || 'Invalid Order ID format' });
+        showToast({ title: 'Error', description: orderValidation.message || 'Invalid Order ID format', variant: 'destructive' });
         return;
       }
       
@@ -480,14 +480,14 @@ export default function AdminPaymentsPage() {
       );
       
       const orderInfo = (response as any).data.orderNumber ? ` for order ${(response as any).data.orderNumber}` : '';
-      showToast({ type: 'success', message: `Paybill payment recorded successfully${orderInfo}` });
+      showToast({ title: 'Success', description: `Paybill payment recorded successfully${orderInfo}`, variant: 'success' });
       setPaybillForm({ phoneNumber: '', amount: '', mpesaCode: '', reference: '', notes: '', orderId: '' });
       setShowPaybillForm(false);
       fetchTransactions();
       fetchStats();
     } catch (error) {
       console.error('Error recording paybill payment:', error);
-      showToast({ type: 'error', message: 'Failed to record paybill payment. Please check if the order exists.' });
+      showToast({ title: 'Error', description: 'Failed to record paybill payment. Please check if the order exists.', variant: 'destructive' });
     }
   };
 

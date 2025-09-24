@@ -38,10 +38,10 @@ export const adminConfig: AdminConfig = {
   apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
   debug: process.env.NODE_ENV === 'development',
   features: {
-    // Phase 1 features (all start FALSE for safety)
-    apiServiceLayer: getFeatureFlag('API_SERVICE_LAYER', false),
-    improvedValidation: getFeatureFlag('IMPROVED_VALIDATION', false),
-    improvedLoading: getFeatureFlag('IMPROVED_LOADING', false),
+    // Phase 1 features (enabled for production)
+    apiServiceLayer: getFeatureFlag('API_SERVICE_LAYER', true),
+    improvedValidation: getFeatureFlag('IMPROVED_VALIDATION', true),
+    improvedLoading: getFeatureFlag('IMPROVED_LOADING', true),
 
     // Phase 2 features (will be added later)
     newConfirmDialogs: getFeatureFlag('NEW_CONFIRM_DIALOGS', false),

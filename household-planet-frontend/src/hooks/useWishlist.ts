@@ -97,6 +97,12 @@ export const useWishlist = create<WishlistStore>()(
 
       syncWithBackend: async () => {
         try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+          if (!token) {
+            console.log('No token found, skipping wishlist sync');
+            return;
+          }
+          
           const response = await api.get('/wishlist');
           const wishlistData = (response as any).data;
           // Handle different response structures
@@ -116,11 +122,25 @@ export const useWishlist = create<WishlistStore>()(
           set({ items: backendItems, wishlistData });
         } catch (error) {
           console.error('Failed to sync wishlist:', error);
+          // If it's an auth error, don't retry
+          if (error instanceof Error && error.message.includes('Authentication required')) {
+            console.log('Authentication required for wishlist sync, clearing token');
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('token');
+            }
+          }
         }
       },
 
       syncLocalToBackend: async () => {
         const state = get();
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        
+        if (!token) {
+          console.log('No token found, skipping local to backend wishlist sync');
+          return;
+        }
+        
         if (state.items.length === 0) return;
         
         for (const item of state.items) {

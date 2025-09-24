@@ -24,7 +24,6 @@ const WhatsAppIcon = () => (
 import Link from 'next/link';
 import { useToast } from '@/hooks/useToast';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
-import { secureApiClient } from '@/lib/secure-api';
 
 interface Order {
   id: number;
@@ -122,18 +121,21 @@ export default function AdminOrdersPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       
-      return secureApiClient.get('/api/orders/admin/stats').then(response => {
-        return response.data;
-      }).catch(error => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/admin/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      }).then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        throw error;
+        return response.json();
       });
     },
     refetchInterval: 30000,
-    enabled: !!(user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
   });
 
   const { data: ordersData, refetch: refetchOrders, isLoading } = useQuery({
@@ -149,18 +151,21 @@ export default function AdminOrdersPage() {
         ...(searchTerm && { customerEmail: searchTerm })
       });
 
-      return secureApiClient.get(`/api/orders?${params}`).then(response => {
-        return response.data;
-      }).catch(error => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      }).then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        throw error;
+        return response.json();
       });
     },
     refetchInterval: 60000,
-    enabled: !!(user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')
+    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
   });
 
   useEffect(() => {
@@ -171,7 +176,7 @@ export default function AdminOrdersPage() {
   }, [ordersData]);
 
   useEffect(() => {
-    if (showReturns && (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff')) {
+    if (showReturns && (user?.role === 'ADMIN' || user?.role === 'STAFF')) {
       fetchReturns();
     }
   }, [showReturns, user]);
@@ -186,8 +191,29 @@ export default function AdminOrdersPage() {
         return;
       }
       
-      const response = await secureApiClient.get('/api/orders/returns');
-      setReturns(response.data);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Returns API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not JSON');
+      }
+      
+      const data = await response.json();
+      setReturns(data);
     } catch (error) {
       console.error('Error fetching returns:', error);
       setReturns([]);
@@ -196,13 +222,32 @@ export default function AdminOrdersPage() {
 
   const processReturn = async (returnId: string, status: string, notes?: string) => {
     try {
-      const response = await secureApiClient.put('/api/orders/returns/process', { returnId, status, notes });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/returns/process`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ returnId, status, notes }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       fetchReturns();
-      showToast({ type: 'success', message: `Return ${status.toLowerCase()} successfully` });
+      showToast({
+        title: 'Success!',
+        description: `Return ${status.toLowerCase()} successfully`,
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error processing return:', error);
-      showToast({ type: 'error', message: 'Failed to process return. Please try again.' });
+      showToast({
+        title: 'Error',
+        description: 'Failed to process return. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -211,11 +256,27 @@ export default function AdminOrdersPage() {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      const response = await secureApiClient.put(`/api/orders/${orderId}/status`, { status, notes });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ status, notes }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
       
       // Show success message
       const orderNumber = orders.find(o => o.id === orderId)?.orderNumber || orderId;
-      showToast({ type: 'success', message: `Order ${orderNumber} status updated to ${status} successfully!` });
+      showToast({
+        title: 'Success!',
+        description: `Order ${orderNumber} status updated to ${status} successfully!`,
+        variant: 'success'
+      });
       
       // Dispatch event to update pending orders badge
       window.dispatchEvent(new CustomEvent('orderStatusChanged', { 
@@ -226,30 +287,38 @@ export default function AdminOrdersPage() {
       refetchStats();
     } catch (error) {
       console.error('Error updating order status:', error);
-      showToast({ type: 'error', message: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
+      showToast({
+        title: 'Error',
+        description: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
+        variant: 'destructive'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
   const handleBulkDelete = async () => {
-    console.log('Bulk delete started', { selectedOrders, orders: orders.length });
-    
     // Filter orders that can be deleted (only PENDING and CANCELLED)
     const deletableOrders = orders.filter(order => 
       selectedOrders.includes(order.id) && ['PENDING', 'CANCELLED'].includes(order.status)
     );
     
-    console.log('Deletable orders:', deletableOrders.map(o => ({ id: o.id, status: o.status })));
-    
     const nonDeletableCount = selectedOrders.length - deletableOrders.length;
     
     if (nonDeletableCount > 0) {
-      showToast({ type: 'warning', message: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.` });
+      showToast({
+        title: 'Some orders cannot be deleted',
+        description: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.`,
+        variant: 'destructive'
+      });
     }
     
     if (deletableOrders.length === 0) {
-      showToast({ type: 'error', message: 'Only pending or cancelled orders can be deleted.' });
+      showToast({
+        title: 'No orders to delete',
+        description: 'Only pending or cancelled orders can be deleted.',
+        variant: 'destructive'
+      });
       setShowBulkDeleteDialog(false);
       return;
     }
@@ -257,24 +326,37 @@ export default function AdminOrdersPage() {
     setBulkDeleting(true);
     
     try {
-      console.log('Making API request to delete orders:', deletableOrders.map(o => o.id));
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/bulk/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ orderIds: deletableOrders.map(order => order.id) }),
+      });
       
-      const response = await secureApiClient.post('/api/orders/bulk/delete', { orderIds: deletableOrders.map(order => order.id) });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
-      console.log('API response status:', response.status);
-      
-      const result = response.data;
-      console.log('Bulk delete result:', result);
-      
+      const result = await response.json();
       setOrders(prev => prev.filter(o => !selectedOrders.includes(o.id)));
       setSelectedOrders([]);
       setShowBulkDeleteDialog(false);
       refetchOrders();
       refetchStats();
-      showToast({ type: 'success', message: `${result.deletedCount} orders deleted successfully` });
+      showToast({
+        title: 'Success!',
+        description: `${result.deletedCount} orders deleted successfully`,
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error deleting orders:', error);
-      showToast({ type: 'error', message: `Failed to delete orders: ${error instanceof Error ? error.message : 'Unknown error'}` });
+      showToast({
+        title: 'Error',
+        description: 'Failed to delete orders. Please try again.',
+        variant: 'destructive'
+      });
     } finally {
       setBulkDeleting(false);
     }
@@ -287,15 +369,33 @@ export default function AdminOrdersPage() {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      const response = await secureApiClient.post(`/api/orders/${orderId}/shipping-label`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/shipping-label`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
       
-      const data = response.data;
-      showToast({ type: 'success', message: `Shipping label generated. Tracking: ${data.trackingNumber}` });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      showToast({
+        title: 'Success!',
+        description: `Shipping label generated. Tracking: ${data.trackingNumber}`,
+        variant: 'success'
+      });
       refetchOrders();
       refetchStats();
     } catch (error) {
       console.error('Error generating shipping label:', error);
-      showToast({ type: 'error', message: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
+      showToast({
+        title: 'Error',
+        description: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
+        variant: 'destructive'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -303,22 +403,45 @@ export default function AdminOrdersPage() {
 
   const sendCustomerEmail = async (orderId: number, template: string) => {
     try {
-      const response = await secureApiClient.post(`/api/orders/${orderId}/email`, { template });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ template }),
+      });
       
-      showToast({ type: 'success', message: 'Email sent successfully!' });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      showToast({
+        title: 'Success!',
+        description: 'Email sent successfully!',
+        variant: 'success'
+      });
     } catch (error) {
       console.error('Error sending email:', error);
-      showToast({ type: 'error', message: 'Failed to send email. Please try again.' });
+      showToast({
+        title: 'Error',
+        description: 'Failed to send email. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
   const checkPaymentAndViewReceipt = async (orderId: number) => {
     try {
-      const response = await secureApiClient.get(`/api/payments/status/${orderId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/status/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       
-      const paymentStatus = response.data;
-      if (paymentStatus?.status === 'COMPLETED') {
-        await viewReceipt(orderId);
+      if (response.ok) {
+        const paymentStatus = await response.json();
+        if (paymentStatus?.status === 'COMPLETED') {
+          await viewReceipt(orderId);
+        }
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
@@ -327,13 +450,24 @@ export default function AdminOrdersPage() {
 
   const viewReceipt = async (orderId: number) => {
     try {
-      const response = await secureApiClient.get(`/api/payments/receipt/${orderId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       
-      const receiptData = response.data;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to generate receipt');
+      }
+      
+      const receiptData = await response.json();
       await generatePDFReceipt(receiptData);
     } catch (error) {
       console.error('Error viewing receipt:', error);
-      showToast({ type: 'error', message: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.' });
+      showToast({
+        title: 'Error',
+        description: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -493,7 +627,11 @@ export default function AdminOrdersPage() {
       html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error('Error generating PDF:', error);
-      showToast({ type: 'error', message: 'Failed to generate PDF receipt. Please try again.' });
+      showToast({
+        title: 'Error',
+        description: 'Failed to generate PDF receipt. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -860,11 +998,19 @@ export default function AdminOrdersPage() {
         console.log('Statement window opened successfully');
       } else {
         console.error('Failed to open popup window - popup blocked?');
-        showToast({ type: 'error', message: 'Please allow popups for this site to export the statement.' });
+        showToast({
+          title: 'Popup Blocked',
+          description: 'Please allow popups for this site to export the statement.',
+          variant: 'destructive'
+        });
       }
     } catch (error) {
       console.error('Error generating statement:', error);
-      showToast({ type: 'error', message: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
+      showToast({
+        title: 'Error',
+        description: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
+        variant: 'destructive'
+      });
     }
   };
 
@@ -1303,8 +1449,9 @@ export default function AdminOrdersPage() {
   const triggerSTKPush = async (orderId: number, phoneNumber: string) => {
     if (!phoneNumber.trim()) {
       showToast({
-        type: 'error',
-        message: 'Phone Number Required: Please enter a valid phone number to send M-Pesa payment prompt.'
+        title: 'Phone Number Required',
+        description: 'Please enter a valid phone number to send M-Pesa payment prompt.',
+        variant: 'destructive'
       });
       return;
     }
@@ -1329,8 +1476,9 @@ export default function AdminOrdersPage() {
       
       const data = await response.json();
       showToast({
-        type: 'success',
-        message: `✅ STK Push Sent Successfully! Payment prompt sent to ${phoneNumber}. Customer will receive M-Pesa prompt on their phone.`
+        title: '✅ STK Push Sent Successfully!',
+        description: `Payment prompt sent to ${phoneNumber}. Customer will receive M-Pesa prompt on their phone.`,
+        variant: 'success'
       });
       
       // Check payment status and view receipt if successful
@@ -1341,8 +1489,9 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error sending STK push:', error);
       showToast({
-        type: 'error',
-        message: `❌ STK Push Failed: Failed to send payment prompt: ${(error as Error).message}`
+        title: '❌ STK Push Failed',
+        description: `Failed to send payment prompt: ${(error as Error).message}`,
+        variant: 'destructive'
       });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
@@ -1355,7 +1504,11 @@ export default function AdminOrdersPage() {
     if (!order) return;
 
     if (!['PENDING', 'CANCELLED'].includes(order.status)) {
-      showToast({ type: 'error', message: 'Only pending or cancelled orders can be deleted.' });
+      showToast({
+        title: 'Cannot Delete Order',
+        description: 'Only pending or cancelled orders can be deleted.',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -1370,9 +1523,23 @@ export default function AdminOrdersPage() {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      const response = await secureApiClient.post(`/api/orders/delete/${orderId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/delete/${orderId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
       
-      showToast({ type: 'success', message: `Order ${deleteDialog.order.orderNumber} deleted successfully!` });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      showToast({
+        title: 'Success!',
+        description: `Order ${deleteDialog.order.orderNumber} deleted successfully!`,
+        variant: 'success'
+      });
       
       setDeleteDialog({ open: false, order: null });
       
@@ -1384,7 +1551,11 @@ export default function AdminOrdersPage() {
       refetchStats();
     } catch (error) {
       console.error('Error deleting order:', error);
-      showToast({ type: 'error', message: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}` });
+      showToast({
+        title: 'Error',
+        description: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
+        variant: 'destructive'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -1406,7 +1577,7 @@ export default function AdminOrdersPage() {
     );
   };
 
-  if (!user || !(user.role === 'ADMIN' || user.role === 'admin' || user.role === 'SUPER_ADMIN' || user.role === 'super_admin' || user.role === 'STAFF' || user.role === 'staff')) {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -1771,39 +1942,57 @@ export default function AdminOrdersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-2 min-w-[120px]">
-                            <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-1">
+                            <div className="flex gap-1">
                               {order.id && (
                                 <Link href={`/admin/orders/${order.id}`}>
-                                  <Button variant="outline" size="sm" title="View Order Details" className="h-8 w-8 p-0">
-                                    <Eye className="h-4 w-4" />
+                                  <Button variant="outline" size="sm" title="View Order Details" className="p-2">
+                                    <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                                   </Button>
                                 </Link>
                               )}
+
+                              {/* STK Push temporarily disabled */}
+                              {/* {order.status === 'CONFIRMED' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setStkPushDialog({ open: true, orderId: order.id, phone: (order as any).user?.phone || '' })}
+                                  disabled={actionLoading[`stk-${order.id}`]}
+                                  title="Send M-Pesa STK Push"
+                                  className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 p-2"
+                                >
+                                  {actionLoading[`stk-${order.id}`] ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-green-600"></div>
+                                  ) : (
+                                    <Smartphone className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  )}
+                                </Button>
+                              )} */}
                               {order.id && order.status === 'DELIVERED' && (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => viewReceipt(order.id)}
                                   title="View Receipt"
-                                  className="h-8 w-8 p-0 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                  className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 p-2"
                                 >
-                                  <FileText className="h-4 w-4" />
+                                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
                               )}
-                              {['PENDING', 'CANCELLED'].includes(order.status) && (user?.role === 'ADMIN' || user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin' || user?.role === 'STAFF' || user?.role === 'staff') && (
+                              {['PENDING', 'CANCELLED'].includes(order.status) && user?.role === 'ADMIN' && (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => confirmDeleteOrder(order.id)}
                                   disabled={actionLoading[`delete-${order.id}`]}
                                   title="Delete Order"
-                                  className="h-8 w-8 p-0 bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                                  className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 p-2"
                                 >
                                   {actionLoading[`delete-${order.id}`] ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-red-600"></div>
                                   ) : (
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                   )}
                                 </Button>
                               )}
@@ -1814,7 +2003,7 @@ export default function AdminOrdersPage() {
                                 updateOrderStatus(order.id, status);
                               }}
                             >
-                              <SelectTrigger className="w-full h-8 text-xs">
+                              <SelectTrigger className="w-full sm:w-32 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1899,7 +2088,7 @@ export default function AdminOrdersPage() {
 
 
       <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <DialogContent className="sm:max-w-md bg-white">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />

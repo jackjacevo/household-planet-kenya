@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, FolderOpen, Folder, Tag, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, GripVertical, AlertTriangle, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { secureApiClient } from '@/lib/secure-api';
-import { useToast } from '@/contexts/ToastContext';
+import Image from 'next/image';
+import OptimizedThumbnail from '@/components/admin/OptimizedThumbnail';
+import CategoryTableSkeleton from '@/components/admin/CategoryTableSkeleton';
+import { preloadCategoryImages } from '@/lib/imageOptimization';
+import axios from 'axios';
 
 interface Category {
   id: number;
@@ -21,11 +24,14 @@ interface Category {
 }
 
 export default function AdminCategoriesPage() {
-  const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Category | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -34,38 +40,30 @@ export default function AdminCategoriesPage() {
     parentId: '',
     isActive: true
   });
-  const [uploadingImage, setUploadingImage] = useState(false);
-
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  // Preload images when categories change
+  useEffect(() => {
+    if (categories.length > 0) {
+      preloadCategoryImages(categories);
+    }
+  }, [categories]);
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
-      const response = await secureApiClient.get('/api/categories');
-      
-      const responseData = response.data;
-      let categoriesData = [];
-      
-      if (responseData.categories && Array.isArray(responseData.categories)) {
-        categoriesData = responseData.categories;
-      } else if (Array.isArray(responseData)) {
-        categoriesData = responseData;
-      }
-      
-      const safeCategoriesData = categoriesData.map((cat: any) => ({
-        ...cat,
-        _count: cat._count || { products: 0 },
-        children: cat.children || []
-      }));
-      
-      setCategories(safeCategoriesData);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCategories((response as any).data);
     } catch (error: any) {
-      showToast({ type: 'error', message: 'Failed to load categories' });
-      setCategories([]);
+      setError(error.response?.data?.message || 'Failed to fetch categories');
+      console.error('Error fetching categories:', error);
     } finally {
       setLoading(false);
     }
@@ -83,62 +81,16 @@ export default function AdminCategoriesPage() {
     }));
   };
 
-  const validateCategoryFile = (file: File): string | null => {
-    const allowedTypes = [
-      'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
-      'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml', 'image/x-icon'
-    ];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    
-    if (!allowedTypes.includes(file.type)) {
-      return `"${file.name}" is not supported. Allowed formats: JPG, PNG, WebP, GIF, BMP, TIFF, SVG, ICO.`;
-    }
-    
-    if (file.size > maxSize) {
-      return `"${file.name}" is too large. Maximum file size is 5MB.`;
-    }
-    
-    return null;
-  };
-
-  const handleImageUpload = async (file: File) => {
-    // Validate file before upload
-    const validationError = validateCategoryFile(file);
-    if (validationError) {
-      showToast({ type: 'error', message: validationError });
-      return;
-    }
-
-    setUploadingImage(true);
-    try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await secureApiClient.post('/api/admin/categories/upload-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      const imageUrl = response.data.url;
-      setFormData(prev => ({ ...prev, image: imageUrl }));
-      showToast({ type: 'success', message: 'Image uploaded successfully' });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to upload image';
-      showToast({ type: 'error', message: errorMessage.includes('Only') ? errorMessage : 'Failed to upload image. Please try again.' });
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      showToast({ type: 'error', message: 'Category name is required' });
+      setError('Category name is required');
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
       const data = {
         ...formData,
@@ -148,37 +100,55 @@ export default function AdminCategoriesPage() {
         image: formData.image.trim() || null,
         parentId: formData.parentId ? parseInt(formData.parentId) : null
       };
-      
+
       if (editingCategory) {
-        await secureApiClient.put(`/api/admin/categories/${editingCategory.id}`, data);
-        showToast({ type: 'success', message: 'Category updated successfully' });
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${editingCategory.id}`, data, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('Category updated successfully');
       } else {
-        await secureApiClient.post('/api/admin/categories', data);
-        showToast({ type: 'success', message: 'Category created successfully' });
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, data, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('Category created successfully');
       }
 
       await fetchCategories();
       resetForm();
     } catch (error: any) {
-      showToast({ type: 'error', message: error.response?.data?.message || 'Failed to save category' });
+      setError(error.response?.data?.message || 'Failed to save category');
+      console.error('Error saving category:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (category: Category) => {
-    if (!confirm(`Are you sure you want to delete "${category.name}"?`)) return;
-    
+    if (category._count.products > 0) {
+      setError(`Cannot delete category "${category.name}" because it has ${category._count.products} products. Please move or delete the products first.`);
+      return;
+    }
+
+    if (category.children.length > 0) {
+      setError(`Cannot delete category "${category.name}" because it has subcategories. Please delete or move the subcategories first.`);
+      return;
+    }
+
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
-      await secureApiClient.delete(`/api/admin/categories/${category.id}`);
-      showToast({ type: 'success', message: `Category "${category.name}" deleted successfully` });
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${category.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess(`Category "${category.name}" deleted successfully`);
       await fetchCategories();
     } catch (error: any) {
-      showToast({ type: 'error', message: error.response?.data?.message || 'Failed to delete category' });
+      setError(error.response?.data?.message || 'Failed to delete category');
+      console.error('Error deleting category:', error);
     } finally {
       setLoading(false);
+      setDeleteConfirm(null);
     }
   };
 
@@ -186,6 +156,7 @@ export default function AdminCategoriesPage() {
     setFormData({ name: '', slug: '', description: '', image: '', parentId: '', isActive: true });
     setEditingCategory(null);
     setShowForm(false);
+    setError(null);
   };
 
   const handleEdit = (category: Category) => {
@@ -199,58 +170,126 @@ export default function AdminCategoriesPage() {
     });
     setEditingCategory(category);
     setShowForm(true);
+    setError(null);
   };
 
-  const parentCategories = categories.filter(cat => !cat.parentId);
-  const getSubcategories = (parentId: number) => categories.filter(cat => cat.parentId === parentId);
+  const clearMessages = () => {
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+    
+    setUploading(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append('image', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload-image`,
+        uploadFormData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+
+      console.log('Setting image URL:', (response as any).data.imageUrl);
+      setFormData(prev => ({ ...prev, image: (response as any).data.imageUrl }));
+      setSuccess('Image uploaded successfully');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      setError(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            {parentCategories.length} parent categories, {categories.filter(cat => cat.parentId).length} subcategories
-          </p>
+          <p className="mt-2 text-sm text-gray-700">Organize your product categories</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowForm(true)} disabled={loading}>
+          <Button onClick={() => { setShowForm(true); clearMessages(); }} disabled={loading}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Category
+            Add Parent Category
+          </Button>
+          <Button 
+            onClick={() => { 
+              setFormData({ name: '', slug: '', description: '', image: '', parentId: '1', isActive: true });
+              setEditingCategory(null);
+              setShowForm(true);
+              clearMessages();
+            }} 
+            disabled={loading}
+            variant="outline"
+            className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Subcategory
           </Button>
         </div>
       </div>
 
-      {showForm && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-4" 
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-            zIndex: 9999 
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) resetForm();
-          }}
-        >
-          <div 
-            className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" 
-            style={{ zIndex: 10000 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {editingCategory ? 'Edit Category' : 'Add Category'}
-              </h3>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="h-4 w-4 text-gray-500" />
-              </button>
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{error}</p>
             </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <button onClick={clearMessages} className="ml-auto text-red-400 hover:text-red-600">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-green-800">{success}</p>
+            </div>
+            <button onClick={clearMessages} className="ml-auto text-green-400 hover:text-green-600">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Category Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`max-w-2xl w-full mx-4 p-6 rounded-lg shadow-lg ${
+            formData.parentId ? 'bg-blue-50 border border-blue-200' : 'bg-white'
+          }`}>
+            <h3 className={`text-lg font-medium mb-4 ${
+              formData.parentId ? 'text-blue-800' : 'text-gray-900'
+            }`}>
+              {editingCategory ? 'Edit Category' : formData.parentId ? 'Add Subcategory' : 'Add Parent Category'}
+            </h3>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
                 <input
@@ -260,83 +299,44 @@ export default function AdminCategoriesPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                   disabled={loading}
-                  placeholder="Enter category name"
                 />
               </div>
-              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={loading}
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
                 <select
                   value={formData.parentId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value, image: e.target.value ? '' : prev.image }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={loading}
                 >
-                  <option value="">No Parent (Main Category)</option>
-                  {parentCategories.filter(c => c.id !== editingCategory?.id).map(category => (
+                  <option value="">No Parent</option>
+                  {categories.filter(c => c.id !== editingCategory?.id && !c.parentId).map(category => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
                 </select>
               </div>
-              
-              {!formData.parentId && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
-                  <div className="space-y-3">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/svg+xml,image/x-icon"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleImageUpload(file);
-                          e.target.value = ''; // Clear input after processing
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled={loading || uploadingImage}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Supported: JPG, PNG, WebP, GIF, BMP, TIFF, SVG, ICO • Max size: 5MB
-                    </p>
-                    
-                    {uploadingImage && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                        Loading image...
-                      </div>
-                    )}
-                    
-                    {formData.image && (
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <img 
-                          src={(() => {
-                            if (formData.image.startsWith('http')) return formData.image;
-                            if (formData.image.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${formData.image}`;
-                            return `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/image/${formData.image}`;
-                          })()} 
-                          alt="Category preview" 
-                          className="h-16 w-16 object-cover rounded-lg border border-gray-200" 
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Image uploaded</p>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                            className="mt-1 text-red-600 hover:text-red-800"
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              <div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="mr-2"
+                  disabled={loading}
+                />
+                <label className="text-sm font-medium text-gray-700">Active</label>
+              </div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={formData.description}
@@ -344,27 +344,50 @@ export default function AdminCategoriesPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   disabled={loading}
-                  placeholder="Optional description"
                 />
               </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  disabled={loading}
-                />
-                <label className="text-sm font-medium text-gray-700">Active</label>
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
+              {!formData.parentId && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
+                  <div className="flex items-center gap-4">
+                    {formData.image && (
+                      <div className="relative">
+                        <img src={formData.image} alt="Category" className="w-16 h-16 object-cover rounded-lg" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={uploading || loading}
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {uploading ? 'Uploading...' : 'Upload Image'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="md:col-span-2 flex gap-2">
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
+                </Button>
                 <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
                   Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
                 </Button>
               </div>
             </form>
@@ -372,154 +395,174 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete the category "{deleteConfirm.name}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={loading}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={loading}
+              >
+                {loading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Categories Table */}
+      {loading && categories.length === 0 ? (
+        <CategoryTableSkeleton />
       ) : categories.length === 0 ? (
-        <div className="bg-white shadow rounded-lg p-8 text-center">
-          <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">No categories found. Create your first category to get started.</p>
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="p-8 text-center">
+            <p className="text-gray-500">No categories found. Create your first category to get started.</p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {parentCategories.map((parentCategory) => {
-            const subcategories = getSubcategories(parentCategory.id);
-            
-            return (
-              <div key={parentCategory.id} className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-                {/* Parent Category Header */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {parentCategory.image ? (
-                        <img 
-                          src={(() => {
-                            if (parentCategory.image.startsWith('http')) return parentCategory.image;
-                            if (parentCategory.image.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${parentCategory.image}`;
-                            return `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/image/${parentCategory.image}`;
-                          })()} 
-                          alt={parentCategory.name}
-                          className="h-12 w-12 object-cover rounded-lg border-2 border-blue-200 shadow-sm"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center border-2 border-blue-200">
-                          <FolderOpen className="h-6 w-6 text-blue-600" />
-                        </div>
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {categories
+                .filter(cat => !cat.parentId)
+                .map((parentCategory) => [
+                  <tr key={parentCategory.id} className={`${loading ? 'opacity-50' : ''} bg-blue-50`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <OptimizedThumbnail
+                        src={parentCategory.image}
+                        alt={parentCategory.name}
+                        size="md"
+                        fallbackText={parentCategory.name.charAt(0)}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-bold text-blue-900">{parentCategory.name}</div>
+                      <div className="text-sm text-blue-600">{parentCategory.slug}</div>
+                      {parentCategory.description && (
+                        <div className="text-xs text-blue-500 mt-1 truncate max-w-xs">{parentCategory.description}</div>
                       )}
-                      <div>
-                        <h3 className="text-lg font-semibold text-blue-900">{parentCategory.name}</h3>
-                        <p className="text-sm text-blue-700">{parentCategory.description}</p>
-                        <div className="flex items-center space-x-3 mt-1">
-                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                            {subcategories.length} subcategories
-                          </span>
-                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                            {parentCategory._count?.products || 0} products
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                      Parent
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {parentCategory._count.products}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         parentCategory.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {parentCategory.isActive ? 'Active' : 'Inactive'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => {
-                          setFormData({ name: '', slug: '', description: '', image: '', parentId: parentCategory.id.toString(), isActive: true });
-                          setEditingCategory(null);
-                          setShowForm(true);
-                        }}
-                        className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+                        onClick={() => handleEdit(parentCategory)}
+                        disabled={loading}
                       >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(parentCategory)} className="bg-white">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => handleDelete(parentCategory)}
-                        className="bg-white text-red-600 hover:bg-red-50"
+                        onClick={() => setDeleteConfirm(parentCategory)}
+                        disabled={loading || parentCategory._count.products > 0 || parentCategory.children.length > 0}
+                        className={parentCategory._count.products > 0 || parentCategory.children.length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Subcategories */}
-                {subcategories.length > 0 && (
-                  <div className="p-4">
-                    <div className="flex flex-wrap gap-2">
-                      {subcategories.map((subcategory) => (
-                        <div key={subcategory.id} className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-lg px-3 py-2 border border-gray-200 group transition-colors">
-                          {subcategory.image ? (
-                            <img 
-                              src={(() => {
-                                if (subcategory.image.startsWith('http')) return subcategory.image;
-                                if (subcategory.image.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${subcategory.image}`;
-                                return `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/image/${subcategory.image}`;
-                              })()} 
-                              alt={subcategory.name}
-                              className="h-5 w-5 object-cover rounded mr-2"
-                            />
-                          ) : (
-                            <Folder className="h-4 w-4 text-gray-500 mr-2" />
-                          )}
-                          <span className="text-sm font-medium text-gray-700 mr-2">{subcategory.name}</span>
-                          <span className={`px-2 py-0.5 text-xs rounded-full mr-2 ${
-                            subcategory.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                          }`}>
-                            {subcategory.isActive ? '✓' : '✗'}
-                          </span>
-                          <span className="text-xs text-gray-500 mr-2">({subcategory._count?.products || 0})</span>
-                          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEdit(subcategory)}
-                              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(subcategory)}
-                              className="p-1 text-red-600 hover:bg-red-100 rounded"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                    </td>
+                  </tr>,
+                  ...categories
+                    .filter(cat => cat.parentId === parentCategory.id)
+                    .map((subCategory) => (
+                      <tr key={subCategory.id} className={loading ? 'opacity-50' : ''}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="ml-4">
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {subcategories.length === 0 && (
-                  <div className="p-4 text-center text-gray-500">
-                    <p className="text-sm mb-2">No subcategories yet</p>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => {
-                        setFormData({ name: '', slug: '', description: '', image: '', parentId: parentCategory.id.toString(), isActive: true });
-                        setEditingCategory(null);
-                        setShowForm(true);
-                      }}
-                      className="text-blue-600"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add First Subcategory
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="ml-4">
+                            <OptimizedThumbnail
+                              src={subCategory.image}
+                              alt={subCategory.name}
+                              size="sm"
+                              fallbackText={subCategory.name.charAt(0)}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="ml-6">
+                            <div className="text-sm font-medium text-gray-700">↳ {subCategory.name}</div>
+                            <div className="text-sm text-gray-500">{subCategory.slug}</div>
+                            {subCategory.description && (
+                              <div className="text-xs text-gray-400 mt-1 truncate max-w-xs">{subCategory.description}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          Subcategory
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {subCategory._count.products}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            subCategory.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {subCategory.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleEdit(subCategory)}
+                            disabled={loading}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => setDeleteConfirm(subCategory)}
+                            disabled={loading || subCategory._count.products > 0}
+                            className={subCategory._count.products > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                ]).flat()}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

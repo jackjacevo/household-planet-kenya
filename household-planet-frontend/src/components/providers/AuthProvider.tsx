@@ -30,17 +30,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      refreshUser().then(() => {
-        // Sync backend data to local state on app load
-        const { syncWithBackend: syncCart } = useCart.getState();
-        const { syncWithBackend: syncWishlist } = useWishlist.getState();
-        
-        Promise.all([
-          syncCart(),
-          syncWishlist()
-        ]).catch(error => {
-          console.warn('Failed to sync backend data on load:', error);
-        });
+      refreshUser().then((userValid) => {
+        // Only sync if user is valid
+        if (userValid) {
+          // Sync backend data to local state on app load
+          const { syncWithBackend: syncCart } = useCart.getState();
+          const { syncWithBackend: syncWishlist } = useWishlist.getState();
+          
+          Promise.all([
+            syncCart(),
+            syncWishlist()
+          ]).catch(error => {
+            console.warn('Failed to sync backend data on load:', error);
+          });
+        }
+      }).catch(() => {
+        // If refreshUser fails, token is invalid
+        setIsLoading(false);
       });
     } else {
       setIsLoading(false);
@@ -51,9 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.getUserProfile();
       setUser((response as any).user || null);
+      return true; // User is valid
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
+      return false; // User is invalid
     } finally {
       setIsLoading(false);
     }

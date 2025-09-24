@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Lipaflex/Documents/VS PROJECTS/HouseholdPlanetKenya/household-planet-frontend/src/lib/config/**)",
+      "Read(//c/Users/Lipaflex/Documents/VS PROJECTS/HouseholdPlanetKenya/household-planet-frontend/src/lib/**)",
+      "Read(//c/Users/Lipaflex/Documents/VS PROJECTS/HouseholdPlanetKenya/household-planet-frontend/src/**)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

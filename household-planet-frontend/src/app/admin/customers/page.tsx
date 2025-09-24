@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Users, Search, Trash2, Eye, CheckSquare, Square, X, User, Mail, Phone, Calendar, ShoppingBag, MapPin, Tag, CheckCircle, AlertCircle } from 'lucide-react';
-import { secureApiClient } from '@/lib/secure-api';
+import axios from 'axios';
 
 interface Customer {
   id: number;
@@ -62,19 +62,11 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await secureApiClient.get(`/api/customers/search?q=${encodeURIComponent(searchQuery)}`);
-      // Handle different response structures
-      const responseData = (response as any).data;
-      if (responseData.customers && Array.isArray(responseData.customers)) {
-        setCustomers(responseData.customers);
-      } else if (responseData.data && Array.isArray(responseData.data)) {
-        setCustomers(responseData.data);
-      } else if (Array.isArray(responseData)) {
-        setCustomers(responseData);
-      } else {
-        console.warn('Unexpected customers API response structure:', responseData);
-        setCustomers([]);
-      }
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/search?q=${encodeURIComponent(searchQuery)}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setCustomers((response as any).data);
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
@@ -110,7 +102,10 @@ export default function CustomersPage() {
     try {
       setDeleting(true);
       const token = localStorage.getItem('token');
-      await secureApiClient.delete(`/api/customers/${customerId}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
       
       setCustomers(prev => prev.filter(c => c.id !== customerId));
       setSelectedCustomers(prev => prev.filter(id => id !== customerId));
@@ -145,7 +140,13 @@ export default function CustomersPage() {
     try {
       setDeleting(true);
       const token = localStorage.getItem('token');
-      await secureApiClient.delete('/api/customers/bulk', { data: { customerIds: selectedCustomers } });
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/bulk`,
+        { 
+          headers: { 'Authorization': `Bearer ${token}` },
+          data: { customerIds: selectedCustomers }
+        }
+      );
       
       setCustomers(prev => prev.filter(c => !selectedCustomers.includes(c.id)));
       setSelectedCustomers([]);
@@ -171,16 +172,11 @@ export default function CustomersPage() {
     try {
       setLoadingDetails(true);
       const token = localStorage.getItem('token');
-      const response = await secureApiClient.get(`/api/customers/${customerId}/details`);
-      // Handle different response structures
-      const responseData = (response as any).data;
-      if (responseData.customer) {
-        setSelectedCustomer(responseData.customer);
-      } else if (responseData.data) {
-        setSelectedCustomer(responseData.data);
-      } else {
-        setSelectedCustomer(responseData);
-      }
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}/details`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setSelectedCustomer((response as any).data);
     } catch (error) {
       console.error('Error fetching customer details:', error);
       alert('Failed to load customer details');

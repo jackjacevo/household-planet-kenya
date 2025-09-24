@@ -38,37 +38,13 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
-      
-      // Try to fetch from backend first
-      try {
-        const response = await axios.get(`${apiUrl}/api/products/brands`, {
-          headers: { Authorization: `Bearer ${token}` },
-          timeout: 10000
-        });
-        
-        const responseData = response.data;
-        if (Array.isArray(responseData)) {
-          const brandObjects = responseData.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            slug: item.slug || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            logo: item.logo,
-            isActive: item.isActive !== false,
-            _count: item._count || { products: 0 }
-          }));
-          setBrands(brandObjects);
-          return;
-        }
-      } catch (apiError) {
-        console.warn('Brands API failed:', apiError instanceof Error ? apiError.message : 'Unknown error');
-        setBrands([]);
-        setError('Unable to load brands. Please try again later.');
-      }
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBrands((response as any).data);
     } catch (error: any) {
-      console.warn('Brand fetch failed, using fallback');
-      setBrands([]);
-      setError('Brands temporarily unavailable');
+      setError(error.response?.data?.message || 'Failed to fetch brands');
+      console.error('Error fetching brands:', error);
     } finally {
       setLoading(false);
     }
@@ -97,45 +73,29 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       const data = {
         ...formData,
         name: formData.name.trim(),
         slug: formData.slug.trim() || generateSlug(formData.name),
-        logo: formData.logo.trim() || undefined
+        logo: formData.logo.trim() || null
       };
 
-      // Try to save to backend first
-      try {
-        if (editingBrand) {
-          await axios.put(`${apiUrl}/api/products/brands/${editingBrand.id}`, data, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 10000
-          });
-          setSuccess('Brand updated successfully');
-        } else {
-          await axios.post(`${apiUrl}/api/products/brands`, data, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 10000
-          });
-          setSuccess('Brand created successfully');
-        }
-        await fetchBrands();
-      } catch (apiError) {
-        console.warn('Brand save API failed, updating locally');
-        // Fallback to local update
-        if (editingBrand) {
-          setBrands(prev => prev.map(b => b.id === editingBrand.id ? { ...b, ...data } : b));
-          setSuccess('Brand updated (local only)');
-        } else {
-          const newBrand = { id: Date.now(), ...data, _count: { products: 0 } };
-          setBrands(prev => [...prev, newBrand]);
-          setSuccess('Brand created (local only)');
-        }
+      if (editingBrand) {
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${editingBrand.id}`, data, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('Brand updated successfully');
+      } else {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, data, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('Brand created successfully');
       }
+
+      await fetchBrands();
       resetForm();
     } catch (error: any) {
-      setError('Failed to save brand - API unavailable');
+      setError(error.response?.data?.message || 'Failed to save brand');
       console.error('Error saving brand:', error);
     } finally {
       setLoading(false);
@@ -143,9 +103,8 @@ export default function AdminBrandsPage() {
   };
 
   const handleDelete = async (brand: Brand) => {
-    const productCount = brand._count?.products || 0;
-    if (productCount > 0) {
-      setError(`Cannot delete brand "${brand.name}" because it has ${productCount} products. Please move or delete the products first.`);
+    if (brand._count.products > 0) {
+      setError(`Cannot delete brand "${brand.name}" because it has ${brand._count.products} products. Please move or delete the products first.`);
       return;
     }
 
@@ -153,23 +112,13 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
-      
-      // Try to delete from backend first
-      try {
-        await axios.delete(`${apiUrl}/api/products/brands/${brand.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          timeout: 10000
-        });
-        setSuccess('Brand deleted successfully');
-        await fetchBrands();
-      } catch (apiError) {
-        console.warn('Brand delete API failed, updating locally');
-        setBrands(prev => prev.filter(b => b.id !== brand.id));
-        setSuccess('Brand deleted (local only)');
-      }
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${brand.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess(`Brand "${brand.name}" deleted successfully`);
+      await fetchBrands();
     } catch (error: any) {
-      setError('Failed to delete brand - API unavailable');
+      setError(error.response?.data?.message || 'Failed to delete brand');
       console.error('Error deleting brand:', error);
     } finally {
       setLoading(false);

@@ -13,6 +13,12 @@ export function PersistentDataSync() {
       // User is authenticated - only sync backend data to local state
       const syncOnAuth = async () => {
         try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.log('No token found, skipping data sync');
+            return;
+          }
+          
           const { syncWithBackend: syncCart } = useCart.getState();
           const { syncWithBackend: syncWishlist } = useWishlist.getState();
           

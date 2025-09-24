@@ -14,7 +14,7 @@ const fallbackAPI = {
   categories: {
     getAll: async () => {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.categories || response.data || [];
@@ -32,6 +32,13 @@ const fallbackAPI = {
   },
 
   products: {
+    getAll: async () => {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data.products || response.data || [];
+    },
     uploadTempImages: async (formData: FormData) => {
       const token = localStorage.getItem('token');
       const response = await axios.post(
@@ -45,6 +52,16 @@ const fallbackAPI = {
           timeout: 30000
         }
       );
+      return response.data;
+    }
+  },
+
+  dashboard: {
+    getStats: async () => {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       return response.data;
     }
   }
@@ -114,10 +131,23 @@ export const safeAdminAPI = {
   },
 
   products: {
+    getAll: createSafeAPICall(
+      adminAPI.products.getProducts.bind(adminAPI.products),
+      fallbackAPI.products.getAll,
+      'products.getAll'
+    ),
     uploadTempImages: createSafeAPICall(
       adminAPI.products.uploadTempImages.bind(adminAPI.products),
       fallbackAPI.products.uploadTempImages,
       'products.uploadTempImages'
+    )
+  },
+
+  dashboard: {
+    getStats: createSafeAPICall(
+      adminAPI.dashboard.getDashboardStats.bind(adminAPI.dashboard),
+      fallbackAPI.dashboard.getStats,
+      'dashboard.getStats'
     )
   }
 };

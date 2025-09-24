@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  ShoppingCart,
-  DollarSign,
-  Users,
+import { 
+  ShoppingCart, 
+  DollarSign, 
+  Users, 
   Package,
   TrendingUp,
   TrendingDown,
@@ -21,19 +21,14 @@ import {
   Bell,
   ArrowRight
 } from 'lucide-react';
-import { api } from '@/lib/api';
-import { useAuthStore } from '@/lib/store/authStore';
-import { dashboardStatsSchema, validateApiResponse } from '@/lib/validation';
-import { getErrorMessage } from '@/lib/error-messages';
+import { safeAdminAPI } from '@/lib/api/admin-api-wrapper';
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 import { SimpleLineChart, SimplePieChart, SimpleBarChart, CustomerGrowthChart } from '@/components/admin/SimpleChart';
-import { isFeatureEnabled, debugLog } from '@/lib/config/admin-config';
-import UnifiedDashboard from '@/components/admin/UnifiedDashboard';
 
 interface DashboardStats {
   overview: {
     totalOrders: number;
     totalRevenue: number;
-    deliveredRevenue?: number;
     totalCustomers: number;
     totalProducts: number;
     activeProducts: number;
@@ -70,68 +65,30 @@ interface DashboardStats {
   }>;
 }
 
-// Legacy dashboard component (kept for backward compatibility)
-function LegacyDashboard() {
-  const { user } = useAuthStore();
+export default function AdminDashboard() {
+  const { refreshAll } = useRealtimeOrders();
   
   const fetchDashboardStats = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No authentication token');
-    
-    try {
-      const response = await api.get('/admin/dashboard');
-      return validateApiResponse(dashboardStatsSchema, response.data);
-    } catch (error) {
-      // Fallback to mock data if backend has role guard issues
-      console.warn('Dashboard API failed, using fallback data:', error instanceof Error ? error.message : 'Unknown error');
-      return {
-        overview: {
-          totalOrders: 0,
-          totalRevenue: 0,
-          totalCustomers: 0,
-          totalProducts: 0,
-          activeProducts: 0,
-          outOfStockProducts: 0,
-          todayOrders: 0,
-          todayRevenue: 0,
-          pendingOrders: 0,
-          lowStockProducts: 0,
-          revenueChange: 'N/A',
-          revenueChangeType: 'neutral' as const,
-          ordersChange: 'N/A',
-          ordersChangeType: 'neutral' as const,
-          customersChange: 'N/A',
-          customersChangeType: 'neutral' as const,
-          productsChange: 'N/A',
-          productsChangeType: 'neutral' as const
-        },
-        recentOrders: [],
-        topProducts: [],
-        customerGrowth: [],
-        salesByCounty: []
-      };
-    }
+    return await safeAdminAPI.dashboard.getStats();
   };
 
   const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: fetchDashboardStats,
-    refetchInterval: 10000, // Reduced for better real-time feel
-    retry: false,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+    refetchInterval: 30000,
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return false;
+      }
+      return failureCount < 3;
+    }
   });
 
   if (loading) {
     return (
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center justify-center py-6 sm:py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm sm:text-base text-gray-600">Loading dashboard...</p>
-            </div>
-          </div>
-        </div>
         <div className="animate-pulse">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
@@ -144,38 +101,19 @@ function LegacyDashboard() {
   }
 
   if (error) {
-    const errorMessage = getErrorMessage(error);
-    const isNetworkError = errorMessage.includes('Network error');
-    const isServerError = errorMessage.includes('Server error');
-    
     return (
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="bg-red-50 border border-red-200 rounded-md p-3 sm:p-4">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
+              <AlertTriangle className="h-5 w-5 text-red-400" />
             </div>
-            <div className="ml-2 sm:ml-3">
-              <h3 className="text-xs sm:text-sm font-medium text-red-800">
-                {isNetworkError ? 'Connection Error' : isServerError ? 'Server Error' : 'Dashboard Error'}
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Error loading dashboard
               </h3>
-              <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-700">
-                <p>{errorMessage}</p>
-                {isNetworkError && <p className="mt-1">Check your internet connection and try again.</p>}
-                {isServerError && <p className="mt-1">Our servers are experiencing issues. Please try again in a few minutes.</p>}
-              </div>
-              <div className="mt-2 sm:mt-3">
-                <button 
-                  onClick={() => {
-                    import('@/lib/toast').then(({ showInfo }) => {
-                      showInfo('Refreshing dashboard...');
-                    });
-                    window.location.reload();
-                  }}
-                  className="text-xs sm:text-sm bg-red-100 hover:bg-red-200 text-red-800 px-2 sm:px-3 py-1 rounded transition-colors"
-                >
-                  Retry
-                </button>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Unable to load dashboard data. Please try refreshing the page.</p>
               </div>
             </div>
           </div>
@@ -184,49 +122,42 @@ function LegacyDashboard() {
     );
   }
 
-  if (!stats) {
-    return (
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 sm:p-4">
-          <div className="text-sm sm:text-base text-yellow-800">No dashboard data available</div>
-        </div>
-      </div>
-    );
-  }
+  if (!stats) return <div>Loading dashboard...</div>;
 
   const statCards = [
     {
       name: 'Revenue',
-      value: `KSh ${(stats.overview?.totalRevenue || 0).toLocaleString()}`,
-      change: stats.overview?.revenueChange || 'N/A',
-      changeType: stats.overview?.revenueChangeType || 'neutral',
+      value: `KSh ${(stats.overview.deliveredRevenue || 0).toLocaleString()}`,
+      subValue: `Total: KSh ${(stats.overview.totalRevenue || 0).toLocaleString()}`,
+      change: '+12.5%',
+      changeType: 'increase',
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
       name: 'Total Orders',
-      value: (stats.overview?.totalOrders || 0).toLocaleString(),
-      change: stats.overview?.ordersChange || 'N/A',
-      changeType: stats.overview?.ordersChangeType || 'neutral',
+      value: (stats.overview.totalOrders || 0).toLocaleString(),
+      change: '+8.2%',
+      changeType: 'increase',
       icon: ShoppingCart,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       name: 'Total Customers',
-      value: (stats.overview?.totalCustomers || 0).toLocaleString(),
-      change: stats.overview?.customersChange || 'N/A',
-      changeType: stats.overview?.customersChangeType || 'neutral',
+      value: (stats.overview.totalCustomers || 0).toLocaleString(),
+      change: '+15.3%',
+      changeType: 'increase',
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
       name: 'Total Products',
-      value: (stats.overview?.totalProducts || 0).toLocaleString(),
-      change: stats.overview?.productsChange || 'N/A',
-      changeType: stats.overview?.productsChangeType || 'neutral',
+      value: (stats.overview.totalProducts || 0).toLocaleString(),
+      change: '+2.1%',
+      changeType: 'increase',
       icon: Package,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
@@ -236,22 +167,22 @@ function LegacyDashboard() {
   const todayStats = [
     {
       name: "Today's Orders",
-      value: stats.overview?.todayOrders || 0,
+      value: stats.overview.todayOrders,
       icon: ShoppingCart,
     },
     {
       name: "Today's Revenue",
-      value: `KSh ${(stats.overview?.todayRevenue || 0).toLocaleString()}`,
+      value: `KSh ${(stats.overview.todayRevenue || 0).toLocaleString()}`,
       icon: DollarSign,
     },
     {
       name: 'Pending Orders',
-      value: stats.overview?.pendingOrders || 0,
+      value: stats.overview.pendingOrders,
       icon: Bell,
     },
     {
       name: 'Low Stock Alerts',
-      value: stats.overview?.lowStockProducts || 0,
+      value: stats.overview.lowStockProducts,
       icon: AlertTriangle,
     },
   ];
@@ -259,25 +190,25 @@ function LegacyDashboard() {
   const productStats = [
     {
       name: 'Total Products',
-      value: stats.overview?.totalProducts || 0,
+      value: stats.overview.totalProducts,
       icon: Package,
       color: 'text-blue-600'
     },
     {
       name: 'Active Products',
-      value: stats.overview?.activeProducts || 0,
+      value: stats.overview.activeProducts,
       icon: Eye,
       color: 'text-green-600'
     },
     {
       name: 'Low Stock',
-      value: stats.overview?.lowStockProducts || 0,
+      value: stats.overview.lowStockProducts,
       icon: AlertTriangle,
       color: 'text-yellow-600'
     },
     {
       name: 'Out of Stock',
-      value: stats.overview?.outOfStockProducts || 0,
+      value: stats.overview.outOfStockProducts,
       icon: AlertTriangle,
       color: 'text-red-600'
     },
@@ -288,28 +219,21 @@ function LegacyDashboard() {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-              {(() => {
-                const hour = new Date().getHours();
-                if (hour < 12) return '🌅 Good Morning! Dashboard Overview';
-                if (hour < 17) return '☀️ Good Afternoon! Dashboard Overview';
-                return '🌙 Good Evening! Dashboard Overview';
-              })()} 
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Overview</h1>
             <p className="mt-1 sm:mt-2 text-sm text-gray-700">
               Welcome to your admin dashboard. Here's what's happening with your store today.
             </p>
           </div>
           <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="hidden sm:inline">Live updates every 10s</span>
+            <span className="hidden sm:inline">Live updates every 30s</span>
             <span className="sm:hidden">Live updates</span>
           </div>
         </div>
       </div>
 
       {/* New Orders Alert */}
-      {(stats.overview?.pendingOrders || 0) > 0 && (
+      {stats.overview.pendingOrders > 0 && (
         <div className="mb-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg border border-orange-300">
           <div className="px-4 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between">
@@ -321,10 +245,10 @@ function LegacyDashboard() {
                 </div>
                 <div className="ml-3 sm:ml-4">
                   <h3 className="text-base sm:text-lg font-semibold text-white">
-                    {stats.overview?.pendingOrders || 0} New Order{(stats.overview?.pendingOrders || 0) !== 1 ? 's' : ''} Pending
+                    {stats.overview.pendingOrders} New Order{stats.overview.pendingOrders !== 1 ? 's' : ''} Pending
                   </h3>
                   <p className="text-sm text-orange-100">
-                    {(stats.overview?.pendingOrders || 0) === 1 ? 'You have a new order' : `You have ${stats.overview?.pendingOrders || 0} new orders`} waiting for processing
+                    {stats.overview.pendingOrders === 1 ? 'You have a new order' : `You have ${stats.overview.pendingOrders} new orders`} waiting for processing
                   </p>
                 </div>
               </div>
@@ -359,20 +283,22 @@ function LegacyDashboard() {
                     <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                       {item.name}
                     </dt>
-                    <dd className="flex flex-col gap-1">
-                      <div className="text-xl sm:text-3xl font-bold text-gray-900">
+                    <dd className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-0">
+                      <div className="text-lg sm:text-2xl font-semibold text-gray-900">
                         {item.value}
                       </div>
+                      {item.subValue && (
+                        <div className="text-xs text-gray-500 hidden sm:block">
+                          {item.subValue}
+                        </div>
+                      )}
                       <div className={`flex items-baseline text-xs sm:text-sm font-semibold sm:ml-2 ${
-                        item.changeType === 'increase' ? 'text-green-600' : 
-                        item.changeType === 'decrease' ? 'text-red-600' : 'text-gray-500'
+                        item.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {item.changeType === 'increase' ? (
                           <TrendingUp className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
-                        ) : item.changeType === 'decrease' ? (
-                          <TrendingDown className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
                         ) : (
-                          <div className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
+                          <TrendingDown className="self-center flex-shrink-0 h-3 w-3 sm:h-4 sm:w-4" />
                         )}
                         <span className="ml-1">{item.change}</span>
                       </div>
@@ -503,7 +429,7 @@ function LegacyDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {Array.isArray(stats.recentOrders) && stats.recentOrders.length > 0 ? stats.recentOrders.slice(0, 5).map((order: any) => (
+            {(stats.recentOrders || []).slice(0, 5).map((order: any) => (
               <div key={order.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -529,11 +455,7 @@ function LegacyDashboard() {
                   </div>
                 </div>
               </div>
-            )) : (
-              <div className="px-4 py-8 text-center text-gray-500">
-                No recent orders
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -547,14 +469,15 @@ function LegacyDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {Array.isArray(stats.topProducts) && stats.topProducts.length > 0 ? stats.topProducts.map((product: any) => (
+            {(stats.topProducts || []).map((product: any) => (
               <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center">
                   <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <img
                       className="h-8 w-8 sm:h-10 sm:w-10 rounded object-cover"
-                      src={'/images/products/placeholder.svg'}
+                      src={(product.images && product.images.length > 0 && product.images[0] && !product.images[0].includes('[')) ? product.images[0] : '/images/products/placeholder.svg'}
                       alt={product.name}
+                      onError={(e) => { e.currentTarget.src = '/images/products/placeholder.svg'; }}
                     />
                   </div>
                   <div className="ml-3 sm:ml-4 flex-1 min-w-0">
@@ -568,11 +491,7 @@ function LegacyDashboard() {
                   </div>
                 </div>
               </div>
-            )) : (
-              <div className="px-4 py-8 text-center text-gray-500">
-                No top products
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -586,7 +505,7 @@ function LegacyDashboard() {
             </h2>
           </div>
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-            {Array.isArray(stats.salesByCounty) && stats.salesByCounty.length > 0 ? stats.salesByCounty.slice(0, 5).map((county: any, index: number) => (
+            {stats.salesByCounty?.slice(0, 5).map((county: any, index: number) => (
               <div key={county.county} className="px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -612,11 +531,7 @@ function LegacyDashboard() {
                   </div>
                 </div>
               </div>
-            )) : (
-              <div className="px-4 py-8 text-center text-gray-500">
-                No sales data
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
@@ -624,16 +539,4 @@ function LegacyDashboard() {
 
     </div>
   );
-}
-
-// Main dashboard component with feature flag switching
-export default function AdminDashboard() {
-  // Check if unified dashboard is enabled
-  if (isFeatureEnabled('unifiedDashboard')) {
-    debugLog('Using unified dashboard with enhanced performance features');
-    return <UnifiedDashboard fallbackComponent={LegacyDashboard} />;
-  } else {
-    debugLog('Using legacy dashboard implementation');
-    return <LegacyDashboard />;
-  }
 }

@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Users, UserPlus, Shield, Activity, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
-import { secureApiClient } from '@/lib/secure-api';
+import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Staff {
   id: number;
   name: string;
   email: string;
-  role: 'ADMIN' | 'STAFF' | 'SUPER_ADMIN';
+  role: 'ADMIN' | 'STAFF';
   isActive: boolean;
   permissions: string[];
   createdAt: string;
@@ -46,7 +46,7 @@ export default function AdminManagementPage() {
     name: '',
     email: '',
     password: '',
-    role: 'ADMIN' as 'ADMIN' | 'STAFF' | 'SUPER_ADMIN',
+    role: 'ADMIN' as 'ADMIN' | 'STAFF',
     permissions: [] as string[]
   });
 
@@ -57,12 +57,12 @@ export default function AdminManagementPage() {
   const fetchStaff = async () => {
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
-      const response = await secureApiClient.get('/api/admin/staff');
-      // Filter to show ADMIN and SUPER_ADMIN users
-      setStaff((response as any).data.filter((member: Staff) => 
-        member.role === 'ADMIN' || member.role === 'SUPER_ADMIN'
-      ));
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      // Filter to only show ADMIN users
+      setStaff((response as any).data.filter((member: Staff) => member.role === 'ADMIN'));
     } catch (error) {
       console.error('Error fetching staff:', error);
     } finally {
@@ -76,7 +76,11 @@ export default function AdminManagementPage() {
     try {
       setError('');
       const token = localStorage.getItem('token');
-      await secureApiClient.post('/api/admin/staff', { ...formData, role: 'ADMIN' });
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
+        { ...formData, role: 'ADMIN' },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
       setShowCreateDialog(false);
       resetForm();
       fetchStaff();
@@ -109,7 +113,11 @@ export default function AdminManagementPage() {
       if (!updateData.password) {
         delete updateData.password;
       }
-      await secureApiClient.put(`/api/admin/staff/${editingStaff.id}`, updateData);
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff/${editingStaff.id}`,
+        updateData,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
       setShowEditDialog(false);
       setShowPasswordConfirm(false);
       setEditingStaff(null);
@@ -125,7 +133,10 @@ export default function AdminManagementPage() {
     if (!deletingStaff) return;
     try {
       const token = localStorage.getItem('token');
-      await secureApiClient.delete(`/api/admin/staff/${deletingStaff.id}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff/${deletingStaff.id}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
       setShowDeleteDialog(false);
       setDeletingStaff(null);
       fetchStaff();
@@ -145,6 +156,11 @@ export default function AdminManagementPage() {
   };
 
   const openEditDialog = (staff: Staff) => {
+    // Prevent staff from editing their own details
+    if (!isAdmin() && user?.id === staff.id) {
+      alert('You cannot edit your own staff details. Contact an administrator.');
+      return;
+    }
     setEditingStaff(staff);
     setFormData({
       name: staff.name,
@@ -243,10 +259,8 @@ export default function AdminManagementPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    member.role === 'SUPER_ADMIN' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
-                  }`}>
-                    {member.role}
+                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                    ADMIN
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -282,7 +296,8 @@ export default function AdminManagementPage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => openEditDialog(member)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className={`${(isAdmin() || user?.id !== member.id) ? 'text-blue-600 hover:text-blue-900' : 'text-gray-400 cursor-not-allowed'}`}
+                      disabled={!isAdmin() && user?.id === member.id}
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -469,55 +484,40 @@ export default function AdminManagementPage() {
                   </div>
                 </div>
                 
-                {/* Only show role and permissions for admins editing others */}
-                {isAdmin() && user?.id !== editingStaff?.id && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-                        value="ADMIN"
-                        disabled
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Permissions</label>
-                      <div className="bg-gray-50 rounded-lg p-4 max-h-40 overflow-y-auto">
-                        <div className="grid grid-cols-1 gap-3">
-                          {AVAILABLE_PERMISSIONS.map(permission => (
-                            <label key={permission} className="flex items-center space-x-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                checked={formData.permissions.includes(permission)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setFormData(prev => ({ ...prev, permissions: [...prev.permissions, permission] }));
-                                  } else {
-                                    setFormData(prev => ({ ...prev, permissions: prev.permissions.filter(p => p !== permission) }));
-                                  }
-                                }}
-                              />
-                              <span className="text-sm text-gray-700 capitalize">{permission.replace('_', ' ')}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    value="ADMIN"
+                    disabled
+                  />
+                </div>
                 
-                {/* Show read-only info for staff editing themselves */}
-                {user?.id === editingStaff?.id && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-2">You can update your name, email, and password. Role and permissions can only be changed by an administrator.</p>
-                    <div className="text-sm">
-                      <span className="font-medium">Current Role:</span> {editingStaff?.role}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Permissions</label>
+                  <div className="bg-gray-50 rounded-lg p-4 max-h-40 overflow-y-auto">
+                    <div className="grid grid-cols-1 gap-3">
+                      {AVAILABLE_PERMISSIONS.map(permission => (
+                        <label key={permission} className="flex items-center space-x-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            checked={formData.permissions.includes(permission)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({ ...prev, permissions: [...prev.permissions, permission] }));
+                              } else {
+                                setFormData(prev => ({ ...prev, permissions: prev.permissions.filter(p => p !== permission) }));
+                              }
+                            }}
+                          />
+                          <span className="text-sm text-gray-700 capitalize">{permission.replace('_', ' ')}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
               
               <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
