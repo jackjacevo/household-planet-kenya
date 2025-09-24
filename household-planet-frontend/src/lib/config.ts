@@ -5,14 +5,16 @@ const getApiUrl = () => {
   const PRODUCTION_SITE_URL = 'https://householdplanetkenya.co.ke';
 
   // Development URLs
-  const DEV_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const rawDevUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const DEV_API_URL = rawDevUrl.endsWith('/api') ? rawDevUrl : `${rawDevUrl}/api`;
   const DEV_SITE_URL = 'http://localhost:3000';
 
   // In production, determine the best API URL
   if (process.env.NODE_ENV === 'production') {
     // If we have the environment variable, use it directly with /api
     if (process.env.NEXT_PUBLIC_API_URL) {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL.includes('/api')
+      // Always add /api suffix if not present
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL.endsWith('/api')
         ? process.env.NEXT_PUBLIC_API_URL
         : `${process.env.NEXT_PUBLIC_API_URL}/api`;
 
