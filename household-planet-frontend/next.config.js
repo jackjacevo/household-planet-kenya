@@ -7,21 +7,13 @@ const nextConfig = {
   output: 'standalone',
 
   // Optimize build performance
-  swcMinify: true,
   poweredByHeader: false,
   compress: true,
 
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', 'recharts'],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
+
   },
 
   env: {
@@ -122,8 +114,7 @@ const nextConfig = {
   trailingSlash: false,
   generateEtags: true,
 
-  // Optimize fonts and assets
-  optimizeFonts: true,
+
 
   // Production optimizations
   ...(process.env.NODE_ENV === 'production' && {
