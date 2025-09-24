@@ -2,7 +2,7 @@
 
 import { motion, type Variants } from 'framer-motion';
 import { HeroSection } from '@/components/home/HeroSection'
-import { FeaturedCategories } from '@/components/home/FeaturedCategories'
+
 import { BestSellers } from '@/components/home/BestSellers'
 import { NewArrivals } from '@/components/home/NewArrivals'
 import { InstagramFeed } from '@/components/home/InstagramFeed'
@@ -80,17 +80,7 @@ export default function HomePage() {
           <HeroSection />
         </motion.section>
         
-        {/* Categories Section */}
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          variants={sectionVariants}
-          className="py-4 sm:py-8"
-        >
-          <FeaturedCategories />
-        </motion.section>
-        
+
         {/* Featured Products */}
         <motion.section
           initial="hidden"
