@@ -21,7 +21,7 @@ export default function AdminAuthGuard({ children }: AdminAuthGuardProps) {
       const hasContextAuth = contextUser;
       
       if (!hasStoreAuth && !hasContextAuth) {
-        router.push('/admin/login');
+        router.push('/login');
         return;
       }
 
@@ -42,13 +42,13 @@ export default function AdminAuthGuard({ children }: AdminAuthGuardProps) {
             const refreshed = await refreshAccessToken();
             if (!refreshed) {
               logout();
-              router.push('/admin/login');
+              router.push('/login');
               return;
             }
           }
         } catch {
           logout();
-          router.push('/admin/login');
+          router.push('/login');
           return;
         }
 

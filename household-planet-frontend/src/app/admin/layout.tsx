@@ -259,15 +259,11 @@ export default function AdminLayout({
       {/* Main content */}
       <div className="lg:pl-64">
         <main className="py-4 px-2 sm:py-6 sm:px-4">
-          {pathname === '/admin/login' ? (
-            children
-          ) : (
-            <AdminAuthGuard>
-              <AdminErrorBoundary>
-                {children}
-              </AdminErrorBoundary>
-            </AdminAuthGuard>
-          )}
+          <AdminAuthGuard>
+            <AdminErrorBoundary>
+              {children}
+            </AdminErrorBoundary>
+          </AdminAuthGuard>
         </main>
       </div>
     </div>
