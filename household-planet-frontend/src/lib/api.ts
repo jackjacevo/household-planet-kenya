@@ -1,8 +1,6 @@
 import { API_CONFIG } from './config'
-import { mockApi } from './mock-api'
 
 const API_BASE_URL = API_CONFIG.BASE_URL
-const USE_MOCK_API = process.env.NODE_ENV === 'production' // Use mock in production until backend is ready
 
 class ApiClient {
   private baseURL: string
@@ -98,9 +96,6 @@ class ApiClient {
 
   // Categories endpoints
   async getCategories() {
-    if (USE_MOCK_API) {
-      return mockApi.getCategories()
-    }
     return this.request('/categories')
   }
 

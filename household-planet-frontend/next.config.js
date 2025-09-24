@@ -55,7 +55,7 @@ const nextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'https://api.householdplanetkenya.co.ke/:path*',
+          destination: 'https://api.householdplanetkenya.co.ke/api/:path*',
         },
       ];
     }
