@@ -43,28 +43,50 @@ const badgeVariants = {
 const householdImages = [
   {
     url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+    mobileUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    fallback: '/images/banners/hero-banner-1.jpg',
     title: 'Modern Kitchen Essentials'
   },
   {
     url: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+    mobileUrl: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    fallback: '/images/banners/hero-banner-1.jpg',
     title: 'Elegant Bathroom Solutions'
   },
   {
     url: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+    mobileUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    fallback: '/images/banners/hero-banner-1.jpg',
     title: 'Beautiful Home Decor'
   },
   {
     url: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+    mobileUrl: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    fallback: '/images/banners/hero-banner-1.jpg',
     title: 'Cozy Living Spaces'
   },
   {
     url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+    mobileUrl: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    fallback: '/images/banners/hero-banner-1.jpg',
     title: 'Premium Cookware'
   }
 ];
 
 export function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imageErrors, setImageErrors] = useState<{[key: number]: boolean}>({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -82,19 +104,43 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative h-[400px] sm:h-96 md:h-[500px] overflow-hidden bg-gray-100">
+    <section className="hero-section relative h-[300px] sm:h-96 md:h-[500px] overflow-hidden bg-gradient-to-br from-green-50 to-orange-50">
       {/* Image Slideshow */}
       <div className="absolute inset-0">
-        {householdImages.map((image, index) => (
-          <motion.div
-            key={index}
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url("${image.url}")` }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: index === currentSlide ? 1 : 0 }}
-            transition={{ duration: 0.8 }}
-          />
-        ))}
+        {householdImages.map((image, index) => {
+          const imageUrl = imageErrors[index] 
+            ? image.fallback 
+            : (isMobile ? image.mobileUrl : image.url);
+          
+          return (
+            <motion.div
+              key={index}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat mobile-hero-image"
+              style={{ 
+                backgroundImage: `url("${imageUrl}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: index === currentSlide ? 1 : 0 }}
+              transition={{ duration: 0.8 }}
+              onError={() => {
+                setImageErrors(prev => ({ ...prev, [index]: true }));
+              }}
+            >
+              {/* Preload image for better mobile performance */}
+              <img 
+                src={imageUrl}
+                alt={image.title}
+                style={{ display: 'none' }}
+                onError={() => {
+                  setImageErrors(prev => ({ ...prev, [index]: true }));
+                }}
+              />
+            </motion.div>
+          );
+        })}
       </div>
       
       {/* Overlay */}

@@ -1,15 +1,104 @@
+/**
+ * Enhanced Loading States Component
+ * Provides consistent, accessible loading indicators throughout the app
+ * Feature-flagged for safe rollout - maintains backward compatibility
+ */
+
 'use client';
 
-import { motion } from 'framer-motion';
-import { Loader2, Package, ShoppingCart, CreditCard, Truck } from 'lucide-react';
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Loader2,
+  RefreshCw,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Truck
+} from 'lucide-react';
+import { adminConfig, isFeatureEnabled, debugLog } from '@/lib/config/admin-config';
 
+// Enhanced loading types
+export enum LoadingType {
+  SPINNER = 'spinner',
+  DOTS = 'dots',
+  PULSE = 'pulse',
+  SKELETON = 'skeleton',
+  PROGRESS = 'progress',
+  REFRESH = 'refresh',
+  // Legacy compatibility
+  DEFAULT = 'default',
+  PRODUCTS = 'products',
+  CART = 'cart',
+  CHECKOUT = 'checkout',
+  PAYMENT = 'payment',
+  DELIVERY = 'delivery'
+}
+
+export enum LoadingSize {
+  SMALL = 'sm',
+  MEDIUM = 'md',
+  LARGE = 'lg',
+  EXTRA_LARGE = 'xl'
+}
+
+export enum StatusType {
+  LOADING = 'loading',
+  SUCCESS = 'success',
+  ERROR = 'error',
+  WARNING = 'warning'
+}
+
+// Legacy interface for backward compatibility
 interface LoadingStateProps {
   type?: 'default' | 'products' | 'cart' | 'checkout' | 'payment' | 'delivery';
   message?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
+// Enhanced loading props
+interface EnhancedLoadingProps {
+  type?: LoadingType;
+  size?: LoadingSize;
+  className?: string;
+  color?: string;
+  message?: string;
+  fallback?: React.ReactNode;
+}
+
+// Legacy LoadingState component - maintained for backward compatibility
 export function LoadingState({ type = 'default', message, size = 'md' }: LoadingStateProps) {
+  // Check if improved loading is enabled
+  if (isFeatureEnabled('improvedLoading')) {
+    debugLog('Using enhanced loading state for legacy component');
+
+    // Map legacy types to new enhanced types
+    const mappedType = (() => {
+      switch (type) {
+        case 'products':
+        case 'cart':
+        case 'checkout':
+        case 'payment':
+        case 'delivery':
+          return LoadingType.SPINNER;
+        default:
+          return LoadingType.SPINNER;
+      }
+    })();
+
+    return (
+      <EnhancedLoading
+        type={mappedType}
+        size={size === 'sm' ? LoadingSize.SMALL : size === 'lg' ? LoadingSize.LARGE : LoadingSize.MEDIUM}
+        message={message}
+        contextType={type}
+      />
+    );
+  }
   const getIcon = () => {
     switch (type) {
       case 'products': return Package;
@@ -215,4 +304,283 @@ export function ErrorState({
       )}
     </motion.div>
   );
+}
+
+// Enhanced Loading Components for Phase 2
+
+// Spinner loading component
+interface SpinnerLoadingProps extends EnhancedLoadingProps {
+  type: LoadingType.SPINNER;
+  contextType?: string;
+}
+
+export function SpinnerLoading({
+  size = LoadingSize.MEDIUM,
+  className = '',
+  color = 'text-blue-600',
+  message,
+  contextType
+}: SpinnerLoadingProps) {
+  const sizeClasses = {
+    [LoadingSize.SMALL]: 'h-4 w-4',
+    [LoadingSize.MEDIUM]: 'h-6 w-6',
+    [LoadingSize.LARGE]: 'h-8 w-8',
+    [LoadingSize.EXTRA_LARGE]: 'h-12 w-12'
+  };
+
+  // Use contextual icons if available
+  const getContextualIcon = () => {
+    switch (contextType) {
+      case 'products': return Package;
+      case 'cart': return ShoppingCart;
+      case 'checkout':
+      case 'payment': return CreditCard;
+      case 'delivery': return Truck;
+      default: return Loader2;
+    }
+  };
+
+  const Icon = getContextualIcon();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`flex items-center justify-center gap-2 ${className}`}
+    >
+      <Icon className={`animate-spin ${sizeClasses[size]} ${color}`} />
+      {message && (
+        <span className="text-sm text-gray-600 animate-pulse">{message}</span>
+      )}
+    </motion.div>
+  );
+}
+
+// Dots loading component
+interface DotsLoadingProps extends EnhancedLoadingProps {
+  type: LoadingType.DOTS;
+}
+
+export function DotsLoading({ size = LoadingSize.MEDIUM, className = '', color = 'bg-blue-600', message }: DotsLoadingProps) {
+  const sizeClasses = {
+    [LoadingSize.SMALL]: 'h-1.5 w-1.5',
+    [LoadingSize.MEDIUM]: 'h-2 w-2',
+    [LoadingSize.LARGE]: 'h-3 w-3',
+    [LoadingSize.EXTRA_LARGE]: 'h-4 w-4'
+  };
+
+  const gapClasses = {
+    [LoadingSize.SMALL]: 'gap-1',
+    [LoadingSize.MEDIUM]: 'gap-1.5',
+    [LoadingSize.LARGE]: 'gap-2',
+    [LoadingSize.EXTRA_LARGE]: 'gap-2.5'
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`flex flex-col items-center gap-2 ${className}`}
+    >
+      <div className={`flex items-center ${gapClasses[size]}`}>
+        {[0, 1, 2].map((index) => (
+          <motion.div
+            key={index}
+            className={`rounded-full ${sizeClasses[size]} ${color}`}
+            animate={{
+              scale: [1, 1.5, 1],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              delay: index * 0.2
+            }}
+          />
+        ))}
+      </div>
+      {message && (
+        <span className="text-sm text-gray-600">{message}</span>
+      )}
+    </motion.div>
+  );
+}
+
+// Progress loading component
+interface ProgressLoadingProps extends EnhancedLoadingProps {
+  type: LoadingType.PROGRESS;
+  progress?: number;
+  showPercentage?: boolean;
+}
+
+export function ProgressLoading({
+  progress = 0,
+  showPercentage = true,
+  className = '',
+  color = 'bg-blue-600',
+  message
+}: ProgressLoadingProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`w-full ${className}`}
+    >
+      <div className="flex justify-between items-center mb-1">
+        {message && <span className="text-sm text-gray-600">{message}</span>}
+        {showPercentage && (
+          <span className="text-sm text-gray-600">{Math.round(progress)}%</span>
+        )}
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <motion.div
+          className={`h-2 rounded-full ${color}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+// Status loading component
+interface StatusLoadingProps {
+  status: StatusType;
+  message?: string;
+  size?: LoadingSize;
+  className?: string;
+}
+
+export function StatusLoading({
+  status,
+  message,
+  size = LoadingSize.MEDIUM,
+  className = ''
+}: StatusLoadingProps) {
+  const sizeClasses = {
+    [LoadingSize.SMALL]: 'h-4 w-4',
+    [LoadingSize.MEDIUM]: 'h-6 w-6',
+    [LoadingSize.LARGE]: 'h-8 w-8',
+    [LoadingSize.EXTRA_LARGE]: 'h-12 w-12'
+  };
+
+  const statusConfig = {
+    [StatusType.LOADING]: {
+      icon: Clock,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      defaultMessage: 'Processing...'
+    },
+    [StatusType.SUCCESS]: {
+      icon: CheckCircle,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      defaultMessage: 'Success!'
+    },
+    [StatusType.ERROR]: {
+      icon: XCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      defaultMessage: 'Error occurred'
+    },
+    [StatusType.WARNING]: {
+      icon: AlertCircle,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      defaultMessage: 'Warning'
+    }
+  };
+
+  const config = statusConfig[status];
+  const IconComponent = config.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className={`flex items-center gap-2 p-3 rounded-lg border ${config.bgColor} ${config.borderColor} ${className}`}
+    >
+      <IconComponent className={`${sizeClasses[size]} ${config.color} ${status === StatusType.LOADING ? 'animate-pulse' : ''}`} />
+      <span className={`text-sm ${config.color}`}>
+        {message || config.defaultMessage}
+      </span>
+    </motion.div>
+  );
+}
+
+// Main enhanced loading component
+interface EnhancedLoadingPropsWithContext extends EnhancedLoadingProps {
+  contextType?: string;
+}
+
+export function EnhancedLoading({
+  type = LoadingType.SPINNER,
+  size = LoadingSize.MEDIUM,
+  className = '',
+  color,
+  message,
+  fallback,
+  contextType,
+  ...props
+}: EnhancedLoadingPropsWithContext) {
+  // Check if enhanced loading is enabled
+  if (!isFeatureEnabled('improvedLoading')) {
+    debugLog('Using fallback loading state');
+
+    if (fallback) {
+      return <>{fallback}</>;
+    }
+
+    // Simple fallback loading using existing component structure
+    return (
+      <div className={`flex items-center justify-center gap-2 ${className}`}>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        {message && <span className="text-sm text-gray-600">{message}</span>}
+      </div>
+    );
+  }
+
+  debugLog('Using enhanced loading states');
+
+  const commonProps = { size, className, color, message };
+
+  return (
+    <AnimatePresence>
+      {type === LoadingType.SPINNER && <SpinnerLoading {...commonProps} type={LoadingType.SPINNER} contextType={contextType} />}
+      {type === LoadingType.DOTS && <DotsLoading {...commonProps} type={LoadingType.DOTS} />}
+      {type === LoadingType.PROGRESS && <ProgressLoading {...commonProps} type={LoadingType.PROGRESS} {...(props as any)} />}
+    </AnimatePresence>
+  );
+}
+
+// Hook for easier loading state management
+export function useLoadingStates() {
+  return {
+    LoadingState, // Legacy component
+    EnhancedLoading,
+    SpinnerLoading,
+    DotsLoading,
+    ProgressLoading,
+    StatusLoading,
+    Skeleton, // Existing skeleton component
+    ErrorState, // Existing error component
+    LoadingType,
+    LoadingSize,
+    StatusType,
+
+    // Helper functions
+    createLoadingComponent: (type: LoadingType, defaultProps: Partial<EnhancedLoadingProps> = {}) =>
+      (props: EnhancedLoadingProps) => <EnhancedLoading {...defaultProps} {...props} type={type} />,
+
+    isLoadingEnabled: () => isFeatureEnabled('improvedLoading')
+  };
 }

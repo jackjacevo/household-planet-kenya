@@ -68,7 +68,7 @@ export default function HomePage() {
         structuredData={structuredData}
       />
       
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/20 w-full overflow-x-hidden">
+      <main className="min-h-screen bg-white w-full overflow-x-hidden">
         {/* Sticky Social Media Icons */}
         <SocialMediaIcons />
         

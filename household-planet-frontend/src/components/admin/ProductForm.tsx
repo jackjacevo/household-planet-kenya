@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Plus, Upload, X, Image as ImageIcon } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '@/contexts/ToastContext';
+import { safeAdminAPI } from '@/lib/api/admin-api-wrapper';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useConfirmation } from '@/contexts/ConfirmationContext';
 
 interface ProductFormProps {
   product?: any;
@@ -15,13 +18,20 @@ interface ProductFormProps {
 
 export default function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   const { showToast } = useToast();
+  const { handleApiError, handleFormError } = useErrorHandler({
+    context: 'Product Form',
+    fallbackToOldHandler: true
+  });
+  const { showDeleteConfirmation, showUnsavedChangesConfirmation } = useConfirmation();
+
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm({
+  const { register, handleSubmit, formState: { errors, isDirty }, setValue, watch, reset } = useForm({
     defaultValues: {
       name: '',
       sku: '',
@@ -76,29 +86,68 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     }
   }, [product, reset, setValue]);
 
+  // Track form changes for unsaved changes warning
+  useEffect(() => {
+    const initialImages = product?.images || [];
+    const imagesChanged = JSON.stringify(images) !== JSON.stringify(initialImages);
+    setHasUnsavedChanges(isDirty || imagesChanged);
+  }, [isDirty, images, product?.images]);
+
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCategories(response.data.categories || response.data || []);
+      // Use safe API wrapper with automatic fallback
+      const categoriesData = await safeAdminAPI.categories.getAll();
+      setCategories(categoriesData || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      setCategories([]);
+      // Use new error handler (with fallback to old behavior)
+      handleApiError(error, 'Fetch categories');
+
+      // Additional fallback for absolute safety
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCategories(response.data.categories || response.data || []);
+      } catch (fallbackError) {
+        console.error('Fallback categories fetch also failed:', fallbackError);
+        setCategories([]);
+
+        // Show fallback error if needed
+        showToast({
+          type: 'error',
+          message: 'Failed to load categories. Some features may be limited.'
+        });
+      }
     }
   };
 
   const fetchBrands = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBrands(response.data.brands || response.data || []);
+      // Use safe API wrapper with automatic fallback
+      const brandsData = await safeAdminAPI.brands.getAll();
+      setBrands(brandsData || []);
     } catch (error) {
-      console.error('Error fetching brands:', error);
-      setBrands([]);
+      // Use new error handler (with fallback to old behavior)
+      handleApiError(error, 'Fetch brands');
+
+      // Additional fallback for absolute safety
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBrands(response.data.brands || response.data || []);
+      } catch (fallbackError) {
+        console.error('Fallback brands fetch also failed:', fallbackError);
+        setBrands([]);
+
+        // Show fallback error if needed
+        showToast({
+          type: 'error',
+          message: 'Failed to load brands. Some features may be limited.'
+        });
+      }
     }
   };
 
@@ -243,12 +292,31 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages(prev => {
-      const newImages = [...prev];
-      newImages.splice(index, 1);
-      return newImages;
-    });
+  const removeImage = async (index: number) => {
+    const confirmed = await showDeleteConfirmation('image');
+    if (confirmed) {
+      setImages(prev => {
+        const newImages = [...prev];
+        newImages.splice(index, 1);
+        return newImages;
+      });
+      showToast({
+        type: 'success',
+        message: 'Image removed successfully'
+      });
+    }
+  };
+
+  // Enhanced cancel handler with unsaved changes confirmation
+  const handleCancel = async () => {
+    if (hasUnsavedChanges) {
+      const confirmed = await showUnsavedChangesConfirmation();
+      if (confirmed) {
+        onCancel();
+      }
+    } else {
+      onCancel();
+    }
   };
 
   const handleFormSubmit = async (data: any) => {
@@ -310,6 +378,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
       console.log('📝 Submitting product data:', productData);
       await onSubmit(productData);
+      // Reset unsaved changes flag after successful submission
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Form submission error:', error);
     } finally {
@@ -332,7 +402,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
                   {product ? 'Update your product information' : 'Create a new product for your store'}
                 </p>
               </div>
-              <Button variant="outline" onClick={onCancel} className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+              <Button variant="outline" onClick={handleCancel} className="bg-white/10 border-white/20 text-white hover:bg-white/20">
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
@@ -671,7 +741,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <Button type="button" variant="outline" onClick={onCancel} disabled={loading} className="px-8 py-3 rounded-xl">
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={loading} className="px-8 py-3 rounded-xl">
                   Cancel
                 </Button>
                 <Button type="submit" disabled={loading} className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg">

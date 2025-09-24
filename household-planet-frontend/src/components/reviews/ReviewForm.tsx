@@ -2,7 +2,9 @@
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Star, Camera, X, Upload } from 'lucide-react';
+import { Star, Camera, X, Upload, LogIn } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface ReviewFormProps {
   productId: number;
@@ -14,8 +16,11 @@ export function ReviewForm({ productId, onSubmit }: ReviewFormProps) {
   const [comment, setComment] = useState('');
   const [photos, setPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const router = useRouter();
 
   const handlePhotoUpload = (files: FileList | null) => {
     if (files) {
@@ -30,8 +35,15 @@ export function ReviewForm({ productId, onSubmit }: ReviewFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
+    if (!user) {
+      setError('Please log in to submit a review');
+      return;
+    }
+    
     if (rating === 0) {
-      alert('Please select a rating');
+      setError('Please select a rating');
       return;
     }
 
@@ -49,25 +61,55 @@ export function ReviewForm({ productId, onSubmit }: ReviewFormProps) {
         formData.append('images', photo);
       });
 
+      console.log('Submitting review with data:', {
+        productId,
+        rating,
+        comment: comment.trim(),
+        photosCount: photos.length
+      });
+
       await onSubmit(formData);
       
       // Reset form
       setRating(0);
       setComment('');
       setPhotos([]);
-      
-      alert('Review submitted successfully!');
-    } catch (error) {
+      setError(null);
+    } catch (error: any) {
       console.error('Error submitting review:', error);
-      alert('Failed to submit review. Please try again.');
+      setError(error.message || 'Failed to submit review. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (!user) {
+    return (
+      <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Write a Review</h3>
+        <div className="text-center py-8">
+          <LogIn className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 mb-4">Please log in to write a review</p>
+          <Button
+            onClick={() => router.push('/login')}
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+          >
+            Log In
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg">
       <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Write a Review</h3>
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

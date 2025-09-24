@@ -125,8 +125,17 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
     }
   };
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const submitReview = async () => {
-    if (!user || newReview.rating === 0) return;
+    if (!user || newReview.rating === 0) {
+      setSubmitError('Please provide a rating');
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError(null);
 
     try {
       const formData = new FormData();
@@ -141,7 +150,9 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
         formData.append(`images`, image);
       });
 
-      await api.post('/reviews', formData);
+      const response = await api.post('/reviews', formData);
+
+      console.log('Review submitted successfully:', response);
 
       // Reset form and reload reviews
       setNewReview({
@@ -153,10 +164,19 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
         images: []
       });
       setShowReviewForm(false);
-      loadReviews();
-      loadStats();
-    } catch (error) {
+      
+      // Reload reviews and stats
+      await loadReviews(1);
+      await loadStats();
+      
+      // Show success message
+      alert('Review submitted successfully!');
+    } catch (error: any) {
       console.error('Error submitting review:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit review';
+      setSubmitError(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -455,20 +475,31 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
                   <p className="text-xs text-gray-500">Upload up to 5 photos</p>
                 </div>
 
+                {/* Error Message */}
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                    <p className="text-red-700 text-sm">{submitError}</p>
+                  </div>
+                )}
+
                 {/* Submit */}
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
-                    onClick={() => setShowReviewForm(false)}
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      setSubmitError(null);
+                    }}
                     className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    disabled={submitting}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={submitReview}
-                    disabled={newReview.rating === 0}
+                    disabled={newReview.rating === 0 || submitting}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit Review
+                    {submitting ? 'Submitting...' : 'Submit Review'}
                   </button>
                 </div>
               </div>
@@ -479,6 +510,23 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
 
       {/* Reviews List */}
       <div className="space-y-4">
+        {reviews.length === 0 && !loading && (
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-gray-400 mb-4">
+              <StarIcon className="h-12 w-12 mx-auto" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No reviews yet</h3>
+            <p className="text-gray-600 mb-4">Be the first to review this product!</p>
+            {canReview && user && (
+              <button
+                onClick={() => setShowReviewForm(true)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Write the First Review
+              </button>
+            )}
+          </div>
+        )}
         {reviews.map((review) => (
           <div key={review.id} className="bg-white rounded-lg border p-6">
             <div className="flex justify-between items-start mb-3">
@@ -575,7 +623,7 @@ export default function EnhancedReviewSystem({ productId, canReview = false }: E
       </div>
 
       {/* Load More */}
-      {hasMore && (
+      {hasMore && reviews.length > 0 && (
         <div className="text-center">
           <button
             onClick={() => loadReviews(page + 1)}

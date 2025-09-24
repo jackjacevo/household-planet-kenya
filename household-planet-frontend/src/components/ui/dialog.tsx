@@ -62,6 +62,13 @@ const DialogTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HT
 );
 DialogTitle.displayName = 'DialogTitle';
 
+const DialogDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
+  ({ className, ...props }, ref) => (
+    <p ref={ref} className={cn('text-sm text-gray-600', className)} {...props} />
+  )
+);
+DialogDescription.displayName = 'DialogDescription';
+
 const DialogTrigger = ({ children, asChild, ...props }: { children: React.ReactNode; asChild?: boolean; [key: string]: any }) => {
   if (asChild) {
     return React.cloneElement(children as React.ReactElement, props);
@@ -69,4 +76,4 @@ const DialogTrigger = ({ children, asChild, ...props }: { children: React.ReactN
   return <>{children}</>;
 };
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger };
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger };

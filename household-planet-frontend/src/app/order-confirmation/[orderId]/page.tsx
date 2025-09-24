@@ -92,8 +92,34 @@ export default function OrderConfirmationPage() {
               headers: { 'Authorization': `Bearer ${token}` },
             }
           );
-          setOrder((response as any).data);
-          setTrackingNumber((response as any).data.trackingNumber || generateTrackingNumber());
+          
+          const orderData = (response as any).data;
+          console.log('Loaded order data:', orderData);
+          
+          // Enhance order data with proper customer information
+          const enhancedOrder = {
+            ...orderData,
+            // Ensure customer info is properly populated
+            customerName: orderData.customerName || orderData.user?.name || orderData.user?.fullName || 'Not provided',
+            customerPhone: orderData.customerPhone || orderData.user?.phone || 'Not provided',
+            customerEmail: orderData.customerEmail || orderData.user?.email || 'Not provided',
+            // Ensure delivery location is properly formatted
+            deliveryLocationName: typeof orderData.deliveryLocation === 'string' 
+              ? orderData.deliveryLocation 
+              : orderData.deliveryLocation?.name || 'Not specified',
+            // Ensure shipping address is available
+            shippingAddress: orderData.shippingAddress || {
+              fullName: orderData.customerName || orderData.user?.name || 'Not provided',
+              phone: orderData.customerPhone || orderData.user?.phone || 'Not provided',
+              email: orderData.customerEmail || orderData.user?.email || 'Not provided',
+              street: orderData.deliveryAddress || '',
+              town: orderData.deliveryTown || '',
+              county: orderData.deliveryCounty || ''
+            }
+          };
+          
+          setOrder(enhancedOrder);
+          setTrackingNumber(enhancedOrder.trackingNumber || generateTrackingNumber());
           
           // Clear cart after successful order confirmation
           const orderCreated = localStorage.getItem('orderCreated');
@@ -109,6 +135,7 @@ export default function OrderConfirmationPage() {
           }
           return;
         } catch (authError: any) {
+          console.error('Authenticated order fetch failed:', authError);
           // If authenticated request fails, try guest lookup if we have completion data
           if (authError.response?.status === 401 || authError.response?.status === 403) {
             localStorage.removeItem('token'); // Clear invalid token
@@ -123,22 +150,54 @@ export default function OrderConfirmationPage() {
           const orderNumber = orderCompletionData.orderNumber || 
                              (typeof orderId === 'string' && orderId.includes('-') ? orderId : `ORDER-${orderId}`);
           
+          console.log('Attempting guest order lookup:', { orderNumber, phone: orderCompletionData.customerInfo.phone });
+          
           const response = await axios.get(
             `${process.env.NEXT_PUBLIC_API_URL}/api/orders/guest/${orderNumber}?phone=${encodeURIComponent(orderCompletionData.customerInfo.phone)}`
           );
           
-          // Transform guest order data to match expected format
+          const guestOrderData = (response as any).data;
+          console.log('Guest order data received:', guestOrderData);
+          
+          // Transform guest order data to match expected format with comprehensive mapping
           const guestOrder = {
-            ...(response as any).data,
+            ...guestOrderData,
             user: null,
-            customerName: (response as any).data.customerInfo?.name,
-            customerPhone: (response as any).data.customerInfo?.phone,
-            customerEmail: (response as any).data.customerInfo?.email,
+            // Map customer information from multiple possible sources
+            customerName: guestOrderData.customerName || 
+                         guestOrderData.customerInfo?.name || 
+                         orderCompletionData.customerInfo?.name || 
+                         'Guest Customer',
+            customerPhone: guestOrderData.customerPhone || 
+                          guestOrderData.customerInfo?.phone || 
+                          orderCompletionData.customerInfo?.phone || 
+                          'Not provided',
+            customerEmail: guestOrderData.customerEmail || 
+                          guestOrderData.customerInfo?.email || 
+                          orderCompletionData.customerInfo?.email || 
+                          'Not provided',
+            // Map delivery information
+            deliveryLocationName: guestOrderData.deliveryLocation || 
+                                 orderCompletionData.deliveryInfo?.location || 
+                                 'Not specified',
+            deliveryPrice: guestOrderData.deliveryPrice || 
+                          guestOrderData.shippingCost || 
+                          orderCompletionData.deliveryInfo?.cost || 
+                          0,
+            // Create comprehensive shipping address
             shippingAddress: {
-              fullName: (response as any).data.customerInfo?.name,
-              phone: (response as any).data.customerInfo?.phone,
-              email: (response as any).data.customerInfo?.email
-            }
+              fullName: guestOrderData.customerName || orderCompletionData.customerInfo?.name || 'Guest Customer',
+              phone: guestOrderData.customerPhone || orderCompletionData.customerInfo?.phone || 'Not provided',
+              email: guestOrderData.customerEmail || orderCompletionData.customerInfo?.email || 'Not provided',
+              street: guestOrderData.deliveryAddress || '',
+              town: guestOrderData.deliveryTown || '',
+              county: guestOrderData.deliveryCounty || ''
+            },
+            // Ensure payment information is available
+            paymentMethod: guestOrderData.paymentMethod || orderCompletionData.paymentInfo?.method || 'CASH_ON_DELIVERY',
+            paymentStatus: guestOrderData.paymentStatus || 'PENDING',
+            // Map order notes
+            notes: guestOrderData.notes || orderCompletionData.deliveryInfo?.notes || ''
           };
           
           setOrder(guestOrder);
@@ -279,7 +338,7 @@ export default function OrderConfirmationPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${order.id}/receipt`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/receipt/${order.id}`, {
         method: 'GET',
         headers
       });
@@ -543,28 +602,50 @@ export default function OrderConfirmationPage() {
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     <p><span className="text-gray-600">Name:</span> 
                       <span className="font-medium">
-                        {(order as any).customerInfo?.name || (order as any).customerName || order.shippingAddress?.fullName || (order as any).user?.name || 'Not provided'}
+                        {(order as any).customerName || 
+                         (order as any).customerInfo?.name || 
+                         order.shippingAddress?.fullName || 
+                         (order as any).user?.name || 
+                         (order as any).user?.fullName || 
+                         orderCompletionData?.customerInfo?.name || 
+                         'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Phone:</span> 
                       <span className="font-medium">
-                        {(order as any).customerInfo?.phone || (order as any).customerPhone || (order.shippingAddress as any)?.phone || (order as any).user?.phone || 'Not provided'}
+                        {(order as any).customerPhone || 
+                         (order as any).customerInfo?.phone || 
+                         (order.shippingAddress as any)?.phone || 
+                         (order as any).user?.phone || 
+                         orderCompletionData?.customerInfo?.phone || 
+                         'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Email:</span> 
                       <span className="font-medium">
-                        {(order as any).customerInfo?.email || (order as any).customerEmail || (order.shippingAddress as any)?.email || (order as any).user?.email || 'Not provided'}
+                        {(order as any).customerEmail || 
+                         (order as any).customerInfo?.email || 
+                         (order.shippingAddress as any)?.email || 
+                         (order as any).user?.email || 
+                         orderCompletionData?.customerInfo?.email || 
+                         'Not provided'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Location:</span> 
                       <span className="font-medium">
-                        {(order.deliveryLocation as any)?.name || order.deliveryLocation || 'Not provided'}
+                        {(order as any).deliveryLocationName || 
+                         (order.deliveryLocation as any)?.name || 
+                         order.deliveryLocation || 
+                         orderCompletionData?.deliveryInfo?.location || 
+                         'Not specified'}
                       </span>
                     </p>
-                    {(order as any).deliveryInfo?.notes && (
+                    {((order as any).notes || (order as any).deliveryInfo?.notes || orderCompletionData?.deliveryInfo?.notes) && (
                       <p><span className="text-gray-600">Notes:</span> 
                         <span className="font-medium text-xs">
-                          {(order as any).deliveryInfo.notes}
+                          {(order as any).notes || 
+                           (order as any).deliveryInfo?.notes || 
+                           orderCompletionData?.deliveryInfo?.notes}
                         </span>
                       </p>
                     )}
@@ -579,22 +660,35 @@ export default function OrderConfirmationPage() {
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     <p><span className="text-gray-600">Method:</span> 
                       <span className="font-medium ml-1">
-                        {order.paymentMethod === 'MPESA' && '📱 M-Pesa'}
-                        {order.paymentMethod === 'CARD' && '💳 Card'}
-                        {order.paymentMethod === 'CASH_ON_DELIVERY' && '💵 Cash on Delivery'}
-                        {order.paymentMethod === 'BANK_TRANSFER' && '🏦 Bank Transfer'}
+                        {(order.paymentMethod || orderCompletionData?.paymentInfo?.method) === 'MPESA' && '📱 M-Pesa'}
+                        {(order.paymentMethod || orderCompletionData?.paymentInfo?.method) === 'CARD' && '💳 Card'}
+                        {(order.paymentMethod || orderCompletionData?.paymentInfo?.method) === 'CASH_ON_DELIVERY' && '💵 Cash on Delivery'}
+                        {(order.paymentMethod || orderCompletionData?.paymentInfo?.method) === 'BANK_TRANSFER' && '🏦 Bank Transfer'}
+                        {!(order.paymentMethod || orderCompletionData?.paymentInfo?.method) && '💵 Cash on Delivery'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Status:</span> 
                       <span className={`font-medium ml-1 px-2 py-1 rounded-full text-xs ${
                         order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' :
                         order.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                        order.paymentStatus === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
                         {order.paymentStatus || 'PENDING'}
                       </span>
                     </p>
-                    <p><span className="text-gray-600">Total:</span> <span className="font-bold text-green-600">{formatPrice(order.total)}</span></p>
+                    <p><span className="text-gray-600">Total:</span> 
+                      <span className="font-bold text-green-600">
+                        {formatPrice(order.total || orderCompletionData?.paymentInfo?.total || 0)}
+                      </span>
+                    </p>
+                    {orderCompletionData?.promoInfo && (
+                      <p><span className="text-gray-600">Promo:</span> 
+                        <span className="font-medium text-green-600 ml-1">
+                          {orderCompletionData.promoInfo.code} (-{formatPrice(orderCompletionData.promoInfo.discountAmount)})
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -682,17 +776,39 @@ export default function OrderConfirmationPage() {
                     </h3>
                     <div className="space-y-2">
                       <p className="font-semibold text-gray-800">
-                        {typeof order.deliveryLocation === 'string' 
+                        {(order as any).deliveryLocationName || 
+                         (typeof order.deliveryLocation === 'string' 
                           ? order.deliveryLocation 
-                          : (order.deliveryLocation as any)?.name || 'N/A'}
+                          : (order.deliveryLocation as any)?.name) || 
+                         orderCompletionData?.deliveryInfo?.location || 
+                         'Not specified'}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Delivery Cost: <span className="font-medium text-orange-600">{formatPrice(order.deliveryPrice || order.shippingCost || (order as any).deliveryCost || 0)}</span>
+                        Delivery Cost: <span className="font-medium text-orange-600">
+                          {formatPrice(
+                            order.deliveryPrice || 
+                            order.shippingCost || 
+                            (order as any).deliveryCost || 
+                            orderCompletionData?.deliveryInfo?.cost || 
+                            0
+                          )}
+                        </span>
                       </p>
-                      {order.shippingAddress && (
+                      {(order.shippingAddress || orderCompletionData?.customerInfo) && (
                         <div className="text-sm text-gray-600">
-                          <p>{order.shippingAddress.street}</p>
-                          <p>{order.shippingAddress.town}, {order.shippingAddress.county}</p>
+                          {order.shippingAddress?.street && <p>{order.shippingAddress.street}</p>}
+                          {(order.shippingAddress?.town || order.shippingAddress?.county) && (
+                            <p>
+                              {order.shippingAddress.town}
+                              {order.shippingAddress.town && order.shippingAddress.county && ', '}
+                              {order.shippingAddress.county}
+                            </p>
+                          )}
+                          {orderCompletionData?.customerInfo && !order.shippingAddress?.street && (
+                            <p className="text-xs text-gray-500">
+                              Contact: {orderCompletionData.customerInfo.phone}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -812,10 +928,15 @@ export default function OrderConfirmationPage() {
                     <span className="text-gray-600">Subtotal ({order.items?.length || 0})</span>
                     <span className="font-medium">{formatPrice(order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || order.subtotal || 0)}</span>
                   </div>
-                  {(order as any).promoCode && (order as any).discountAmount && (order as any).discountAmount > 0 && (
+                  {((order as any).promoCode || orderCompletionData?.promoInfo?.code) && 
+                   ((order as any).discountAmount > 0 || orderCompletionData?.promoInfo?.discountAmount > 0) && (
                     <div className="flex justify-between text-sm bg-green-50 -mx-2 px-2 py-1 rounded">
-                      <span className="text-green-700 font-medium">Promo Discount ({(order as any).promoCode})</span>
-                      <span className="font-medium text-green-600">-{formatPrice((order as any).discountAmount)}</span>
+                      <span className="text-green-700 font-medium">
+                        Promo Discount ({(order as any).promoCode || orderCompletionData?.promoInfo?.code})
+                      </span>
+                      <span className="font-medium text-green-600">
+                        -{formatPrice((order as any).discountAmount || orderCompletionData?.promoInfo?.discountAmount || 0)}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
@@ -827,9 +948,13 @@ export default function OrderConfirmationPage() {
                       <span className="text-sm sm:text-lg font-bold text-gray-800">Total</span>
                       <span className="text-lg sm:text-2xl font-bold text-green-600">
                         {formatPrice(
-                          (order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || order.subtotal || 0) - 
-                          ((order as any).discountAmount || 0) + 
-                          (order.deliveryPrice || order.shippingCost || (order as any).deliveryCost || 0)
+                          order.total || 
+                          orderCompletionData?.paymentInfo?.total || 
+                          (
+                            (order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || order.subtotal || 0) - 
+                            ((order as any).discountAmount || orderCompletionData?.promoInfo?.discountAmount || 0) + 
+                            (order.deliveryPrice || order.shippingCost || (order as any).deliveryCost || orderCompletionData?.deliveryInfo?.cost || 0)
+                          )
                         )}
                       </span>
                     </div>

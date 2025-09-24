@@ -240,6 +240,17 @@ export class OrdersController {
     return this.ordersService.createReturn(req.user.id, createReturnDto);
   }
 
+  @Get(':id/receipt')
+  async getReceipt(
+    @Request() req,
+    @Param('id') orderId: string,
+    @Query('preview') preview: string,
+    @Res() res: Response
+  ) {
+    // Receipt is the same as invoice
+    return this.getInvoice(req, orderId, preview, res);
+  }
+
   @Get(':id/invoice')
   async getInvoice(
     @Request() req,

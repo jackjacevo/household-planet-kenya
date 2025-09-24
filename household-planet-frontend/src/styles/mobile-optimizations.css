@@ -249,6 +249,27 @@
   }
 }
 
+/* Mobile image optimizations */
+@media (max-width: 768px) {
+  .mobile-hero-image {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: scroll !important;
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  .mobile-image-preload {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+}
+
 /* Mobile utility classes */
 @media (max-width: 768px) {
   .mobile-hidden {
@@ -277,5 +298,17 @@
   
   .mobile-text-left {
     text-align: left !important;
+  }
+}
+
+/* Improve mobile image loading performance */
+@media (max-width: 768px) {
+  [style*="background-image"] {
+    background-attachment: scroll !important;
+  }
+  
+  .hero-section {
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }

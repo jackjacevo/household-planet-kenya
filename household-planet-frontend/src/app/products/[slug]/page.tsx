@@ -92,7 +92,9 @@ export default function ProductDetailPage() {
 
   const handleReviewSubmit = async (formData: FormData) => {
     try {
+      console.log('Submitting review for product:', product?.id);
       const response = await api.createReview(formData);
+      console.log('Review submission response:', response);
       
       // Show success message
       showToast({
@@ -100,19 +102,33 @@ export default function ProductDetailPage() {
         message: 'Review Submitted! ⭐ Thank you for your feedback. Your review has been posted.'
       });
       
-      // Refresh reviews after submission
+      // Refresh reviews after submission with a small delay
       if (product) {
-        await fetchReviews(product.id);
+        setTimeout(async () => {
+          await fetchReviews(product.id);
+        }, 1000);
       }
       
       return response;
     } catch (error: any) {
       console.error('Error submitting review:', error);
       
+      let errorMessage = 'Failed to submit review. Please try again.';
+      
+      if (error.message) {
+        if (error.message.includes('already reviewed')) {
+          errorMessage = 'You have already reviewed this product.';
+        } else if (error.message.includes('Authentication')) {
+          errorMessage = 'Please log in to submit a review.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       // Show error message
       showToast({
         type: 'error',
-        message: 'Review Failed ❌ - ' + ((error as Error).message || 'Failed to submit review. Please try again.'),
+        message: 'Review Failed ❌ - ' + errorMessage,
       });
       
       throw error;

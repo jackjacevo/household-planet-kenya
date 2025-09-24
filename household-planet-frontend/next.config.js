@@ -1,6 +1,28 @@
 /** @type {import('next').NextConfig} */
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
   output: 'standalone',
+
+  // Optimize build performance
+  swcMinify: true,
+  poweredByHeader: false,
+  compress: true,
+
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'recharts'],
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
+  },
 
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
@@ -33,7 +55,8 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
+    // Client-side fallbacks
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -43,8 +66,73 @@ const nextConfig = {
         crypto: false,
       };
     }
+
+    // Optimize bundle splitting in production
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks.cacheGroups,
+            // Vendor chunk for large libraries
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              enforce: true,
+            },
+            // Admin-specific chunk
+            admin: {
+              test: /[\\/]src[\\/].*admin.*[\\/]/,
+              name: 'admin',
+              chunks: 'all',
+              priority: 10,
+            },
+            // UI components chunk
+            ui: {
+              test: /[\\/]src[\\/]components[\\/]ui[\\/]/,
+              name: 'ui',
+              chunks: 'all',
+              priority: 9,
+            },
+            // Chart libraries chunk
+            charts: {
+              test: /[\\/]node_modules[\\/](chart\.js|recharts|react-chartjs-2)[\\/]/,
+              name: 'charts',
+              chunks: 'all',
+              priority: 8,
+            },
+            // React Query chunk
+            reactQuery: {
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]react-query[\\/]/,
+              name: 'react-query',
+              chunks: 'all',
+              priority: 7,
+            },
+          },
+        },
+      };
+    }
+
     return config;
   },
+
+  // Enable static optimization
+  trailingSlash: false,
+  generateEtags: true,
+
+  // Optimize fonts and assets
+  optimizeFonts: true,
+
+  // Production optimizations
+  ...(process.env.NODE_ENV === 'production' && {
+    compiler: {
+      removeConsole: {
+        exclude: ['error'],
+      },
+    },
+  }),
 }
 
-module.exports = nextConfig
+module.exports = withBundleAnalyzer(nextConfig)

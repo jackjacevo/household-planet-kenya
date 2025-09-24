@@ -556,7 +556,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/20 w-full">
+    <div className="min-h-screen bg-white w-full">
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-8">
         <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">Checkout</h1>
