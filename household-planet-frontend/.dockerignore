@@ -6,12 +6,10 @@ npm-debug.log*
 .git
 .gitignore
 README.md
-.env
-.env.local
-.env.production.local
-.env.development.local
+.env*
 .nyc_output
 coverage
 .DS_Store
 *.tgz
 *.tar.gz
+docker-compose.yml
