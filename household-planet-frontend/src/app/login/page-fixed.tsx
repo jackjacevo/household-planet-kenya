@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -8,7 +8,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+
+// Import components directly to avoid circular dependencies
+import { api } from '@/lib/api'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -17,13 +19,13 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>
 
-function LoginContent() {
+export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, loading } = useAuth()
 
   useEffect(() => {
     const message = searchParams.get('message')
@@ -42,13 +44,18 @@ function LoginContent() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    setLoading(true)
+
     try {
-      await login(data.email, data.password)
-      window.location.href = '/'
+      const response = await api.login(data.email, data.password) as any
+      localStorage.setItem('token', response.accessToken)
+      router.push('/')
     } catch (err) {
       setError('root', {
         message: 'Invalid email or password. Please try again.'
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -61,17 +68,17 @@ function LoginContent() {
           className="w-full max-w-md"
         >
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
+        <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center shadow-lg"
+            className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg"
           >
-            <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            <Lock className="w-8 h-8 text-white" />
           </motion.div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-sm sm:text-base text-gray-600">Sign in to your Household Planet account</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <p className="text-gray-600">Sign in to your Household Planet account</p>
         </div>
 
         {/* Login Form */}
@@ -79,9 +86,9 @@ function LoginContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 border border-gray-100"
+          className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Success Message */}
             {successMessage && (
               <motion.div
@@ -117,7 +124,7 @@ function LoginContent() {
                   {...register('email')}
                   type="email"
                   placeholder="Enter your email"
-                  className={`flex h-10 sm:h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                  className={`flex h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 />
               </div>
               {errors.email && (
@@ -143,7 +150,7 @@ function LoginContent() {
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  className={`flex h-10 sm:h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 pr-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                  className={`flex h-12 w-full rounded-md border bg-white px-3 py-2 pl-10 pr-10 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 />
                 <button
                   type="button"
@@ -179,7 +186,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-10 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md disabled:opacity-50 inline-flex items-center justify-center text-sm sm:text-base"
+              className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md disabled:opacity-50 inline-flex items-center justify-center"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -194,15 +201,6 @@ function LoginContent() {
               )}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-gray-200" />
-            <span className="px-4 text-sm text-gray-500 bg-white">or</span>
-            <div className="flex-1 border-t border-gray-200" />
-          </div>
-
-
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
@@ -219,24 +217,5 @@ function LoginContent() {
         </motion.div>
       </motion.div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-              <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Loading...</h1>
-          </div>
-        </div>
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
   )
 }
