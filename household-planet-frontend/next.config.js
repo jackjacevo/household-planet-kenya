@@ -24,17 +24,25 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/_next/static/css/(.*).css',
         headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: 'Content-Type',
+            value: 'text/css',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
       {
-        source: '/(.*)\.(css|js)',
+        source: '/_next/static/js/(.*).js',
         headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
