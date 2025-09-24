@@ -4,7 +4,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig = {
-  output: 'standalone',
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
 
   // Optimize build performance
