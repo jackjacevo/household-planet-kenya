@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import { join, resolve, basename, extname } from 'path';
 import { randomUUID } from 'crypto';
 import { AppLogger } from './logger.service';
+import { LogSanitizer } from '../utils/log-sanitizer';
 
 @Injectable()
 export class SecureUploadService {
@@ -13,12 +14,7 @@ export class SecureUploadService {
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
     try {
-      console.log('🔍 SecureUploadService.uploadFile called with:', {
-        originalname: file.originalname,
-        size: file.size,
-        mimetype: file.mimetype,
-        folder: folder
-      });
+      LogSanitizer.log('🔍 SecureUploadService.uploadFile called:', { name: file.originalname, size: file.size, folder });
       
       this.validateFile(file);
       
@@ -43,7 +39,7 @@ export class SecureUploadService {
       console.log('🎯 Returning public path:', publicPath);
       return publicPath;
     } catch (error) {
-      console.error('❌ Upload failed:', error);
+      LogSanitizer.log('❌ Upload failed:', error.message);
       this.logger.error(`Upload failed for ${file?.originalname}: ${error.message}`, error.stack);
       this.logger.logFileOperation('upload', file?.originalname || 'unknown', false);
       throw new BadRequestException(`Upload failed: ${error.message}`);

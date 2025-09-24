@@ -3,10 +3,10 @@
  * Handles both local uploads and external URLs
  */
 export function getImageUrl(imagePath: string | null | undefined): string {
-  console.log('🖼️ getImageUrl called with:', imagePath);
+  // getImageUrl called
   // Return placeholder if no image path or empty string
   if (!imagePath || imagePath.trim() === '') {
-    console.log('❌ No image path, using placeholder');
+    // No image path, using placeholder
     return '/images/products/placeholder.svg';
   }
 
@@ -32,8 +32,8 @@ export function getImageUrl(imagePath: string | null | undefined): string {
     return '/images/products/placeholder.svg';
   }
 
-  // If it's already a full URL (starts with http) or base64 data, return as is
-  if (cleanPath.startsWith('http') || cleanPath.startsWith('data:')) {
+  // If it's already a full URL (starts with http), return as is
+  if (cleanPath.startsWith('http')) {
     return cleanPath;
   }
 

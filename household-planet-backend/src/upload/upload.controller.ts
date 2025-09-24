@@ -55,8 +55,8 @@ export class UploadController {
   async uploadProductImage(@UploadedFile() file: Express.Multer.File, @Request() req) {
     try {
       console.log('🔍 Upload product endpoint called');
-      console.log('📁 File received:', file ? { name: file.originalname, size: file.size, type: file.mimetype } : 'No file');
-      console.log('👤 User:', req.user ? { id: req.user.userId, email: req.user.email } : 'No user');
+      console.log('📁 File received:', file ? `${file.originalname} (${file.size} bytes)` : 'No file');
+      console.log('👤 User:', req.user?.userId || 'No user');
       
       if (!file) {
         console.log('❌ No file uploaded');
@@ -65,7 +65,7 @@ export class UploadController {
       
       this.logger.log(`Product image upload by user ${req.user?.userId}`);
       const result = await this.secureUpload.uploadFile(file, 'products');
-      console.log('✅ Upload successful:', result);
+      console.log('✅ Upload successful');
       return { 
         success: true,
         url: typeof result === 'string' ? result : (result as any).url,
@@ -84,8 +84,8 @@ export class UploadController {
   async uploadProductImages(@UploadedFiles() files: Express.Multer.File[], @Request() req) {
     try {
       console.log('🔍 Upload products endpoint called');
-      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
-      console.log('👤 User:', req.user ? { id: req.user.userId, email: req.user.email } : 'No user');
+      console.log('📁 Files received:', files ? `${files.length} files` : 'No files');
+      console.log('👤 User:', req.user?.userId || 'No user');
       
       if (!files || files.length === 0) {
         console.log('❌ No files uploaded');
@@ -101,7 +101,7 @@ export class UploadController {
       const results = await Promise.all(uploadPromises);
       const images = results.map(result => typeof result === 'string' ? result : (result as any).url);
       
-      console.log('✅ Upload successful:', images);
+      console.log('✅ Upload successful:', images.length, 'images');
       return { 
         success: true,
         images,
@@ -120,7 +120,7 @@ export class UploadController {
   async uploadCategoryImage(@UploadedFile() file: Express.Multer.File, @Request() req) {
     try {
       console.log('🔍 Upload category endpoint called');
-      console.log('📁 File received:', file ? { name: file.originalname, size: file.size, type: file.mimetype } : 'No file');
+      console.log('📁 File received:', file ? `${file.originalname} (${file.size} bytes)` : 'No file');
       
       if (!file) {
         console.log('❌ No file uploaded');
@@ -129,7 +129,7 @@ export class UploadController {
       
       this.logger.log(`Category image upload by user ${req.user?.userId}`);
       const result = await this.secureUpload.uploadFile(file, 'categories');
-      console.log('✅ Category upload successful:', result);
+      console.log('✅ Category upload successful');
       return { 
         success: true,
         url: typeof result === 'string' ? result : (result as any).url,
@@ -167,7 +167,7 @@ export class UploadController {
   async uploadImages(@UploadedFiles() files: Express.Multer.File[], @Request() req) {
     try {
       console.log('🔍 Upload images endpoint called');
-      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
+      console.log('📁 Files received:', files ? `${files.length} files` : 'No files');
       
       if (!files || files.length === 0) {
         console.log('❌ No images uploaded');
@@ -183,7 +183,7 @@ export class UploadController {
       const results = await Promise.all(uploadPromises);
       const images = results.map(result => typeof result === 'string' ? result : (result as any).url);
       
-      console.log('✅ Multiple images upload successful:', images);
+      console.log('✅ Multiple images upload successful:', images.length, 'images');
       return { 
         success: true,
         images,

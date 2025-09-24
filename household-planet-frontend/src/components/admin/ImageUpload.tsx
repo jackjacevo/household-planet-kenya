@@ -89,7 +89,7 @@ export default function ImageUpload({
           }
         );
         
-        console.log('Upload response:', (response as any).data);
+        console.log('Upload response: Success');
         
         if ((response as any).data.success && (response as any).data.images) {
           onImagesChange([...images, ...(response as any).data.images]);
@@ -101,14 +101,8 @@ export default function ImageUpload({
           throw new Error('Upload failed: Invalid response format');
         }
       } catch (apiError) {
-        // Fallback: Create local blob URLs for immediate preview
-        console.warn('Image upload API failed, using local preview');
-        const localUrls = filesToProcess.map(file => URL.createObjectURL(file));
-        onImagesChange([...images, ...localUrls]);
-        setUploadStatus({ 
-          type: 'success', 
-          message: `Images ready for upload (${filesToProcess.length} files)` 
-        });
+        console.error('Image upload failed:', apiError);
+        throw new Error('Upload failed. Please try again.');
       }
       
       // Clear success message after 3 seconds
@@ -145,10 +139,7 @@ export default function ImageUpload({
       }
     }
     
-    // Clean up blob URLs
-    if (imageUrl && imageUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(imageUrl);
-    }
+    // No blob URL cleanup needed - using file paths only
     
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
@@ -261,7 +252,7 @@ export default function ImageUpload({
                     alt={`Product image ${index + 1}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.error('Image failed to load:', getImageUrl(image));
+                      console.error('Image failed to load for index:', index);
                       e.currentTarget.src = '/images/products/placeholder.svg';
                     }}
                   />

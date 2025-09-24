@@ -105,7 +105,7 @@ export class AdminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: false, forbidNonWhitelisted: false }))
   createProduct(@Body() createProductDto: CreateProductDto, @Req() req) {
-    console.log('Received product creation request:', JSON.stringify(createProductDto, null, 2));
+    console.log('Received product creation request for:', createProductDto.name);
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '127.0.0.1';
     const userAgent = req.get('User-Agent') || 'Unknown';
     return this.adminService.createProduct(createProductDto, req.user?.id, ipAddress, userAgent);
@@ -195,8 +195,8 @@ export class AdminController {
   uploadTempImages(@UploadedFiles() files: Express.Multer.File[], @Req() req) {
     try {
       console.log('🔍 Admin temp images upload endpoint called');
-      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
-      console.log('👤 User:', req.user ? { id: req.user.id, email: req.user.email } : 'No user');
+      console.log('📁 Files received:', files ? `${files.length} files` : 'No files');
+      console.log('👤 User:', req.user?.id || 'No user');
       
       if (!files || files.length === 0) {
         console.log('❌ No files uploaded to temp endpoint');
@@ -227,7 +227,7 @@ export class AdminController {
   uploadProductImages(@Param('id', ParseIntPipe) id: number, @UploadedFiles() files: Express.Multer.File[], @Req() req) {
     try {
       console.log(`🔍 Admin product ${id} images upload endpoint called`);
-      console.log('📁 Files received:', files ? files.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) : 'No files');
+      console.log('📁 Files received:', files ? `${files.length} files` : 'No files');
       
       if (!files || files.length === 0) {
         console.log('❌ No files uploaded to product images endpoint');

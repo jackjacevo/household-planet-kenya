@@ -23,26 +23,9 @@ async function bootstrap() {
   const originalConsoleError = console.error;
   const originalConsoleWarn = console.warn;
   
-  const filterBase64 = (args: any[]) => {
-    return args.map(arg => {
-      if (typeof arg === 'string' && arg.includes('data:image/')) {
-        return arg.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+\/=]+/g, 'data:image/[BASE64_HIDDEN]');
-      }
-      return arg;
-    });
-  };
+  // No base64 filtering needed - using file paths only
   
-  console.log = (...args: any[]) => {
-    originalConsoleLog(...filterBase64(args));
-  };
-  
-  console.error = (...args: any[]) => {
-    originalConsoleError(...filterBase64(args));
-  };
-  
-  console.warn = (...args: any[]) => {
-    originalConsoleWarn(...filterBase64(args));
-  };
+  // Using original console methods - no base64 data to filter
   
   // Initialize database
   const logger = new Logger('Bootstrap');
