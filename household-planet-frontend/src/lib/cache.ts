@@ -1,7 +1,15 @@
 // Browser cache utilities
 export class BrowserCache {
   private static instance: BrowserCache;
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  protected cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+  protected getCacheKeys(): IterableIterator<string> {
+    return this.cache.keys();
+  }
+
+  protected deleteFromCache(key: string): boolean {
+    return this.cache.delete(key);
+  }
 
   static getInstance(): BrowserCache {
     if (!BrowserCache.instance) {
@@ -191,9 +199,9 @@ export class AdminCache extends BrowserCache {
   // Helper to clear by prefix
   private clearByPrefix(prefix: string): void {
     // Clear memory cache
-    for (const key of this.cache.keys()) {
+    for (const key of this.getCacheKeys()) {
       if (key.startsWith(prefix)) {
-        this.cache.delete(key);
+        this.deleteFromCache(key);
       }
     }
 
@@ -221,7 +229,7 @@ export class AdminCache extends BrowserCache {
       total: 0
     };
 
-    for (const key of this.cache.keys()) {
+    for (const key of this.getCacheKeys()) {
       if (key.startsWith('admin:dashboard:')) stats.dashboard++;
       else if (key.startsWith('admin:orders:')) stats.orders++;
       else if (key.startsWith('admin:products:')) stats.products++;
