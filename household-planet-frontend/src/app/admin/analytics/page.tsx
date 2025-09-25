@@ -22,7 +22,7 @@ export default function AdminAnalytics() {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dashboard`);
       if (response.ok) {
         const result = await response.json();
         setData(result);

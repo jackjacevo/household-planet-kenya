@@ -49,49 +49,49 @@ class BaseApiService {
 class ProductsApiService extends BaseApiService {
   async getProducts(): Promise<any[]> {
     return this.handleRequest(
-      () => secureApiClient.get('/api/admin/products'),
+      () => secureApiClient.get('/products'),
       'products.getAll'
     );
   }
 
   async getProduct(id: number): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.get(`/api/admin/products/${id}`),
+      () => secureApiClient.get(`/products/${id}`),
       'products.getOne'
     );
   }
 
   async createProduct(data: any): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/admin/products', data),
+      () => secureApiClient.post('/products', data),
       'products.create'
     );
   }
 
   async updateProduct(id: number, data: any): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.put(`/api/admin/products/${id}`, data),
+      () => secureApiClient.put(`/products/${id}`, data),
       'products.update'
     );
   }
 
   async deleteProduct(id: number): Promise<void> {
     return this.handleRequest(
-      () => secureApiClient.delete(`/api/admin/products/${id}`),
+      () => secureApiClient.delete(`/products/${id}`),
       'products.delete'
     );
   }
 
   async bulkDeleteProducts(productIds: number[]): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/admin/products/bulk-delete', { productIds }),
+      () => secureApiClient.post('/products/bulk-delete', { productIds }),
       'products.bulkDelete'
     );
   }
 
   async uploadTempImages(formData: FormData): Promise<{ images: string[]; success: boolean; message: string }> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/admin/products/temp/images', formData, {
+      () => secureApiClient.post('/products/temp/images', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000
       }),
@@ -104,42 +104,42 @@ class ProductsApiService extends BaseApiService {
 class CategoriesApiService extends BaseApiService {
   async getCategories(): Promise<any[]> {
     return this.handleRequest(
-      () => secureApiClient.get('/api/categories'),
+      () => secureApiClient.get('/categories'),
       'categories.getAll'
     );
   }
 
   async getCategory(id: number): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.get(`/api/categories/${id}`),
+      () => secureApiClient.get(`/categories/${id}`),
       'categories.getOne'
     );
   }
 
   async createCategory(data: any): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/admin/categories', data),
+      () => secureApiClient.post('/categories', data),
       'categories.create'
     );
   }
 
   async updateCategory(id: number, data: any): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.put(`/api/admin/categories/${id}`, data),
+      () => secureApiClient.put(`/categories/${id}`, data),
       'categories.update'
     );
   }
 
   async deleteCategory(id: number): Promise<void> {
     return this.handleRequest(
-      () => secureApiClient.delete(`/api/admin/categories/${id}`),
+      () => secureApiClient.delete(`/categories/${id}`),
       'categories.delete'
     );
   }
 
   async uploadCategoryImage(formData: FormData): Promise<{ url: string }> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/admin/categories/upload-image', formData, {
+      () => secureApiClient.post('/categories/upload-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       }),
       'categories.uploadImage'
@@ -151,35 +151,35 @@ class CategoriesApiService extends BaseApiService {
 class BrandsApiService extends BaseApiService {
   async getBrands(): Promise<any[]> {
     return this.handleRequest(
-      () => secureApiClient.get('/api/admin/brands'),
+      () => secureApiClient.get('/brands'),
       'brands.getAll'
     );
   }
 
   async getBrand(id: number): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.get(`/api/admin/brands/${id}`),
+      () => secureApiClient.get(`/brands/${id}`),
       'brands.getOne'
     );
   }
 
   async createBrand(data: any): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/admin/brands', data),
+      () => secureApiClient.post('/brands', data),
       'brands.create'
     );
   }
 
   async updateBrand(id: number, data: any): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.put(`/api/admin/brands/${id}`, data),
+      () => secureApiClient.put(`/brands/${id}`, data),
       'brands.update'
     );
   }
 
   async deleteBrand(id: number): Promise<void> {
     return this.handleRequest(
-      () => secureApiClient.delete(`/api/admin/brands/${id}`),
+      () => secureApiClient.delete(`/brands/${id}`),
       'brands.delete'
     );
   }
@@ -190,35 +190,35 @@ class OrdersApiService extends BaseApiService {
   async getOrders(params?: any): Promise<PaginatedResponse> {
     const queryParams = new URLSearchParams(params || {});
     return this.handleRequest(
-      () => secureApiClient.get(`/api/orders?${queryParams}`),
+      () => secureApiClient.get(`/orders?${queryParams}`),
       'orders.getAll'
     );
   }
 
   async getOrderStats(): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.get('/api/orders/admin/stats'),
+      () => secureApiClient.get('/orders/admin/stats'),
       'orders.getStats'
     );
   }
 
   async updateOrderStatus(id: number, data: { status: string; notes?: string }): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.put(`/api/orders/${id}/status`, data),
+      () => secureApiClient.put(`/orders/${id}/status`, data),
       'orders.updateStatus'
     );
   }
 
   async deleteOrder(id: number): Promise<void> {
     return this.handleRequest(
-      () => secureApiClient.post(`/api/orders/delete/${id}`),
+      () => secureApiClient.post(`/orders/delete/${id}`),
       'orders.delete'
     );
   }
 
   async bulkDeleteOrders(orderIds: number[]): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.post('/api/orders/bulk/delete', { orderIds }),
+      () => secureApiClient.post('/orders/bulk/delete', { orderIds }),
       'orders.bulkDelete'
     );
   }
@@ -228,7 +228,7 @@ class OrdersApiService extends BaseApiService {
 class DashboardApiService extends BaseApiService {
   async getDashboardStats(): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.get('/api/admin/dashboard'),
+      () => secureApiClient.get('/dashboard'),
       'dashboard.getStats'
     );
   }

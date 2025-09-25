@@ -63,7 +63,7 @@ export default function CustomersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `/api/customers/search?q=${encodeURIComponent(searchQuery)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/customers/search?q=${encodeURIComponent(searchQuery)}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setCustomers((response as any).data);
@@ -103,7 +103,7 @@ export default function CustomersPage() {
       setDeleting(true);
       const token = localStorage.getItem('token');
       await axios.delete(
-        `/api/customers/${customerId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/customers/${customerId}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
@@ -141,7 +141,7 @@ export default function CustomersPage() {
       setDeleting(true);
       const token = localStorage.getItem('token');
       await axios.delete(
-        `/api/customers/bulk`,
+        `${process.env.NEXT_PUBLIC_API_URL}/customers/bulk`,
         { 
           headers: { 'Authorization': `Bearer ${token}` },
           data: { customerIds: selectedCustomers }
@@ -173,7 +173,7 @@ export default function CustomersPage() {
       setLoadingDetails(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `/api/customers/${customerId}/details`,
+        `${process.env.NEXT_PUBLIC_API_URL}/customers/${customerId}/details`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setSelectedCustomer((response as any).data);

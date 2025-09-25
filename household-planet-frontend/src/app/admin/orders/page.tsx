@@ -121,7 +121,7 @@ export default function AdminOrdersPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       
-      return fetch(`/api/orders/admin/stats`, {
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/admin/stats`, {
         headers: { 'Authorization': `Bearer ${token}` },
       }).then(response => {
         if (!response.ok) {
@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
         ...(searchTerm && { customerEmail: searchTerm })
       });
 
-      return fetch(`/api/orders?${params}`, {
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       }).then(response => {
         if (!response.ok) {
