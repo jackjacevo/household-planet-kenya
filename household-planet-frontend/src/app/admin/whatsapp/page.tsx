@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/Tabs';
-import WhatsAppOrderEntry from '../../components/admin/WhatsAppOrderEntry';
-import WhatsAppMessages from '../../components/admin/WhatsAppMessages';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
+import WhatsAppOrderEntry from '../../../components/admin/WhatsAppOrderEntry';
+import WhatsAppMessages from '../../../components/admin/WhatsAppMessages';
 
 export default function WhatsAppPage() {
   return (

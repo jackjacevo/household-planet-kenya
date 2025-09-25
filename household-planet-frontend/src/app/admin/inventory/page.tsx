@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Package, XCircle, RefreshCw, Edit } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { Button } from '../../../components/ui/Button';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, AlertTriangle } from 'lucide-react';
-import { Button } from '../../../components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import axios from 'axios';
 
 interface Brand {

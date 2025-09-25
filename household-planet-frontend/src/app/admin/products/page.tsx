@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings, X } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
-import ProductForm from '../../components/admin/ProductForm';
-import BulkActions from '../../components/admin/BulkActions';
-import ProductAnalytics from '../../components/admin/ProductAnalytics';
-import StockStatus from '../../components/admin/StockStatus';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { getImageUrl } from '../../lib/imageUtils';
-import { safeAdminAPI } from '../../lib/api/admin-api-wrapper';
+import { Button } from '../../../components/ui/Button';
+import ProductForm from '../../../components/admin/ProductForm';
+import BulkActions from '../../../components/admin/BulkActions';
+import ProductAnalytics from '../../../components/admin/ProductAnalytics';
+import StockStatus from '../../../components/admin/StockStatus';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
+import { getImageUrl } from '../../../lib/imageUtils';
+import { safeAdminAPI } from '../../../lib/api/admin-api-wrapper';
 import axios from 'axios';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../../contexts/ToastContext';
 
 interface Product {
   id: number;

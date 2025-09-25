@@ -73,7 +73,7 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const { user, isAdmin, hasPermission } = useAuth();
+  const { user, isAdmin, isStaff } = useAuth();
   const queryClient = useQueryClient();
   const { refreshAll } = useRealtimeOrders();
 
@@ -93,7 +93,7 @@ export default function AdminLayout({
     queryKey: ['pendingOrdersCount'],
     queryFn: fetchPendingOrdersCount,
     refetchInterval: 10000,
-    enabled: mounted && (isAdmin() || hasPermission('manage_orders')),
+    enabled: mounted && (isAdmin() || isStaff()),
     retry: false
   });
 
@@ -116,10 +116,10 @@ export default function AdminLayout({
   useEffect(() => {
     setMounted(true);
     // Also invalidate on mount to ensure fresh data
-    if (isAdmin() || hasPermission('manage_orders')) {
+    if (isAdmin() || isStaff()) {
       queryClient.invalidateQueries({ queryKey: ['pendingOrdersCount'] });
     }
-  }, [queryClient, isAdmin, hasPermission]);
+  }, [queryClient, isAdmin, isStaff]);
 
   if (!mounted) {
     return (
@@ -134,8 +134,8 @@ export default function AdminLayout({
   const getVisibleNavigation = () => {
     return navigation.filter(item => {
       if (isAdmin()) return true;
-      const requiredPermission = navigationPermissions[item.href];
-      return requiredPermission ? hasPermission(requiredPermission) : false;
+      // For now, staff can see most admin pages
+      return isStaff();
     });
   };
 

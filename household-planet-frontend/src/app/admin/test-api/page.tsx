@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '../../components/ui/Button';
-import { safeAdminAPI, adminAPI } from '../../lib/api/admin-api-wrapper';
+import { Button } from '../../../components/ui/Button';
+import { safeAdminAPI, adminAPI } from '../../../lib/api/admin-api-wrapper';
 
 export default function AdminAPITestPage() {
   const [loading, setLoading] = useState(false);

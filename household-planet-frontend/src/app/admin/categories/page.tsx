@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, GripVertical, AlertTriangle, Upload, X } from 'lucide-react';
-import { Button } from '../../../components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
-import OptimizedThumbnail from '../../../components/admin/OptimizedThumbnail';
-import CategoryTableSkeleton from '../../../components/admin/CategoryTableSkeleton';
-import { preloadCategoryImages } from '../../../lib/imageOptimization';
+import OptimizedThumbnail from '@/components/admin/OptimizedThumbnail';
+import CategoryTableSkeleton from '@/components/admin/CategoryTableSkeleton';
+import { preloadCategoryImages } from '@/lib/imageOptimization';
 import axios from 'axios';
 
 interface Category {

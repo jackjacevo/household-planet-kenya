@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '../../contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Checkbox } from '../../components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Textarea } from '../../components/ui/Textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/Tabs';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
+import { Badge } from '../../../components/ui/Badge';
+import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
+import { Checkbox } from '../../../components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog';
+import { Textarea } from '../../../components/ui/Textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
 import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle, Smartphone, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
@@ -22,8 +22,8 @@ const WhatsAppIcon = () => (
   </svg>
 );
 import Link from 'next/link';
-import { useToast } from '../../hooks/useToast';
-import { useRealtimeOrders } from '../../hooks/useRealtimeOrders';
+import { useToast } from '../../../hooks/useToast';
+import { useRealtimeOrders } from '../../../hooks/useRealtimeOrders';
 
 interface Order {
   id: number;
@@ -237,16 +237,14 @@ export default function AdminOrdersPage() {
       
       fetchReturns();
       showToast({
-        title: 'Success!',
-        description: `Return ${status.toLowerCase()} successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `Return ${status.toLowerCase()} successfully`
       });
     } catch (error) {
       console.error('Error processing return:', error);
       showToast({
-        title: 'Error',
-        description: 'Failed to process return. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Failed to process return. Please try again.'
       });
     }
   };
@@ -273,9 +271,8 @@ export default function AdminOrdersPage() {
       // Show success message
       const orderNumber = orders.find(o => o.id === orderId)?.orderNumber || orderId;
       showToast({
-        title: 'Success!',
-        description: `Order ${orderNumber} status updated to ${status} successfully!`,
-        variant: 'success'
+        type: 'success',
+        message: `Order ${orderNumber} status updated to ${status} successfully!`
       });
       
       // Dispatch event to update pending orders badge
@@ -288,9 +285,8 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error updating order status:', error);
       showToast({
-        title: 'Error',
-        description: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
+        type: 'error',
+        message: `Failed to update order status: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`
       });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
@@ -307,17 +303,15 @@ export default function AdminOrdersPage() {
     
     if (nonDeletableCount > 0) {
       showToast({
-        title: 'Some orders cannot be deleted',
-        description: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.`,
-        variant: 'destructive'
+        type: 'warning',
+        message: `${nonDeletableCount} order${nonDeletableCount > 1 ? 's' : ''} with status other than PENDING or CANCELLED will be skipped.`
       });
     }
     
     if (deletableOrders.length === 0) {
       showToast({
-        title: 'No orders to delete',
-        description: 'Only pending or cancelled orders can be deleted.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Only pending or cancelled orders can be deleted.'
       });
       setShowBulkDeleteDialog(false);
       return;
@@ -346,16 +340,14 @@ export default function AdminOrdersPage() {
       refetchOrders();
       refetchStats();
       showToast({
-        title: 'Success!',
-        description: `${result.deletedCount} orders deleted successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `${result.deletedCount} orders deleted successfully`
       });
     } catch (error) {
       console.error('Error deleting orders:', error);
       showToast({
-        title: 'Error',
-        description: 'Failed to delete orders. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Failed to delete orders. Please try again.'
       });
     } finally {
       setBulkDeleting(false);
@@ -383,18 +375,16 @@ export default function AdminOrdersPage() {
       
       const data = await response.json();
       showToast({
-        title: 'Success!',
-        description: `Shipping label generated. Tracking: ${data.trackingNumber}`,
-        variant: 'success'
+        type: 'success',
+        message: `Shipping label generated. Tracking: ${data.trackingNumber}`
       });
       refetchOrders();
       refetchStats();
     } catch (error) {
       console.error('Error generating shipping label:', error);
       showToast({
-        title: 'Error',
-        description: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
+        type: 'error',
+        message: `Failed to generate shipping label: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`
       });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
@@ -417,16 +407,14 @@ export default function AdminOrdersPage() {
       }
       
       showToast({
-        title: 'Success!',
-        description: 'Email sent successfully!',
-        variant: 'success'
+        type: 'success',
+        message: 'Email sent successfully!'
       });
     } catch (error) {
       console.error('Error sending email:', error);
       showToast({
-        title: 'Error',
-        description: 'Failed to send email. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Failed to send email. Please try again.'
       });
     }
   };
@@ -464,9 +452,8 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error viewing receipt:', error);
       showToast({
-        title: 'Error',
-        description: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: (error instanceof Error ? (error as Error).message : 'Unknown error') || 'Failed to load receipt. Please try again.'
       });
     }
   };
@@ -628,9 +615,8 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error generating PDF:', error);
       showToast({
-        title: 'Error',
-        description: 'Failed to generate PDF receipt. Please try again.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Failed to generate PDF receipt. Please try again.'
       });
     }
   };
@@ -999,17 +985,15 @@ export default function AdminOrdersPage() {
       } else {
         console.error('Failed to open popup window - popup blocked?');
         showToast({
-          title: 'Popup Blocked',
-          description: 'Please allow popups for this site to export the statement.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Please allow popups for this site to export the statement.'
         });
       }
     } catch (error) {
       console.error('Error generating statement:', error);
       showToast({
-        title: 'Error',
-        description: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
+        type: 'error',
+        message: `Failed to generate statement: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`
       });
     }
   };
@@ -1505,9 +1489,8 @@ export default function AdminOrdersPage() {
 
     if (!['PENDING', 'CANCELLED'].includes(order.status)) {
       showToast({
-        title: 'Cannot Delete Order',
-        description: 'Only pending or cancelled orders can be deleted.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'Only pending or cancelled orders can be deleted.'
       });
       return;
     }
@@ -1536,9 +1519,8 @@ export default function AdminOrdersPage() {
       }
       
       showToast({
-        title: 'Success!',
-        description: `Order ${deleteDialog.order.orderNumber} deleted successfully!`,
-        variant: 'success'
+        type: 'success',
+        message: `Order ${deleteDialog.order.orderNumber} deleted successfully!`
       });
       
       setDeleteDialog({ open: false, order: null });
@@ -1552,9 +1534,8 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error deleting order:', error);
       showToast({
-        title: 'Error',
-        description: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`,
-        variant: 'destructive'
+        type: 'error',
+        message: `Failed to delete order: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`
       });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));

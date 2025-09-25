@@ -19,9 +19,9 @@ import {
   Upload,
   RotateCcw
 } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { settingsApi, type SettingsData } from '../../lib/settings-api';
+import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
+import { settingsApi, type SettingsData } from '../../../lib/settings-api';
 // import toast from 'react-hot-toast';
 const toast = {
   success: (msg: string) => {
@@ -46,15 +46,15 @@ const toast = {
     }
   }
 };
-import { CompanySettingsTab } from '../../components/admin/settings/CompanySettingsTab';
-import { PaymentSettingsTab } from '../../components/admin/settings/PaymentSettingsTab';
-import { NotificationSettingsTab } from '../../components/admin/settings/NotificationSettingsTab';
-import { InventorySettingsTab } from '../../components/admin/settings/InventorySettingsTab';
-import { SEOSettingsTab } from '../../components/admin/settings/SEOSettingsTab';
-import { SecuritySettingsTab } from '../../components/admin/settings/SecuritySettingsTab';
-import { EmailSettingsTab } from '../../components/admin/settings/EmailSettingsTab';
-import { SocialMediaSettingsTab } from '../../components/admin/settings/SocialMediaSettingsTab';
-import { DeliverySettingsTab } from '../../components/admin/settings/DeliverySettingsTab';
+import { CompanySettingsTab } from '../../../components/admin/settings/CompanySettingsTab';
+import { PaymentSettingsTab } from '../../../components/admin/settings/PaymentSettingsTab';
+import { NotificationSettingsTab } from '../../../components/admin/settings/NotificationSettingsTab';
+import { InventorySettingsTab } from '../../../components/admin/settings/InventorySettingsTab';
+import { SEOSettingsTab } from '../../../components/admin/settings/SEOSettingsTab';
+import { SecuritySettingsTab } from '../../../components/admin/settings/SecuritySettingsTab';
+import { EmailSettingsTab } from '../../../components/admin/settings/EmailSettingsTab';
+import { SocialMediaSettingsTab } from '../../../components/admin/settings/SocialMediaSettingsTab';
+import { DeliverySettingsTab } from '../../../components/admin/settings/DeliverySettingsTab';
 
 const TABS = [
   { id: 'company', label: 'Company', icon: Building2 },
