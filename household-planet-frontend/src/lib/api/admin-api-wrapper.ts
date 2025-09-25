@@ -14,7 +14,7 @@ const fallbackAPI = {
   categories: {
     getAll: async () => {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.categories || response.data || [];
@@ -24,7 +24,7 @@ const fallbackAPI = {
   brands: {
     getAll: async () => {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/brands`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.brands || response.data || [];
@@ -34,7 +34,7 @@ const fallbackAPI = {
   products: {
     getAll: async () => {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data.products || response.data || [];
@@ -42,7 +42,7 @@ const fallbackAPI = {
     uploadTempImages: async (formData: FormData) => {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/temp/images`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products/temp/images`,
         formData,
         {
           headers: {
