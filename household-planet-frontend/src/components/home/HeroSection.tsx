@@ -134,7 +134,7 @@ export function HeroSection() {
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
                 backgroundAttachment: 'scroll',
-                filter: 'blur(3px) brightness(0.7),
+                filter: 'blur(3px) brightness(0.7)',
                 zIndex: index === currentSlide ? 1 : 0
               }}
               initial={{ opacity: 0 }}
