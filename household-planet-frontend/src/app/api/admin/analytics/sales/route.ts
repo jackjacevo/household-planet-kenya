@@ -14,6 +14,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response.data);
   } catch (error: any) {
+    if (error.response?.status === 401) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     return NextResponse.json({
       sales: [
         { period: 'Jan', count: 0 },
