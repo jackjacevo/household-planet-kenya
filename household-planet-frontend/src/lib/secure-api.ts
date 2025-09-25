@@ -11,7 +11,7 @@ const validateApiUrl = (url: string): string => {
 };
 
 export const secureApiClient = axios.create({
-  baseURL: ALLOWED_API_URL,
+  baseURL: '',
   timeout: 10000,
 });
 
@@ -21,10 +21,8 @@ secureApiClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Validate the full URL
-  if (config.url && config.baseURL) {
-    validateApiUrl(`${config.baseURL}${config.url}`);
-  }
+  // Skip URL validation for relative paths
+  // Relative paths will be handled by Next.js API routes
   
   return config;
 });

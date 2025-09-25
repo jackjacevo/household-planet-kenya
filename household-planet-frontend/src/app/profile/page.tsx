@@ -40,7 +40,7 @@ export default function ProfilePage() {
   const fetchRecentOrders = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
+      const response = await fetch(`/api/orders/my-orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
@@ -74,7 +74,7 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem('token')
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`,
+        `/api/users/change-password`,
         {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
