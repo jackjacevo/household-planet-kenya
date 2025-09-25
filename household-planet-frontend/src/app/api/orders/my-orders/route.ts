@@ -11,8 +11,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response.data);
   } catch (error: any) {
-    console.error('My orders API error:', error.response?.data || error.message);
-    
     if (error.response?.status === 401) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
