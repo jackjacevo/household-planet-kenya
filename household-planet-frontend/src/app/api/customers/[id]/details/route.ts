@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { secureAPI } from '@/lib/secure-api';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
   try {
-    const response = await secureAPI.get(`/customers/${params.id}/details`, {
+    const response = await secureAPI.get(`/customers/${id}/details`, {
       headers: {
         'Cookie': request.headers.get('cookie') || '',
       },
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
     
     return NextResponse.json({
-      id: parseInt(params.id),
+      id: parseInt(id),
       name: 'Customer',
       email: 'customer@example.com',
       phone: '',

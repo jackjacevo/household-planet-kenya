@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { secureAPI } from '@/lib/secure-api';
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
   try {
-    const response = await secureAPI.delete(`/customers/${params.id}`, {
+    const response = await secureAPI.delete(`/customers/${id}`, {
       headers: {
         'Cookie': request.headers.get('cookie') || '',
       },

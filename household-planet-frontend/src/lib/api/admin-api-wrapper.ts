@@ -54,7 +54,7 @@ const fallbackAPI = {
       );
       return response.data;
     }
-  }
+  },
 
   dashboard: {
     getStats: async () => {
