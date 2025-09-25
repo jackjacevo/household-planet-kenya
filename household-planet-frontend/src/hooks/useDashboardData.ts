@@ -14,7 +14,7 @@ interface DashboardStats {
 
 // Unified dashboard data fetcher
 const fetchDashboardUnified = async (): Promise<DashboardStats> => {
-  const response = await fetch(`${adminConfig.apiUrl}/admin/dashboard/unified`, {
+  const response = await fetch(`${adminConfig.apiUrl}/dashboard`, {
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('token')}`,
       'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ const fetchDashboardUnified = async (): Promise<DashboardStats> => {
 
 // Fallback individual fetchers
 const fetchOrderStats = async () => {
-  const response = await fetch(`${adminConfig.apiUrl}/admin/orders/stats`, {
+  const response = await fetch(`${adminConfig.apiUrl}/dashboard`, {
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('token')}`,
       'Content-Type': 'application/json',

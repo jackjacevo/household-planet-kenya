@@ -35,7 +35,7 @@ const getFeatureFlag = (key: string, defaultValue: boolean = false): boolean => 
 
 // Admin configuration with safe defaults
 export const adminConfig: AdminConfig = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke/api',
   debug: process.env.NODE_ENV === 'development',
   features: {
     // Phase 1 features (enabled for production)
