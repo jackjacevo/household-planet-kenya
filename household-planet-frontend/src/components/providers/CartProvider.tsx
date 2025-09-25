@@ -64,39 +64,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const refreshCart = async () => {
     if (!user) return;
-    
+
     try {
-      const response = await api.getCart();
-      setItems((response as any).items || []);
+      // TODO: Implement backend cart sync when cart API is available
+      // For now, just load from localStorage for authenticated users too
+      const guestCart = localStorage.getItem('guestCart');
+      if (guestCart) {
+        try {
+          const parsed = JSON.parse(guestCart);
+          setItems(parsed.items || []);
+        } catch {
+          localStorage.removeItem('guestCart');
+          setItems([]);
+        }
+      } else {
+        setItems([]);
+      }
     } catch (error) {
       console.error('Failed to refresh cart:', error);
+      setItems([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const addItem = async (productId: string, variantId?: string, quantity = 1) => {
-    if (user) {
-      await api.addToCart(
-        typeof productId === 'string' ? parseInt(productId) : productId,
-        quantity,
-        variantId ? (typeof variantId === 'string' ? parseInt(variantId) : variantId) : undefined
-      );
-      await refreshCart();
-    } else {
-      // Handle guest cart
-      const newItem: CartItem = {
-        id: Date.now().toString(),
-        productId: typeof productId === 'string' ? parseInt(productId) : productId,
-        variantId: variantId ? (typeof variantId === 'string' ? parseInt(variantId) : variantId) : undefined,
-        quantity,
-        product: {} as any, // Will be populated when cart is synced
-      };
-      
-      const updatedItems = [...items, newItem];
-      setItems(updatedItems);
-      localStorage.setItem('guestCart', JSON.stringify({ items: updatedItems }));
-    }
+    // TODO: Implement backend cart sync when cart API is available
+    // For now, use localStorage for both authenticated and guest users
+    const newItem: CartItem = {
+      id: Date.now().toString(),
+      productId: typeof productId === 'string' ? parseInt(productId) : productId,
+      variantId: variantId ? (typeof variantId === 'string' ? parseInt(variantId) : variantId) : undefined,
+      quantity,
+      product: {} as any, // Will be populated when cart is synced
+    };
+
+    const updatedItems = [...items, newItem];
+    setItems(updatedItems);
+    localStorage.setItem('guestCart', JSON.stringify({ items: updatedItems }));
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
@@ -105,37 +110,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (user) {
-      // For now, just refresh cart - in a real implementation, you would update the item
-      await refreshCart();
-    } else {
-      const updatedItems = items.map(item =>
-        item.id === itemId ? { ...item, quantity } : item
-      );
-      setItems(updatedItems);
-      localStorage.setItem('guestCart', JSON.stringify({ items: updatedItems }));
-    }
+    // TODO: Implement backend cart sync when cart API is available
+    // For now, use localStorage for both authenticated and guest users
+    const updatedItems = items.map(item =>
+      item.id === itemId ? { ...item, quantity } : item
+    );
+    setItems(updatedItems);
+    localStorage.setItem('guestCart', JSON.stringify({ items: updatedItems }));
   };
 
   const removeItem = async (itemId: string) => {
-    if (user) {
-      // For now, just refresh cart - in a real implementation, you would remove the item
-      await refreshCart();
-    } else {
-      const updatedItems = items.filter(item => item.id !== itemId);
-      setItems(updatedItems);
-      localStorage.setItem('guestCart', JSON.stringify({ items: updatedItems }));
-    }
+    // TODO: Implement backend cart sync when cart API is available
+    // For now, use localStorage for both authenticated and guest users
+    const updatedItems = items.filter(item => item.id !== itemId);
+    setItems(updatedItems);
+    localStorage.setItem('guestCart', JSON.stringify({ items: updatedItems }));
   };
 
   const clearCart = async () => {
-    if (user) {
-      // For now, just clear local state - in a real implementation, you would clear the backend cart
-      setItems([]);
-    } else {
-      setItems([]);
-      localStorage.removeItem('guestCart');
-    }
+    // TODO: Implement backend cart sync when cart API is available
+    // For now, use localStorage for both authenticated and guest users
+    setItems([]);
+    localStorage.removeItem('guestCart');
   };
 
   const getTotalPrice = () => {

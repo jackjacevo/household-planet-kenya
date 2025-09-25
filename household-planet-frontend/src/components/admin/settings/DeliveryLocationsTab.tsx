@@ -15,7 +15,19 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { useToast } from '@/contexts/ToastContext';
+// Simple toast implementation
+const useToast = () => ({
+  showToast: ({ type, message }: { type: 'success' | 'error'; message: string }) => {
+    console.log(`${type === 'success' ? '✅' : '❌'} ${message}`);
+    if (typeof window !== 'undefined') {
+      const toastEl = document.createElement('div');
+      toastEl.className = `fixed top-4 right-4 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-4 py-2 rounded shadow-lg z-50`;
+      toastEl.textContent = message;
+      document.body.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 3000);
+    }
+  }
+});
 
 interface DeliveryLocation {
   id?: string;

@@ -82,7 +82,7 @@ export default function CartPage() {
     if (!promoCode.trim()) return;
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/promo-codes/validate`, {
+      const response = await fetch(`/api/promo-codes/validate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

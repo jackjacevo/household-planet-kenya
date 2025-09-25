@@ -64,7 +64,7 @@ export default function AdminActivitiesPage() {
       });
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/activities?${params}`,
+        `/api/admin/activities?${params}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
@@ -84,7 +84,7 @@ export default function AdminActivitiesPage() {
       if (!token) return;
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/activities/stats`,
+        `/api/admin/activities/stats`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setStats((response as any).data);

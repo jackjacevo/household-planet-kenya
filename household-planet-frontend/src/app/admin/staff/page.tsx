@@ -58,7 +58,7 @@ export default function AdminManagementPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
+        `/api/admin/staff`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       // Filter to only show ADMIN users
@@ -77,7 +77,7 @@ export default function AdminManagementPage() {
       setError('');
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff`,
+        `/api/admin/staff`,
         { ...formData, role: 'ADMIN' },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -114,7 +114,7 @@ export default function AdminManagementPage() {
         delete updateData.password;
       }
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff/${editingStaff.id}`,
+        `/api/admin/staff/${editingStaff.id}`,
         updateData,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -134,7 +134,7 @@ export default function AdminManagementPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/staff/${deletingStaff.id}`,
+        `/api/admin/staff/${deletingStaff.id}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setShowDeleteDialog(false);

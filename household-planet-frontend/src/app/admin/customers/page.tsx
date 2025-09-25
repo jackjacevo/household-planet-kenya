@@ -63,7 +63,7 @@ export default function CustomersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/search?q=${encodeURIComponent(searchQuery)}`,
+        `/api/customers/search?q=${encodeURIComponent(searchQuery)}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setCustomers((response as any).data);

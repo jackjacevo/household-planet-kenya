@@ -40,14 +40,16 @@ export default function InventoryPage() {
       }
       
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inventory/alerts`,
+        `/api/admin/inventory/alerts`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setAlerts((response as any).data);
     } catch (error: any) {
       console.error('Error fetching inventory alerts:', error);
       if (error.response?.status === 401) {
-        setError('Authentication failed. Please log in again.');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return;
       } else if (error.response?.status === 403) {
         setError('Access denied. Admin privileges required.');
       } else {

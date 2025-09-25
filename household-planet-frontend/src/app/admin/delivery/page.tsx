@@ -30,7 +30,7 @@ export default function AdminDeliveryPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/delivery/admin/orders`,
+        `/api/delivery/admin/orders`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
@@ -42,7 +42,7 @@ export default function AdminDeliveryPage() {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
+          `/api/orders`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const orders = (response as any).data.orders || (response as any).data;
@@ -86,7 +86,7 @@ export default function AdminDeliveryPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/orders/${deliveryId}/status`,
+        `/api/orders/${deliveryId}/status`,
         { status: newStatus },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://householdplanetkenya.co.ke/api'
+const API_BASE_URL = ''
 
 export interface Setting {
   value: any
@@ -126,110 +126,110 @@ class SettingsApiClient {
   }
 
   async getSettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings`, {
+    const response = await axios.get(`/api/settings`, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async getPublicSettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings/public`)
+    const response = await axios.get(`/api/settings/public`)
     return response.data
   }
 
   async updateCompanySettings(settings: CompanySettings) {
-    const response = await axios.post(`${this.baseURL}/api/settings/company`, settings, {
+    const response = await axios.post(`/api/settings/company`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async exportSettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings/export`, {
+    const response = await axios.get(`/api/settings/export`, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async importSettings(settings: any) {
-    const response = await axios.post(`${this.baseURL}/api/settings/import`, settings, {
+    const response = await axios.post(`/api/settings/import`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async resetToDefaults() {
-    const response = await axios.post(`${this.baseURL}/api/settings/reset`, {}, {
+    const response = await axios.post(`/api/settings/reset`, {}, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateSettings(settings: any) {
-    const response = await axios.put(`${this.baseURL}/api/settings`, settings, {
+    const response = await axios.put(`/api/settings`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async getDeliverySettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings/delivery`, {
+    const response = await axios.get(`/api/settings/delivery`, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateDeliverySettings(settings: any) {
-    const response = await axios.put(`${this.baseURL}/api/settings/delivery`, settings, {
+    const response = await axios.put(`/api/settings/delivery`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async getPaymentSettings() {
-    const response = await axios.get(`${this.baseURL}/api/settings/payment`, {
+    const response = await axios.get(`/api/settings/payment`, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updatePaymentSettings(settings: any) {
-    const response = await axios.put(`${this.baseURL}/api/settings/payment`, settings, {
+    const response = await axios.put(`/api/settings/payment`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateInventorySettings(settings: InventorySettings) {
-    const response = await axios.put(`${this.baseURL}/api/settings/inventory`, settings, {
+    const response = await axios.put(`/api/settings/inventory`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateNotificationSettings(settings: NotificationSettings) {
-    const response = await axios.post(`${this.baseURL}/api/settings/notification`, settings, {
+    const response = await axios.post(`/api/settings/notification`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateSecuritySettings(settings: SecuritySettings) {
-    const response = await axios.put(`${this.baseURL}/api/settings/security`, settings, {
+    const response = await axios.put(`/api/settings/security`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateSEOSettings(settings: SEOSettings) {
-    const response = await axios.put(`${this.baseURL}/api/settings/seo`, settings, {
+    const response = await axios.put(`/api/settings/seo`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data
   }
 
   async updateSocialMediaSettings(settings: SocialMediaSettings) {
-    const response = await axios.put(`${this.baseURL}/api/settings/social`, settings, {
+    const response = await axios.put(`/api/settings/social`, settings, {
       headers: this.getAuthHeaders(),
     })
     return response.data

@@ -47,10 +47,9 @@ export function SimpleLineChart() {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         const response = await axios.get(
-          `${apiUrl}/api/admin/analytics/revenue?period=monthly`,
+          `/api/admin/analytics/revenue?period=monthly`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const revenueData = response.data.revenue || [];
@@ -153,10 +152,9 @@ export function SimplePieChart() {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         const response = await axios.get(
-          `${apiUrl}/api/admin/categories/popular?period=monthly`,
+          `/api/admin/categories/popular?period=monthly`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const categories = response.data.categories || [];
@@ -241,10 +239,9 @@ export function SimpleBarChart() {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         const response = await axios.get(
-          `${apiUrl}/api/admin/analytics/sales?period=monthly`,
+          `/api/admin/analytics/sales?period=monthly`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const salesData = response.data.sales || [];
@@ -336,11 +333,10 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
       try {
         // First try to get data from dashboard (which now includes proper customer growth)
         const response = await axios.get(
-          `${apiUrl}/api/admin/dashboard`,
+          `/api/admin/dashboard`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const dashboardGrowth = response.data.customerGrowth || [];
@@ -351,7 +347,7 @@ export function CustomerGrowthChart({ customerGrowth }: { customerGrowth: Array<
         
         // Fallback: try customer insights endpoint
         const insightsResponse = await axios.get(
-          `${apiUrl}/api/admin/customers/insights`,
+          `/api/admin/customers/insights`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         

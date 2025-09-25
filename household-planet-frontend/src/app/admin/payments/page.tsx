@@ -83,7 +83,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/stats`,
+        `/api/payments/admin/stats`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setStats((response as any).data);
@@ -102,7 +102,7 @@ export default function AdminPaymentsPage() {
       });
       
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/transactions?${params}`,
+        `/api/payments/admin/transactions?${params}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setTransactions((response as any).data.transactions || (response as any).data);
@@ -129,7 +129,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/refund`,
+        `/api/payments/admin/refund`,
         { transactionId: selectedTransaction.id, reason: 'Admin refund' },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -368,7 +368,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/cash-payment`,
+        `/api/payments/admin/cash-payment`,
         {
           orderId,
           amount,
@@ -405,7 +405,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/pending-payment`,
+        `/api/payments/admin/pending-payment`,
         {
           orderId: pendingForm.orderId,
           amount,
@@ -467,7 +467,7 @@ export default function AdminPaymentsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/admin/paybill-payment`,
+        `/api/payments/admin/paybill-payment`,
         {
           phoneNumber: paybillForm.phoneNumber,
           amount,

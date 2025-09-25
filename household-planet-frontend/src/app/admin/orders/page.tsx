@@ -86,7 +86,7 @@ const priorityColors = {
 };
 
 export default function AdminOrdersPage() {
-  const { user } = useAuth();
+  const { user, isAdmin, isStaff } = useAuth();
   const { showToast } = useToast();
   const { refreshAll } = useRealtimeOrders();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -121,7 +121,7 @@ export default function AdminOrdersPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/admin/stats`, {
+      return fetch(`/api/orders/admin/stats`, {
         headers: { 'Authorization': `Bearer ${token}` },
       }).then(response => {
         if (!response.ok) {
@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
       });
     },
     refetchInterval: 30000,
-    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
+    enabled: !!(isAdmin() || isStaff())
   });
 
   const { data: ordersData, refetch: refetchOrders, isLoading } = useQuery({
@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
         ...(searchTerm && { customerEmail: searchTerm })
       });
 
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders?${params}`, {
+      return fetch(`/api/orders?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       }).then(response => {
         if (!response.ok) {
@@ -165,7 +165,7 @@ export default function AdminOrdersPage() {
       });
     },
     refetchInterval: 60000,
-    enabled: !!(user?.role === 'ADMIN' || user?.role === 'STAFF')
+    enabled: !!(isAdmin() || isStaff())
   });
 
   useEffect(() => {
@@ -1558,7 +1558,7 @@ export default function AdminOrdersPage() {
     );
   };
 
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
+  if (!user || (!isAdmin() && !isStaff())) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
