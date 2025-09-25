@@ -82,15 +82,13 @@ export default function AdminProductsPage() {
       console.error('Error fetching products:', error);
       if (error.response?.status === 401) {
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
       } else {
         showToast({
-          title: 'Error',
-          description: 'Failed to load products. Please refresh the page.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Failed to load products. Please refresh the page.'
         });
       }
     } finally {
@@ -105,9 +103,8 @@ export default function AdminProductsPage() {
       
       if (!token) {
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
         return;
       }
@@ -115,9 +112,8 @@ export default function AdminProductsPage() {
       // Validate required fields
       if (!productData.name || !productData.categoryId || !productData.price) {
         showToast({
-          title: 'Validation Error',
-          description: 'Please fill in all required fields (name, category, price).',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Validation Error: Please fill in all required fields (name, category, price).'
         });
         return;
       }
@@ -138,26 +134,23 @@ export default function AdminProductsPage() {
       setShowForm(false);
       setEditingProduct(null);
       showToast({
-        title: 'Success!',
-        description: `Product "${productData.name}" created successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `Product "${productData.name}" created successfully`
       });
     } catch (error: any) {
       console.error('Error creating product:', error);
       if (error.response?.status === 401) {
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
         localStorage.removeItem('token');
         window.location.href = '/login';
       } else {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to create product';
         showToast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive'
+          type: 'error',
+          message: errorMessage
         });
       }
     }
@@ -171,9 +164,8 @@ export default function AdminProductsPage() {
     if (!editingProduct) {
       console.error('AdminProductsPage: No editing product found');
       showToast({
-        title: 'Error',
-        description: 'No product selected for editing.',
-        variant: 'destructive'
+        type: 'error',
+        message: 'No product selected for editing.'
       });
       return;
     }
@@ -185,9 +177,8 @@ export default function AdminProductsPage() {
       if (!token) {
         console.error('AdminProductsPage: No token found');
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
         return;
       }
@@ -200,9 +191,8 @@ export default function AdminProductsPage() {
           price: productData.price
         });
         showToast({
-          title: 'Validation Error',
-          description: 'Please fill in all required fields (name, category, price).',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Validation Error: Please fill in all required fields (name, category, price).'
         });
         return;
       }
@@ -231,9 +221,8 @@ export default function AdminProductsPage() {
       
       console.log('AdminProductsPage: Showing success toast');
       showToast({
-        title: 'Success!',
-        description: `Product "${productData.name}" updated successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `Product "${productData.name}" updated successfully`
       });
     } catch (error: any) {
       console.error('AdminProductsPage: Error updating product:', error);
@@ -245,9 +234,8 @@ export default function AdminProductsPage() {
       
       if (error.response?.status === 401) {
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
         localStorage.removeItem('token');
         window.location.href = '/login';
@@ -255,9 +243,8 @@ export default function AdminProductsPage() {
         const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to update product';
         console.log('Full error response:', error.response?.data);
         showToast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive'
+          type: 'error',
+          message: errorMessage
         });
       }
     }
@@ -276,9 +263,8 @@ export default function AdminProductsPage() {
       
       if (!token) {
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
         return;
       }
@@ -289,26 +275,23 @@ export default function AdminProductsPage() {
       );
       await fetchProducts();
       showToast({
-        title: 'Success!',
-        description: `Product "${productName}" deleted successfully`,
-        variant: 'success'
+        type: 'success',
+        message: `Product "${productName}" deleted successfully`
       });
     } catch (error: any) {
       console.error('Error deleting product:', error);
       if (error.response?.status === 401) {
         showToast({
-          title: 'Authentication Error',
-          description: 'Please login again to continue.',
-          variant: 'destructive'
+          type: 'error',
+          message: 'Authentication Error: Please login again to continue.'
         });
         localStorage.removeItem('token');
         window.location.href = '/login';
       } else {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to delete product';
         showToast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive'
+          type: 'error',
+          message: errorMessage
         });
       }
     }

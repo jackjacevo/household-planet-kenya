@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useToast } from '@/contexts/ToastContext';
 
 interface DeliveryLocation {
   id?: string;
@@ -43,6 +44,7 @@ const TIER_RANGES = {
 };
 
 export function DeliveryLocationsTab() {
+  const { showToast } = useToast();
   const [locations, setLocations] = useState<DeliveryLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,11 +81,11 @@ export function DeliveryLocationsTab() {
         setLocations(data.data || []);
       } else {
         console.error('Failed to load locations:', response.statusText);
-        showToast('Failed to load delivery locations', 'error');
+        showToast({ type: 'error', message: 'Failed to load delivery locations' });
       }
     } catch (error) {
       console.error('Failed to load delivery locations:', error);
-      showToast('Failed to load delivery locations', 'error');
+      showToast({ type: 'error', message: 'Failed to load delivery locations' });
     } finally {
       setLoading(false);
     }
@@ -112,7 +114,7 @@ export function DeliveryLocationsTab() {
       if (response.ok) {
         await loadLocations();
         resetForm();
-        showToast(editingLocation ? 'Location updated successfully' : 'Location created successfully');
+        showToast({ type: 'success', message: editingLocation ? 'Location updated successfully' : 'Location created successfully' });
         
         // Trigger refresh for all components using delivery locations
         if (typeof window !== 'undefined') {
@@ -126,11 +128,11 @@ export function DeliveryLocationsTab() {
         }
       } else {
         const errorData = await response.json();
-        showToast(errorData.message || 'Failed to save location', 'error');
+        showToast({ type: 'error', message: errorData.message || 'Failed to save location' });
       }
     } catch (error) {
       console.error('Failed to save location:', error);
-      showToast('Failed to save location', 'error');
+      showToast({ type: 'error', message: 'Failed to save location' });
     }
   };
 
@@ -151,7 +153,7 @@ export function DeliveryLocationsTab() {
 
       if (response.ok) {
         await loadLocations();
-        showToast('Location deleted successfully');
+        showToast({ type: 'success', message: 'Location deleted successfully' });
         
         // Trigger refresh for all components using delivery locations
         if (typeof window !== 'undefined') {
@@ -165,11 +167,11 @@ export function DeliveryLocationsTab() {
         }
       } else {
         const errorData = await response.json();
-        showToast(errorData.message || 'Failed to delete location', 'error');
+        showToast({ type: 'error', message: errorData.message || 'Failed to delete location' });
       }
     } catch (error) {
       console.error('Failed to delete location:', error);
-      showToast('Failed to delete location', 'error');
+      showToast({ type: 'error', message: 'Failed to delete location' });
     }
   };
 
@@ -193,15 +195,6 @@ export function DeliveryLocationsTab() {
     setShowForm(false);
   };
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    const toastEl = document.createElement('div');
-    toastEl.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-      type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    } text-white`;
-    toastEl.textContent = message;
-    document.body.appendChild(toastEl);
-    setTimeout(() => toastEl.remove(), 3000);
-  };
 
   const filteredLocations = locations.filter(location => {
     const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase());
