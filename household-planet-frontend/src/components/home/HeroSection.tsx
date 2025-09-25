@@ -134,7 +134,7 @@ export function HeroSection() {
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
                 backgroundAttachment: 'scroll',
-                filter: 'blur(1px)',
+                filter: 'blur(3px) brightness(0.7),
                 zIndex: index === currentSlide ? 1 : 0
               }}
               initial={{ opacity: 0 }}
@@ -164,7 +164,7 @@ export function HeroSection() {
       </div>
       
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/60" />
       
       {/* Navigation Arrows */}
       <button
@@ -182,7 +182,7 @@ export function HeroSection() {
       </button>
       
       {/* Modern Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/70" />
       
       {/* Floating Elements */}
       <div className="absolute inset-0">

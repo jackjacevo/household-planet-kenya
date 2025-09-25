@@ -62,7 +62,7 @@ const fallbackAPI = {
       if (!token) {
         throw new Error('No authentication token found');
       }
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/dashboard`, {
+      const response = await axios.get('/api/admin/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
