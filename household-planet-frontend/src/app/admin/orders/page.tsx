@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/Textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useAuth } from '../../contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Textarea } from '../../components/ui/Textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/Tabs';
 import { Eye, Download, Filter, Search, Mail, Package, FileText, MessageSquare, Truck, AlertCircle, Smartphone, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
@@ -22,8 +22,8 @@ const WhatsAppIcon = () => (
   </svg>
 );
 import Link from 'next/link';
-import { useToast } from '@/hooks/useToast';
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { useToast } from '../../hooks/useToast';
+import { useRealtimeOrders } from '../../hooks/useRealtimeOrders';
 
 interface Order {
   id: number;

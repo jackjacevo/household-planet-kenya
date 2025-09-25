@@ -21,9 +21,9 @@ import {
   Bell,
   ArrowRight
 } from 'lucide-react';
-import { safeAdminAPI } from '@/lib/api/admin-api-wrapper';
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
-import { SimpleLineChart, SimplePieChart, SimpleBarChart, CustomerGrowthChart } from '@/components/admin/SimpleChart';
+import { safeAdminAPI } from '../../lib/api/admin-api-wrapper';
+import { useRealtimeOrders } from '../../hooks/useRealtimeOrders';
+import { SimpleLineChart, SimplePieChart, SimpleBarChart, CustomerGrowthChart } from '../../components/admin/SimpleChart';
 
 interface DashboardStats {
   overview: {

@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { FileText, Image, Mail, HelpCircle, Newspaper, Settings } from 'lucide-react';
-import BannerManager from '@/components/admin/content/BannerManager';
-import PageManager from '@/components/admin/content/PageManager';
-import EmailTemplateManager from '@/components/admin/content/EmailTemplateManager';
-import FAQManager from '@/components/admin/content/FAQManager';
-import BlogManager from '@/components/admin/content/BlogManager';
+import BannerManager from '../../components/admin/content/BannerManager';
+import PageManager from '../../components/admin/content/PageManager';
+import EmailTemplateManager from '../../components/admin/content/EmailTemplateManager';
+import FAQManager from '../../components/admin/content/FAQManager';
+import BlogManager from '../../components/admin/content/BlogManager';
 
 export default function ContentManagementPage() {
   const [activeTab, setActiveTab] = useState('banners');

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Users, UserPlus, Shield, Activity, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Staff {
   id: number;

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import axios from 'axios';
-import { SalesChart, CategoryChart, GeographicChart } from '@/components/admin/DashboardCharts';
+import { SalesChart, CategoryChart, GeographicChart } from '../../../components/admin/DashboardCharts';
 
 interface SalesData {
   period: string;

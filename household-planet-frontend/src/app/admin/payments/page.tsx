@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Card, CardContent } from '../../components/ui/Card';
 import { CreditCard, TrendingUp, AlertCircle, CheckCircle, XCircle, Plus, Search, Filter } from 'lucide-react';
 import axios from 'axios';
-import { validateOrderId, formatOrderId, extractAmountFromOrderNumber } from '@/lib/orderValidation';
-import { useToast } from '@/contexts/ToastContext';
+import { validateOrderId, formatOrderId, extractAmountFromOrderNumber } from '../../lib/orderValidation';
+import { useToast } from '../../contexts/ToastContext';
 
 interface PaymentStats {
   totalTransactions: number;

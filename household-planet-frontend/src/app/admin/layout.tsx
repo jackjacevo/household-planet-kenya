@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AdminRoute } from '@/components/auth/AdminRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import { AdminRoute } from '../../components/auth/AdminRoute';
+import { useAuth } from '../../contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { useRealtimeOrders } from '../../hooks/useRealtimeOrders';
 import axios from 'axios';
 
 const navigationPermissions: { [key: string]: string } = {
