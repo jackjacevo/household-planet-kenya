@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    const backendUrl = `${BACKEND_URL}/api/admin/dashboard?${searchParams.toString()}`;
+    const backendUrl = `${BACKEND_URL}/dashboard?${searchParams.toString()}`;
 
     const response = await fetch(backendUrl, {
       method: 'GET',
