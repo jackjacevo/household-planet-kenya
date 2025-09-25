@@ -69,7 +69,18 @@ export default function AdminDashboard() {
   const { refreshAll } = useRealtimeOrders();
   
   const fetchDashboardStats = async () => {
-    return await safeAdminAPI.dashboard.getStats();
+    console.log('Dashboard: Fetching stats...');
+    console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('Token exists:', !!localStorage.getItem('token'));
+    
+    try {
+      const result = await safeAdminAPI.dashboard.getStats();
+      console.log('Dashboard: Stats fetched successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('Dashboard: Error fetching stats:', error);
+      throw error;
+    }
   };
 
   const { data: stats, isLoading: loading, error } = useQuery({
@@ -77,12 +88,8 @@ export default function AdminDashboard() {
     queryFn: fetchDashboardStats,
     refetchInterval: 30000,
     retry: (failureCount, error: any) => {
-      if (error?.response?.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        return false;
-      }
-      return failureCount < 3;
+      console.log('Dashboard API error:', error?.response?.status, error?.message);
+      return failureCount < 2;
     }
   });
 

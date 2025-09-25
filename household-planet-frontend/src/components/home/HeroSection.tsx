@@ -85,6 +85,18 @@ export function HeroSection() {
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Preload mobile images
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      householdImages.forEach((image, index) => {
+        const img = new Image();
+        img.src = image.mobileUrl;
+        img.onerror = () => {
+          setImageErrors(prev => ({ ...prev, [index]: true }));
+        };
+      });
+    }
+    
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -115,25 +127,32 @@ export function HeroSection() {
           return (
             <motion.div
               key={index}
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat mobile-hero-image"
+              className="absolute inset-0 mobile-hero-image"
               style={{ 
                 backgroundImage: `url("${imageUrl}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
+                backgroundRepeat: 'no-repeat',
+                backgroundAttachment: 'scroll',
+                zIndex: index === currentSlide ? 1 : 0
               }}
               initial={{ opacity: 0 }}
               animate={{ opacity: index === currentSlide ? 1 : 0 }}
               transition={{ duration: 0.8 }}
-              onError={() => {
-                setImageErrors(prev => ({ ...prev, [index]: true }));
-              }}
             >
-              {/* Preload image for better mobile performance */}
               <img 
                 src={imageUrl}
                 alt={image.title}
-                style={{ display: 'none' }}
+                style={{ 
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 0,
+                  pointerEvents: 'none'
+                }}
                 onError={() => {
                   setImageErrors(prev => ({ ...prev, [index]: true }));
                 }}
@@ -248,12 +267,12 @@ export function HeroSection() {
       </div>
       
       {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 hidden sm:flex space-x-3">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex space-x-2 sm:space-x-3">
         {householdImages.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-4 h-4 rounded-full transition-all duration-300 ${
+            className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300 ${
               index === currentSlide ? 'bg-white shadow-lg' : 'bg-white/50 hover:bg-white/70'
             }`}
           />

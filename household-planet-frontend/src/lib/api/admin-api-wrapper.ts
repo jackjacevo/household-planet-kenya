@@ -59,6 +59,9 @@ const fallbackAPI = {
   dashboard: {
     getStats: async () => {
       const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/dashboard`, {
         headers: { Authorization: `Bearer ${token}` }
       });

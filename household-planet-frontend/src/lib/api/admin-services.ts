@@ -228,7 +228,7 @@ class OrdersApiService extends BaseApiService {
 class DashboardApiService extends BaseApiService {
   async getDashboardStats(): Promise<any> {
     return this.handleRequest(
-      () => secureApiClient.get('/dashboard'),
+      () => secureApiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/dashboard`),
       'dashboard.getStats'
     );
   }
