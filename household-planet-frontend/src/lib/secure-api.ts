@@ -28,3 +28,4 @@ secureApiClient.interceptors.request.use((config) => {
 });
 
 export { validateApiUrl };
+export { secureApiClient as secureAPI };
