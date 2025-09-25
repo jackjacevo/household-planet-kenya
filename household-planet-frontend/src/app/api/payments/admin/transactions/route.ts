@@ -1,36 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.householdplanetkenya.co.ke';
+import { secureAPI } from '@/lib/secure-api';
 
 export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const searchParams = url.searchParams;
-    // Remove duplicate /api - BACKEND_URL already includes /api
-    const baseUrl = BACKEND_URL.endsWith('/api') ? BACKEND_URL : `${BACKEND_URL}/api`;
-    const backendUrl = `${baseUrl}/payments/admin/transactions?${searchParams.toString()}`;
+    const { searchParams } = new URL(request.url);
+    const params = new URLSearchParams();
+    
+    searchParams.forEach((value, key) => {
+      params.append(key, value);
+    });
 
-    const response = await fetch(backendUrl, {
-      method: 'GET',
+    const response = await secureAPI.get(`/payments/admin/transactions?${params.toString()}`, {
       headers: {
-        'Content-Type': 'application/json',
-        ...(request.headers.get('authorization') && {
-          'Authorization': request.headers.get('authorization')!
-        })
+        'Cookie': request.headers.get('cookie') || '',
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status}`);
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Payments admin transactions API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch payment transactions', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    
+    return NextResponse.json({
+      transactions: [],
+      total: 0
+    });
   }
 }
