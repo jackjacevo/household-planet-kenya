@@ -110,7 +110,7 @@ export function UserProfile() {
               My Profile
             </Link>
             <Link
-              href="/account"
+              href="/profile"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={handleMenuClick}
             >
@@ -118,7 +118,7 @@ export function UserProfile() {
               Account Settings
             </Link>
             <Link
-              href="/account/orders"
+              href="/profile"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={handleMenuClick}
             >
@@ -126,7 +126,7 @@ export function UserProfile() {
               My Orders
             </Link>
             <Link
-              href="/track-order"
+              href="/guest-order-lookup"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={handleMenuClick}
             >
@@ -134,7 +134,7 @@ export function UserProfile() {
               Track Order
             </Link>
             <Link
-              href="/account/wishlist"
+              href="/wishlist"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={handleMenuClick}
             >
