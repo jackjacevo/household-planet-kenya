@@ -38,7 +38,7 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, {
+      const response = await axios.get(`/api/admin/brands`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBrands((response as any).data);
@@ -81,12 +81,12 @@ export default function AdminBrandsPage() {
       };
 
       if (editingBrand) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${editingBrand.id}`, data, {
+        await axios.put(`/api/admin/brands/${editingBrand.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSuccess('Brand updated successfully');
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands`, data, {
+        await axios.post(`/api/admin/brands`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSuccess('Brand created successfully');
@@ -112,7 +112,7 @@ export default function AdminBrandsPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/brands/${brand.id}`, {
+      await axios.delete(`/api/admin/brands/${brand.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess(`Brand "${brand.name}" deleted successfully`);

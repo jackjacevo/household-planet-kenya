@@ -121,7 +121,7 @@ export const useWishlist = create<WishlistStore>()(
           const backendItems = itemsArray.map((item: any) => item.product || item);
           set({ items: backendItems, wishlistData });
         } catch (error) {
-          console.error('Failed to sync wishlist:', error);
+          // Silently handle auth errors
           // If it's an auth error, don't retry
           if (error instanceof Error && error.message.includes('Authentication required')) {
             console.log('Authentication required for wishlist sync, clearing token');

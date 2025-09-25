@@ -279,7 +279,12 @@ export const useCart = create<CartStore>()(
           }));
           set({ items: backendItems, cartData });
         } catch (error) {
-          console.error('Failed to sync cart:', error);
+          // Silently handle auth errors to prevent console spam
+          if (error instanceof Error && error.message.includes('Authentication required')) {
+            console.log('Cart sync skipped - authentication required');
+          } else {
+            // Silently handle auth errors
+          }
         }
       },
 

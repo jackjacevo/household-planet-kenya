@@ -57,7 +57,7 @@ export default function AdminCategoriesPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, {
+      const response = await axios.get(`/api/admin/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories((response as any).data);
@@ -102,12 +102,12 @@ export default function AdminCategoriesPage() {
       };
 
       if (editingCategory) {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${editingCategory.id}`, data, {
+        await axios.put(`/api/admin/categories/${editingCategory.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSuccess('Category updated successfully');
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`, data, {
+        await axios.post(`/api/admin/categories`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSuccess('Category created successfully');
@@ -138,7 +138,7 @@ export default function AdminCategoriesPage() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${category.id}`, {
+      await axios.delete(`/api/admin/categories/${category.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess(`Category "${category.name}" deleted successfully`);
@@ -200,7 +200,7 @@ export default function AdminCategoriesPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/upload-image`,
+        `/api/admin/categories/upload-image`,
         uploadFormData,
         {
           headers: {

@@ -103,7 +103,7 @@ export default function CustomersPage() {
       setDeleting(true);
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}`,
+        `/api/customers/${customerId}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
@@ -141,7 +141,7 @@ export default function CustomersPage() {
       setDeleting(true);
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/bulk`,
+        `/api/customers/bulk`,
         { 
           headers: { 'Authorization': `Bearer ${token}` },
           data: { customerIds: selectedCustomers }
@@ -173,7 +173,7 @@ export default function CustomersPage() {
       setLoadingDetails(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}/details`,
+        `/api/customers/${customerId}/details`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setSelectedCustomer((response as any).data);

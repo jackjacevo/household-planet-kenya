@@ -119,7 +119,7 @@ export default function AdminProductsPage() {
       }
       
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`,
+        `/api/admin/products`,
         productData,
         { 
           headers: { 
@@ -197,7 +197,7 @@ export default function AdminProductsPage() {
         return;
       }
       
-      const updateUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editingProduct.id}`;
+      const updateUrl = `/api/admin/products/${editingProduct.id}`;
       console.log('AdminProductsPage: Making PUT request to:', updateUrl);
       console.log('AdminProductsPage: Request payload:', productData);
       
@@ -270,7 +270,7 @@ export default function AdminProductsPage() {
       }
       
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`,
+        `/api/admin/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await fetchProducts();
