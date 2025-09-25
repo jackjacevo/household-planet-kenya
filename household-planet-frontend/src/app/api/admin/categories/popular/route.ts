@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       categories: [
-        { name: 'Kitchen', count: 0 },
-        { name: 'Cleaning', count: 0 },
-        { name: 'Storage', count: 0 }
+        { category: 'Kitchen', sales: 0 },
+        { category: 'Cleaning', sales: 0 },
+        { category: 'Storage', sales: 0 }
       ]
     });
   }

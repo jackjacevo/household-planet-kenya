@@ -20,12 +20,12 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       revenue: [
-        { period: 'Jan', amount: 0 },
-        { period: 'Feb', amount: 0 },
-        { period: 'Mar', amount: 0 },
-        { period: 'Apr', amount: 0 },
-        { period: 'May', amount: 0 },
-        { period: 'Jun', amount: 0 }
+        { period: 'Jan', revenue: 0 },
+        { period: 'Feb', revenue: 0 },
+        { period: 'Mar', revenue: 0 },
+        { period: 'Apr', revenue: 0 },
+        { period: 'May', revenue: 0 },
+        { period: 'Jun', revenue: 0 }
       ],
       total: 0,
       growth: 0
